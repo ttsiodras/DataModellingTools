@@ -1,0 +1,8 @@
+TASTE Data Modelling Technologies
+
+- commonPy - Base API for parsing ASN.1
+- asn2aadlPlus - Convert ASN.1 modules to AADL
+- asn2dataModel - A mappers, convert ASN.1 for use in "any" language (Simulink, C, Ada, Python...)
+- aadl2glueC - B mappers, generate runtime code for converting data from/to ASN.1 in various languages
+
+
