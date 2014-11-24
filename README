@@ -1,8 +1,33 @@
 TASTE Data Modelling Technologies
+=================================
 
-- commonPy - Base API for parsing ASN.1
-- asn2aadlPlus - Convert ASN.1 modules to AADL
-- asn2dataModel - A mappers, convert ASN.1 for use in "any" language (Simulink, C, Ada, Python...)
-- aadl2glueC - B mappers, generate runtime code for converting data from/to ASN.1 in various languages
+- commonPy (*library*)
 
+    Contains the basic API for parsing ASN.1 (via invocation of 
+    [ASN1SCC](https://github.com/ttsiodras/asn1scc) and simplification
+    of the generated XML AST representation to the Python classes
+    inside `asnAST.py`.
 
+- asn2aadlPlus (*utility*)
+
+    Converts the type declarations inside ASN.1 grammars to AADL
+    declarations (used by the Ellidiss GUI to create the final systems)
+
+- asn2dataModel
+
+    Reads the ASN.1 specification of the exchanged messages, and generates
+    the semantically equivalent Modeling tool/Modeling language declarations
+    (e.g.  SCADE/Lustre, Matlab/Simulink statements, etc). 
+
+    The actual mapping logic exists in plugins, called *A mappers*
+    (`simulink_A_mapper.py` handles Simulink/RTW, `scade6_A_mapper.py`
+    handles SCADE5, `ada_A_mapper.py` generates Ada types,
+    `sqlalchemy_A_mapper.py`, generates SQL definitions via SQLAlchemy, etc)
+
+- aadl2glueC
+
+    Reads the AADL specification of the system, and then generates the runtime
+    bridge-code that will map the message data structures from those generated
+    by [ASN1SCC](https://github.com/ttsiodras/asn1scc) to/from those generated
+    by the modeling tool used to functionally model the subsystem
+    (e.g. SCADE, ObjectGeode, Matlab/Simulink, C, Ada, etc).
