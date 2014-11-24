@@ -1,7 +1,7 @@
 TASTE Data Modelling Technologies
 =================================
 
-- commonPy (*library*)
+- **commonPy** (*library*)
 
     Contains the basic API for parsing ASN.1 (via invocation of 
     [ASN1SCC](https://github.com/ttsiodras/asn1scc) and simplification
