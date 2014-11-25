@@ -97,7 +97,7 @@ import antlr
 
 from commonPy.utility import panic, warn, inform
 
-import commonPy.verify
+import commonPy.verify as verify
 
 g_mappedName = {
     'SEQUENCE': 'OnSequence',

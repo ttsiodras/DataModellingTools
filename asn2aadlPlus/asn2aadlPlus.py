@@ -7,6 +7,8 @@ import shutil
 import getopt
 import tempfile
 import platform
+from subprocess import Popen, PIPE
+import distutils.spawn as spawn
 
 import commonPy.configMT
 import commonPy.asnParser
@@ -16,7 +18,6 @@ from commonPy.asnAST import \
     AsnEnumerated, AsnString, AsnChoice, AsnSequence, \
     AsnSequenceOf, AsnSet, AsnSetOf
 
-import distutils.spawn as spawn
 
 from commonPy.utility import inform, panic, mysystem
 
@@ -138,7 +139,12 @@ def calculateForNativeAndASN1SCC(absASN1SCCpath, autosrc, names, inputFiles):
         namesDict[cleanNameAsAsn1cWants(asnTypename)] = asnTypename
 
     # Get a list of all available compilers
-    g_platformCompilers = os.popen("find-supported-compilers").read().splitlines()
+    try:
+        pipe = Popen("find-supported-compilers", stdout=PIPE).stdout
+        g_platformCompilers = pipe.read().splitlines()
+    except OSError as err:
+        print 'Not running in a TASTE environment: {}\nUsing GCC only for computing sizeofs'.format(str(err))
+        g_platformCompilers = ['gcc']
     # Get the maximum size of each asn1type from all platform compilers     
     messageSizes = {}
     for cc in g_platformCompilers:

@@ -30,7 +30,7 @@ import commonPy.aadlAST
 from commonPy.utility import inform, panic
 import commonPy.cleanupNodes
 
-import commonPy.verify
+import commonPy.verify as verify
 
 __doc__ = '''\
 Model Translator
