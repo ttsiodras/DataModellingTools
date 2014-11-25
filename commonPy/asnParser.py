@@ -50,6 +50,7 @@ import sys
 import copy
 import tempfile
 import re
+import distutils.spawn as spawn
 
 import configMT
 import utility
@@ -1075,9 +1076,9 @@ def CheckForInvalidKeywords(node):
 
 
 def ParseAsnFileList(listOfFilenames):
-    asn1SccPath = os.getenv('ASN1SCC')
+    asn1SccPath = spawn.find_executable('asn1.exe')
     if asn1SccPath is None:
-        utility.panic("ASN1SCC environment variable is not set, you must set it.\n")
+        utility.panic("ASN1SCC seems not installed on your system (asn1.exe not found in PATH).\n")
         sys.stderr.write("WARNING: ASN1SCC environment var unset, using naive ASN.1 parser...\n")
         global g_filename
         g_filename = listOfFilenames[0]

@@ -278,9 +278,9 @@ def main():
     autosrc = tempfile.mkdtemp(".asn1c")
     inform("Created temporary directory (%s) for auto-generated files...", autosrc)
     absPathOfAADLfile = os.path.abspath(aadlFile)
-    asn1SccPath = os.getenv('ASN1SCC')
+    asn1SccPath = spawn.find_executable('asn1.exe')
     if asn1SccPath is None:
-        panic("ASN1SCC environment variable is not set, you must set it.\n")
+        panic("ASN1SCC seems not installed on your system (asn1.exe not found in PATH).\n")
     absASN1SCCpath = os.path.abspath(asn1SccPath)
 
     # A, those good old days... I could calculate the buffer size for BER (SIZ), and then compare

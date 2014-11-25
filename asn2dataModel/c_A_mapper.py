@@ -24,6 +24,7 @@ code generator A.'''
 
 import os
 import sys
+import distutils.spawn as spawn
 
 from commonPy.utility import panic
 
@@ -37,13 +38,13 @@ def Version():
 
 def OnStartup(unused_modelingLanguage, asnFiles, outputDir):
     #print "Use ASN1SCC to generate the structures for '%s'" % asnFile
-    if None == os.getenv("ASN1SCC"):
-        if None == os.getenv("DMT"):  # pragma: no cover
-            panic("DMT environment variable is not set, you must set it.")  # pragma: no cover
-        os.putenv("ASN1SCC", os.getenv("DMT") + os.sep + "asn1scc/asn1.exe")  # pragma: no cover
+    asn1SccPath = spawn.find_executable('asn1.exe')
+    if not asn1SccPath:
+        panic("ASN1SCC seems not installed on your system (asn1.exe not found in PATH).\n")
     os.system(
         ("mono " if sys.argv[0].endswith('.py') and sys.platform.startswith('linux') else "") +
-        "\"$ASN1SCC\" -wordSize 8 -typePrefix asn1Scc -c -uPER -o \"" + outputDir + "\" \"" + "\" \"".join(asnFiles) + "\"")
+        "\"{}\" -wordSize 8 -typePrefix asn1Scc -c -uPER -o \"".format(asn1SccPath) +
+        outputDir + "\" \"" + "\" \"".join(asnFiles) + "\"")
     cmd = 'rm -f '
     for i in ['real.c', 'asn1crt.c', 'acn.c', 'ber.c', 'xer.c']:
         cmd += ' "' + outputDir + '"/' + i

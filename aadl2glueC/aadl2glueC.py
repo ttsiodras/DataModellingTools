@@ -81,6 +81,7 @@ but with an extra call to OnFinal at the end.
 import os
 import sys
 import copy
+import distutils.spawn as spawn
 
 import commonPy.configMT
 
@@ -209,13 +210,15 @@ def SpecialCodes(unused_SystemsAndImplementations, unused_uniqueDataFiles, asnFi
 the scope of individual parameters (e.g. it needs access to all ASN.1
 types). This used to cover Dumpable C/Ada Types and OG headers.'''
     outputDir = commonPy.configMT.outputDir
-
+    asn1SccPath = spawn.find_executable('asn1.exe')
     if len(asnFiles) != 0:
-        if None == os.getenv("ASN1SCC"):
-            if None == os.getenv("DMT"):  # pragma: no cover
-                panic("DMT environment variable is not set, you must set it.")  # pragma: no cover
-            os.putenv("ASN1SCC", os.getenv("DMT") + os.sep + "asn1scc/asn1.exe")  # pragma: no cover
-        os.system("mono \"$ASN1SCC\" -wordSize 8 -typePrefix asn1Scc -Ada -equal -uPER -o \"" + outputDir + "\" \"" + "\" \"".join(asnFiles) + "\"")
+        if not asn1SccPath:
+            panic("ASN1SCC seems not installed on your system (asn1.exe not found in PATH).\n")
+        #os.system("mono \"{asn$ASN1SCC\" -wordSize 8 -typePrefix asn1Scc -Ada -equal -uPER -o \"" + outputDir + "\" \"" + "\" \"".join(asnFiles) + "\"")
+        os.system('mono "{}" -wordSize 8 -typePrefix asn1Scc -Ada -equal -uPER -o "{}" "{}"'
+                  .format(asn1SccPath,
+                          outputDir,
+                          '" "'.join(asnFiles)))
 
 
 def main():
