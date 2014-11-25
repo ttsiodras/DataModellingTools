@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 '''
-Setup file for Linux distribution
+Setup file for Linux distribution of the Data Modelling Toolchain (DMT).
+
 Usage:  python setup.py sdist   --> to create a tarball
         python setup.py install --> to install in python directory
 '''
@@ -18,7 +19,7 @@ setup(
     version=commonPy.__version__,
     packages=find_packages(),
     author='Thanassis Tsiodras',
-    author_email='ttsiodras@semantix.grt',
+    author_email='ttsiodras@semantix.gr',
     description='TASTE Data Modelling Technologies based on ASN.1',
     long_description=open('README').read(),
     install_requires=[],
