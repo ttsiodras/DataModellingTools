@@ -51,9 +51,9 @@ def CleanNameAsPythonWants(name):
 
 def OnStartup(unused_modelingLanguage, asnFile, outputDir):
     os.system("cp \"" + asnFile + "\" \"" + outputDir + "\"")
-    if os.getenv("DMT") is None:
-        panic("You must set the DMT environment variable")  # pragma: no cover
-    os.system("cp \"$DMT/asn2dataModel/Stubs.py\" \"" + outputDir + "\"")
+    this_path = os.path.dirname(__file__)
+    stubs = this_path + os.sep + 'Stubs.py'
+    os.system('cp "{}" "{}"'.format(stubs, outputDir))
     global g_bHasStartupRunOnce
     if g_bHasStartupRunOnce:
         # Don't rerun, it has already done all the work
@@ -91,15 +91,11 @@ def OnStartup(unused_modelingLanguage, asnFile, outputDir):
     # and used during comparisons of incoming TMs (For MSCs)
 
     Makefile.write('''
-ifeq ($(DMT),)
-$(error You must set the DMT environment variable)
-endif
-
 ifeq ($(ASN2DATAMODEL),)
-ASN2DATAMODEL:=$(DMT)/asn2dataModel/asn2dataModel.py
+ASN2DATAMODEL:=asn2dataModel
 endif
 ifeq ($(ASN1SCC),)
-ASN1SCC:=$(DMT)/asn1scc/asn1.exe
+ASN1SCC:=asn1.exe
 endif
 
 PREFIX:=`taste-config --prefix`/share/
