@@ -82,6 +82,7 @@ import os
 import sys
 import copy
 import distutils.spawn as spawn
+from importlib import import_module
 
 import commonPy.configMT
 
@@ -360,17 +361,16 @@ def main():
         if modelingLanguage.lower() in ["gui_ri", "gui_pi", "vhdl", "rhapsody"]:
             modelingLanguage = "C"
 
-        backendFilename = modelingLanguage.lower() + "_B_mapper.py"
+        backendFilename = "." + modelingLanguage.lower() + "_B_mapper.py"
         inform("Parsing %s...", backendFilename)
         try:
-            backend = __import__(backendFilename[:-3])
+            backend = import_module(backendFilename[:-3], 'aadl2glueC')
             if backendFilename[:-3] not in loadedBackends:
                 loadedBackends[backendFilename[:-3]] = 1
                 if commonPy.configMT.verbose:
                     backend.Version()
-        except:  # pragma: no cover
-            warn("Failed to load backend (%s) for %s.%s...\nReproducing it...\n", backendFilename, sp._id, sp_impl)  # pragma: no cover
-            backend = __import__(backendFilename[:-3])  # pragma: no cover
+        except ImportError as err:  # pragma: no cover
+            panic("Failed to load backend ({}) for {}.{}: {}\n".format(backendFilename, sp._id, sp_impl, str(err)))  # pragma: no cover
             continue  # pragma: no cover
 
         # Asynchronous backends are only generating standalone encoders and decoders
@@ -466,9 +466,10 @@ def main():
 
     def mappers(lang):
         if lang.lower() in ["gui_pi", "gui_ri"]:
-            return [__import__("python_B_mapper"), __import__("pyside_B_mapper")]
+            return [import_module(".python_B_mapper", "aadl2glueC"),
+                    import_module(".pyside_B_mapper", "aadl2glueC")]
         elif lang.lower() == "vhdl":  # pragma: no cover
-            return [__import__("vhdl_B_mapper")]  # pragma: no cover
+            return [import_module(".vhdl_B_mapper", "aadl2glueC")]  # pragma: no cover
 
     for si in [x for x in SystemsAndImplementations if x[2] is not None and x[2].lower() in ["gui_ri", "gui_pi", "vhdl"]]:
         # We do, start the work

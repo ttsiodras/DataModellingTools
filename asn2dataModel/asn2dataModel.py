@@ -23,6 +23,7 @@
 import os
 import sys
 import copy
+from importlib import import_module
 
 import commonPy.configMT
 import commonPy.asnParser
@@ -151,16 +152,16 @@ def main():
     # For each ASN.1 grammar file referenced in the system level description
     for arg, modelingLanguage in argsToTools.iteritems():
         if locals()[arg]:
-            backendFilename = modelingLanguage.lower() + "_A_mapper.py"
+            backendFilename = "." + modelingLanguage.lower() + "_A_mapper.py"
             inform("Parsing %s...", backendFilename)
             try:
-                backend = __import__(backendFilename[:-3])
+                backend = import_module(backendFilename[:-3], 'asn2dataModel')
                 if backendFilename[:-3] not in loadedBackends:
                     loadedBackends[backendFilename[:-3]] = 1
                     if commonPy.configMT.verbose:
                         backend.Version()
-            except:  # pragma: no cover
-                panic("Failed to load backend (%s)" % backendFilename)  # pragma: no cover
+            except ImportError as err:  # pragma: no cover
+                panic("Failed to load backend (%s): %s" % (backendFilename, str(err)))  # pragma: no cover
 
             # Esp. for C, we want to pass the complete list of ASN.1 files to ASN1SCC,
             # instead of working per type:
