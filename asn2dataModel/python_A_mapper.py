@@ -100,6 +100,15 @@ endif
 
 PREFIX:=`taste-config --prefix`/share/
 
+define InterfaceEnum
+%%module InterfaceEnum 
+%%{
+#include "interface_enum.h"
+%%}
+#include "interface_enum.h"
+endef
+export InterfaceEnum
+
 GRAMMAR := %(origGrammarBase)s
 BASEGRAMMAR := %(base)s
 BUILDDIR:= .
@@ -121,7 +130,7 @@ $(BUILDDIR)/DV_wrap.c:  $(BUILDDIR)/DV.i        $(BUILDDIR)/$(GRAMMAR).h
 	swig -ignoremissing -includeall -outdir $(BUILDDIR) -python $(BUILDDIR)/DV.i
 
 ExtraSwigGate:
-	cp $(PREFIX)/asn1-editor/InterfaceEnum.i .
+	echo "$$InterfaceEnum" > InterfaceEnum.i
 	swig -ignoremissing -includeall -outdir . -python ./InterfaceEnum.i && gcc -g -shared  -fPIC `python-config --includes` -o _InterfaceEnum.so InterfaceEnum_wrap.c
 
 $(BUILDDIR)/%%.o:       $(BUILDDIR)/%%.c
