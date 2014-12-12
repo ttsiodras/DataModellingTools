@@ -167,8 +167,9 @@ udp = False
 shared_lib = False
 get_state = None
 
-# Callback configured by the GUI with a signal to be emitted on state change
+# Callbacks configured by the GUI with a signal to be emitted on state change
 msc_callback = None
+sdl_callback = None
 
 # Keep track of the internal binary's state (shared lib only)
 current_state = None
@@ -505,6 +506,7 @@ def sendTC(tc):
             new_state = get_state()
             if new_state != current_state:
                 msc_callback.msc_box.emit(new_state)
+                sdl_callback.change_state.emit(new_state)
                 current_state = new_state
 '''.format(interfaceName=CleanSP))
 
