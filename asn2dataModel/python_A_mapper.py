@@ -362,36 +362,58 @@ def CreateGettersAndSetters(path, params, accessPathInC, node, names, leafTypeDi
 
 
 def DumpTypeDumper(codeIndent, outputIndent, lines, variableName, node, names):
+    ''' Return the lines of code needed to display the value of a variable
+        of a given type, in the ASN.1 Value Notation format (aka GSER) '''
     if isinstance(node, AsnBool):
-        lines.append(codeIndent + 'print "%s"+str(%s.Get()!=0)' % (outputIndent, variableName))
+        lines.append(codeIndent + 'lines.append("%s"+str(%s.Get()!=0))'
+                                  % (outputIndent, variableName))
     elif isinstance(node, AsnInt):
-        lines.append(codeIndent + 'print "%s"+str(%s.Get())' % (outputIndent, variableName))
+        lines.append(codeIndent + 'lines.append("%s"+str(%s.Get()))'
+                                  % (outputIndent, variableName))
     elif isinstance(node, AsnReal):
-        lines.append(codeIndent + 'print "%s"+str(%s.Get())' % (outputIndent, variableName))
+        lines.append(codeIndent + 'lines.append("%s"+str(%s.Get()))'
+                                  % (outputIndent, variableName))
     elif isinstance(node, AsnString):
-        lines.append(codeIndent + 'print "%s"+str(%s.GetPyString())' % (outputIndent, variableName))
+        lines.append(codeIndent + 'lines.append("%s\""+str(%s.GetPyString()) + "\"")'
+                                  % (outputIndent, variableName))
     elif isinstance(node, AsnEnumerated):
-        lines.append(codeIndent + 'print "%s"+str(%s.Get())' % (outputIndent, variableName))
-    elif isinstance(node, AsnChoice) or isinstance(node, AsnSet) or isinstance(node, AsnSequence):
+        lines.append(codeIndent + 'lines.append("%s"+str(%s.Get()))'
+                                  % (outputIndent, variableName))
+    elif isinstance(node, (AsnChoice, AsnSet, AsnSequence)):
+        lines.append(codeIndent + 'lines.append("{")')
         extraIndent = ""
+        sep = " "
         if isinstance(node, AsnChoice):
             extraIndent = "    "
-        for child in node._members:
+        for idx, child in enumerate(node._members):
             if isinstance(node, AsnChoice):
-                lines.append(codeIndent + 'if %s.kind.Get() == DV.%s:' % (variableName, CleanNameAsPythonWants(child[2])))
-            lines.append(codeIndent + extraIndent + 'print "%s%s:"' % (outputIndent, child[0]))
+                lines.append(codeIndent + 'if %s.kind.Get() == DV.%s:'
+                                          % (variableName,
+                                             CleanNameAsPythonWants(child[2])))
+                sep = ": "
+            if idx > 0:
+                # Separate fields with comas
+                lines.append(codeIndent + extraIndent + "lines.append(', ')")
+            lines.append(codeIndent + extraIndent + 'lines.append("%s%s%s")'
+                                                    % (outputIndent, child[0], sep))
             childNode = child[1]
             if isinstance(childNode, AsnMetaMember):
                 childNode = names[childNode._containedType]
             DumpTypeDumper(codeIndent + extraIndent, outputIndent + "    ", lines, variableName+"."+CleanNameAsPythonWants(child[0]), childNode, names)
+        lines.append(codeIndent + 'lines.append("}")')
     elif isinstance(node, AsnSetOf) or isinstance(node, AsnSequenceOf):
+        lines.append(codeIndent + 'lines.append("{")')
         containedNode = node._containedType
         if isinstance(containedNode, str):
             containedNode = names[containedNode]
         for i in xrange(0, node._range[-1]):
             lines.append(codeIndent + 'if %s.GetLength()>%d:' % (variableName, i))
-            lines.append(codeIndent + '    print "%s[%d]:"' % (outputIndent, i))
+            if i > 0:
+                # Separate fields with comas
+                lines.append(codeIndent + "    lines.append(', ')")
+            #lines.append(codeIndent + '    print "%s[%d]:"' % (outputIndent, i))
             DumpTypeDumper(codeIndent+"    ", outputIndent+"    ", lines, variableName+'['+str(i)+']', containedNode, names)
+        lines.append(codeIndent + 'lines.append("}")')
 
 
 def CreateDeclarationForType(nodeTypename, names, leafTypeDict):
@@ -419,10 +441,16 @@ def CreateDeclarationForType(nodeTypename, names, leafTypeDict):
         if isinstance(node, AsnString):
             g_outputFile.write('''#\n''')
         CreateGettersAndSetters(name+"_", Params(nodeTypename), "", node, names, leafTypeDict)
-        g_outputFile.write("    def PrintAll(self):\n")
+        g_outputFile.write("\n    def GSER(self):\n")
+        g_outputFile.write("        ''' Return the GSER representation of the value '''\n")
+        g_outputFile.write("        lines = []\n")
         lines = []
         DumpTypeDumper("        ", "", lines, "self", names[nodeTypename], names)
         g_outputFile.write("\n".join(lines) + "\n\n")
+        g_outputFile.write("        return ' '.join(lines)")
+        g_outputFile.write("\n\n    def PrintAll(self):\n")
+        g_outputFile.write("        ''' Display a variable of this type '''\n")
+        g_outputFile.write("        print(self.GSER() + '\\n')\n\n\n")
 
     else:  # pragma: no cover
         panic("Unexpected ASN.1 type... Send this grammar to Semantix")  # pragma: no cover
