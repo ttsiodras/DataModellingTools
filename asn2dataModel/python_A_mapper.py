@@ -384,7 +384,7 @@ def DumpTypeDumper(codeIndent, outputIndent, lines, variableName, node, names):
         extraIndent = ""
         sep = " "
         if isinstance(node, AsnChoice):
-            extraIndent = "    "
+            extraIndent = " "
         for idx, child in enumerate(node._members):
             if isinstance(node, AsnChoice):
                 lines.append(codeIndent + 'if %s.kind.Get() == DV.%s:'
@@ -399,7 +399,9 @@ def DumpTypeDumper(codeIndent, outputIndent, lines, variableName, node, names):
             childNode = child[1]
             if isinstance(childNode, AsnMetaMember):
                 childNode = names[childNode._containedType]
-            DumpTypeDumper(codeIndent + extraIndent, outputIndent + "    ", lines, variableName+"."+CleanNameAsPythonWants(child[0]), childNode, names)
+            DumpTypeDumper(codeIndent + extraIndent, outputIndent + " ",
+                           lines, variableName+"." + 
+                           CleanNameAsPythonWants(child[0]), childNode, names)
         lines.append(codeIndent + 'lines.append("}")')
     elif isinstance(node, AsnSetOf) or isinstance(node, AsnSequenceOf):
         lines.append(codeIndent + 'lines.append("{")')
@@ -412,7 +414,8 @@ def DumpTypeDumper(codeIndent, outputIndent, lines, variableName, node, names):
                 # Separate fields with comas
                 lines.append(codeIndent + "    lines.append(', ')")
             #lines.append(codeIndent + '    print "%s[%d]:"' % (outputIndent, i))
-            DumpTypeDumper(codeIndent+"    ", outputIndent+"    ", lines, variableName+'['+str(i)+']', containedNode, names)
+            DumpTypeDumper(codeIndent+"    ", outputIndent+" ", lines,
+                           variableName+'['+str(i)+']', containedNode, names)
         lines.append(codeIndent + 'lines.append("}")')
 
 
