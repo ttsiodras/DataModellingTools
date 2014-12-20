@@ -374,7 +374,7 @@ def DumpTypeDumper(codeIndent, outputIndent, lines, variableName, node, names):
         lines.append(codeIndent + 'lines.append("%s"+str(%s.Get()))'
                                   % (outputIndent, variableName))
     elif isinstance(node, AsnString):
-        lines.append(codeIndent + 'lines.append("%s\""+str(%s.GetPyString()) + "\"")'
+        lines.append(codeIndent + 'lines.append("%s\\\""+str(%s.GetPyString()) + "\\\"")'
                                   % (outputIndent, variableName))
     elif isinstance(node, AsnEnumerated):
         lines.append(codeIndent + 'lines.append("%s"+str(%s.Get()))'
