@@ -381,7 +381,8 @@ def DumpTypeDumper(codeIndent, outputIndent, lines, variableName, node, names):
         lines.append(codeIndent + 'lines.append("%s"+%s[str(%s.Get())])'
                                   % (outputIndent, mapping, variableName))
     elif isinstance(node, (AsnChoice, AsnSet, AsnSequence)):
-        lines.append(codeIndent + 'lines.append("{")')
+        if not isinstance(node, AsnChoice):
+            lines.append(codeIndent + 'lines.append("{")')
         extraIndent = ""
         sep = " "
         if isinstance(node, AsnChoice):
@@ -403,7 +404,8 @@ def DumpTypeDumper(codeIndent, outputIndent, lines, variableName, node, names):
             DumpTypeDumper(codeIndent + extraIndent, outputIndent + " ",
                            lines, variableName+"." + 
                            CleanNameAsPythonWants(child[0]), childNode, names)
-        lines.append(codeIndent + 'lines.append("}")')
+        if not isinstance(node, AsnChoice):
+            lines.append(codeIndent + 'lines.append("}")')
     elif isinstance(node, AsnSetOf) or isinstance(node, AsnSequenceOf):
         lines.append(codeIndent + 'lines.append("{")')
         containedNode = node._containedType
