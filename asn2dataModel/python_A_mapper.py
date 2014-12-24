@@ -365,7 +365,7 @@ def DumpTypeDumper(codeIndent, outputIndent, lines, variableName, node, names):
     ''' Return the lines of code needed to display the value of a variable
         of a given type, in the ASN.1 Value Notation format (aka GSER) '''
     if isinstance(node, AsnBool):
-        lines.append(codeIndent + 'lines.append("%s"+str(%s.Get()!=0))'
+        lines.append(codeIndent + 'lines.append("%s"+str(%s.Get()!=0).upper())'
                                   % (outputIndent, variableName))
     elif isinstance(node, AsnInt):
         lines.append(codeIndent + 'lines.append("%s"+str(%s.Get()))'
@@ -377,8 +377,9 @@ def DumpTypeDumper(codeIndent, outputIndent, lines, variableName, node, names):
         lines.append(codeIndent + 'lines.append("%s\\\""+str(%s.GetPyString()) + "\\\"")'
                                   % (outputIndent, variableName))
     elif isinstance(node, AsnEnumerated):
-        lines.append(codeIndent + 'lines.append("%s"+str(%s.Get()))'
-                                  % (outputIndent, variableName))
+        mapping = str({val: name for name, val in node._members})
+        lines.append(codeIndent + 'lines.append("%s"+%s[str(%s.Get())])'
+                                  % (outputIndent, mapping, variableName))
     elif isinstance(node, (AsnChoice, AsnSet, AsnSequence)):
         lines.append(codeIndent + 'lines.append("{")')
         extraIndent = ""
