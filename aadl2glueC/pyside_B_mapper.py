@@ -165,14 +165,6 @@ tcId = -1
 msgQ = False
 udp = False
 shared_lib = False
-get_state = None
-
-# Callbacks configured by the GUI with a signal to be emitted on state change
-msc_callback = None
-sdl_callback = None
-
-# Keep track of the internal binary's state (shared lib only)
-current_state = None
 
 try:
     import PythonController
@@ -201,15 +193,8 @@ def setSharedLib(dll=None):
     # The shared library is loaded and initialized by the caller
     global shared_lib
     global {tcName}_via_shared_lib
-    global get_state
     shared_lib = True
     {tcName}_via_shared_lib = dll.{fvName}_{tcName}
-    try:
-        get_state = dll.{fvName}_state
-        get_state.restype = ctypes.c_char_p
-    except AttributeError:
-        # No get_state function, probably not an SDL component
-        pass
 
 '''.format(fvName=FVname, tcName=CleanSP))
         g_PyDataModel.write('\ntc["{tcName}"] = '.format(tcName=CleanSP))
@@ -243,7 +228,6 @@ def setUDP():
 
 def {tmName}(tm_ptr, size):
     """ Callback function when receiving this TM """
-    print 'Received TM !'
     if editor:
         # Cast the void* pointer to an array of bytes
         as_bytes = ctypes.cast(tm_ptr,
@@ -446,14 +430,10 @@ def expect(Q, VNvalue, ignoreOther=False, timeout=None):
             nativeData = decode_TM(pDataFromMQ)
             receivedValue = fromASN1ToPyside(nativeData)
             receivedValue = vn.toASN1ValueNotation(receivedValue)
-            #print 'EXPECTED', expectedValue, 'RECEIVED', receivedValue
             if asn1_python.compareVnValues(receivedValue, expectedValue):
-                #print 'Received and verified message content, all OK'
                 Q.task_done()
                 return
             else:
-                #print 'Received {interfaceName}, but with wrong data!'
-                #print 'Expected ', expectedValue, 'but got', receivedValue
                 Q.task_done()
                 raise ValueError('Received {interfaceName} with wrong data: '\
 + str(receivedValue))
@@ -501,13 +481,6 @@ def sendTC(tc):
         # TC is sent in native format
         ptr = ctypes.cast(tc._ptr.__long__(), ctypes.POINTER(ctypes.c_uint16))
         {interfaceName}_via_shared_lib(ptr)
-        if get_state:
-            global current_state
-            new_state = get_state()
-            if new_state != current_state:
-                msc_callback.msc_box.emit(new_state)
-                sdl_callback.change_state.emit(new_state)
-                current_state = new_state
 '''.format(interfaceName=CleanSP))
 
         global g_fromPysideToASN1
