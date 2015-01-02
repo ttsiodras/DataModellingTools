@@ -166,6 +166,9 @@ msgQ = False
 udp = False
 shared_lib = False
 
+# Variable containing a signal that is used to send a message via a dll
+send_via_dll = None
+
 try:
     import PythonController
 except ImportError:
@@ -479,8 +482,13 @@ def sendTC(tc):
 
     elif shared_lib:
         # TC is sent in native format
-        ptr = ctypes.cast(tc._ptr.__long__(), ctypes.POINTER(ctypes.c_uint16))
-        {interfaceName}_via_shared_lib(ptr)
+        # ptr = ctypes.cast(tc._ptr.__long__(), ctypes.POINTER(ctypes.c_long))
+        # {interfaceName}_via_shared_lib(ptr)
+        # The call to the dll will be done by the SDL handler that manages
+        # the Undo stack and the the overal system state
+        send_via_dll.dll.emit("{interfaceName}",
+                              {interfaceName}_via_shared_lib,
+                              tc)
 '''.format(interfaceName=CleanSP))
 
         global g_fromPysideToASN1
