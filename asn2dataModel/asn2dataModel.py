@@ -3,6 +3,9 @@
 #
 # (C) Semantix Information Technologies.
 #
+# Copyright 2014-2015 IB Krates <info@krates.ee>
+#       QGenc code generator integration
+#
 # Semantix Information Technologies is licensing the code of the
 # Data Modelling Tools (DMT) in the following dual-license mode:
 #
@@ -73,6 +76,8 @@ def main():
         'toAda': 'ada',
         'toPython': 'python',
         'toSMP2': 'smp2',
+        'toQGenAda': 'qgenada',
+        'toQGenC': 'qgenc',
         'toSQL': 'sql'
     }
     for i in os.listdir(os.path.abspath(os.path.dirname(sys.argv[0]))):
@@ -165,7 +170,7 @@ def main():
 
             # Esp. for C, we want to pass the complete list of ASN.1 files to ASN1SCC,
             # instead of working per type:
-            if modelingLanguage.lower() in ["c", "ada", "smp2"]:
+            if modelingLanguage.lower() in ["c", "ada", "smp2", "qgenc", "qgenada"]:
                 if 'OnStartup' in dir(backend):
                     backend.OnStartup(modelingLanguage, uniqueASNfiles.keys(), commonPy.configMT.outputDir)
                 if 'OnShutdown' in dir(backend):
