@@ -338,7 +338,7 @@ class {cleanTypename}_SQL(Base):
         if isChoice:
             g_sqlalchemyOutput.write(
                 '        '
-                'if pyObj.kind.Get() == DV.' + c[-1] + ':\n')
+                'if self.kind == DV.' + c[-1] + ':\n')
             g_sqlalchemyOutput.write(
                 '            '
                 'self.{cleanFieldname} = '
