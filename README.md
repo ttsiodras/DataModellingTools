@@ -13,7 +13,7 @@ TASTE Data Modelling Technologies
     Converts the type declarations inside ASN.1 grammars to AADL
     declarations (used by the Ellidiss GUI to create the final systems)
 
-- **asn2dataModel** (*utility*/
+- **asn2dataModel** (*utility*)
 
     Reads the ASN.1 specification of the exchanged messages, and generates
     the semantically equivalent Modeling tool/Modeling language declarations
@@ -24,7 +24,7 @@ TASTE Data Modelling Technologies
     handles SCADE5, `ada_A_mapper.py` generates Ada types,
     `sqlalchemy_A_mapper.py`, generates SQL definitions via SQLAlchemy, etc)
 
-- **aadl2glueC** (*utiltiy*)
+- **aadl2glueC** (*utility*)
 
     Reads the AADL specification of the system, and then generates the runtime
     bridge-code that will map the message data structures from those generated
