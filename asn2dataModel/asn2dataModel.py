@@ -78,7 +78,8 @@ def main():
         'toSMP2': 'smp2',
         'toQGenAda': 'qgenada',
         'toQGenC': 'qgenc',
-        'toSQL': 'sql'
+        'toSQL': 'sql',
+        'toSqlalchemy': 'sqlalchemy'
     }
     for i in os.listdir(os.path.abspath(os.path.dirname(sys.argv[0]))):
         if '_A_mapper' in i and i.endswith('.py'):
