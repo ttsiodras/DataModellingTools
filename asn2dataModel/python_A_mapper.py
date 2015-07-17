@@ -442,6 +442,11 @@ def CreateDeclarationForType(nodeTypename, names, leafTypeDict):
                 else:  # pragma: no cover
                     panic("Python_A_mapper: must have values for enumerants (%s)" % node.Location())  # pragma: no cover
             g_outputFile.write(allowed + "]\n")
+        if isinstance(node, (AsnSequence, AsnSet)):
+            g_outputFile.write("    # Ordered list of fields:\n")
+            children = [child[0] for child in node._members]
+            g_outputFile.write("    children_ordered = ['{}']\n\n"
+                               .format("', '".join(children)))
         g_outputFile.write("    def __init__(self):\n")
         g_outputFile.write("        COMMON.__init__(self, \"" + name + "\")\n")
         if isinstance(node, AsnString):
