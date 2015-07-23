@@ -36,6 +36,8 @@ setup(
             'asn2aadlPlus = asn2aadlPlus:main',
             'asn2dataModel = asn2dataModel:main',
             'aadl2glueC = aadl2glueC:main',
+            'msgPrinter = asn2dataModel.msgPrinter:main',
+            'msgPrinterASN1 = asn2dataModel.msgPrinterASN1:main',
         ]
     }
 )
