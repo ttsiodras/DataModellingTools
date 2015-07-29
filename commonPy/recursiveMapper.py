@@ -8,12 +8,12 @@
 #       The DMT Commercial Developer License is the suggested version
 # to use for the development of proprietary and/or commercial software.
 # This version is for developers/companies who do not want to comply
-# with the terms of the GNU Lesser General Public License version 2.1.
+# with the terms of the GNU Lesser General Public License version 3.
 #
-# GNU LGPL v. 2.1:
+# GNU LLGPL v. 2.1:
 #       This version of DMT is the one to use for the development of
 # applications, when you are willing to comply with the terms of the
-# GNU Lesser General Public License version 2.1.
+# GNU Lesser General Public License version 3.
 #
 # Note that in both cases, there are no charges (royalties) for the
 # generated code.

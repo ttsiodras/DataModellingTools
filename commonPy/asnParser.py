@@ -10,17 +10,17 @@
 # to use for the development of proprietary and/or commercial software.
 # This version is for developers/companies who do not want to share
 # the source code they develop with others or otherwise comply with the
-# terms of the GNU General Public License version 2.1.
+# terms of the GNU Lesser General Public License version 3.
 #
-# GNU GPL v. 2.1:
+# GNU LGPL v. 2.1:
 #       This version of DMT is the one to use for the development of
 # non-commercial applications, when you are willing to comply
-# with the terms of the GNU General Public License version 2.1.
+# with the terms of the GNU Lesser General Public License version 3.
 #
 # The features of the two licenses are summarized below:
 #
 #                       Commercial
-#                       Developer               GPL
+#                       Developer               LGPL
 #                       License
 #
 # License cost          License fee charged     No license fee
@@ -30,7 +30,7 @@
 #                       be closed               must be provided back
 #
 # Can create            Yes, that is,           No, applications are subject
-# proprietary           no source code needs    to the GPL and all source code
+# proprietary           no source code needs    to the LGPL and all source code
 # applications          to be disclosed         must be made available
 #
 # Support               Yes, 12 months of       No, but available separately
