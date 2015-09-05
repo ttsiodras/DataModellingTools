@@ -234,7 +234,7 @@ def {tmName}(tm_ptr, size):
     if editor:
         # Cast the void* pointer to an array of bytes
         as_bytes = ctypes.cast(tm_ptr,
-                               ctypes.POINTER((ctypes.c_byte * (size / 8))))
+                               ctypes.POINTER((ctypes.c_ubyte * (size / 8))))
 
         # Create a corrsponding SWIG buffer and copy the content
         swig_ptr = DV.new_byte_SWIG_PTR(size / 8)
