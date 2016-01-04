@@ -337,7 +337,7 @@ def main():
     # If some AST nodes must be skipped (for any reason), go learn about them
     commonPy.cleanupNodes.DiscoverBadTypes()
 
-    if {"ada", "qgenada"} in {y[2].lower() for y in SystemsAndImplementations}:
+    if {"ada", "qgenada"} & {y[2].lower() for y in SystemsAndImplementations}:
         SpecialCodes(SystemsAndImplementations, uniqueDataFiles, uniqueASNfiles, useOSS)
 
     asynchronousBackends = []
