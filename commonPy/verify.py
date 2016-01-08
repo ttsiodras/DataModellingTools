@@ -92,10 +92,11 @@ calling VerifyNodeRange for each Node.'''
     if isinstance(node, commonPy.asnAST.AsnBasicNode):
         VerifyNodeRange(node)
     elif isinstance(node, commonPy.asnAST.AsnSequence) or isinstance(node, commonPy.asnAST.AsnChoice) or isinstance(node, commonPy.asnAST.AsnSet):
-        if 0 == len(node._members):
-            panic(
-                "Empty SEQUENCE/SETs are not allowed. Please add at least one field in (%s)\n"
-                % node.Location())
+        #Bug fixed in ASN1SCC - this check is no longer needed
+        #if 0 == len(node._members):
+        #    panic(
+        #        "Empty SEQUENCE/SETs are not allowed. Please add at least one field in (%s)\n"
+        #        % node.Location())
         for child in node._members:
             VerifyRanges(child[1], names)
     elif isinstance(node, commonPy.asnAST.AsnSequenceOf) or isinstance(node, commonPy.asnAST.AsnSetOf):

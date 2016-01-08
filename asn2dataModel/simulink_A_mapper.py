@@ -201,6 +201,8 @@ def CreateDeclarationForType(nodeTypename, names, leafTypeDict):
         CreateAlias(nodeTypename, "int32", "values of ENUMERATED %s" % nodeTypename)
         g_outputFile.write("\n")
     elif isinstance(node, AsnSequence) or isinstance(node, AsnSet) or isinstance(node, AsnChoice):
+        if len(node._members) == 0:
+            panic("Simulink_A_mapper: Simulink can't support empty Seq/Set/Choice! (%s)" % node.Location())
         elemNo = 0
         if isinstance(node, AsnChoice):
             elemNo += 1

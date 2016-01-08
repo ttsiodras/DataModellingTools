@@ -262,9 +262,10 @@ def CreateSetOf(newModule, lineNo, xmlSetOfNode):
 
 
 def CommonSeqSetChoice(newModule, lineNo, xmlSequenceNode, classToCreate, childTypeName):
-    if len(xmlSequenceNode._children) == 0:
-        panic("CommonSeqSetChoice: No children under Sequence/Choice/SetType (%s, %s)" %  # pragma: no cover
-              (newModule._asnFilename, lineNo))  # pragma: no cover
+    # Bug fixed in ASN1SCC, this check is no longer needed
+#   if len(xmlSequenceNode._children) == 0:
+#       panic("CommonSeqSetChoice: No children under Sequence/Choice/SetType (%s, %s)" %  # pragma: no cover
+#             (newModule._asnFilename, lineNo))  # pragma: no cover
 
     myMembers = []
     for x in xmlSequenceNode._children:
