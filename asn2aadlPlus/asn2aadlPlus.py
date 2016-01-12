@@ -368,8 +368,10 @@ end Stream_Element_Buffer;
         if None == os.getenv('UPD'):
             o.write('    Source_Language => ASN1;\n')
         o.write('    -- Size of a buffer to cover all forms of message representation:\n')
-        o.write('    -- Real message size is %d; suggested aligned message buffer is...\n' % messageSizes[asnTypename][0])
-        o.write('    Source_Data_Size => %d B%s;\n' % (messageSizes[asnTypename][1], bAADLv2 and "ytes" or ""))
+        le_size = 0 if asnTypename not in messageSizes else messageSizes[asnTypename][0]
+        o.write('    -- Real message size is %d; suggested aligned message buffer is...\n' % le_size)
+        le_size_rounded = 0 if asnTypename not in messageSizes else messageSizes[asnTypename][1]
+        o.write('    Source_Data_Size => %d B%s;\n' % (le_size_rounded, bAADLv2 and "ytes" or ""))
         o.write('    -- name of the corresponding data type in the source file:\n')
         o.write('    Type_Source_Name => "%s";\n' % asnTypename)
         o.write('    -- what kind of type is this?\n')
@@ -406,7 +408,7 @@ end Stream_Element_Buffer;
             o.write('    -- Buffer to hold a marshalled data of type ' + cleanName + "\n")
             o.write('PROPERTIES\n')
             o.write('    Data_Model::Data_Representation => array;\n')
-            o.write('    Data_Model::Dimension => (%d); -- Size of the buffer\n' % messageSizes[asnTypename][1])
+            o.write('    Data_Model::Dimension => (%d); -- Size of the buffer\n' % le_size_rounded)
             if bAADLv2:
                 o.write('    Data_Model::Base_Type => (classifier (DataView::Stream_Element_Buffer));\n')
             else:
