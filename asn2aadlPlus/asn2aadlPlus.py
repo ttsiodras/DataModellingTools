@@ -157,7 +157,7 @@ def calculateForNativeAndASN1SCC(absASN1SCCpath, autosrc, names, inputFiles):
 
         for cfile in os.listdir("."):
             if cfile.endswith(".c"):
-                if 0 != mysystem('%s -c -I. "%s" 2>"%s.stats.err"' % (path_to_compiler, cfile, base)):
+                if 0 != mysystem('%s -c -std=c99 -I. "%s" 2>"%s.stats.err"' % (path_to_compiler, cfile, base)):
                     panic("Compilation of generated sources failed - is %s installed?\n"
                             "(report inside '%s')\n" % (cc, os.path.join(autosrc, base + ".stats.err")))
 
@@ -169,7 +169,7 @@ def calculateForNativeAndASN1SCC(absASN1SCCpath, autosrc, names, inputFiles):
                 (dummy, size, dummy2, msg) = line.split()
             except ValueError:
                 # Ignore lines that are not well-formatted
-                pass
+                continue
 
             #Remove prefix
             asnType = msg.split('_', 1)[1]
