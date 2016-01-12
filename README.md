@@ -33,3 +33,7 @@ TASTE Data Modelling Technologies
     ObjectGeode, Matlab/Simulink, C, Ada, etc).
 
 
+CHANGELOG
+
+1.1.1
+     support empty SEQUENCEs (MyType ::= SEQUENCE {}) - except for Simulink
