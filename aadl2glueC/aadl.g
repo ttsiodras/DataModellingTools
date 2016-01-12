@@ -291,7 +291,7 @@ data_type
         //print "Data definition of", id.getText(), panms
         asnFilename = ""
         asnNodename = ""
-        asnSize = 0
+        asnSize = -1
         for prop in panms:
             if prop._name.lower() == "source_text": asnFilename = prop._propertyExpressionOrList[1:-1]
             elif prop._name.lower() == "type_source_name": asnNodename = prop._propertyExpressionOrList[1:-1]
@@ -300,7 +300,7 @@ data_type
                     asnSize = int(prop._propertyExpressionOrList)
                 except:
                    panic("Line %d: DATA (%s) must have source_data_size be declared as [0-9]B (not '%s')"  % (id.getLine(), id.getText(), prop._propertyExpressionOrList))
-        if asnFilename!="" and asnNodename!="" and asnSize != 0:
+        if asnFilename!="" and asnNodename!="" and asnSize != -1:
             s = Signal(asnFilename, asnNodename, asnSize)
             g_signals[id.getText()] = s
             g_signals[g_currentPackage + "::" + id.getText()] = s
