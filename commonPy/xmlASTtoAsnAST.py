@@ -445,7 +445,7 @@ def SimpleCleaner(x):
 
 def PrintType(f, xmlType, indent, nameCleaner):
     if len(xmlType._children) == 0:
-        panic("AST inconsistency: xmlType._children == 0\nContact Semantix")  # pragma: no cover
+        panic("AST inconsistency: xmlType._children == 0\nContact ESA")  # pragma: no cover
     realType = xmlType._children[0]
     if realType._name == "BooleanType":
         f.write('BOOLEAN')
@@ -486,7 +486,7 @@ def PrintType(f, xmlType, indent, nameCleaner):
             f.write(indent + '    ' + nameCleaner(GetAttr(realType._children[0], "VarName")) + "\t")
             firstChildOptional = GetAttr(realType._children[0], "Optional") == "True"
             if len(realType._children[0]._children) == 0:
-                panic("AST inconsistency: len(realType._children[0]._children) = 0\nContact Semantix")  # pragma: no cover
+                panic("AST inconsistency: len(realType._children[0]._children) = 0\nContact ESA")  # pragma: no cover
             PrintType(f, realType._children[0]._children[0], indent+"    ", nameCleaner)  # the contained type of the first child
             if firstChildOptional:
                 f.write(' OPTIONAL')
@@ -494,27 +494,27 @@ def PrintType(f, xmlType, indent, nameCleaner):
                 f.write(",\n" + indent + '    ' + nameCleaner(GetAttr(sequenceOrSetChild, "VarName")) + "\t")
                 childOptional = GetAttr(sequenceOrSetChild, "Optional") == "True"
                 if len(sequenceOrSetChild._children) == 0:
-                    panic("AST inconsistency: len(sequenceOrSetChild._children) = 0\nContact Semantix")  # pragma: no cover
+                    panic("AST inconsistency: len(sequenceOrSetChild._children) = 0\nContact ESA")  # pragma: no cover
                 PrintType(f, sequenceOrSetChild._children[0], indent+"    ", nameCleaner)  # the contained type
                 if childOptional:
                     f.write(' OPTIONAL')
-        else:
-            panic("AST inconsistency: len(realType._children)=0\nContact Semantix")  # pragma: no cover
+#       else:
+#           panic("AST inconsistency: len(realType._children)=0\nContact ESA")  # pragma: no cover
         f.write('\n' + indent + '}')
     elif realType._name == "ChoiceType":
         f.write('CHOICE {\n')
         if len(realType._children)>0:
             f.write(indent + '    ' + nameCleaner(GetAttr(realType._children[0], "VarName")) + "\t")
             if len(realType._children[0]._children) == 0:
-                panic("AST inconsistency: len(realType._children[0]._children) = 0\nContact Semantix")  # pragma: no cover
+                panic("AST inconsistency: len(realType._children[0]._children) = 0\nContact ESA")  # pragma: no cover
             PrintType(f, realType._children[0]._children[0], indent+"    ", nameCleaner)  # the contained type of the first child
             for choiceChild in realType._children[1:]:
                 f.write(",\n" + indent + '    ' + nameCleaner(GetAttr(choiceChild, "VarName")) + "\t")
                 if len(choiceChild._children) == 0:
-                    panic("AST inconsistency: len(choiceChild._children) = 0\nContact Semantix")  # pragma: no cover
+                    panic("AST inconsistency: len(choiceChild._children) = 0\nContact ESA")  # pragma: no cover
                 PrintType(f, choiceChild._children[0], indent+"    ", nameCleaner)  # the contained type
         else:
-            panic("AST inconsistency: len(realType._children)=0\nContact Semantix")  # pragma: no cover
+            panic("AST inconsistency: len(realType._children)=0\nContact ESA")  # pragma: no cover
         f.write('\n' + indent + '}')
     elif realType._name == "SequenceOfType":
         f.write('SEQUENCE')
@@ -524,7 +524,7 @@ def PrintType(f, xmlType, indent, nameCleaner):
         if len(realType._children)>0:
             PrintType(f, realType._children[0], indent+"    ", nameCleaner)  # the contained type
         else:
-            panic("AST inconsistency: len(realType._children)=0\nContact Semantix")  # pragma: no cover
+            panic("AST inconsistency: len(realType._children)=0\nContact ESA")  # pragma: no cover
     elif realType._name == "SetOfType":
         f.write('SET')
         mmin = GetAttr(realType, "Min")
@@ -533,9 +533,9 @@ def PrintType(f, xmlType, indent, nameCleaner):
         if len(realType._children)>0:
             PrintType(f, realType._children[0], indent+"    ", nameCleaner)  # the contained type
         else:
-            panic("AST inconsistency: len(realType._children)=0\nContact Semantix")  # pragma: no cover
+            panic("AST inconsistency: len(realType._children)=0\nContact ESA")  # pragma: no cover
     else:
-        panic("AST inconsistency: Unknown type (%s)\nContact Semantix" % realType._name)  # pragma: no cover
+        panic("AST inconsistency: Unknown type (%s)\nContact ESA" % realType._name)  # pragma: no cover
 
 
 def PrintGrammarFromAST(f, nameCleaner=SimpleCleaner):
@@ -555,7 +555,7 @@ def PrintGrammarFromAST(f, nameCleaner=SimpleCleaner):
             PrintType(f, typeChild, '', nameCleaner)
             f.write('\n\n')
         else:
-            panic("AST inconsistency: typeChild is None\nContact Semantix")  # pragma: no cover
+            panic("AST inconsistency: typeChild is None\nContact ESA")  # pragma: no cover
 
 
 def PrintGrammarFromASTtoStdOut():
