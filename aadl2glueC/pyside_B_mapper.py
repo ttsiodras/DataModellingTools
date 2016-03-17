@@ -258,7 +258,7 @@ def setSharedLib(dll=None):
 
 '''.format(tmName=CleanSP, fvName=FVname))
         g_PyDataModel.write('\ntm["{tmName}"] = '.format(tmName=CleanSP))
-        buttons=([["plotButton", "Plot"], ["meterButton", "Meter"],
+        buttons = ([["plotButton", "Plot"], ["meterButton", "Meter"],
                   ["unusedButton", "Unused"]])
         classType = "asn1Viewer"
 
@@ -302,6 +302,13 @@ def setSharedLib(dll=None):
         <widget class="QPushButton" name="{buttons[2][0]}">
          <property name="text">
           <string>{buttons[2][1]}</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboButton" name="customCombo">
+         <property name="text">
+          <string>Custom</string>
          </property>
         </widget>
        </item>
