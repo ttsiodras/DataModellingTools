@@ -306,7 +306,7 @@ def setSharedLib(dll=None):
         </widget>
        </item>
        <item>
-        <widget class="QComboButton" name="customCombo">
+        <widget class="QComboBox" name="customCombo">
          <property name="text">
           <string>Custom</string>
          </property>

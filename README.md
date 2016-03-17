@@ -35,5 +35,8 @@ TASTE Data Modelling Technologies
 
 CHANGELOG
 
+1.1.2
+     pyside_b_mapper: added combo box for the asn1 value editor
+
 1.1.1
      support empty SEQUENCEs (MyType ::= SEQUENCE {}) - except for Simulink
