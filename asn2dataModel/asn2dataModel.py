@@ -72,6 +72,7 @@ def main():
         'toSCADE6': 'SCADE6',
         'toSIMULINK': 'Simulink',
         'toC': 'C',
+        'toCPP': 'C',
         'toRTDS': 'RTDS',
         'toAda': 'ada',
         'toPython': 'python',
