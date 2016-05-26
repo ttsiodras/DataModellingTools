@@ -37,6 +37,12 @@ PROPERTIES
 	Source_Language => Scade6;
 END mytestsubsystemEmpty.Scade;
 
+SUBPROGRAM IMPLEMENTATION mytestsubsystemEmpty.QGenAda
+PROPERTIES
+	FV_Name => "mytestsubsystemEmpty_fv_QGenAda";
+	Source_Language => QGenAda;
+END mytestsubsystemEmpty.QGenAda;
+
 -- GUIs can't tolerate empty param set
 
 SUBPROGRAM mytestsubsystem
@@ -143,6 +149,12 @@ PROPERTIES
 	FV_Name => "mytestsubsystem_fv_Scade";
 	Source_Language => Scade6;
 END mytestsubsystem.Scade;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystem.QGenAda
+PROPERTIES
+	FV_Name => "mytestsubsystemEmpty_fv_QGenAda";
+	Source_Language => QGenAda;
+END mytestsubsystem.QGenAda;
 
 -- SUBPROGRAM IMPLEMENTATION mytestsubsystem.GUIPI
 -- PROPERTIES

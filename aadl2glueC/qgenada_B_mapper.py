@@ -225,66 +225,66 @@ class FromASN1SCCtoQGenAda(RecursiveMapper):
 
 class FromQGenAdaToOSS(RecursiveMapper):
     def MapInteger(self, srcQGenAda, destVar, _, __, ___):
-        pass
+        pass  # pragma: no cover
 
     def MapReal(self, srcQGenAda, destVar, _, __, ___):
-        pass
+        pass  # pragma: no cover
 
     def MapBoolean(self, srcQGenAda, destVar, _, __, ___):
-        pass
+        pass  # pragma: no cover
 
     def MapOctetString(self, srcQGenAda, destVar, node, _, __):
-        pass
+        pass  # pragma: no cover
 
     def MapEnumerated(self, srcQGenAda, destVar, _, __, ___):
-        pass
+        pass  # pragma: no cover
 
     def MapSequence(self, srcQGenAda, destVar, node, leafTypeDict, names):
-        pass
+        pass  # pragma: no cover
 
     def MapSet(self, srcQGenAda, destVar, node, leafTypeDict, names):
-        pass
+        pass  # pragma: no cover
 
     def MapChoice(self, srcQGenAda, destVar, node, leafTypeDict, names):
-        pass
+        pass  # pragma: no cover
 
     def MapSequenceOf(self, srcQGenAda, destVar, node, leafTypeDict, names):
-        pass
+        pass  # pragma: no cover
 
     def MapSetOf(self, srcQGenAda, destVar, node, leafTypeDict, names):
-        pass
+        pass  # pragma: no cover
 
 
 class FromOSStoQGenAda(RecursiveMapper):
     def MapInteger(self, srcVar, dstQGenAda, _, __, ___):
-        pass
+        pass  # pragma: no cover
 
     def MapReal(self, srcVar, dstQGenAda, _, __, ___):
-        pass
+        pass  # pragma: no cover
 
     def MapBoolean(self, srcVar, dstQGenAda, _, __, ___):
-        pass
+        pass  # pragma: no cover
 
     def MapOctetString(self, srcVar, dstQGenAda, node, _, __):
-        pass
+        pass  # pragma: no cover
 
     def MapEnumerated(self, srcVar, dstQGenAda, node, __, ___):
-        pass
+        pass  # pragma: no cover
 
     def MapSequence(self, srcVar, dstQGenAda, node, leafTypeDict, names):
-        pass
+        pass  # pragma: no cover
 
     def MapSet(self, srcVar, dstQGenAda, node, leafTypeDict, names):
-        pass
+        pass  # pragma: no cover
 
     def MapChoice(self, srcVar, dstQGenAda, node, leafTypeDict, names):
-        pass
+        pass  # pragma: no cover
 
     def MapSequenceOf(self, srcVar, dstQGenAda, node, leafTypeDict, names):
-        pass
+        pass  # pragma: no cover
 
     def MapSetOf(self, srcVar, dstQGenAda, node, leafTypeDict, names):
-        pass
+        pass  # pragma: no cover
 
 
 class QGenAdaGlueGenerator(SynchronousToolGlueGenerator):
@@ -295,16 +295,16 @@ class QGenAdaGlueGenerator(SynchronousToolGlueGenerator):
         return FromQGenAdaToASN1SCC()
 
     def FromToolToOSS(self):
-        return FromQGenAdaToOSS()
+        return FromQGenAdaToOSS()  # pragma: no cover
 
     def FromASN1SCCtoTool(self):
         return FromASN1SCCtoQGenAda()
 
     def FromOSStoTool(self):
-        return FromOSStoQGenAda()
+        return FromOSStoQGenAda()  # pragma: no cover
 
     def HeadersOnStartup(self, unused_modelingLanguage, unused_asnFile, subProgram, unused_subProgramImplementation, unused_outputDir, unused_maybeFVname):
-        pass
+        pass  # pragma: no cover
 
     def SourceVar(self, unused_nodeTypename, unused_encoding, unused_node, unused_subProgram, unused_subProgramImplementation, param, unused_leafTypeDict, unused_names):
         if isinstance(param._sourceElement, AadlPort):
