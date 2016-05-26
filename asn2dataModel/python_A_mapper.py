@@ -393,7 +393,7 @@ def DumpTypeDumper(codeIndent, outputIndent, lines, variableName, node, names):
                                           % (variableName,
                                              CleanNameAsPythonWants(child[2])))
                 sep = ": "
-            if idx > 0:
+            elif idx > 0:
                 # Separate fields with comas
                 lines.append(codeIndent + extraIndent + "lines.append(', ')")
             lines.append(codeIndent + extraIndent + 'lines.append("%s%s%s")'
@@ -416,7 +416,7 @@ def DumpTypeDumper(codeIndent, outputIndent, lines, variableName, node, names):
         lines.append(codeIndent + '        lines.append(",")')
         DumpTypeDumper(codeIndent+"    ", outputIndent+" ", lines,
                        variableName+'[i]', containedNode, names)
-        lines.append(codeIndent + "map(emitElem, xrange(self.GetLength()))")
+        lines.append(codeIndent + "map(emitElem, xrange(%s.GetLength()))" % variableName)
         lines.append(codeIndent + 'lines.append("}")')
         #for i in xrange(0, node._range[-1]):
         #    lines.append(codeIndent + 'if %s.GetLength()>%d:' % (variableName, i))
