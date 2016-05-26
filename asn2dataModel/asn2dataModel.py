@@ -64,7 +64,6 @@ def usage(argsToTools):
 
 def main():
     sys.path.append(os.path.abspath(os.path.dirname(sys.argv[0])))
-    sys.path.append(os.path.abspath(os.path.dirname(sys.argv[0]) + os.sep + '..'))
     sys.path.append('commonPy')
 
     argsToTools = {
@@ -160,10 +159,10 @@ def main():
     # For each ASN.1 grammar file referenced in the system level description
     for arg, modelingLanguage in argsToTools.iteritems():
         if locals()[arg]:
-            backendFilename = modelingLanguage.lower() + "_A_mapper.py"
+            backendFilename = "." + modelingLanguage.lower() + "_A_mapper.py"
             inform("Parsing %s...", backendFilename)
             try:
-                backend = import_module(backendFilename[:-3])
+                backend = import_module(backendFilename[:-3], 'asn2dataModel')
                 if backendFilename[:-3] not in loadedBackends:
                     loadedBackends[backendFilename[:-3]] = 1
                     if commonPy.configMT.verbose:
