@@ -647,6 +647,10 @@ def WriteCodeForGUIControls(prefixes, parentControl, node, subProgram,
         # Recurse on children
         if node._members:
             g_firstElem = True
+        else:
+            # Empty sequence, nothing to set
+            g_fromPysideToASN1.append(g_iter * "    " + "pass  # Empty sequence\n")
+
         for child in node._members:
             # child[0] is the name of the field
             # child[2] is the string "field_PRESENT" used for choice indexes
