@@ -64,6 +64,10 @@ def usage(argsToTools):
 
 def main():
     sys.path.append(os.path.abspath(os.path.dirname(sys.argv[0])))
+    global underCoverageAnalysis
+    underCoverageAnalysis = os.environ.get('COVERAGE') == "1"
+    if underCoverageAnalysis:
+        sys.path.append(os.path.abspath(os.path.dirname(sys.argv[0]) + os.sep + ".."))
     sys.path.append('commonPy')
 
     argsToTools = {
@@ -162,7 +166,10 @@ def main():
             backendFilename = "." + modelingLanguage.lower() + "_A_mapper.py"
             inform("Parsing %s...", backendFilename)
             try:
-                backend = import_module(backendFilename[:-3], 'asn2dataModel')
+                if underCoverageAnalysis:
+                    backend = import_module(backendFilename[1:-3])
+                else:  # pragma: no cover
+                    backend = import_module(backendFilename[:-3], 'asn2dataModel')  # pragma: no cover
                 if backendFilename[:-3] not in loadedBackends:
                     loadedBackends[backendFilename[:-3]] = 1
                     if commonPy.configMT.verbose:

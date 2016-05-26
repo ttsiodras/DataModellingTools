@@ -224,6 +224,10 @@ types). This used to cover Dumpable C/Ada Types and OG headers.'''
 
 def main():
     sys.path.append(os.path.abspath(os.path.dirname(sys.argv[0])))
+    global underCoverageAnalysis
+    underCoverageAnalysis = os.environ.get('COVERAGE') == "1"
+    if underCoverageAnalysis:
+        sys.path.append(os.path.abspath(os.path.dirname(sys.argv[0]) + os.sep + ".."))
     if sys.argv.count("-o") != 0:
         idx = sys.argv.index("-o")
         try:
@@ -364,7 +368,10 @@ def main():
         backendFilename = "." + modelingLanguage.lower() + "_B_mapper.py"
         inform("Parsing %s...", backendFilename)
         try:
-            backend = import_module(backendFilename[:-3], 'aadl2glueC')
+            if underCoverageAnalysis:
+                backend = import_module(backendFilename[1:-3])
+            else:  # pragma: no cover
+                backend = import_module(backendFilename[:-3], 'aadl2glueC')  # pragma: no cover
             if backendFilename[:-3] not in loadedBackends:
                 loadedBackends[backendFilename[:-3]] = 1
                 if commonPy.configMT.verbose:
@@ -466,10 +473,16 @@ def main():
 
     def mappers(lang):
         if lang.lower() in ["gui_pi", "gui_ri"]:
-            return [import_module(".python_B_mapper", "aadl2glueC"),
-                    import_module(".pyside_B_mapper", "aadl2glueC")]
+            if underCoverageAnalysis:
+                return [import_module("python_B_mapper"), import_module("pyside_B_mapper")]
+            else:  # pragma: no cover
+                return [import_module(".python_B_mapper", "aadl2glueC"),
+                        import_module(".pyside_B_mapper", "aadl2glueC")]  # pragma: no cover
         elif lang.lower() == "vhdl":  # pragma: no cover
-            return [import_module(".vhdl_B_mapper", "aadl2glueC")]  # pragma: no cover
+            if underCoverageAnalysis:
+                return [import_module("vhdl_B_mapper")]  # pragma: no cover
+            else:  # pragma: no cover
+                return [import_module(".vhdl_B_mapper", "aadl2glueC")]  # pragma: no cover
 
     for si in [x for x in SystemsAndImplementations if x[2] is not None and x[2].lower() in ["gui_ri", "gui_pi", "vhdl"]]:
         # We do, start the work

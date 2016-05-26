@@ -12,19 +12,19 @@ ___asn2dataModel_%.py,cover:	../asn2dataModel/%.py DataTypesSimulink.asn
 	#$(MAKE) -f Makefile.M2M clean
 	mkdir -p output
 	rm -rf output/*
-	LANG=C LC_ALL=C python-coverage run -a ../commonPy/asnParser.py DataTypesSimulink.asn >/dev/null
-	LANG=C LC_ALL=C python-coverage run -a ../asn2dataModel/asn2dataModel.py 2>/dev/null || echo -n
-	LANG=C LC_ALL=C python-coverage run -a ../asn2dataModel/asn2dataModel.py -o output 2>/dev/null || echo -n
-	LANG=C LC_ALL=C python-coverage run -a ../asn2dataModel/asn2dataModel.py -o output -verbose -toSIMULINK DataTypesSimulink.asn >/dev/null
-	LANG=C LC_ALL=C python-coverage run -a ../asn2dataModel/asn2dataModel.py -o output -toOG DataTypesSimulink.asn
-	LANG=C LC_ALL=C python-coverage run -a ../asn2dataModel/asn2dataModel.py -o output -toAda DataTypesSimulink.asn
-	LANG=C LC_ALL=C python-coverage run -a ../asn2dataModel/asn2dataModel.py -o output -toC DataTypesSimulink.asn >/dev/null
-	LANG=C LC_ALL=C python-coverage run -a ../asn2dataModel/asn2dataModel.py -o output -toSMP2 DataTypesSimulink.asn >/dev/null
-	LANG=C LC_ALL=C python-coverage run -a ../asn2dataModel/asn2dataModel.py -o output -toPython DataTypesSimulink.asn >/dev/null
-	LANG=C LC_ALL=C python-coverage run -a ../asn2dataModel/asn2dataModel.py -o output -toSCADE6 DataTypesSimulink.asn >/dev/null
-	LANG=C LC_ALL=C python-coverage run -a ../asn2dataModel/asn2dataModel.py -o output -toSQL DataTypesSimulink.asn >/dev/null
-	LANG=C LC_ALL=C python-coverage run -a ../asn2dataModel/asn2dataModel.py -o output -toSqlalchemy DataTypesSimulink.asn >/dev/null
-	LANG=C LC_ALL=C python-coverage annotate -d . ../asn2dataModel/*.py ../commonPy/*.py
+	COVERAGE=1 LANG=C LC_ALL=C python-coverage run -a ../commonPy/asnParser.py DataTypesSimulink.asn >/dev/null
+	COVERAGE=1 LANG=C LC_ALL=C python-coverage run -a ../asn2dataModel/asn2dataModel.py 2>/dev/null || echo -n
+	COVERAGE=1 LANG=C LC_ALL=C python-coverage run -a ../asn2dataModel/asn2dataModel.py -o output 2>/dev/null || echo -n
+	COVERAGE=1 LANG=C LC_ALL=C python-coverage run -a ../asn2dataModel/asn2dataModel.py -o output -verbose -toSIMULINK DataTypesSimulink.asn >/dev/null
+	COVERAGE=1 LANG=C LC_ALL=C python-coverage run -a ../asn2dataModel/asn2dataModel.py -o output -toOG DataTypesSimulink.asn
+	COVERAGE=1 LANG=C LC_ALL=C python-coverage run -a ../asn2dataModel/asn2dataModel.py -o output -toAda DataTypesSimulink.asn
+	COVERAGE=1 LANG=C LC_ALL=C python-coverage run -a ../asn2dataModel/asn2dataModel.py -o output -toC DataTypesSimulink.asn >/dev/null
+	COVERAGE=1 LANG=C LC_ALL=C python-coverage run -a ../asn2dataModel/asn2dataModel.py -o output -toSMP2 DataTypesSimulink.asn >/dev/null
+	COVERAGE=1 LANG=C LC_ALL=C python-coverage run -a ../asn2dataModel/asn2dataModel.py -o output -toPython DataTypesSimulink.asn >/dev/null
+	COVERAGE=1 LANG=C LC_ALL=C python-coverage run -a ../asn2dataModel/asn2dataModel.py -o output -toSCADE6 DataTypesSimulink.asn >/dev/null
+	COVERAGE=1 LANG=C LC_ALL=C python-coverage run -a ../asn2dataModel/asn2dataModel.py -o output -toSQL DataTypesSimulink.asn >/dev/null
+	COVERAGE=1 LANG=C LC_ALL=C python-coverage run -a ../asn2dataModel/asn2dataModel.py -o output -toSqlalchemy DataTypesSimulink.asn >/dev/null
+	COVERAGE=1 LANG=C LC_ALL=C python-coverage annotate -d . ../asn2dataModel/*.py ../commonPy/*.py
 
 check:
 	@for i in $(PYSRC_A_COVER) ; do echo Checking $$i ... ; ./checkCoverage.pl $$i || { ( echo $$i ; ./review.pl $$i ) | less -RS ; exit 1 ; } ; done
