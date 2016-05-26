@@ -580,7 +580,7 @@ def WriteCodeForGUIControls(prefixes, parentControl, node, subProgram,
                 + asnStr + ".GetPyString()\n")
 
     if isinstance(node, AsnEnumerated):
-        g_fromASN1ToPyside.append(g_iter * "    "+"val" +pyStr + " = {}\n")
+        g_fromASN1ToPyside.append(g_iter * "    "+"val" + pyStr + " = {}\n")
         for enum_value in node._members:
             g_fromPysideToASN1.append(
                     g_iter * "    " + "if val" + pyStr
@@ -644,8 +644,9 @@ def WriteCodeForGUIControls(prefixes, parentControl, node, subProgram,
             elif isinstance(node, AsnSequence) or isinstance(node, AsnSet):
                 g_PyDataModel.write('''"children":[''')
         g_fromASN1ToPyside.append(g_iter * "    " + "val" + pyStr + " = {}\n")
-        # Recurse on a children
-        g_firstElem = True
+        # Recurse on children
+        if node._members:
+            g_firstElem = True
         for child in node._members:
             # child[0] is the name of the field
             # child[2] is the string "field_PRESENT" used for choice indexes
