@@ -202,7 +202,7 @@ def CreateDeclarationForType(nodeTypename, names, leafTypeDict):
         g_outputFile.write("\n")
     elif isinstance(node, AsnSequence) or isinstance(node, AsnSet) or isinstance(node, AsnChoice):
         if len(node._members) == 0:
-            panic("Simulink_A_mapper: Simulink can't support empty Seq/Set/Choice! (%s)" % node.Location())
+            panic("Simulink_A_mapper: Simulink can't support empty Seq/Set/Choice! (%s)" % node.Location())  # pragma: no cover
         elemNo = 0
         if isinstance(node, AsnChoice):
             elemNo += 1

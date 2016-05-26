@@ -41,7 +41,7 @@ def OnStartup(unused_modelingLanguage, asnFiles, outputDir):
     #print "Use ASN1SCC to generate the structures for '%s'" % asnFile
     asn1SccPath = spawn.find_executable('asn1.exe')
     if not asn1SccPath:
-        panic("ASN1SCC seems not installed on your system (asn1.exe not found in PATH).\n")
+        panic("ASN1SCC seems not installed on your system (asn1.exe not found in PATH).\n")  # pragma: no cover
     os.system(
         ("mono " if sys.argv[0].endswith('.py') and sys.platform.startswith('linux') else "") +
         "\"{}\" -wordSize 8 -typePrefix asn1Scc -Ada -uPER -o \"".format(asn1SccPath) +

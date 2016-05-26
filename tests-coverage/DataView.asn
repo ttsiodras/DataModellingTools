@@ -1,0 +1,508 @@
+DataView DEFINITIONS ::= BEGIN
+
+MYBOOL ::= BOOLEAN
+
+T-INTEGER ::= INTEGER( -1000 .. 1000 )
+
+T-REAL ::= REAL( -10000.0 .. 10000.0 )
+
+T-ACCELERATION ::= SEQUENCE (SIZE(3)) OF T-REAL
+
+T-ACS-CMD ::= SEQUENCE {
+  set-acs1-cmd BOOLEAN ,
+  set-acs2-cmd BOOLEAN
+}
+
+T-ANGLE ::= T-REAL
+
+T-ANGULAR-RATE ::= SEQUENCE {
+  p-rate T-INTEGER ,
+  q-rate T-INTEGER ,
+  r-rate T-INTEGER
+}
+
+T-CAM-CMD ::= SEQUENCE {
+  set-cam-cmd-pde1 T-ON-OFF-CMD ,
+  set-cam-cmd-pde2 T-ON-OFF-CMD ,
+  set-cam-cmd-pde3 T-ON-OFF-CMD ,
+  set-cam-cmd-pde4 T-ON-OFF-CMD
+}
+
+T-CM-CONFIGURATION ::= SEQUENCE {
+  angular-rate-threshold  T-REAL ,
+  rdv-phase T-INTEGER ,
+  boost-monitoring-opening-date SEQUENCE (SIZE(3)) OF T-INTEGER ,
+  boost-threshold-dvx SEQUENCE (SIZE(3)) OF T-REAL ,
+  boost-threshold-dvz SEQUENCE (SIZE(3)) OF T-REAL ,
+  boost-monitoring-duration SEQUENCE (SIZE(3)) OF T-INTEGER ,
+  acca-bias-estimation SEQUENCE (SIZE(6)) OF T-REAL ,
+  zm-threshold-initial  T-REAL ,
+  zm-threshold-final  T-REAL ,
+  mc-threshold-initial  T-REAL ,
+  mc-threshold-final  T-REAL ,
+  zm-initial  T-REAL ,
+  zm-final  T-REAL ,
+  r-r-rate-threshold-curve SEQUENCE (SIZE(12)) OF T-REAL ,
+  boost-intensities-dvx SEQUENCE (SIZE(3)) OF T-REAL ,
+  boost-intensities-dvz SEQUENCE (SIZE(3)) OF T-REAL ,
+  acca-lsb-value-acm T-VECTOR6 ,
+  acca-bias-estimate T-VECTOR6 ,
+  pseudo-inverse-acm T-VECTOR18 ,
+  tgm-window-size T-VECTOR4 ,
+  tgm-range-ref T-VECTOR4
+}
+
+T-CM-TELEMETRY ::= SEQUENCE {
+  cm-statuses SEQUENCE (SIZE(4)) OF BOOLEAN ,
+  acm-status T-INTEGER ,
+  tgm-status T-INTEGER ,
+  mcm-phase T-INTEGER ,
+  obm-mode T-INTEGER ,
+  alarm-counters SEQUENCE (SIZE(2)) OF T-INTEGER ,
+  internal-rates SEQUENCE (SIZE(6)) OF T-INTEGER ,
+  radial-velocity  T-REAL ,
+  longitudinal-velocity  T-REAL
+}
+
+T-CONFIGURATION-TABLE ::= SEQUENCE {
+  pde1-pde4-config-is-selected BOOLEAN ,
+  pde1-is-available BOOLEAN ,
+  pde2-is-available BOOLEAN ,
+  pde3-is-available BOOLEAN ,
+  pde4-is-available BOOLEAN ,
+  dpu-reset-is-requested BOOLEAN ,
+  cam-duration T-INTEGER ,
+  cam-boost-only-is-requested BOOLEAN ,
+  halt-mode-is-requested BOOLEAN
+}
+
+T-CONTROLLER-CONFIG ::= SEQUENCE {
+  atv-mass T-MASS ,
+  inertia T-INERTIA ,
+  center-of-mass T-VECTOR3 ,
+  initial-efficiency-matrix T-INITIAL-EFFICIENCY-MATRIX ,
+  inverse-efficiency-matrix T-EFFICIENCY-MATRIX ,
+  aimed-delta-v T-VELOCITY ,
+  q-lof-to-atv-cam-inst T-QUATERNION ,
+  q-j2000-to-atv-sasp-inst T-QUATERNION ,
+  orbital-pulsation  T-REAL
+}
+
+T-CONTROLLER-FILTER-STATE ::= SEQUENCE {
+  inputA T-MATRIX-3-4 ,
+  outputA T-MATRIX-3-4
+}
+
+T-CONTROLLER-SATURATION-LEVEL ::= SEQUENCE (SIZE(3)) OF T-REAL
+
+T-CONTROLLER-STATE ::= SEQUENCE {
+  q-lof-to-atv T-QUATERNION ,
+  atv-abs-angular-rates T-ANGULAR-RATE ,
+  atv-disruptive-acceleration T-ACCELERATION
+}
+
+T-CONTROLLER-TELEMETRY ::= SEQUENCE {
+  estimated-delta-v T-VELOCITY ,
+  thrusters-opening T-THRUSTERS-OPENING ,
+  estimated-atv-quaternion-1  T-REAL ,
+  estimated-atv-quaternion-2  T-REAL ,
+  estimated-atv-quaternion-3  T-REAL
+}
+
+T-CONTROL-GAINS ::= SEQUENCE {
+  k1  T-REAL ,
+  k2  T-REAL
+}
+
+T-CURRENT ::= T-REAL
+
+T-DTG-ANGULAR-INCREMENT ::= SEQUENCE (SIZE(4)) OF T-REAL
+
+T-DTG-LSB ::= SEQUENCE (SIZE(4)) OF T-REAL
+
+T-DTG-MEAS-TABLE-LINE ::= SEQUENCE (SIZE(30)) OF T-REAL
+
+T-DTG-MEAS-TABLE ::= SEQUENCE (SIZE(4)) OF T-DTG-MEAS-TABLE-LINE
+
+T-EFFICIENCY-MATRIX-LINE ::= SEQUENCE (SIZE(3)) OF T-REAL
+
+T-EFFICIENCY-MATRIX ::= SEQUENCE (SIZE(3)) OF T-EFFICIENCY-MATRIX-LINE
+
+T-FCV-OPENING-DUR-CMD ::= SEQUENCE {
+  fcv1-opening-duration T-INTEGER ,
+  fcv2-opening-duration T-INTEGER
+}
+
+T-FORCE-EFFICIENCY-MATRIX-LINE ::= SEQUENCE (SIZE(4)) OF T-REAL
+
+T-FORCE-EFFICIENCY-MATRIX ::= SEQUENCE (SIZE(3)) OF T-FORCE-EFFICIENCY-MATRIX-LINE
+
+T-FTCP-HEALTH-STATUS ::= SEQUENCE {
+  ftc1-health-status-is-on BOOLEAN ,
+  ftc2-health-status-is-on BOOLEAN ,
+  ftc3-health-status-is-on BOOLEAN
+}
+
+T-HW-STATUSES ::= SEQUENCE {
+  power-sensor-enable BOOLEAN ,
+  output-sensor-enable BOOLEAN ,
+  flag-dtg1-power-enabled BOOLEAN ,
+  flag-dtg2-power-enabled BOOLEAN ,
+  flag-lcl-status-pde1 BOOLEAN ,
+  flag-lcl-status-pde2 BOOLEAN ,
+  flag-lcl-status-pde3 BOOLEAN ,
+  flag-lcl-status-pde4 BOOLEAN ,
+  flag-hlct-red-button-from-cpf1 BOOLEAN ,
+  flag-hlct-red-button-from-cpf2 BOOLEAN ,
+  pfs-ewm-msuy-msux-hs T-PFS-EWM-MSU-MSU-HS ,
+  flag-hltc-disarm-from-cpf1 BOOLEAN ,
+  flag-hltc-disarm-from-cpf2 BOOLEAN ,
+  flag-hltc-arm-from-cpf1 BOOLEAN ,
+  flag-hltc-arm-from-cpf2 BOOLEAN ,
+  flag-pde-power-sensor BOOLEAN ,
+  flag-aux-bat-sensor BOOLEAN
+}
+
+T-INERTIA ::= SEQUENCE (SIZE(3)) OF T-REAL
+
+T-INITIAL-EFFICIENCY-MATRIX-LINE ::= SEQUENCE (SIZE(4)) OF T-REAL
+
+T-INITIAL-EFFICIENCY-MATRIX ::= SEQUENCE (SIZE(6)) OF T-INITIAL-EFFICIENCY-MATRIX-LINE
+
+T-MASS ::= T-REAL
+
+T-MATRIX-3-4-LINE ::= SEQUENCE (SIZE(4)) OF T-REAL
+
+T-MATRIX-3-4 ::= SEQUENCE (SIZE(3)) OF T-MATRIX-3-4-LINE
+
+T-MSU-ID ::= ENUMERATED {
+  msu1 (0),
+  msu2 (1)
+}
+
+T-MSU-STATUS ::= ENUMERATED {
+  slave(0) ,
+  master(1)
+}
+
+T-MSU-TELEMETRY ::= SEQUENCE {
+  state-is-pfs-m-stdby BOOLEAN ,
+  state-is-pfs-m-ready-for-cam BOOLEAN ,
+  state-is-pfs-m-cam-in-waiting BOOLEAN ,
+  state-is-pfs-m-cam-prgs BOOLEAN ,
+  state-is-pfs-m-cam-inhib BOOLEAN ,
+  msu-failed-has-been-detected BOOLEAN ,
+  cam-mode T-CAM-MODE ,
+  cam-test2-is-enabled BOOLEAN ,
+  autocam-is-enabled BOOLEAN ,
+  first-config-has-been-received BOOLEAN ,
+  current-configuration-table T-CONFIGURATION-TABLE ,
+  buffered-configuration-table T-CONFIGURATION-TABLE ,
+  msu-status T-MSU-STATUS ,
+  msu-hs-is-ok BOOLEAN ,
+  pfs-iwm-arming-relay-status-on BOOLEAN ,
+  navigation-telemetry T-NAVIGATION-TELEMETRY ,
+  controller-telemetry T-CONTROLLER-TELEMETRY ,
+  cm-telemetry T-CM-TELEMETRY ,
+  msu-obut T-OBUT ,
+  synchro-broadcast-status T-SYNCHRO-BROADCAST-STATUS ,
+  hw-statuses T-HW-STATUSES ,
+  sw-warning-code T-SW-WARNING-CODE ,
+  ftcp-health-status T-FTCP-HEALTH-STATUS ,
+  bit-result T-INTEGER ,
+  msu-id T-MSU-ID ,
+  cm-auto-cam-cmd-is-requested BOOLEAN ,
+  cpu-overload-status BOOLEAN ,
+  pfs-ewm-ssu-msu-is-available BOOLEAN ,
+  controller-to-be-activated BOOLEAN ,
+  msu-online-bit-status-is-ok BOOLEAN ,
+  pfs-ewm-dtg12-msu T-PFS-EWM-DTG12-MSU ,
+  new-config-is-available BOOLEAN ,
+  new-config-is-confirmed BOOLEAN ,
+  pfs-iwm-measurements T-PFS-IWM-MEASUREMENTS ,
+  power-consumption T-POWER-CONSUMPTION
+}
+
+T-NAVIGATION-CONFIGURATION ::= SEQUENCE {
+  q-lof-to-atv-cam-inst T-QUATERNION ,
+  q-j2000-to-atv-sasp-inst T-QUATERNION ,
+  orbital-pulsation  T-REAL ,
+  q-j2000-to-ocf T-QUATERNION ,
+  q-j2000-to-atv T-QUATERNION ,
+  coarse-drift-msu T-VECTOR4 ,
+  fine-drift-msu T-VECTOR4 ,
+  dtg-lsb-value-msu T-VECTOR8 ,
+  dtg-fd-fine-threshold  T-REAL ,
+  dtg-fd-coarse-threshold  T-REAL ,
+  ssu-calib-data-msu T-VECTOR12 ,
+  true-ssu-axis-to-atv T-VECTOR9 ,
+  true-dtg-axis-to-atv-msu T-VECTOR12 ,
+  estimated-flight-drifts-config T-VECTOR4
+}
+
+T-NAVIGATION-OUTPUT ::= SEQUENCE {
+  q-j2000-to-atv-nav T-QUATERNION ,
+  q-lof-to-atv-nav T-QUATERNION ,
+  atv-abs-ang-rate-nav T-ANGULAR-RATE
+}
+
+T-NAVIGATION-STATE ::= SEQUENCE {
+  q-j2000-to-atv T-QUATERNION ,
+  q-lof-to-atv T-QUATERNION ,
+  q-j2000-to-atv-unconfir T-QUATERNION ,
+  q-lof-to-atv-unconfir T-QUATERNION
+}
+
+T-NAVIGATION-TELEMETRY ::= SEQUENCE {
+  pfs-dtg-is-failed BOOLEAN ,
+  alpha-ssu T-ANGLE ,
+  beta-ssu T-ANGLE ,
+  navigation-output T-NAVIGATION-OUTPUT
+}
+
+T-OBUT ::= T-INTEGER
+
+T-ON-OFF-CMD ::= SEQUENCE {
+  on-cmd BOOLEAN ,
+  off-cmd BOOLEAN
+}
+
+T-PFS-1BUS-DATA ::= SEQUENCE {
+  synchro-block T-PFS-BUS-DATA-BLOCK ,
+  tc-block1 T-PFS-BUS-DATA-BLOCK ,
+  tc-block2 T-PFS-BUS-DATA-BLOCK ,
+  tc-block3 T-PFS-BUS-DATA-BLOCK ,
+  tc-block4 T-PFS-BUS-DATA-BLOCK ,
+  tc-block5 T-PFS-BUS-DATA-BLOCK ,
+  tc-block6 T-PFS-BUS-DATA-BLOCK ,
+  tc-block7 T-PFS-BUS-DATA-BLOCK ,
+  tc-block8 T-PFS-BUS-DATA-BLOCK ,
+  tc-block9 T-PFS-BUS-DATA-BLOCK ,
+  tc-block0 T-PFS-BUS-DATA-BLOCK ,
+  acm-block T-PFS-BUS-DATA-BLOCK ,
+  tgm-block1 T-PFS-BUS-DATA-BLOCK
+}
+
+T-PFS-ACM-DATA ::= SEQUENCE {
+  data-is-available BOOLEAN ,
+  x-velocity T-INTEGER ,
+  y-velocity T-INTEGER
+}
+
+T-PFS-BUS-DATA ::= SEQUENCE {
+  pfs-bus1-data T-PFS-1BUS-DATA ,
+  pfs-bus2-data T-PFS-1BUS-DATA ,
+  pfs-bus3-data T-PFS-1BUS-DATA ,
+  pfs-bus4-data T-PFS-1BUS-DATA
+}
+
+T-PFS-BUS-DATA-BLOCK ::= SEQUENCE (SIZE(32)) OF INTEGER16
+
+T-PFS-BUS-SENSOR-DATA ::= SEQUENCE {
+  pfs-tgm1-data T-PFS-TGM-DATA ,
+  pfs-tgm2-data T-PFS-TGM-DATA ,
+  pfs-acm1-data T-PFS-ACM-DATA ,
+  pfs-acm2-data T-PFS-ACM-DATA ,
+  pfs-acm3-data T-PFS-ACM-DATA
+}
+
+T-PFS-EWC-MSU-PDE-T ::= SEQUENCE {
+  pfs-ewc-msu-pde1-t T-ACS-CMD ,
+  pfs-ewc-msu-pde2-t T-ACS-CMD ,
+  pfs-ewc-msu-pde3-t T-ACS-CMD ,
+  pfs-ewc-msu-pde4-t T-ACS-CMD
+}
+
+T-PFS-EWM-DTG12-MSU ::= SEQUENCE {
+  pfs-ewm-dtg1-msu T-PFS-EWM-DTG-MSU ,
+  pfs-ewm-dtg2-msu T-PFS-EWM-DTG-MSU
+}
+
+T-PFS-EWM-DTG12-MSU-MODE ::= SEQUENCE {
+  dtg1-mode T-PFS-EWM-DTG-MSU-MODE ,
+  dtg2-mode T-PFS-EWM-DTG-MSU-MODE
+}
+
+T-PFS-EWM-DTG-MSU ::= SEQUENCE {
+  pfs-ewm-dtg-msu-mode T-PFS-EWM-DTG-MSU-MODE ,
+  pfs-ewm-dtg-msu-axis1 T-INTEGER ,
+  pfs-ewm-dtg-msu-axis2 T-INTEGER
+}
+
+T-PFS-EWM-DTG-MSU-MODE ::= ENUMERATED {
+  dtg-fine-mode(0) ,
+  dtg-coarse-mode(1)
+}
+
+T-PFS-EWM-MSU-MSU-HS ::= SEQUENCE {
+  pfs-ewm-msu-hs-is-ok1 BOOLEAN ,
+  pfs-ewm-msu-hs-is-ok2 BOOLEAN ,
+  pfs-ewm-msu-hs-is-ok3 BOOLEAN
+}
+
+T-PFS-EWM-SSU-MSU-MEAS ::= SEQUENCE {
+  pfs-ewm-ssu-msu-meas1  T-REAL ,
+  pfs-ewm-ssu-msu-meas2  T-REAL ,
+  pfs-ewm-ssu-msu-meas3  T-REAL ,
+  pfs-ewm-ssu-msu-meas4  T-REAL
+}
+
+T-PFS-IWM-MEASUREMENTS ::= SEQUENCE {
+  pfs-iwm-voltage-cpu T-VOLTAGE ,
+  pfs-iwm-voltage-pos T-VOLTAGE ,
+  pfs-iwm-voltage-neg T-VOLTAGE ,
+  pfs-iwm-voltage-bat T-VOLTAGE ,
+  pfs-ewm-current-ssu1 T-CURRENT ,
+  pfs-ewm-current-ssu2 T-CURRENT ,
+  pfs-ewm-current-ssu3 T-CURRENT ,
+  pfs-ewm-current-ssu4 T-CURRENT ,
+  pfs-iwm-current-pde1 T-CURRENT ,
+  pfs-iwm-current-pde2 T-CURRENT ,
+  pfs-iwm-current-pde3 T-CURRENT ,
+  pfs-iwm-current-pde4 T-CURRENT ,
+  pfs-iwm-current-prim T-CURRENT ,
+  pfs-iwm-voltage-prim T-VOLTAGE ,
+  pfs-iwm-temp-msu T-TEMP ,
+  pfs-iwm-temp-gyro T-TEMP
+}
+
+T-PFS-TGM-DATA ::= SEQUENCE {
+  data-is-available BOOLEAN ,
+  current-mode T-INTEGER ,
+  target-data-valid BOOLEAN ,
+  on-line-bit-result BOOLEAN ,
+  frame-counter T-INTEGER ,
+  retro1-data-valid BOOLEAN ,
+  retro2-data-valid BOOLEAN ,
+  target-range T-INTEGER ,
+  target-datation T-INTEGER ,
+  retro1-range T-INTEGER ,
+  retro1-datation T-INTEGER ,
+  retro2-range T-INTEGER ,
+  retro2-datation T-INTEGER
+}
+
+T-POWER-CONSUMPTION ::= T-REAL
+
+T-QUATERNION ::= SEQUENCE (SIZE(4)) OF T-REAL
+
+T-SEQUENCER-CONFIGURATION ::= SEQUENCE {
+  pde1-pde4-config-is-selected BOOLEAN ,
+  pde1-is-available BOOLEAN ,
+  pde2-is-available BOOLEAN ,
+  pde3-is-available BOOLEAN ,
+  pde4-is-available BOOLEAN ,
+  dpu-reset-is-requested BOOLEAN ,
+  cam-duration T-INTEGER ,
+  cam-boost-only-is-requested BOOLEAN ,
+  halt-mode-is-requested BOOLEAN
+}
+
+T-SW-WARNING-CODE ::= T-INTEGER
+
+T-SYNCHRO-BROADCAST-STATUS ::= SEQUENCE (SIZE(4)) OF BOOLEAN
+
+T-TEMP ::= T-REAL
+
+T-THRUSTERS-OPENING ::= SEQUENCE {
+  thrusters-opening-pde1 T-FCV-OPENING-DUR-CMD ,
+  thrusters-opening-pde2 T-FCV-OPENING-DUR-CMD
+}
+
+T-TORQUE-EFFICIENCY-MATRIX-LINE ::= SEQUENCE (SIZE(3)) OF T-REAL
+
+T-TORQUE-EFFICIENCY-MATRIX ::= SEQUENCE (SIZE(3)) OF T-TORQUE-EFFICIENCY-MATRIX-LINE
+
+T-VECTOR12 ::= SEQUENCE (SIZE(12)) OF T-REAL
+
+T-VECTOR18 ::= SEQUENCE (SIZE(18)) OF T-REAL
+
+T-VECTOR3 ::= SEQUENCE (SIZE(3)) OF T-REAL
+
+T-VECTOR4 ::= SEQUENCE (SIZE(4)) OF T-REAL
+
+T-VECTOR6 ::= SEQUENCE (SIZE(6)) OF T-REAL
+
+T-VECTOR8 ::= SEQUENCE (SIZE(8)) OF T-REAL
+
+T-VECTOR9 ::= SEQUENCE (SIZE(9)) OF T-REAL
+
+T-VELOCITY ::= T-REAL
+
+T-VOLTAGE ::= T-REAL
+
+INTEGER16 ::= T-INTEGER
+
+T-CAM-MODE ::= SEQUENCE {
+  is-in-cam BOOLEAN ,
+  is-in-sa BOOLEAN ,
+  is-in-sp BOOLEAN
+}
+
+T-PFS-EC-UPDATE-CONF-MSU ::= SEQUENCE {
+  configuration-table T-CONFIGURATION-TABLE ,
+  new-config-is-available BOOLEAN
+}
+
+T-MSU-STATE ::= SEQUENCE {
+  state-is-pfs-m-standby BOOLEAN ,
+  state-is-pfs-m-ready-for-cam BOOLEAN ,
+  state-is-pfs-m-cam-prgs BOOLEAN ,
+  state-is-pfs-m-cam-inhib BOOLEAN
+}
+
+T-PDE-CMD-A ::= SEQUENCE {
+  set-pfs-iwc-cam-trig1 T-ON-OFF-CMD ,
+  pfs-iwc-pde-cam-trig2 T-CAM-CMD ,
+  pfs-ewc-msu-pde-cmd1 T-CAM-CMD ,
+  pfs-ewc-msu-pde-cmd2 T-CAM-CMD
+}
+
+T-DPU-CMD ::= SEQUENCE {
+  set-pfs-ewc-msu-dpu-reset T-ON-OFF-CMD ,
+  set-pfs-ewc-msu-dpu-cam T-ON-OFF-CMD
+}
+
+T-HLTM ::= SEQUENCE {
+  set-pfs-hltm-cam-test2-status BOOLEAN ,
+  set-pfs-hltm-cam-trig-status BOOLEAN ,
+  set-pfs-hltm-msu-master-status BOOLEAN ,
+  set-pfs-hltm-config-status BOOLEAN ,
+  set-pfs-hltm-msu-health-status BOOLEAN ,
+  set-pfs-hltm-ftcp-res-detected BOOLEAN ,
+  msu-state T-MSU-STATE
+}
+
+T-HLTC ::= SEQUENCE {
+  pfs-hltc-update-config-is-on BOOLEAN ,
+  pfs-ec-update-config T-PFS-EC-UPDATE-CONF-MSU ,
+  pfs-hltc-enable-cam-test2-is-on BOOLEAN ,
+  pfs-hltc-disable-cam-test2-on BOOLEAN
+}
+
+T-PFS-IWM-ARMING-RELAY-STATUS-ON ::= MYBOOL
+
+T-PFS-HLTC-RED-BUTTON-IS-ON ::= MYBOOL
+
+T-END-BOOST-IS-REACHED ::= MYBOOL
+
+T-SUN-IS-AIMED ::= MYBOOL
+
+T-CONTROLLER-TO-BE-ACTIVATED ::= MYBOOL
+
+T-CONTROL-UP-OUT ::= SEQUENCE {
+thrusters-opening T-THRUSTERS-OPENING
+}
+
+T-CONTROL-DOWN-OUT ::= SEQUENCE {
+end-boost-is-reached T-END-BOOST-IS-REACHED,
+sun-is-aimed T-SUN-IS-AIMED
+}
+
+T-CONTROL-IN ::= SEQUENCE {
+cam-mode T-CAM-MODE,
+controller-to-be-activated T-CONTROLLER-TO-BE-ACTIVATED,
+navigation-output T-NAVIGATION-OUTPUT
+}
+
+END

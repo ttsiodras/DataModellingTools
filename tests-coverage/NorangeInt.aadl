@@ -1,0 +1,96 @@
+package Data_types
+
+public
+
+-- Memory required to encode/decode these messages (aligned to page size: 4096)
+-- Memory_Required: 12288
+
+DATA TypeNested
+PROPERTIES
+    -- name of the ASN.1 source file:
+    Source_Text => ("NorangeInt.asn");
+    -- Size of a buffer to cover DER representation:
+    -- Real message size is 82; suggested aligned message buffer is...
+    Source_Data_Size => 128 B;
+    -- name of the corresponding data type in the source file:
+    Type_Source_Name => "TypeNested";
+END TypeNested;
+
+DATA T_POS
+PROPERTIES
+    -- name of the ASN.1 source file:
+    Source_Text => ("NorangeInt.asn");
+    -- Size of a buffer to cover DER representation:
+    -- Real message size is 1256; suggested aligned message buffer is...
+    Source_Data_Size => 2048 B;
+    -- name of the corresponding data type in the source file:
+    Type_Source_Name => "T-POS";
+END T_POS;
+
+DATA T_INT
+PROPERTIES
+    -- name of the ASN.1 source file:
+    Source_Text => ("NorangeInt.asn");
+    -- Size of a buffer to cover DER representation:
+    -- Real message size is 3; suggested aligned message buffer is...
+    Source_Data_Size => 4 B;
+    -- name of the corresponding data type in the source file:
+    Type_Source_Name => "T-INT";
+END T_INT;
+
+DATA T_REAL
+PROPERTIES
+    -- name of the ASN.1 source file:
+    Source_Text => ("NorangeInt.asn");
+    -- Size of a buffer to cover DER representation:
+    -- Real message size is 11; suggested aligned message buffer is...
+    Source_Data_Size => 16 B;
+    -- name of the corresponding data type in the source file:
+    Type_Source_Name => "T-REAL";
+END T_REAL;
+
+DATA TypeEnumerated
+PROPERTIES
+    -- name of the ASN.1 source file:
+    Source_Text => ("NorangeInt.asn");
+    -- Size of a buffer to cover DER representation:
+    -- Real message size is 3; suggested aligned message buffer is...
+    Source_Data_Size => 4 B;
+    -- name of the corresponding data type in the source file:
+    Type_Source_Name => "TypeEnumerated";
+END TypeEnumerated;
+
+DATA T_STRING
+PROPERTIES
+    -- name of the ASN.1 source file:
+    Source_Text => ("NorangeInt.asn");
+    -- Size of a buffer to cover DER representation:
+    -- Real message size is 17; suggested aligned message buffer is...
+    Source_Data_Size => 32 B;
+    -- name of the corresponding data type in the source file:
+    Type_Source_Name => "T-STRING";
+END T_STRING;
+
+DATA T_ARR
+PROPERTIES
+    -- name of the ASN.1 source file:
+    Source_Text => ("NorangeInt.asn");
+    -- Size of a buffer to cover DER representation:
+    -- Real message size is 20; suggested aligned message buffer is...
+    Source_Data_Size => 32 B;
+    -- name of the corresponding data type in the source file:
+    Type_Source_Name => "T-ARR";
+END T_ARR;
+
+DATA T_BOOL
+PROPERTIES
+    -- name of the ASN.1 source file:
+    Source_Text => ("NorangeInt.asn");
+    -- Size of a buffer to cover DER representation:
+    -- Real message size is 3; suggested aligned message buffer is...
+    Source_Data_Size => 4 B;
+    -- name of the corresponding data type in the source file:
+    Type_Source_Name => "T-BOOL";
+END T_BOOL;
+
+end Data_types;

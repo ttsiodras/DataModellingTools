@@ -411,15 +411,22 @@ def DumpTypeDumper(codeIndent, outputIndent, lines, variableName, node, names):
         containedNode = node._containedType
         if isinstance(containedNode, str):
             containedNode = names[containedNode]
-        for i in xrange(0, node._range[-1]):
-            lines.append(codeIndent + 'if %s.GetLength()>%d:' % (variableName, i))
-            if i > 0:
-                # Separate fields with comas
-                lines.append(codeIndent + "    lines.append(', ')")
-            #lines.append(codeIndent + '    print "%s[%d]:"' % (outputIndent, i))
-            DumpTypeDumper(codeIndent+"    ", outputIndent+" ", lines,
-                           variableName+'['+str(i)+']', containedNode, names)
+        lines.append(codeIndent + 'def emitElem(i):')
+        lines.append(codeIndent + '    if i>0:')
+        lines.append(codeIndent + '        lines.append(",")')
+        DumpTypeDumper(codeIndent+"    ", outputIndent+" ", lines,
+                       variableName+'[i]', containedNode, names)
+        lines.append(codeIndent + "map(emitElem, xrange(self.GetLength()))")
         lines.append(codeIndent + 'lines.append("}")')
+        #for i in xrange(0, node._range[-1]):
+        #    lines.append(codeIndent + 'if %s.GetLength()>%d:' % (variableName, i))
+        #    if i > 0:
+        #        # Separate fields with comas
+        #        lines.append(codeIndent + "    lines.append(', ')")
+        #    #lines.append(codeIndent + '    print "%s[%d]:"' % (outputIndent, i))
+        #    DumpTypeDumper(codeIndent+"    ", outputIndent+" ", lines,
+        #                   variableName+'['+str(i)+']', containedNode, names)
+        #lines.append(codeIndent + 'lines.append("}")')
 
 
 def CreateDeclarationForType(nodeTypename, names, leafTypeDict):

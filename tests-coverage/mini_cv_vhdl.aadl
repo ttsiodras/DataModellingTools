@@ -1,0 +1,88 @@
+SUBPROGRAM mytestsubsystemEmpty
+END mytestsubsystemEmpty;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemEmpty.VHDL
+PROPERTIES
+	FV_Name => "mytestsubsystemEmpty_fv_VHDL";
+	Source_Language => VHDL;
+END mytestsubsystemEmpty.VHDL;
+
+SUBPROGRAM mytestsubsystemvhdl
+FEATURES
+	my_in_AType:IN PARAMETER DataView::AType {encoding=>UPER;};
+	my_in_TypeEnumerated:IN PARAMETER DataView::TypeEnumerated {encoding=>UPER;};
+	my_in_TypeNested:IN PARAMETER DataView::TypeNested {encoding=>UPER;};
+	my_in_T_POS:IN PARAMETER DataView::T_POS {encoding=>UPER;};
+	my_in_T_POS_SET:IN PARAMETER DataView::T_POS_SET {encoding=>UPER;};
+	my_in_T_ARR:IN PARAMETER DataView::T_ARR {encoding=>UPER;};
+	my_in_T_ARR3:IN PARAMETER DataView::T_ARR3 {encoding=>UPER;};
+	my_in_T_ARR4:IN PARAMETER DataView::T_ARR4 {encoding=>UPER;};
+	my_in_T_SET:IN PARAMETER DataView::T_SET {encoding=>UPER;};
+	my_in_T_SETOF:IN PARAMETER DataView::T_SETOF {encoding=>UPER;};
+	my_in_T_BOOL:IN PARAMETER DataView::T_BOOL {encoding=>UPER;};
+	my_in_T_INT:IN PARAMETER DataView::T_INT {encoding=>UPER;};
+	my_in_T_STRING:IN PARAMETER DataView::T_STRING {encoding=>UPER;};
+	my_in_T_META:IN PARAMETER DataView::T_META {encoding=>UPER;};
+	my_out_AType:OUT PARAMETER DataView::AType {encoding=>UPER;};
+	my_out_TypeEnumerated:OUT PARAMETER DataView::TypeEnumerated {encoding=>UPER;};
+	my_out_TypeNested:OUT PARAMETER DataView::TypeNested {encoding=>UPER;};
+	my_out_T_POS:OUT PARAMETER DataView::T_POS {encoding=>UPER;};
+	my_out_T_POS_SET:OUT PARAMETER DataView::T_POS_SET {encoding=>UPER;};
+	my_out_T_ARR:OUT PARAMETER DataView::T_ARR {encoding=>UPER;};
+	my_out_T_ARR3:OUT PARAMETER DataView::T_ARR3 {encoding=>UPER;};
+	my_out_T_ARR4:OUT PARAMETER DataView::T_ARR4 {encoding=>UPER;};
+	my_out_T_SET:OUT PARAMETER DataView::T_SET {encoding=>UPER;};
+	my_out_T_SETOF:OUT PARAMETER DataView::T_SETOF {encoding=>UPER;};
+	my_out_T_BOOL:OUT PARAMETER DataView::T_BOOL {encoding=>UPER;};
+	my_out_T_INT:OUT PARAMETER DataView::T_INT {encoding=>UPER;};
+	my_out_T_STRING:OUT PARAMETER DataView::T_STRING {encoding=>UPER;};
+	my_out_T_META:OUT PARAMETER DataView::T_META {encoding=>UPER;};
+
+	your_in_AType:IN PARAMETER DataView::AType {encoding=>Native;};
+	your_in_TypeEnumerated:IN PARAMETER DataView::TypeEnumerated {encoding=>Native;};
+	your_in_TypeNested:IN PARAMETER DataView::TypeNested {encoding=>Native;};
+	your_in_T_POS:IN PARAMETER DataView::T_POS {encoding=>Native;};
+	your_in_T_POS_SET:IN PARAMETER DataView::T_POS_SET {encoding=>Native;};
+	your_in_T_ARR:IN PARAMETER DataView::T_ARR {encoding=>Native;};
+	your_in_T_ARR3:IN PARAMETER DataView::T_ARR3 {encoding=>Native;};
+	your_in_T_ARR4:IN PARAMETER DataView::T_ARR4 {encoding=>Native;};
+	your_in_T_SET:IN PARAMETER DataView::T_SET {encoding=>Native;};
+	your_in_T_SETOF:IN PARAMETER DataView::T_SETOF {encoding=>Native;};
+	your_in_T_BOOL:IN PARAMETER DataView::T_BOOL {encoding=>Native;};
+	your_in_T_INT:IN PARAMETER DataView::T_INT {encoding=>Native;};
+	your_in_T_STRING:IN PARAMETER DataView::T_STRING {encoding=>Native;};
+	your_in_T_META:IN PARAMETER DataView::T_META {encoding=>Native;};
+	your_out_AType:OUT PARAMETER DataView::AType {encoding=>Native;};
+	your_out_TypeEnumerated:OUT PARAMETER DataView::TypeEnumerated {encoding=>Native;};
+	your_out_TypeNested:OUT PARAMETER DataView::TypeNested {encoding=>Native;};
+	your_out_T_POS:OUT PARAMETER DataView::T_POS {encoding=>Native;};
+	your_out_T_POS_SET:OUT PARAMETER DataView::T_POS_SET {encoding=>Native;};
+	your_out_T_ARR:OUT PARAMETER DataView::T_ARR {encoding=>Native;};
+	your_out_T_ARR3:OUT PARAMETER DataView::T_ARR3 {encoding=>Native;};
+	your_out_T_ARR4:OUT PARAMETER DataView::T_ARR4 {encoding=>Native;};
+	your_out_T_SET:OUT PARAMETER DataView::T_SET {encoding=>Native;};
+	your_out_T_SETOF:OUT PARAMETER DataView::T_SETOF {encoding=>Native;};
+	your_out_T_BOOL:OUT PARAMETER DataView::T_BOOL {encoding=>Native;};
+	your_out_T_INT:OUT PARAMETER DataView::T_INT {encoding=>Native;};
+	your_out_T_STRING:OUT PARAMETER DataView::T_STRING {encoding=>Native;};
+	your_out_T_META:OUT PARAMETER DataView::T_META {encoding=>Native;};
+END mytestsubsystemvhdl;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemvhdl.VHDL
+PROPERTIES
+	FV_Name => "mytestsubsystem_fv_VHDL";
+	Source_Language => VHDL;
+END mytestsubsystemvhdl.VHDL;
+
+SUBPROGRAM mytestsubsystemvhdl2
+FEATURES
+	my_in_AType:IN PARAMETER DataView::AType {encoding=>UPER;};
+	my_in_TypeEnumerated:IN PARAMETER DataView::TypeEnumerated {encoding=>UPER;};
+END mytestsubsystemvhdl2;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemvhdl2.VHDL
+PROPERTIES
+	FV_Name => "mytestsubsystem_fv_VHDL";
+	Source_Language => VHDL;
+END mytestsubsystemvhdl2.VHDL;
+

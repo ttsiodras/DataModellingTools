@@ -1,0 +1,85 @@
+Datamodel DEFINITIONS ::= BEGIN
+
+AType ::= SEQUENCE {
+    blArray	SEQUENCE (SIZE (10 .. 10)) OF BOOLEAN
+}
+
+TypeEnumerated ::= ENUMERATED {
+    red(0),
+    green(1),
+    blue(2)
+}
+
+TypeNested ::= SEQUENCE {
+    intVal	INTEGER (0 .. 10),
+    int2Val	INTEGER (-10 .. 10),
+    intArray	SEQUENCE (SIZE (10 .. 10)) OF INTEGER (0 .. 3),
+    realArray	SEQUENCE (SIZE (10 .. 10)) OF REAL (0.1 .. 3.14),
+    octStrArray	SEQUENCE (SIZE (10 .. 10)) OF OCTET STRING (SIZE (1 .. 10)),
+    boolArray	SEQUENCE (SIZE (10 .. 10)) OF T_BOOL,
+    enumArray	SEQUENCE (SIZE (10 .. 10)) OF TypeEnumerated,
+    enumValue	TypeEnumerated,
+    enumValue2	ENUMERATED {
+        truism(0),
+        falsism(1)
+    },
+    label	OCTET STRING (SIZE (10 .. 40)),
+    bAlpha	T_BOOL,
+    bBeta	BOOLEAN,
+    sString	T_STRING,
+    arr	T_ARR,
+    arr2	T_ARR2
+}
+
+T_POS ::= CHOICE {
+    longitude	REAL (-180 .. 180),
+    latitude	REAL (-90 .. 90),
+    height	REAL (30000 .. 45000),
+    subTypeArray	SEQUENCE (SIZE (10 .. 15)) OF TypeNested,
+    label	OCTET STRING (SIZE (50 .. 50)),
+    intArray	T_ARR,
+    myIntSet	T_SET,
+    myIntSetOf	T_SETOF
+}
+
+T_POS_SET ::= SET {
+    longitude	REAL (-180 .. 180),
+    latitude	REAL (-90 .. 90),
+    height	REAL (30000 .. 45000),
+    subTypeArray	SEQUENCE (SIZE (10 .. 15)) OF TypeNested,
+    label	OCTET STRING (SIZE (20 .. 50)),
+    intArray	T_ARR,
+    myIntSet	T_SET,
+    myIntSetOf	T_SETOF
+}
+
+T_ARR ::= SEQUENCE (SIZE (5 .. 6)) OF INTEGER (0 .. 32764)
+
+T_ARR2 ::= SEQUENCE (SIZE (5 .. 6)) OF REAL (0.1 .. 4.2)
+
+T_ARR3 ::= SEQUENCE (SIZE (5 .. 6)) OF SEQUENCE (SIZE (7 .. 7)) OF REAL (0.1 .. 4.2)
+
+T_ARR4 ::= SEQUENCE (SIZE (5 .. 6)) OF SEQUENCE (SIZE (7 .. 7)) OF REAL (0.1 .. 4.3)
+
+T_SET ::= SET {
+    data1	INTEGER (0 .. 131071),
+    data2	REAL (-100 .. 10),
+    data3	INTEGER (-1024 .. 1024),
+    data4	INTEGER (-1310720 .. 131071)
+}
+
+T_SETOF ::= SET (SIZE (5 .. 6)) OF INTEGER (0 .. 4)
+
+T_BOOL ::= BOOLEAN
+
+T_INT ::= INTEGER (0 .. 50)
+
+T_REAL ::= REAL (-3.14 .. 3.14)
+
+T_STRING ::= OCTET STRING (SIZE (10 .. 15))
+
+T_FIXEDSTRING ::= OCTET STRING (SIZE (15 .. 15))
+
+T_META ::= T_POS
+
+END

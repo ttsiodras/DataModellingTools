@@ -1,0 +1,153 @@
+package AADL_PI_RI
+
+Public
+
+SUBPROGRAM computeNative
+FEATURES
+tc_bool : in parameter D_view::T_BOOL {Encoding=>Native;};
+tc_boolo : out parameter D_view::T_BOOL {Encoding=>Native;};
+tc_int  : in parameter D_view::T_INT {Encoding=>Native;};
+tc_into  : out parameter D_view::T_INT {Encoding=>Native;};
+tc_real : in parameter D_view::T_REAL {Encoding=>Native;};
+tc_realo : out parameter D_view::T_REAL {Encoding=>Native;};
+tc_string : in parameter D_view::T_STRING {Encoding=>Native;};
+tc_stringo : out parameter D_view::T_STRING {Encoding=>Native;};
+tc_array : in parameter D_view::T_ARR {Encoding=>Native;};
+tc_arrayo : out parameter D_view::T_ARR {Encoding=>Native;};
+tc_enum : in parameter D_view::TypeEnumerated {Encoding=>Native;};
+tc_enumo : out parameter D_view::TypeEnumerated {Encoding=>Native;};
+tc_seq : in parameter D_view::TypeNested {Encoding=>Native;};
+tc_seqo : out parameter D_view::TypeNested {Encoding=>Native;};
+tc_cho : in parameter D_view::T_POS {Encoding=>Native;};
+tc_choo : out parameter D_view::T_POS {Encoding=>Native;};
+tc_set : in parameter D_view::T_SET {Encoding=>Native;};
+tc_seto : out parameter D_view::T_SETOF {Encoding=>Native;};
+END computeNative;
+
+SUBPROGRAM computeUPER
+FEATURES
+tc_bool : in parameter D_view::T_BOOL {Encoding=>UPER;};
+tc_boolo : out parameter D_view::T_BOOL {Encoding=>UPER;};
+tc_int  : in parameter D_view::T_INT {Encoding=>UPER;};
+tc_into  : out parameter D_view::T_INT {Encoding=>UPER;};
+tc_real : in parameter D_view::T_REAL {Encoding=>UPER;};
+tc_realo : out parameter D_view::T_REAL {Encoding=>UPER;};
+tc_string : in parameter D_view::T_STRING {Encoding=>UPER;};
+tc_stringo : out parameter D_view::T_STRING {Encoding=>UPER;};
+tc_array : in parameter D_view::T_ARR {Encoding=>UPER;};
+tc_arrayo : out parameter D_view::T_ARR {Encoding=>UPER;};
+tc_enum : in parameter D_view::TypeEnumerated {Encoding=>UPER;};
+tc_enumo : out parameter D_view::TypeEnumerated {Encoding=>UPER;};
+tc_seq : in parameter D_view::TypeNested {Encoding=>UPER;};
+tc_seqo : out parameter D_view::TypeNested {Encoding=>UPER;};
+tc_cho : in parameter D_view::T_POS {Encoding=>UPER;};
+tc_choo : out parameter D_view::T_POS {Encoding=>UPER;};
+tc_set : in parameter D_view::T_SET {Encoding=>UPER;};
+tc_seto : out parameter D_view::T_SETOF {Encoding=>UPER;};
+END computeUPER;
+
+---------
+-- Native
+---------
+
+SUBPROGRAM IMPLEMENTATION computeNative.SCADE5
+PROPERTIES
+Source_Language => Lustre5;
+assert_properties_extended::FV_Name => "compute_native_SCADE5";
+END computeNative.SCADE5;
+
+SUBPROGRAM IMPLEMENTATION computeNative.SCADE6
+PROPERTIES
+Source_Language => Lustre6;
+assert_properties_extended::FV_Name => "compute_native_SCADE6";
+END computeNative.SCADE6;
+
+SUBPROGRAM IMPLEMENTATION computeNative.OG
+PROPERTIES
+Source_Language => SDL;
+assert_properties_extended::FV_Name => "compute_native_OG";
+END computeNative.OG;
+
+SUBPROGRAM IMPLEMENTATION computeNative.C
+PROPERTIES
+Source_Language => C;
+assert_properties_extended::FV_Name => "compute_native_C";
+END computeNative.C;
+
+SUBPROGRAM IMPLEMENTATION computeNative.Ada
+PROPERTIES
+Source_Language => Ada;
+assert_properties_extended::FV_Name => "compute_native_Ada";
+END computeNative.Ada;
+
+SUBPROGRAM IMPLEMENTATION computeNative.Simulink
+PROPERTIES
+Source_Language => Simulink;
+assert_properties_extended::FV_Name => "compute_native_Simulink";
+END computeNative.Simulink;
+
+SUBPROGRAM IMPLEMENTATION computeNative.GUI_PI
+PROPERTIES
+Source_Language => GUI_PI;
+assert_properties_extended::FV_Name => "compute_native_GUI_PI";
+END computeNative.GUI_PI;
+
+SUBPROGRAM IMPLEMENTATION computeNative.GUI_RI
+PROPERTIES
+Source_Language => GUI_RI;
+assert_properties_extended::FV_Name => "compute_native_GUI_RI";
+END computeNative.GUI_RI;
+
+---------
+-- UPER
+---------
+
+SUBPROGRAM IMPLEMENTATION computeUPER.SCADE5
+PROPERTIES
+Source_Language => Lustre5;
+assert_properties_extended::FV_Name => "compute_native_SCADE5";
+END computeUPER.SCADE5;
+
+SUBPROGRAM IMPLEMENTATION computeUPER.SCADE6
+PROPERTIES
+Source_Language => Lustre6;
+assert_properties_extended::FV_Name => "compute_native_SCADE6";
+END computeUPER.SCADE6;
+
+SUBPROGRAM IMPLEMENTATION computeUPER.OG
+PROPERTIES
+Source_Language => SDL;
+assert_properties_extended::FV_Name => "compute_native_OG";
+END computeUPER.OG;
+
+SUBPROGRAM IMPLEMENTATION computeUPER.C
+PROPERTIES
+Source_Language => C;
+assert_properties_extended::FV_Name => "compute_native_C";
+END computeUPER.C;
+
+SUBPROGRAM IMPLEMENTATION computeUPER.Ada
+PROPERTIES
+Source_Language => Ada;
+assert_properties_extended::FV_Name => "compute_native_Ada";
+END computeUPER.Ada;
+
+SUBPROGRAM IMPLEMENTATION computeUPER.Simulink
+PROPERTIES
+Source_Language => Simulink;
+assert_properties_extended::FV_Name => "compute_native_Simulink";
+END computeUPER.Simulink;
+
+SUBPROGRAM IMPLEMENTATION computeUPER.GUI_PI
+PROPERTIES
+Source_Language => GUI_PI;
+assert_properties_extended::FV_Name => "compute_native_GUI_PI";
+END computeUPER.GUI_PI;
+
+SUBPROGRAM IMPLEMENTATION computeUPER.GUI_RI
+PROPERTIES
+Source_Language => GUI_RI;
+assert_properties_extended::FV_Name => "compute_native_GUI_RI";
+END computeUPER.GUI_RI;
+
+end AADL_PI_RI;

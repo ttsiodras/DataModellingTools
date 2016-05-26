@@ -1,0 +1,56 @@
+package SW
+
+public
+
+process P_GNC
+  features
+    read_position: in event data port Data_types::T_ARR;
+    write_position: out event data port Data_types::T_POS;
+  properties
+    Period => 100 Ms;
+    Dispatch_Protocol => Periodic;
+    Source_Language => Rhapsody;
+end P_GNC;
+
+process implementation P_GNC.P_GNC_Impl
+connections
+    event data port write_position -> P_POS.get_position_from_GNC;   
+end P_GNC.P_GNC_Impl;
+
+subprogram P_TMTC
+  features
+    tc_from_ground: in parameter Data_types::T_POS;
+    tc_send: out parameter Data_types::T_POS;
+    tc_bool : in parameter Data_types::T_BOOL;
+    tc_int  : in parameter Data_types::T_INT;
+    tc_into  : out parameter Data_types::T_INT;
+    tc_real : in parameter Data_types::T_REAL;
+    tc_string : in parameter Data_types::T_STRING;
+    tc_array : in parameter Data_types::T_ARR;
+    tc_arrayo : out parameter Data_types::T_ARR;
+    tc_enum : in parameter Data_types::TypeEnumerated;
+    tc_enumo : out parameter Data_types::TypeEnumerated;
+  properties
+    Source_Language => Ada;
+end P_TMTC;
+
+process implementation P_TMTC.P_TMTC_Impl
+connections
+    event data port tc_send -> P_POS.get_position_from_TMTC;
+end P_TMTC.P_TMTC_Impl;
+
+process P_POS
+  features
+    provide_position: out event data port Data_types::T_POS;
+    get_position_from_GNC: in event data port Data_types::T_POS;
+    get_position_from_TMTC: in event data port Data_types::T_POS;
+  properties
+    Source_Language => Ada;
+end P_POS;
+
+process implementation P_POS.P_POS_Impl
+connections
+    event data port provide_position -> P_GNC.read_position;
+end P_POS.P_POS_Impl;
+
+end SW;

@@ -1,0 +1,4 @@
+Make sure you have installed the python "coverage" tool,
+via your distro's package manager or (better) via pip.
+
+Version used: coverage 3.5.2

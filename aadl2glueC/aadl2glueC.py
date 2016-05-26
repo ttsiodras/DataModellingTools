@@ -214,7 +214,7 @@ types). This used to cover Dumpable C/Ada Types and OG headers.'''
     asn1SccPath = spawn.find_executable('asn1.exe')
     if len(asnFiles) != 0:
         if not asn1SccPath:
-            panic("ASN1SCC seems not installed on your system (asn1.exe not found in PATH).\n")
+            panic("ASN1SCC seems not installed on your system (asn1.exe not found in PATH).\n")  # pragma: no cover
         #os.system("mono \"{asn$ASN1SCC\" -wordSize 8 -typePrefix asn1Scc -Ada -equal -uPER -o \"" + outputDir + "\" \"" + "\" \"".join(asnFiles) + "\"")
         os.system('mono "{}" -wordSize 8 -typePrefix asn1Scc -Ada -equal -uPER -o "{}" "{}"'
                   .format(asn1SccPath,
@@ -224,6 +224,7 @@ types). This used to cover Dumpable C/Ada Types and OG headers.'''
 
 def main():
     sys.path.append(os.path.abspath(os.path.dirname(sys.argv[0])))
+    sys.path.append(os.path.abspath(os.path.dirname(sys.argv[0]) + os.sep + '..'))
     if sys.argv.count("-o") != 0:
         idx = sys.argv.index("-o")
         try:
@@ -361,10 +362,10 @@ def main():
         if modelingLanguage.lower() in ["gui_ri", "gui_pi", "vhdl", "rhapsody"]:
             modelingLanguage = "C"
 
-        backendFilename = "." + modelingLanguage.lower() + "_B_mapper.py"
+        backendFilename = modelingLanguage.lower() + "_B_mapper.py"
         inform("Parsing %s...", backendFilename)
         try:
-            backend = import_module(backendFilename[:-3], 'aadl2glueC')
+            backend = import_module(backendFilename[:-3])
             if backendFilename[:-3] not in loadedBackends:
                 loadedBackends[backendFilename[:-3]] = 1
                 if commonPy.configMT.verbose:
@@ -466,10 +467,10 @@ def main():
 
     def mappers(lang):
         if lang.lower() in ["gui_pi", "gui_ri"]:
-            return [import_module(".python_B_mapper", "aadl2glueC"),
-                    import_module(".pyside_B_mapper", "aadl2glueC")]
+            return [import_module("python_B_mapper", "aadl2glueC"),
+                    import_module("pyside_B_mapper", "aadl2glueC")]
         elif lang.lower() == "vhdl":  # pragma: no cover
-            return [import_module(".vhdl_B_mapper", "aadl2glueC")]  # pragma: no cover
+            return [import_module("vhdl_B_mapper", "aadl2glueC")]  # pragma: no cover
 
     for si in [x for x in SystemsAndImplementations if x[2] is not None and x[2].lower() in ["gui_ri", "gui_pi", "vhdl"]]:
         # We do, start the work
