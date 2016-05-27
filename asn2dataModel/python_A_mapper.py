@@ -418,15 +418,6 @@ def DumpTypeDumper(codeIndent, outputIndent, lines, variableName, node, names):
                        variableName+'[i]', containedNode, names)
         lines.append(codeIndent + "map(emitElem, xrange(%s.GetLength()))" % variableName)
         lines.append(codeIndent + 'lines.append("}")')
-        #for i in xrange(0, node._range[-1]):
-        #    lines.append(codeIndent + 'if %s.GetLength()>%d:' % (variableName, i))
-        #    if i > 0:
-        #        # Separate fields with comas
-        #        lines.append(codeIndent + "    lines.append(', ')")
-        #    #lines.append(codeIndent + '    print "%s[%d]:"' % (outputIndent, i))
-        #    DumpTypeDumper(codeIndent+"    ", outputIndent+" ", lines,
-        #                   variableName+'['+str(i)+']', containedNode, names)
-        #lines.append(codeIndent + 'lines.append("}")')
 
 
 def CreateDeclarationForType(nodeTypename, names, leafTypeDict):

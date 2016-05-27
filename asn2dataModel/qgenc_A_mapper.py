@@ -21,9 +21,6 @@
 # Note that in both cases, there are no charges (royalties) for the
 # generated code.
 #
-
-import os
-import sys
 import re
 import commonPy
 from commonPy.utility import panic, inform
@@ -49,21 +46,7 @@ def CleanNameAsSimulinkWants(name):
     return re.sub(r'[^a-zA-Z0-9_]', '_', name)
 
 
-def OnStartup(unused_modelingLanguage, asnFiles, outputDir):
-    if None == os.getenv("ASN1SCC"):
-        if None == os.getenv("DMT"):  # pragma: no cover
-            panic("DMT environment variable is not set, you must set it.")  # pragma: no cover
-        os.putenv("ASN1SCC", os.getenv("DMT") + os.sep + "asn1scc/asn1.exe")  # pragma: no cover
-    os.system(
-        ("mono " if sys.argv[0].endswith('.py') and sys.platform.startswith('linux') else "") +
-        "\"$ASN1SCC\" -wordSize 8 -typePrefix asn1Scc -c -uPER -o \"" + outputDir + "\" \"" + "\" \"".join(asnFiles) + "\"")
-    cmd = 'rm -f '
-    for i in ['real.c', 'asn1crt.c', 'acn.c', 'ber.c', 'xer.c']:
-        cmd += ' "' + outputDir + '"/' + i
-    os.system(cmd)
-    for tmp in asnFiles:
-        os.system("rm -f \"" + outputDir + os.sep + os.path.basename(os.path.splitext(tmp)[0]) + ".c\"")
-
+def OnStartup(unused_modelingLanguage, unused_asnFile, outputDir):
     global g_bHasStartupRunOnce
     if g_bHasStartupRunOnce:
         # Don't rerun, it has already done all the work
@@ -76,7 +59,6 @@ def OnStartup(unused_modelingLanguage, asnFiles, outputDir):
     outputFilename = "Simulink_DataView_asn.m"
     inform("QGenC_A_mapper: Creating file '%s'...", outputFilename)
     global g_outputFile
-    outputDir = outputDir + "../"
     g_outputFile = open(outputDir + outputFilename, 'w')
     global g_definedTypes
     g_definedTypes = {}
@@ -134,11 +116,9 @@ def MapInteger(node):
 
 def CreateAlias(nodeTypename, mappedType, description):
     # Requirements have changed: Simulink has an issue with AliasType...
-    name = CleanNameAsSimulinkWants(nodeTypename)
-    g_outputFile.write("%s = Simulink.AliasType;\n" % name)
-    g_outputFile.write("%s.BaseType = '%s';\n" % (name, mappedType))
-    g_outputFile.write("%s.Description = 'TypeName: asn1Scc%s %s';\n" % (name, name, description))
-    g_outputFile.write("%s.HeaderFile='C_ASN1_Types.h';\n\n" % name)
+    g_outputFile.write("%s = Simulink.AliasType;\n" % CleanNameAsSimulinkWants(nodeTypename))
+    g_outputFile.write("%s.BaseType = '%s';\n" % (CleanNameAsSimulinkWants(nodeTypename), mappedType))
+    g_outputFile.write("%s.Description = '%s';\n\n" % (CleanNameAsSimulinkWants(nodeTypename), description))
     return
 
 
@@ -154,8 +134,6 @@ def DeclareCollection(node, name, internal):
     g_outputFile.write("%s_member_length.DataType='int32';\n" % name)
     g_outputFile.write("%s_member_length.dimensions=1;\n\n" % name)
     g_outputFile.write('%s=Simulink.Bus;\n' % name)
-    g_outputFile.write("%s.Description='TypeName: asn1Scc%s';\n" % (name, name))
-    g_outputFile.write("%s.HeaderFile='C_ASN1_Types.h';\n" % name)
     g_outputFile.write("%s.Elements = " % name)
     g_outputFile.write('[')
     for i in xrange(0, node._range[-1]):
@@ -167,7 +145,7 @@ def DeclareCollection(node, name, internal):
 
 def DeclareSimpleCollection(node, name, internal):
     g_outputFile.write('%s_member_data=Simulink.BusElement;\n' % name)
-    g_outputFile.write("%s_member_data.name='arr';\n" % name)
+    g_outputFile.write("%s_member_data.name='element_data';\n" % name)
     g_outputFile.write("%s_member_data.DataType='%s';\n" % (name, internal))
     g_outputFile.write("%s_member_data.dimensions=%d;\n\n" % (name, node._range[-1]))
 
@@ -182,8 +160,6 @@ def DeclareSimpleCollection(node, name, internal):
         g_outputFile.write("%s_member_length.dimensions=1;\n\n" % name)
 
     g_outputFile.write('%s=Simulink.Bus;\n' % name)
-    g_outputFile.write("%s.Description='TypeName: asn1Scc%s';\n" % (name, name))
-    g_outputFile.write("%s.HeaderFile='C_ASN1_Types.h';\n" % name)
     g_outputFile.write("%s.Elements = " % name)
     g_outputFile.write('[')
     g_outputFile.write("%s_member_data " % name)
@@ -282,8 +258,6 @@ def CreateDeclarationForType(nodeTypename, names, leafTypeDict):
             g_outputFile.write(name + ".dimensions=1;\n\n")
 
         g_outputFile.write("%s = Simulink.Bus;\n" % CleanNameAsSimulinkWants(nodeTypename))
-        g_outputFile.write("%s.Description='TypeName: asn1Scc%s';\n" % (CleanNameAsSimulinkWants(nodeTypename), CleanNameAsSimulinkWants(nodeTypename)))
-        g_outputFile.write("%s.HeaderFile='C_ASN1_Types.h';\n" % CleanNameAsSimulinkWants(nodeTypename))
         g_outputFile.write("%s.Elements = " % CleanNameAsSimulinkWants(nodeTypename))
         if elemNo>1:
             g_outputFile.write('[')

@@ -136,9 +136,9 @@ def MapInteger(node):
 
 def CreateAlias(nodeTypename, mappedType, description):
     # Requirements have changed: Simulink has an issue with AliasType...
-    name = CleanNameAsSimulinkWants(nodeTypename)
-    g_outputFile.write("%s = Simulink.AliasType;\n" % name)
-    g_outputFile.write("%s.BaseType = '%s';\n" % (name, mappedType))
+    g_outputFile.write("%s = Simulink.AliasType;\n" % CleanNameAsSimulinkWants(nodeTypename))
+    g_outputFile.write("%s.BaseType = '%s';\n" % (CleanNameAsSimulinkWants(nodeTypename), mappedType))
+    g_outputFile.write("%s.Description = '%s';\n\n" % (CleanNameAsSimulinkWants(nodeTypename), description))
     return
 
 
@@ -165,7 +165,7 @@ def DeclareCollection(node, name, internal):
 
 def DeclareSimpleCollection(node, name, internal):
     g_outputFile.write('%s_member_data=Simulink.BusElement;\n' % name)
-    g_outputFile.write("%s_member_data.name='Data';\n" % name)
+    g_outputFile.write("%s_member_data.name='element_data';\n" % name)
     g_outputFile.write("%s_member_data.DataType='%s';\n" % (name, internal))
     g_outputFile.write("%s_member_data.dimensions=%d;\n\n" % (name, node._range[-1]))
 
