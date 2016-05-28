@@ -20,7 +20,6 @@
 #
 import re
 import os
-import sys
 import commonPy
 import commonPy.asnParser
 from commonPy.utility import panic, inform
@@ -50,10 +49,12 @@ def CleanNameAsPythonWants(name):
 
 
 def OnStartup(unused_modelingLanguage, asnFile, outputDir):
-    os.system("cp \"" + asnFile + "\" \"" + outputDir + "\"")
+    os.system("bash -c '[ ! -f \"" + outputDir + "/" + asnFile + "\" ] && cp \"" + asnFile + "\" \"" + outputDir + "\"'")
     this_path = os.path.dirname(__file__)
     stubs = this_path + os.sep + 'Stubs.py'
     os.system('cp "{}" "{}"'.format(stubs, outputDir))
+    enum_learner = this_path + os.sep + 'learn_CHOICE_enums.py'
+    os.system('cp "{}" "{}"'.format(enum_learner, outputDir))
     global g_bHasStartupRunOnce
     if g_bHasStartupRunOnce:
         # Don't rerun, it has already done all the work
@@ -78,150 +79,172 @@ def OnStartup(unused_modelingLanguage, asnFile, outputDir):
     global g_outputGetSetH
     g_outputGetSetH = open(outputDir + base + "_getset.h", "w")
     g_outputGetSetH.write('#ifndef __GETSET_H__\n#define __GETSET_H__\n\n')
-    g_outputGetSetH.write('#include "%s.h"\n' % origGrammarBase)
+    g_outputGetSetH.write('#include "%s.h"\n\n' % origGrammarBase)
+    g_outputGetSetH.write('size_t GetStreamCurrentLength(BitStream *pBitStrm);\n')
+    g_outputGetSetH.write('byte *GetBitstreamBuffer(BitStream *pBitStrm);\n')
+    g_outputGetSetH.write('byte GetBufferByte(byte *p, size_t off);\n')
+    g_outputGetSetH.write('void SetBufferByte(byte *p, size_t off, byte b);\n')
+    g_outputGetSetH.write('void ResetStream(BitStream *pStrm);\n')
+    g_outputGetSetH.write('BitStream *CreateStream(size_t bufferSize);\n')
+    g_outputGetSetH.write('void DestroyStream(BitStream *pBitStrm);\n\n')
     global g_outputGetSetC
     g_outputGetSetC = open(outputDir + "%s_getset.c" % base, "w")
     g_outputGetSetC.write('#include <stdio.h>\n')
+    g_outputGetSetC.write('#include <stdlib.h>\n')
+    g_outputGetSetC.write('#include <assert.h>\n')
     g_outputGetSetC.write('#include <string.h>\n')
     g_outputGetSetC.write('#include "%s_getset.h"\n\n' % base)
+    g_outputGetSetC.write('size_t GetStreamCurrentLength(BitStream *pBitStrm) {\n')
+    g_outputGetSetC.write('    return pBitStrm->currentByte + ((pBitStrm->currentBit+7)/8);\n')
+    g_outputGetSetC.write('}\n\n')
+    g_outputGetSetC.write('byte *GetBitstreamBuffer(BitStream *pBitStrm) {\n')
+    g_outputGetSetC.write('    return pBitStrm->buf;\n')
+    g_outputGetSetC.write('}\n\n')
+    g_outputGetSetC.write('byte GetBufferByte(byte *p, size_t off) {\n')
+    g_outputGetSetC.write('    assert(p);\n')
+    g_outputGetSetC.write('    return p[off];\n')
+    g_outputGetSetC.write('}\n\n')
+    g_outputGetSetC.write('void SetBufferByte(byte *p, size_t off, byte b) {\n')
+    g_outputGetSetC.write('    assert(p);\n')
+    g_outputGetSetC.write('    p[off] = b;\n')
+    g_outputGetSetC.write('}\n\n')
+    g_outputGetSetC.write('void ResetStream(BitStream *pStrm) {\n')
+    g_outputGetSetC.write('    assert(pStrm);\n')
+    g_outputGetSetC.write('    assert(pStrm->count > 0);\n')
+    g_outputGetSetC.write('    pStrm->currentByte = 0;\n')
+    g_outputGetSetC.write('    pStrm->currentBit = 0;\n')
+    g_outputGetSetC.write('}\n\n')
+    g_outputGetSetC.write('BitStream *CreateStream(size_t bufferSize) {\n')
+    g_outputGetSetC.write('    BitStream *pBitStrm = malloc(sizeof(BitStream));\n')
+    g_outputGetSetC.write('    assert(pBitStrm);\n')
+    g_outputGetSetC.write('    pBitStrm->buf = malloc(bufferSize);\n')
+    g_outputGetSetC.write('    assert(pBitStrm->buf);\n')
+    g_outputGetSetC.write('    pBitStrm->count = bufferSize;\n')
+    g_outputGetSetC.write('    memset(pBitStrm->buf, 0x0, bufferSize);\n')
+    g_outputGetSetC.write('    ResetStream(pBitStrm);\n')
+    g_outputGetSetC.write('}\n\n')
+    g_outputGetSetC.write('void DestroyStream(BitStream *pBitStrm) {\n')
+    g_outputGetSetC.write('    assert(pBitStrm);\n')
+    g_outputGetSetC.write('    assert(pBitStrm->buf);\n')
+    g_outputGetSetC.write('    free(pBitStrm->buf);\n')
+    g_outputGetSetC.write('    free(pBitStrm);\n')
+    g_outputGetSetC.write('}\n\n')
     Makefile = open(outputDir + "Makefile.python", 'w')
 
     # Note that this Makefile will use a custom ASN1SCC invocation
     # where "-equal" is passed - the _Equal functions will be generated
     # and used during comparisons of incoming TMs (For MSCs)
 
+    # mono_exe = "mono " if sys.argv[0].endswith('.py') and sys.platform.startswith('linux') else ""
+    mono_exe = ""
     Makefile.write('''
-ifeq ($(ASN2DATAMODEL),)
-ASN2DATAMODEL:=asn2dataModel
-endif
-ifeq ($(ASN1SCC),)
 ASN1SCC:=asn1.exe
-endif
-
-PREFIX:=`taste-config --prefix`/share/
-
-define InterfaceEnum
-%%module InterfaceEnum 
-%%{
-#include "interface_enum.h"
-%%}
-#include "interface_enum.h"
-endef
-export InterfaceEnum
-
+ASN2DATAMODEL:=asn2dataModel
 GRAMMAR := %(origGrammarBase)s
 BASEGRAMMAR := %(base)s
-BUILDDIR:= .
-OBJ     := $(BUILDDIR)/$(GRAMMAR).o $(BUILDDIR)/asn1crt.o $(BUILDDIR)/real.o $(BUILDDIR)/acn.o $(BUILDDIR)/ber.o $(BUILDDIR)/xer.o $(BUILDDIR)/DV_wrap.o $(BUILDDIR)/$(BASEGRAMMAR)_getset.o
+BDIR:= .
+OBJ     := $(BDIR)/$(GRAMMAR).o $(BDIR)/asn1crt.o $(BDIR)/real.o $(BDIR)/acn.o $(BDIR)/ber.o $(BDIR)/xer.o $(BDIR)/$(BASEGRAMMAR)_getset.o
 
-all:    _DV.so
+all:    $(BDIR)/$(BASEGRAMMAR)_getset.so $(BDIR)/DV.py
 
-taste:  _DV.so ExtraSwigGate
+$(BDIR)/$(GRAMMAR)_getset.c:       $(GRAMMAR).asn
+%(tab)smkdir -p $(BDIR)
+%(tab)s$(ASN2DATAMODEL) -toPython -o $(BDIR) $<
 
-$(BUILDDIR)/DV.i $(BUILDDIR)/$(GRAMMAR)_getset.c:       $(GRAMMAR).asn
-	mkdir -p $(BUILDDIR)
-	$(ASN2DATAMODEL) -toPython -o $(BUILDDIR) $<
+$(BDIR)/asn1crt.c $(BDIR)/$(GRAMMAR).c $(BDIR)/real.c $(BDIR)/acn.c $(BDIR)/ber.c $(BDIR)/xer.c $(BDIR)/$(GRAMMAR).h $(BDIR)/asn1crt.h:       $(GRAMMAR).asn
+%(tab)sif [ ! -f "$(GRAMMAR).acn" ] ; then %(mono)s$(ASN1SCC) -ACND -o $(BDIR) $< ; fi
+%(tab)s%(mono)s$(ASN1SCC) -ACN -c -uPER -equal -wordSize 8 -o $(BDIR) $< $(GRAMMAR).acn
 
-$(BUILDDIR)/asn1crt.c $(BUILDDIR)/$(GRAMMAR).c $(BUILDDIR)/real.c $(BUILDDIR)/acn.c $(BUILDDIR)/ber.c $(BUILDDIR)/xer.c $(BUILDDIR)/$(GRAMMAR).h $(BUILDDIR)/asn1crt.h:       $(GRAMMAR).asn
-	if [ ! -f "$(GRAMMAR).acn" ] ; then %(mono)s$(ASN1SCC) -ACND -o $(BUILDDIR) $< ; fi
-	%(mono)s$(ASN1SCC) -ACN -c -uPER -equal -wordSize 8 -o $(BUILDDIR) $< $(GRAMMAR).acn
+$(BDIR)/DV.py:       $(GRAMMAR).asn
+%(tab)sgrep 'REQUIRED_BYTES_FOR_ENCODING' $(BDIR)/$(GRAMMAR).h | awk '{print $$2 " = " $$3}' > $@
+%(tab)slearn_CHOICE_enums.py %(base)s >> $@
 
-$(BUILDDIR)/DV_wrap.c:  $(BUILDDIR)/DV.i        $(BUILDDIR)/$(GRAMMAR).h
-	swig -ignoremissing -includeall -outdir $(BUILDDIR) -python $(BUILDDIR)/DV.i
+$(BDIR)/%%.o:       $(BDIR)/%%.c
+%(tab)sgcc -g -fPIC -c `python-config --includes` -o $@ $<
 
-ExtraSwigGate:
-	echo "$$InterfaceEnum" > InterfaceEnum.i
-	swig -ignoremissing -includeall -outdir . -python ./InterfaceEnum.i && gcc -g -shared  -fPIC `python-config --includes` -o _InterfaceEnum.so InterfaceEnum_wrap.c
-
-$(BUILDDIR)/%%.o:       $(BUILDDIR)/%%.c
-	gcc -g -fPIC -c `python-config --includes` -o $@ $<
-
-_DV.so: ${OBJ}
-	gcc -g -fPIC -shared `python-config --ldflags` -o $@ $^
+$(BDIR)/$(BASEGRAMMAR)_getset.so:	${OBJ}
+%(tab)sgcc -g -fPIC -shared `python-config --ldflags` -o $@ $^
 
 clean:
-	rm -f $(BUILDDIR)/asn1crt.?  $(BUILDDIR)/real.?  $(BUILDDIR)/$(GRAMMAR).?  $(BUILDDIR)/acn.?  $(BUILDDIR)/ber.? $(BUILDDIR)/xer.?
-	rm -f $(BUILDDIR)/DV.py $(BUILDDIR)/*.pyc $(BUILDDIR)/DV_wrap.? _DV.so
-	rm -f $(BUILDDIR)/$(GRAMMAR)_getset.? $(BUILDDIR)/$(GRAMMAR)_asn.py $(BUILDDIR)/DV.i
-''' % {
-        'base': base,
-        'origGrammarBase': origGrammarBase,
-        'mono': "mono "
-                if sys.argv[0].endswith('.py') and sys.platform.startswith('linux')
-                else ""
-    })
+%(tab)srm -f $(BDIR)/asn1crt.?  $(BDIR)/real.?  $(BDIR)/$(GRAMMAR).?  $(BDIR)/acn.?  $(BDIR)/ber.? $(BDIR)/xer.?
+%(tab)srm -f $(BDIR)/DV.py $(BDIR)/*.pyc $(BDIR)/$(BASEGRAMMAR)_getset.? $(BDIR)/$(BASEGRAMMAR)_getset.so
+%(tab)srm -f $(BDIR)/$(GRAMMAR)_asn.py
+''' % {'tab': '\t', 'base': base, 'origGrammarBase': origGrammarBase, 'mono': mono_exe})
     Makefile.close()
-    DV_file = open(outputDir + "DV.i", 'w')
-    DV_file.write('''%%module DV
-
-%%{
-#include "%(origGrammarBase)s.h"
-#include "%(base)s_getset.h"
-%%}
-
-#include "%(origGrammarBase)s.h"
-#include "%(base)s_getset.h"
-
-%%include "carrays.i"
-%%array_functions(byte,byte_SWIG_PTR)
-%%array_functions(int,int_SWIG_PTR)
-%%array_functions(double,double_SWIG_PTR)
-''' % {'base': base, 'origGrammarBase': origGrammarBase})
-    for nodeTypename, node in commonPy.asnParser.g_names.iteritems():
-        if node._isArtificial:
-            continue
-        if nodeTypename not in ["byte", "int", "double"]:  # already done these
-            DV_file.write(
-                '%%array_functions(%s,%s_SWIG_PTR)\n' %
-                (CleanNameAsPythonWants(nodeTypename), CleanNameAsPythonWants(nodeTypename)))
-
-    DV_file.write('''
-''')
-    DV_file.close()
     CreateDeclarationsForAllTypes(commonPy.asnParser.g_names, commonPy.asnParser.g_leafTypeDict)
     g_outputGetSetH.write('\n/* Helper functions for NATIVE encodings */\n\n')
     g_outputGetSetC.write('\n/* Helper functions for NATIVE encodings */\n\n')
+
+    def WorkOnType(nodeTypename):
+        typ = CleanNameAsPythonWants(nodeTypename)
+        g_outputGetSetH.write('void SetDataFor_%s(void *dest, void *src);\n' % typ)
+        g_outputGetSetH.write("byte* MovePtrBySizeOf_%s(byte *pData);\n" % typ)
+        g_outputGetSetH.write("byte* CreateInstanceOf_%s(void);\n" % typ)
+        g_outputGetSetH.write("void DestroyInstanceOf_%s(byte *pData);\n\n" % typ)
+        g_outputGetSetC.write('void SetDataFor_%s(void *dest, void *src)\n' % typ)
+        g_outputGetSetC.write('{\n')
+        g_outputGetSetC.write('    memcpy(dest, src, sizeof(%s));\n' % typ)
+        g_outputGetSetC.write('}\n\n')
+        g_outputGetSetC.write("byte* MovePtrBySizeOf_%s(byte *pData)\n" % typ)
+        g_outputGetSetC.write('{\n')
+        g_outputGetSetC.write('    return pData + sizeof(%s);\n' % typ)
+        g_outputGetSetC.write('}\n\n')
+        g_outputGetSetC.write("byte* CreateInstanceOf_%s() {\n" % typ)
+        g_outputGetSetC.write('    %s *p = (%s*)malloc(sizeof(%s));\n' % (typ, typ, typ))
+        if typ != 'int':
+            g_outputGetSetC.write('    %s_Initialize(p);\n' % typ)
+        else:
+            g_outputGetSetC.write('    *p = 0;\n')
+        g_outputGetSetC.write('    return (byte*)p;\n')
+        g_outputGetSetC.write('}\n\n')
+        g_outputGetSetC.write("void DestroyInstanceOf_%s(byte *pData) {\n" % typ)
+        g_outputGetSetC.write('    free(pData);\n')
+        g_outputGetSetC.write('}\n\n')
     for nodeTypename, node in commonPy.asnParser.g_names.iteritems():
         if node._isArtificial:
             continue
-        g_outputGetSetH.write('void SetDataFor_%s(void *dest, void *src);\n' % CleanNameAsPythonWants(nodeTypename))
-        g_outputGetSetH.write("byte* MovePtrBySizeOf_%s(byte *pData);\n" % CleanNameAsPythonWants(nodeTypename))
-        g_outputGetSetC.write('void SetDataFor_%s(void *dest, void *src)\n' % CleanNameAsPythonWants(nodeTypename))
-        g_outputGetSetC.write('{\n')
-        g_outputGetSetC.write('    memcpy(dest, src, sizeof(%s));\n' % CleanNameAsPythonWants(nodeTypename))
-        g_outputGetSetC.write('}\n\n')
-        g_outputGetSetC.write("byte* MovePtrBySizeOf_%s(byte *pData)\n" % CleanNameAsPythonWants(nodeTypename))
-        g_outputGetSetC.write('{\n')
-        g_outputGetSetC.write('    return pData + sizeof(%s);\n' % CleanNameAsPythonWants(nodeTypename))
-        g_outputGetSetC.write('}\n\n')
+        WorkOnType(nodeTypename)
+    WorkOnType("int")
     g_outputGetSetH.write('\n#endif\n')
+    g_outputGetSetH.close()
+    g_outputGetSetC.close()
+
+    retTypes = {}
+    for line in open(outputDir + "%s_getset.c" % base):
+        if any(x in line for x in ['_Get(', '_GetLength']):
+            retType, funcName = line.split()[0:2]
+            funcName = funcName.split('(')[0]
+            retTypes[funcName] = retType
+    g_outputGetSetC = open(outputDir + "DV_Types.py", 'w')
+    g_outputGetSetC.write('funcTypeLookup = ' + repr(retTypes))
+    g_outputGetSetC.close()
 
 
-def OnBasic(nodeTypename, node, leafTypeDict):
+def OnBasic(unused_nodeTypename, unused_node, unused_leafTypeDict):
     pass
 
 
-def OnSequence(nodeTypename, node, leafTypeDict):
+def OnSequence(unused_nodeTypename, unused_node, unused_leafTypeDict):
     pass
 
 
-def OnSet(nodeTypename, node, leafTypeDict):
+def OnSet(unused_nodeTypename, unused_node, unused_leafTypeDict):
     pass  # pragma: nocover
 
 
-def OnEnumerated(nodeTypename, node, leafTypeDict):
+def OnEnumerated(unused_nodeTypename, unused_node, unused_leafTypeDict):
     pass
 
 
-def OnSequenceOf(nodeTypename, node, leafTypeDict):
+def OnSequenceOf(unused_nodeTypename, unused_node, unused_leafTypeDict):
     pass
 
 
-def OnSetOf(nodeTypename, node, leafTypeDict):
+def OnSetOf(unused_nodeTypename, unused_node, unused_leafTypeDict):
     pass  # pragma: nocover
 
 
-def OnChoice(nodeTypename, node, leafTypeDict):
+def OnChoice(unused_nodeTypename, unused_node, unused_leafTypeDict):
     pass
 
 
@@ -229,7 +252,7 @@ def OnShutdown():
     pass
 
 
-class Params:
+class Params(object):
     cTypes = {
         "BOOLEAN": "flag",
         "INTEGER": "asn1SccSint",
@@ -254,19 +277,19 @@ class Params:
         self._types.append("int")
         return True
         # For others, lookup the C type
-        #try:
-        #    realLeafType = leafTypeDict[node._leafType]
-        #except:
-        #    #panic("Python_A_mapper: Only primitive types can be C params, not %s" % node.Location())
-        #    # the lookup will fail for non-primitives, which we ignore
-        #    return False
+        # try:
+        #     realLeafType = leafTypeDict[node._leafType]
+        # except:
+        #     #panic("Python_A_mapper: Only primitive types can be C params, not %s" % node.Location())
+        #     # the lookup will fail for non-primitives, which we ignore
+        #     return False
 
-        #self._vars.append(varName)
-        #try:
-        #    self._types.append(self.cTypes[realLeafType])
-        #except:
-        #    panic("Python_A_mapper: Can't map (%s,%s) to C type\n" % (varName, realLeafType))
-        #return True
+        # self._vars.append(varName)
+        # try:
+        #     self._types.append(self.cTypes[realLeafType])
+        # except:
+        #     panic("Python_A_mapper: Can't map (%s,%s) to C type\n" % (varName, realLeafType))
+        # return True
 
     def Pop(self):
         self._vars.pop()
@@ -365,21 +388,24 @@ def DumpTypeDumper(codeIndent, outputIndent, lines, variableName, node, names):
     ''' Return the lines of code needed to display the value of a variable
         of a given type, in the ASN.1 Value Notation format (aka GSER) '''
     if isinstance(node, AsnBool):
-        lines.append(codeIndent + 'lines.append("%s"+str(%s.Get()!=0).upper())'
-                                  % (outputIndent, variableName))
+        lines.append(
+            codeIndent +
+            'lines.append("%s"+str(%s.Get()!=0).upper())' % (outputIndent, variableName))
     elif isinstance(node, AsnInt):
-        lines.append(codeIndent + 'lines.append("%s"+str(%s.Get()))'
-                                  % (outputIndent, variableName))
+        lines.append(
+            codeIndent + 'lines.append("%s"+str(%s.Get()))' % (outputIndent, variableName))
     elif isinstance(node, AsnReal):
-        lines.append(codeIndent + 'lines.append("%s"+str(%s.Get()))'
-                                  % (outputIndent, variableName))
+        lines.append(
+            codeIndent + 'lines.append("%s"+str(%s.Get()))' % (outputIndent, variableName))
     elif isinstance(node, AsnString):
-        lines.append(codeIndent + 'lines.append("%s\\\""+str(%s.GetPyString()) + "\\\"")'
-                                  % (outputIndent, variableName))
+        lines.append(
+            codeIndent +
+            'lines.append("%s\\\""+str(%s.GetPyString()) + "\\\"")' % (outputIndent, variableName))
     elif isinstance(node, AsnEnumerated):
         mapping = str({val: name for name, val in node._members})
-        lines.append(codeIndent + 'lines.append("%s"+%s[str(%s.Get())])'
-                                  % (outputIndent, mapping, variableName))
+        lines.append(
+            codeIndent +
+            'lines.append("%s"+%s[str(%s.Get())])' % (outputIndent, mapping, variableName))
     elif isinstance(node, (AsnChoice, AsnSet, AsnSequence)):
         if not isinstance(node, AsnChoice):
             lines.append(codeIndent + 'lines.append("{")')
@@ -389,21 +415,26 @@ def DumpTypeDumper(codeIndent, outputIndent, lines, variableName, node, names):
             extraIndent = " "
         for idx, child in enumerate(node._members):
             if isinstance(node, AsnChoice):
-                lines.append(codeIndent + 'if %s.kind.Get() == DV.%s:'
-                                          % (variableName,
-                                             CleanNameAsPythonWants(child[2])))
+                lines.append(
+                    codeIndent + 'if %s.kind.Get() == DV.%s:' % (
+                        variableName,
+                        CleanNameAsPythonWants(child[2])))
                 sep = ": "
             elif idx > 0:
-                # Separate fields with comas
+                # Separate fields with comas:
+                #
+                # - only when we are past the 1st field
+                # - and when we are NOT a CHOICE
                 lines.append(codeIndent + extraIndent + "lines.append(', ')")
-            lines.append(codeIndent + extraIndent + 'lines.append("%s%s%s")'
-                                                    % (outputIndent, child[0], sep))
+            lines.append(
+                codeIndent + extraIndent +
+                'lines.append("%s%s%s")' % (outputIndent, child[0], sep))
             childNode = child[1]
             if isinstance(childNode, AsnMetaMember):
                 childNode = names[childNode._containedType]
-            DumpTypeDumper(codeIndent + extraIndent, outputIndent + " ",
-                           lines, variableName+"." + 
-                           CleanNameAsPythonWants(child[0]), childNode, names)
+            DumpTypeDumper(
+                codeIndent + extraIndent, outputIndent + " ", lines,
+                variableName + "." + CleanNameAsPythonWants(child[0]), childNode, names)
         if not isinstance(node, AsnChoice):
             lines.append(codeIndent + 'lines.append("}")')
     elif isinstance(node, AsnSetOf) or isinstance(node, AsnSequenceOf):

@@ -23,6 +23,17 @@
 # Note that in both cases, there are no charges (royalties) for the
 # generated code.
 #
+'''
+Model Translator
+
+This is one of the code generators that Semantix developed for
+the European research project ASSERT. It is now enhanced in the
+context of Data Modelling and Data Modelling Tuning projects.
+
+It reads the ASN.1 specification of the exchanged messages, and
+generates the semantically equivalent ModelingTool/ModelingLanguage
+declarations (e.g. SCADE/Lustre, Matlab/Simulink statements, etc).
+'''
 import os
 import sys
 import copy
@@ -35,18 +46,6 @@ from commonPy.utility import inform, panic
 import commonPy.cleanupNodes
 
 import commonPy.verify as verify
-
-__doc__ = '''\
-Model Translator
-
-This is one of the code generators that Semantix developed for
-the European research project ASSERT. It is now enhanced in the
-context of Data Modelling and Data Modelling Tuning projects.
-
-It reads the ASN.1 specification of the exchanged messages, and
-generates the semantically equivalent ModelingTool/ModelingLanguage
-declarations (e.g. SCADE/Lustre, Matlab/Simulink statements, etc).
-'''
 
 
 def usage(argsToTools):
@@ -135,7 +134,7 @@ def main():
 
     uniqueASNfiles = {}
     for grammar in sys.argv[1:]:
-        uniqueASNfiles[grammar]=1
+        uniqueASNfiles[grammar] = 1
     commonPy.asnParser.ParseAsnFileList(uniqueASNfiles.keys())
 
     for asnFile in uniqueASNfiles:
@@ -202,7 +201,7 @@ def main():
                         inform("Processing %s (%s)...", nodeTypename, modelingLanguage)
 
                         # First, make sure we know what leaf type this node is
-                        assert(nodeTypename in leafTypeDict)
+                        assert nodeTypename in leafTypeDict
 
                         leafType = leafTypeDict[nodeTypename]
                         # If it is a base type,

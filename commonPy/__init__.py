@@ -13,4 +13,4 @@ import verify
 import recursiveMapper
 import cleanupNodes
 
-__version__ = "1.1.3"
+__version__ = "1.1.4"
