@@ -18,11 +18,55 @@
 # Note that in both cases, there are no charges (royalties) for the
 # generated code.
 #
+import os
 import sys
 import re
 import copy
 import traceback
-import DV
+import DV_Types
+from ctypes import (
+    cdll, c_void_p, c_ubyte, c_double, c_uint,
+    c_longlong, c_bool, c_int, c_long
+)
+
+# load the *getset.so in this folder
+script_path = os.path.dirname(os.path.realpath(__file__))
+soFileNames = [
+    filename
+    for filename in os.listdir(script_path)
+    if filename.endswith("_getset.so")
+]
+if len(soFileNames) != 1:
+    print "Failed to locate a single _getset.so under", script_path
+    sys.exit(1)
+
+JMP = cdll.LoadLibrary(soFileNames[0])
+
+# BitStream constructor
+CreateStream = JMP.CreateStream
+CreateStream.restype = c_void_p
+# BitStream destructor
+DestroyStream = JMP.DestroyStream
+# BitStream reset
+ResetStream = JMP.ResetStream
+# Get number of bytes in encoded stream
+GetStreamCurrentLength = JMP.GetStreamCurrentLength
+GetStreamCurrentLength.restype = c_uint
+
+# Access BitStream buffer
+GetBitstreamBuffer = JMP.GetBitstreamBuffer
+GetBitstreamBuffer.restype = c_void_p
+# Read from buffer
+GetBufferByte = JMP.GetBufferByte
+GetBufferByte.restype = c_ubyte
+# Write to buffer
+SetBufferByte = JMP.SetBufferByte
+
+# Create pErr space for Encoders - i.e. sizeof(int)
+CreateInstanceOf_int = JMP.CreateInstanceOf_int
+CreateInstanceOf_int.restype = c_void_p
+# Release pErr space for Encoders
+DestroyInstanceOf_int = JMP.DestroyInstanceOf_int
 
 
 def panicWithCallStack(msg):
@@ -44,44 +88,44 @@ def myassert(b):
         panicWithCallStack("Assertion failed...")
 
 
-class DataStream:
+class DataStream(object):
     """ASN1SCC BitStream equivalent"""
     def __init__(self, bufferSize):
         """bufferSize: use the DV.TYPENAME_REQUIRED_BYTES_FOR_ENCODING"""
         myassert(isinstance(bufferSize, int))
-        self._bs = DV.BitStream()
-        self._pMem = DV.new_byte_SWIG_PTR(bufferSize)
+        self._bs = c_void_p(CreateStream(bufferSize))
         self._bufferSize = bufferSize
-        DV.BitStream_Init(self._bs, self._pMem, self._bufferSize)
 
     def __del__(self):
-        DV.delete_byte_SWIG_PTR(self._pMem)
+        """Releases the encoded data and the bitstream structure pointing to them"""
+        DestroyStream(self._bs)
 
     def Reset(self):
         """Rewinds the currentByte and currentBit to the start"""
-        self._bs.currentBit = 0
-        self._bs.currentByte = 0
+        ResetStream(self._bs)
 
     def GetPyString(self):
-        #print "Reading",
+        # print "Reading",
         msg = ""
-        for i in xrange(0, self._bs.currentByte + ((self._bs.currentBit+7)/8)):
-            b = DV.byte_SWIG_PTR_getitem(self._pMem, i)
+        pData = GetBitstreamBuffer(self._bs)
+        for i in xrange(0, GetStreamCurrentLength(self._bs)):
+            b = GetBufferByte(pData, i)
             msg += chr(b)
-            #print b, ",",
-        #print "EOF"
+            # print b, ",",
+        # print "EOF"
         return msg
 
     def SetFromPyString(self, data):
         strLength = len(data)
-        assert(self._bs.count >= strLength)
+        assert self._bufferSize >= strLength
         self._bs.count = strLength
-        #print "Writing",
+        pData = GetBitstreamBuffer(self._bs)
+        # print "Writing",
         for i in xrange(0, strLength):
             b = ord(data[i])
-            #print b, ",",
-            DV.byte_SWIG_PTR_setitem(self._pMem, i, b)
-        #print "EOF"
+            # print b, ",",
+            SetBufferByte(pData, i, b)
+        # print "EOF"
 
 
 class COMMON(object):
@@ -139,15 +183,18 @@ An example for SetLength:
 """
 
     allowed = ["_nodeTypeName", "_ptr", "_pErr", "_Caccessor", "_accessPath", "_params"]
-#, "Get", "GetLength", "Set", "SetLength", "Reset", "Encode", "Decode", "SetFromPyString", "GetPyString", "allowed"]
+# , "Get", "GetLength", "Set", "SetLength", "Reset", "Encode", "Decode", "SetFromPyString", "GetPyString", "allowed"]
 
     def __init__(self, nodeTypeName):
         myassert(isinstance(nodeTypeName, str))
         self._nodeTypeName = nodeTypeName
-        self._ptr = getattr(DV, "new_" + Clean(nodeTypeName) + "_SWIG_PTR")(1)
-        getattr(DV, Clean(nodeTypeName) + "_Initialize")(self._ptr)
-        self._pErr = DV.new_int_SWIG_PTR(1)
-        self.Reset()
+        constructor = getattr(JMP, "CreateInstanceOf_" + Clean(nodeTypeName))
+        constructor.restype = c_void_p
+        self._ptr = constructor()
+        self._pErr = CreateInstanceOf_int()
+        self._Caccessor = ""
+        self._params = []
+        self._accessPath = ""
 
     def Reset(self, state=None):
         if state is None:
@@ -161,8 +208,9 @@ An example for SetLength:
         return self._Caccessor[:], copy.deepcopy(self._params), self._accessPath[:]
 
     def __del__(self):
-        DV.delete_int_SWIG_PTR(self._pErr)
-        getattr(DV, "delete_" + Clean(self._nodeTypeName) + "_SWIG_PTR")(self._ptr)
+        DestroyInstanceOf_int(self._pErr)
+        destructor = getattr(JMP, "DestroyInstanceOf_" + Clean(self._nodeTypeName))
+        destructor(self._ptr)
 
     def __str__(self):
         return "Choose the information you want - whole-structure or sequence dump not supported."
@@ -186,7 +234,27 @@ An example for SetLength:
 
     def Get(self, **args):  # postfix="", reset=True
         try:
-            bridgeFunc = getattr(DV, Clean(self._nodeTypeName) + "_" + self._Caccessor + "_Get"+args.get("postfix", ""))
+            bridgeFuncName = Clean(self._nodeTypeName) + "_" + self._Caccessor + "_Get"+args.get("postfix", "")
+            if bridgeFuncName not in DV_Types.funcTypeLookup:
+                print "Function", bridgeFuncName, "not found in lookup - contact support."
+                raise Exception("")
+            resType = DV_Types.funcTypeLookup[bridgeFuncName]
+            if resType.endswith('*'):
+                cTypesResultType = c_void_p
+            else:
+                cTypesResultType = {
+                    'asn1SccSint': c_longlong,
+                    'byte': c_ubyte,
+                    'double': c_double,
+                    'flag': c_bool,
+                    'int': c_int,
+                    'long': c_long
+                }.get(resType, None)
+                if cTypesResultType is None:
+                    print "Result type of", resType, "is not yet supported in the Python mapper - contact support."
+                    raise Exception("")
+            bridgeFunc = getattr(JMP, bridgeFuncName)
+            bridgeFunc.restype = cTypesResultType
             retVal = bridgeFunc(self._ptr, *self._params)
         except:
             oldAP = self._accessPath
@@ -199,15 +267,22 @@ An example for SetLength:
 
     def Set(self, value, **args):  # postfix="", reset=True
         try:
-            #print Clean(self._nodeTypeName) + "_" + self._Caccessor + "_Set"+postfix
-            bridgeFunc = getattr(DV, Clean(self._nodeTypeName) + "_" + self._Caccessor + "_Set"+args.get("postfix", ""))
-            self._params.append(value)
+            # print Clean(self._nodeTypeName) + "_" + self._Caccessor + "_Set"+postfix
+            bridgeFunc = getattr(JMP, Clean(self._nodeTypeName) + "_" + self._Caccessor + "_Set"+args.get("postfix", ""))
+            if isinstance(value, float):
+                ctypesValue = c_double(value)
+            elif isinstance(value, (int, long)):
+                ctypesValue = c_longlong(value)
+            else:
+                ctypesValue = value
+            self._params.append(ctypesValue)
             bridgeFunc(self._ptr, *self._params)
             self._params.pop()
-        except:
+        except Exception, e:
             oldAP = self._accessPath
             if args.get("reset", True):
                 self.Reset()
+            print str(e)
             panicWithCallStack(
                 "The access path you used (%s) or the value you tried to assign (%s) is not valid." %
                 (oldAP, str(value)))
@@ -220,32 +295,51 @@ An example for SetLength:
     def SetLength(self, value, reset=True):
         self.Set(value, postfix="Length", reset=reset)
 
+    @staticmethod
+    def getErrCode(pErr):
+        errCode = 0
+        for i in xrange(4):
+            errCode = (errCode << 8) | GetBufferByte(pErr, (3-i))
+        return errCode
+
     def Encode(self, bitstream, bACN=False):
         """Returns (booleanSuccess, ASN1SCC iErrorCode)
 grep for the errorcode value inside ASN1SCC generated headers."""
         myassert(isinstance(bitstream, DataStream))
-        DV.BitStream_Init(bitstream._bs, bitstream._pMem, bitstream._bufferSize)
+        bitstream.Reset()
         suffix = "_ACN_Encode" if bACN else "_Encode"
-        EncodeFunc = getattr(DV, Clean(self._nodeTypeName) + suffix)
+        EncodeFuncName = Clean(self._nodeTypeName) + suffix
+        EncodeFunc = getattr(JMP, EncodeFuncName)
         success = EncodeFunc(self._ptr, bitstream._bs, self._pErr, True)
         if not success:
-            panicWithCallStack("Error in Encode, code:%d" % DV.int_SWIG_PTR_getitem(self._pErr, 0))
+            panicWithCallStack(
+                "Error in %s, code:%d" % (
+                    EncodeFuncName, COMMON.getErrCode(self._pErr)))
 
     def Decode(self, bitstream, bACN=False):
         """Returns (booleanSuccess, ASN1SCC iErrorCode)
 grep for the errorcode value inside ASN1SCC generated headers."""
         myassert(isinstance(bitstream, DataStream))
         suffix = "_ACN_Decode" if bACN else "_Decode"
-        DecodeFunc = getattr(DV, Clean(self._nodeTypeName) + suffix)
+        DecodeFunc = getattr(JMP, Clean(self._nodeTypeName) + suffix)
         success = DecodeFunc(self._ptr, bitstream._bs, self._pErr)
         if not success:
-            panicWithCallStack("Error in Decode, code:%d" % DV.int_SWIG_PTR_getitem(self._pErr, 0))
+            panicWithCallStack("Error in Decode, code:%d" % COMMON.getErrCode(self._pErr))
 
     def EncodeACN(self, bitstream):
         self.Encode(bitstream, True)
 
     def DecodeACN(self, bitstream):
         self.Decode(bitstream, True)
+
+    def IsConstraintValid(self):
+        # Allocate temp space to store error code (avoid race condition that _pErr would cause)
+        pErr = CreateInstanceOf_int()
+        validatorFunc = getattr(JMP, Clean(self._nodeTypeName) + "_IsConstraintValid")
+        isValid = validatorFunc(self._ptr, pErr)
+        errorCode = COMMON.getErrCode(pErr)
+        DestroyInstanceOf_int(pErr)
+        return isValid, errorCode
 
 # Type-specific helpers...
 
