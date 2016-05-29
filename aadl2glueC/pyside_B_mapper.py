@@ -574,11 +574,11 @@ def WriteCodeForGUIControls(prefixes, parentControl, node, subProgram,
                     g_iter * "    " + "if val" + pyStr
                     + '''["Enum"] == "%s":\n''' % CleanName(enum_value[0]))
             g_fromASN1ToPyside.append(
-                    g_iter * "    " + "if " + asnStr + ".Get() == DV."
-                    + CleanName(enum_value[0]) + ":\n")
+                    g_iter * "    " + "if " + asnStr + ".Get() ==  "
+                    + asnStr + "." + CleanName(enum_value[0]) + ":\n")
             g_iter += 1
             g_fromPysideToASN1.append(
-                    g_iter * "    " + asnStr + ".Set(DV.%s)\n" %
+                    g_iter * "    " + asnStr + ".Set(" + asnStr + ".%s)\n" %
                     CleanName(enum_value[0]))
             g_fromASN1ToPyside.append(
                     g_iter * "    " + "val" + pyStr + "[\"Enum\"] = \""
