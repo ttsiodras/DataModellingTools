@@ -10,15 +10,15 @@ enums_dump = "\n    ".join(
     for e in enums
 )
 uniq = os.getpid()
-extractor_filename ="/tmp/enums_%d" % uniq 
+extractor_filename ="/tmp/enums_%d" % uniq
 f = open(extractor_filename + ".c", 'w')
 f.write("""
 #include <stdio.h>
 #include "%(base)s.h"
 
-main()
+void main()
 {
-%(enums_dump)s   
+%(enums_dump)s
 }""" % {"enums_dump":enums_dump, "base":sys.argv[1]})
 f.close()
 if 0 != os.system(

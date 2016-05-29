@@ -40,7 +40,7 @@ if len(soFileNames) != 1:
     print "Failed to locate a single _getset.so under", script_path
     sys.exit(1)
 
-JMP = cdll.LoadLibrary(soFileNames[0])
+JMP = cdll.LoadLibrary('.' + os.sep + soFileNames[0])
 
 # BitStream constructor
 CreateStream = JMP.CreateStream
@@ -182,15 +182,17 @@ An example for SetLength:
     a.y[3].Set(16)
 """
 
-    allowed = ["_nodeTypeName", "_ptr", "_pErr", "_Caccessor", "_accessPath", "_params"]
+    allowed = ["_nodeTypeName", "_ptr", "_pErr", "_Caccessor", "_accessPath",
+               "_params", "_new_ptr"]
 # , "Get", "GetLength", "Set", "SetLength", "Reset", "Encode", "Decode", "SetFromPyString", "GetPyString", "allowed"]
 
-    def __init__(self, nodeTypeName):
+    def __init__(self, nodeTypeName, ptr=None):
         myassert(isinstance(nodeTypeName, str))
         self._nodeTypeName = nodeTypeName
+        self._new_ptr = ptr is None
         constructor = getattr(JMP, "CreateInstanceOf_" + Clean(nodeTypeName))
         constructor.restype = c_void_p
-        self._ptr = constructor()
+        self._ptr = ptr or constructor()
         self._pErr = CreateInstanceOf_int()
         self._Caccessor = ""
         self._params = []
@@ -207,10 +209,16 @@ An example for SetLength:
     def GetState(self):
         return self._Caccessor[:], copy.deepcopy(self._params), self._accessPath[:]
 
+    def SetData(self, src):
+        bridgeFct = getattr(JMP, "SetDataFor_" + Clean(self._nodeTypeName))
+        bridgeFct(self._ptr, src)
+
     def __del__(self):
+        ''' Destructor: free memory only if it was allocated at creation '''
         DestroyInstanceOf_int(self._pErr)
-        destructor = getattr(JMP, "DestroyInstanceOf_" + Clean(self._nodeTypeName))
-        destructor(self._ptr)
+        if self._new_ptr:
+            destructor = getattr(JMP, "DestroyInstanceOf_" + Clean(self._nodeTypeName))
+            destructor(self._ptr)
 
     def __str__(self):
         return "Choose the information you want - whole-structure or sequence dump not supported."

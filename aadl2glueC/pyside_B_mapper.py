@@ -232,17 +232,7 @@ def setUDP():
 def {tmName}(tm_ptr, size):
     """ Callback function when receiving this TM """
     if editor:
-        # Cast the void* pointer to an array of bytes
-        as_bytes = ctypes.cast(tm_ptr,
-                               ctypes.POINTER((ctypes.c_ubyte * (size / 8))))
-
-        # Create a corrsponding SWIG buffer and copy the content
-        swig_ptr = DV.new_byte_SWIG_PTR(size / 8)
-        for idx in xrange(size/8):
-             DV.byte_SWIG_PTR_setitem(swig_ptr, idx, as_bytes.contents[idx])
-
-        # Notify the GUI that the TM has been received
-        editor.pendingTM = swig_ptr
+        editor.pendingTM = tm_ptr
         tm_callback.got_tm.emit()
 
 
@@ -337,18 +327,16 @@ udpController = None
 
 def checkConstraints(asnVal):
     \'\'\' Check if the ASN.1 constraints are respected \'\'\'
-    _pErr = DV.new_int_SWIG_PTR(1)
+    _pErr = DV.CreateInstanceOf_int()
     if not DV.{asn1Type}_IsConstraintValid(asnVal._ptr, _pErr):
-        errCode = DV.int_SWIG_PTR_getitem(_pErr, 0)
+        errCode = DV.{asn1Type}.getErrCode(_pErr)
         errorMsg = datamodel.errCodes[errCode]['name'] + ': Constraint error! Constraint is: ' + datamodel.errCodes[errCode]['constraint']
+        DV.DestroyInstanceOf_int(pErr)
         if log:
             log.error(errorMsg)
-        #if statusbar:
-        #    statusbar.showMessage(errorMsg)
         return False
     else:
-        #if statusbar:
-        #    statusbar.showMessage('ASN.1 value is valid')
+        DV.DestroyInstanceOf_int(pErr)
         return True
 
 
@@ -423,7 +411,7 @@ def decode_uPER(uPER_encodedBuffer):
 def decode_TM(rawTM):
     \'\'\' Decode a msgQ message (native encoding) \'\'\'
     tm = ASN1.{asn1Type}()
-    DV.SetDataFor_{asn1Type}(tm._ptr, rawTM)
+    tm.SetData(rawTM)
     return tm
 
 

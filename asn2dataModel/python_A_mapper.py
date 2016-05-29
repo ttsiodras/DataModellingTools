@@ -68,7 +68,7 @@ def OnStartup(unused_modelingLanguage, asnFile, outputDir):
     outputFilename = os.path.basename(asnFile)
     outputFilename = re.sub(r'[^a-zA-Z0-9_]', '_', outputFilename) + ".py"
     origGrammarBase = os.path.basename(asnFile.replace(".asn", ""))
-    base = re.sub(r'[^a-zA-Z0-9_]', '_', origGrammarBase)
+    base = re.sub(r'[^a-zA-Z0-9_-]', '_', origGrammarBase)
     inform("Python_A_mapper: Creating file '%s'...", outputFilename)
     global g_outputFile
     g_outputFile = open(outputDir + outputFilename, 'w')
@@ -157,7 +157,7 @@ $(BDIR)/asn1crt.c $(BDIR)/$(GRAMMAR).c $(BDIR)/real.c $(BDIR)/acn.c $(BDIR)/ber.
 
 $(BDIR)/DV.py:       $(GRAMMAR).asn
 %(tab)sgrep 'REQUIRED_BYTES_FOR_ENCODING' $(BDIR)/$(GRAMMAR).h | awk '{print $$2 " = " $$3}' > $@
-%(tab)slearn_CHOICE_enums.py %(base)s >> $@
+%(tab)spython learn_CHOICE_enums.py %(base)s >> $@
 
 $(BDIR)/%%.o:       $(BDIR)/%%.c
 %(tab)sgcc -g -fPIC -c `python-config --includes` -o $@ $<
@@ -476,8 +476,8 @@ def CreateDeclarationForType(nodeTypename, names, leafTypeDict):
             children = [child[0] for child in node._members]
             g_outputFile.write("    children_ordered = ['{}']\n\n"
                                .format("', '".join(children)))
-        g_outputFile.write("    def __init__(self):\n")
-        g_outputFile.write("        COMMON.__init__(self, \"" + name + "\")\n")
+        g_outputFile.write("    def __init__(self, ptr=None):\n")
+        g_outputFile.write("        super(" + name + ", self).__init__(\"" + name + "\", ptr)\n")
         if isinstance(node, AsnString):
             g_outputFile.write('''#\n''')
         CreateGettersAndSetters(name+"_", Params(nodeTypename), "", node, names, leafTypeDict)

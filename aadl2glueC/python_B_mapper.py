@@ -166,8 +166,7 @@ def OnStartup(modelingLanguage, asnFile, subProgram, unused_subProgramImplementa
             CleanParam = CleanName(param._id)
             g_TMprocessors.append("        # Read the data for param %s" % param._id)
             g_TMprocessors.append("        var_%s = %s_asn.%s()" % (CleanParam, g_asn_name, CleanName(param._signal._asnNodename)))
-            g_TMprocessors.append("        DV.SetDataFor_%s(var_%s._ptr, self._pMem)" %
-                                  (CleanName(param._signal._asnNodename), CleanParam))
+            g_TMprocessors.append("        var_%s.SetData(self._pMem)" % CleanParam)
             g_TMprocessors.append('        print "Parameter %s:"' % CleanParam)
             g_TMprocessors.append('        var_%s.PrintAll()' % CleanParam)
             g_TMprocessors.append('        print')

@@ -35,6 +35,9 @@ TASTE Data Modelling Technologies
 
 CHANGELOG
 
+1.2.0
+     Not using SWIG anymore for the Python mappers
+
 1.1.2
      pyside_b_mapper: added combo box for the asn1 value editor
 
