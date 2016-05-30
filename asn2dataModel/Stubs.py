@@ -107,7 +107,7 @@ class DataStream(object):
     def GetPyString(self):
         # print "Reading",
         msg = ""
-        pData = GetBitstreamBuffer(self._bs)
+        pData = c_void_p(GetBitstreamBuffer(self._bs))
         for i in xrange(0, GetStreamCurrentLength(self._bs)):
             b = GetBufferByte(pData, i)
             msg += chr(b)
@@ -119,7 +119,7 @@ class DataStream(object):
         strLength = len(data)
         assert self._bufferSize >= strLength
         self._bs.count = strLength
-        pData = GetBitstreamBuffer(self._bs)
+        pData = c_void_p(GetBitstreamBuffer(self._bs))
         # print "Writing",
         for i in xrange(0, strLength):
             b = ord(data[i])
@@ -193,7 +193,8 @@ An example for SetLength:
         constructor = getattr(JMP, "CreateInstanceOf_" + Clean(nodeTypeName))
         constructor.restype = c_void_p
         self._ptr = ptr or constructor()
-        self._pErr = CreateInstanceOf_int()
+        self._ptr = c_void_p(self._ptr)
+        self._pErr = c_void_p(CreateInstanceOf_int())
         self._Caccessor = ""
         self._params = []
         self._accessPath = ""
@@ -342,7 +343,7 @@ grep for the errorcode value inside ASN1SCC generated headers."""
 
     def IsConstraintValid(self):
         # Allocate temp space to store error code (avoid race condition that _pErr would cause)
-        pErr = CreateInstanceOf_int()
+        pErr = c_void_p(CreateInstanceOf_int())
         validatorFunc = getattr(JMP, Clean(self._nodeTypeName) + "_IsConstraintValid")
         isValid = validatorFunc(self._ptr, pErr)
         errorCode = COMMON.getErrCode(pErr)
