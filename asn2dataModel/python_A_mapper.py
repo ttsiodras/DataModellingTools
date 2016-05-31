@@ -1,19 +1,13 @@
 #
 # (C) Semantix Information Technologies.
+# (C) European Space Agency
 #
-# Semantix Information Technologies is licensing the code of the
-# Data Modelling Tools (DMT) in the following dual-license mode:
+# License:
 #
-# Commercial Developer License:
-#       The DMT Commercial Developer License is the suggested version
-# to use for the development of proprietary and/or commercial software.
-# This version is for developers/companies who do not want to comply
-# with the terms of the GNU Lesser General Public License version 2.1.
-#
-# GNU LGPL v. 2.1:
+# GNU GPL v. 2.1 with Runtime Exceptions:
 #       This version of DMT is the one to use for the development of
 # applications, when you are willing to comply with the terms of the
-# GNU Lesser General Public License version 2.1.
+# GNU General Public License version 2.1.
 #
 # Note that in both cases, there are no charges (royalties) for the
 # generated code.
@@ -158,7 +152,6 @@ $(BDIR)/asn1crt.c $(BDIR)/$(GRAMMAR).c $(BDIR)/real.c $(BDIR)/acn.c $(BDIR)/ber.
 
 $(BDIR)/DV.py:       $(GRAMMAR).asn
 %(tab)sgrep 'REQUIRED_BYTES_FOR_.*ENCODING' $(BDIR)/$(GRAMMAR).h | awk '{print $$2 " = " $$3}' > $@
-%(tab)spython learn_CHOICE_enums.py %(base)s >> $@
 
 $(BDIR)/%%.o:       $(BDIR)/%%.c
 %(tab)sgcc -g -fPIC -c `python-config --includes` -o $@ $<
@@ -417,7 +410,7 @@ def DumpTypeDumper(codeIndent, outputIndent, lines, variableName, node, names):
         for idx, child in enumerate(node._members):
             if isinstance(node, AsnChoice):
                 lines.append(
-                    codeIndent + 'if %s.kind.Get() == DV.%s:' % (
+                    codeIndent + 'if %s.kind.Get() == self.%s:' % (
                         variableName,
                         CleanNameAsPythonWants(child[2])))
                 sep = ": "
@@ -463,20 +456,31 @@ def CreateDeclarationForType(nodeTypename, names, leafTypeDict):
         g_outputFile.write("class " + name + "(COMMON):\n")
         if isinstance(node, AsnEnumerated):
             g_outputFile.write("    # Allowed enumerants:\n")
-            allowed = "    allowed = ["
+            allowed = []
             for member in node._members:
                 # member[0] enumerant name, member[1] integer value (or None)
                 if member[1] is not None:
                     g_outputFile.write("    %s = %s\n" % (CleanNameAsPythonWants(member[0]), member[1]))
-                    allowed += ("%s, " % (CleanNameAsPythonWants(member[0])))
+                    allowed.append(CleanNameAsPythonWants(member[0]))
                 else:  # pragma: no cover
                     panic("Python_A_mapper: must have values for enumerants (%s)" % node.Location())  # pragma: no cover
-            g_outputFile.write(allowed + "]\n")
+            g_outputFile.write("    allowed = [" + ", ".join(allowed) + "]\n")
         if isinstance(node, (AsnSequence, AsnSet)):
             g_outputFile.write("    # Ordered list of fields:\n")
             children = [child[0] for child in node._members]
             g_outputFile.write("    children_ordered = ['{}']\n\n"
                                .format("', '".join(children)))
+        if isinstance(node, AsnChoice):
+            g_outputFile.write("    # Allowed CHOICE selectors:\n")
+            allowed =  []
+            for idx, member in enumerate(node._members):
+                # member[0] enumerant name, member[1] integer value (or None)
+                if member[1] is not None:
+                    g_outputFile.write("    %s = %d\n" % (CleanNameAsPythonWants(member[2]), idx + 1))
+                    allowed.append(CleanNameAsPythonWants(member[2]))
+                else:  # pragma: no cover
+                    panic("Python_A_mapper: must have values for enumerants (%s)" % node.Location())  # pragma: no cover
+            g_outputFile.write("    allowed = [" + ", ".join(allowed) + "]\n")
         g_outputFile.write("    def __init__(self, ptr=None):\n")
         g_outputFile.write("        super(" + name + ", self).__init__(\"" + name + "\", ptr)\n")
         if isinstance(node, AsnString):
