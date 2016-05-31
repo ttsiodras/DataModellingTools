@@ -463,15 +463,15 @@ def CreateDeclarationForType(nodeTypename, names, leafTypeDict):
         g_outputFile.write("class " + name + "(COMMON):\n")
         if isinstance(node, AsnEnumerated):
             g_outputFile.write("    # Allowed enumerants:\n")
-            allowed = "    allowed = ["
+            allowed = []
             for member in node._members:
                 # member[0] enumerant name, member[1] integer value (or None)
                 if member[1] is not None:
                     g_outputFile.write("    %s = %s\n" % (CleanNameAsPythonWants(member[0]), member[1]))
-                    allowed += ("%s, " % (CleanNameAsPythonWants(member[0])))
+                    allowed.append(CleanNameAsPythonWants(member[0]))
                 else:  # pragma: no cover
                     panic("Python_A_mapper: must have values for enumerants (%s)" % node.Location())  # pragma: no cover
-            g_outputFile.write(allowed + "]\n")
+            g_outputFile.write("    allowed = [" + ", ".join(allowed) + "]\n")
         if isinstance(node, (AsnSequence, AsnSet)):
             g_outputFile.write("    # Ordered list of fields:\n")
             children = [child[0] for child in node._members]
