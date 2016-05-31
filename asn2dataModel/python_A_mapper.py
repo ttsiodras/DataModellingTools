@@ -122,6 +122,7 @@ def OnStartup(unused_modelingLanguage, asnFile, outputDir):
     g_outputGetSetC.write('    pBitStrm->count = bufferSize;\n')
     g_outputGetSetC.write('    memset(pBitStrm->buf, 0x0, bufferSize);\n')
     g_outputGetSetC.write('    ResetStream(pBitStrm);\n')
+    g_outputGetSetC.write('    return pBitStrm;\n')
     g_outputGetSetC.write('}\n\n')
     g_outputGetSetC.write('void DestroyStream(BitStream *pBitStrm) {\n')
     g_outputGetSetC.write('    assert(pBitStrm);\n')
