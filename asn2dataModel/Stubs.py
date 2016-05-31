@@ -40,7 +40,7 @@ if len(soFileNames) != 1:
     print "Failed to locate a single _getset.so under", script_path
     sys.exit(1)
 
-JMP = cdll.LoadLibrary('.' + os.sep + soFileNames[0])
+JMP = cdll.LoadLibrary(os.path.join(script_path, soFileNames[0]))
 
 # BitStream constructor
 CreateStream = JMP.CreateStream
