@@ -156,7 +156,7 @@ $(BDIR)/asn1crt.c $(BDIR)/$(GRAMMAR).c $(BDIR)/real.c $(BDIR)/acn.c $(BDIR)/ber.
 %(tab)s%(mono)s$(ASN1SCC) -ACN -c -uPER -equal -wordSize 8 -o $(BDIR) $< $(GRAMMAR).acn
 
 $(BDIR)/DV.py:       $(GRAMMAR).asn
-%(tab)sgrep 'REQUIRED_BYTES_FOR_ENCODING' $(BDIR)/$(GRAMMAR).h | awk '{print $$2 " = " $$3}' > $@
+%(tab)sgrep 'REQUIRED_BYTES_FOR_.*ENCODING' $(BDIR)/$(GRAMMAR).h | awk '{print $$2 " = " $$3}' > $@
 %(tab)spython learn_CHOICE_enums.py %(base)s >> $@
 
 $(BDIR)/%%.o:       $(BDIR)/%%.c
