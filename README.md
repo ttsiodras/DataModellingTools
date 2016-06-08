@@ -35,6 +35,9 @@ TASTE Data Modelling Technologies
 
 CHANGELOG
 
+1.2.3
+     ctypes backend: emit all ENUMERATED values in DV.py
+
 1.2.0
      Not using SWIG anymore for the Python mappers
 
