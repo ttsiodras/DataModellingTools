@@ -3,13 +3,13 @@ include common.mk
 all:
 	make clean
 	LANG=C LC_ALL=C ../asn2dataModel.py -toSMP2 DataTypesSimulink.asn || exit 1
-	LANG=C LC_ALL=C ${COVERAGE} run -a ../smp2/smp2asn.py >/dev/null 2>&1 ; exit 0
-	LANG=C LC_ALL=C ${COVERAGE} run -a ../smp2/smp2asn.py -h >/dev/null 2>&1 ; exit 0
-	LANG=C LC_ALL=C ${COVERAGE} run -a ../smp2/smp2asn.py -z >/dev/null 2>&1 ; exit 0
-	LANG=C LC_ALL=C ${COVERAGE} run -a ../smp2/smp2asn.py -o smp2.asn -a nonexisting.asn nonexisting.cat >/dev/null 2>&1 ; exit 0
-	LANG=C LC_ALL=C ${COVERAGE} run -a ../smp2/smp2asn.py -o smp2.asn -a DataTypesSimulink.asn -v -p datatypessimulink.cat >/dev/null 2>&1 || exit 1
-	LANG=C LC_ALL=C ${COVERAGE} annotate -d . ../smp2/*.py ../commonPy/*.py || exit 1
-	./checkCoverage.pl ___smp2_smp2asn.py,cover || { echo smp2asn.py ; ./review.pl ___smp2_smp2asn.py,cover | less -RS ; exit 1 ; }
+	LANG=C LC_ALL=C ${COVERAGE} run -a ../smp2asn.py >/dev/null 2>&1 ; exit 0
+	LANG=C LC_ALL=C ${COVERAGE} run -a ../smp2asn.py -h >/dev/null 2>&1 ; exit 0
+	LANG=C LC_ALL=C ${COVERAGE} run -a ../smp2asn.py -z >/dev/null 2>&1 ; exit 0
+	LANG=C LC_ALL=C ${COVERAGE} run -a ../smp2asn.py -o smp2.asn -a nonexisting.asn nonexisting.cat >/dev/null 2>&1 ; exit 0
+	LANG=C LC_ALL=C ${COVERAGE} run -a ../smp2asn.py -o smp2.asn -a DataTypesSimulink.asn -v -p datatypessimulink.cat >/dev/null 2>&1 || exit 1
+	LANG=C LC_ALL=C ${COVERAGE} annotate -d . ../smp2asn.py ../commonPy/*.py || exit 1
+	./checkCoverage.pl ___smp2asn.py,cover || { echo smp2asn.py ; ./review.pl ___smp2asn.py,cover | less -RS ; exit 1 ; }
 
 clean:
 	${COVERAGE} erase

@@ -33,9 +33,9 @@ import sys
 import getopt
 
 import commonPy.asnParser
-from createInternalTypes import ScanChildren
+from commonPy.createInternalTypes import ScanChildren
 from commonPy.asnAST import AsnMetaType
-from commonSMP2 import \
+from commonPy.commonSMP2 import \
     info, panic, green, white, red, setVerbosity, \
     DashUnderscoreAgnosticDict, ConvertCatalogueToASN_AST
 

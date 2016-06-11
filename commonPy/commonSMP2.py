@@ -33,7 +33,7 @@ class MagicSmp2SimpleTypesDict(dict):
     #---------------------------------------------------------------------------
     def has_key(self, name):
         name = re.sub(r'/\d{4}/\d{2}/', '/', name)
-        return super(MagicSmp2SimpleTypesDict, self).has_key(name)
+        return name in super(MagicSmp2SimpleTypesDict, self)
 
 
 simpleTypesTable = MagicSmp2SimpleTypesDict({
@@ -68,11 +68,11 @@ def info(level, *args):
     if not args:
         panic("You called info without args")  # pragma: no cover
     if level<=g_verboseLevel:
-        for i in xrange(len(args)):
+        for i in range(len(args)):
             if i !=0 and args[i-1] not in colors:
                 sys.stdout.write(' ')
             sys.stdout.write(args[i])
-        for i in xrange(len(args)-1, -1, -1):
+        for i in range(len(args)-1, -1, -1):
             if args[i] in colors:
                 continue
             if not args[i].endswith('\n'):
@@ -114,7 +114,7 @@ class Attributes:
     def __init__(self, t):
         '''Argument t is an lxml Etree node.'''
         self._attrs = {}
-        for k, v in t.items():
+        for k, v in list(t.items()):
             endBraceIdx = k.find('}')
             if endBraceIdx != -1:
                 k = k[endBraceIdx+1:]
@@ -243,7 +243,7 @@ def MapSMP2Type(attrs, enumOptions, itemTypes, fields):
                             containedType=refTypeHref)))
                 else:
                     members.append((fieldName, 'dummy'))
-            except Exception, e:  # pragma: no cover
+            except Exception as e:  # pragma: no cover
                 panic(str(e) + '\nMake sure that:\n'
                       '1. The "Name" attribute exists\n'
                       '2. The "Type" child element, with attribute '
@@ -358,7 +358,7 @@ def ConvertCatalogueToASN_AST(inputSmp2Files):
                     asnTypesDict[nodeTypename] = cast(**containedDict)
                 else:
                     if a.href is not None and a.href.startswith("http://www.esa.int/"):
-                        print "WARNING: Unknown hardcoded (%s) - should it be added in commonSMP2.py:simpleTypesTable?" % a.href
+                        print("WARNING: Unknown hardcoded (%s) - should it be added in commonSMP2.py:simpleTypesTable?" % a.href)
                     # This <Type> element had no xsi:type, and it's xlink:title was not in the hardcoded list
                     # Skip it.
                     # panic("Both 'xsi:type' and 'Name' are mandatory attributes (file:%s, line:%d)" %
@@ -405,6 +405,6 @@ def ConvertCatalogueToASN_AST(inputSmp2Files):
             # (used below, in FixupOutOfOrderIdReferences)
             idToTypeDict[a.Id] = cataloguePrefix + nodeTypename
 
-    for nodeTypename in asnTypesDict.keys():
+    for nodeTypename in list(asnTypesDict.keys()):
         FixupOutOfOrderIdReferences(nodeTypename, asnTypesDict, idToTypeDict)
     return asnTypesDict, idToTypeDict
