@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # vim: set expandtab ts=8 sts=4 shiftwidth=4
 #
 # (C) Semantix Information Technologies.
