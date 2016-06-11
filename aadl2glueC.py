@@ -93,6 +93,7 @@ import commonPy.cleanupNodes
 from commonPy.utility import panic, inform
 
 import commonPy.verify as verify
+import B_mappers
 
 g_mappedName = {
     'SEQUENCE': 'OnSequence',
