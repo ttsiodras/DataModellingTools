@@ -1,6 +1,6 @@
 include common.mk
 
-VPATH=.:../A_mappers:../commonPy
+VPATH=..:../A_mappers:../commonPy
 
 PYSRC_A := createInternalTypes.py ada_A_mapper.py c_A_mapper.py og_A_mapper.py simulink_A_mapper.py python_A_mapper.py scade6_A_mapper.py smp2_A_mapper.py sqlalchemy_A_mapper.py rtds_A_mapper.py qgenada_A_mapper.py qgenc_A_mapper.py
 PYSRC_A_COVER := $(PYSRC_A:%.py=___A_mappers_%.py,cover)
@@ -11,7 +11,6 @@ all:	$(PYSRC_A_COVER) check
 
 ___A_mappers_%.py,cover:	../A_mappers/%.py DataTypesSimulink.asn
 	@echo Update required: $@ depends on $?
-	#$(MAKE) -f Makefile.M2M clean
 	mkdir -p output
 	rm -rf output/*
 	LANG=C LC_ALL=C ${COVERAGE} run -a ../asn2dataModel.py 2>/dev/null || echo -n
@@ -31,7 +30,7 @@ ___A_mappers_%.py,cover:	../A_mappers/%.py DataTypesSimulink.asn
 	LANG=C LC_ALL=C ${COVERAGE} annotate -d . ../asn2dataModel.py ../A_mappers/*.py ../commonPy/*.py
 
 check:
-	@for i in $(PYSRC_A_COVER) ; do echo Checking $$i ... ; ./checkCoverage.pl $$i || { ( echo $$i ; ./review.pl $$i ) | less -RS ; exit 1 ; } ; done
+	@for i in ___asn2dataModel.py,cover $(PYSRC_A_COVER) ; do echo Checking $$i ... ; ./checkCoverage.pl $$i || { ( echo $$i ; ./review.pl $$i ) | less -RS ; exit 1 ; } ; done
 
 clean:
 	${COVERAGE} erase

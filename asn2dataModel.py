@@ -79,7 +79,10 @@ def main():
         'toSQL': 'sql',
         'toSqlalchemy': 'sqlalchemy'
     }
-    for i in os.listdir(os.path.abspath(os.path.dirname(sys.argv[0]))):
+    for i in os.listdir(
+            os.path.join(
+                os.path.abspath(os.path.dirname(sys.argv[0])),
+                "A_mappers")):
         if '_A_mapper' in i and i.endswith('.py'):
             target = i.split('_')[0]
             if target.lower() not in [x.lower() for x in argsToTools.values()]:
