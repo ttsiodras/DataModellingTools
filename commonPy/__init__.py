@@ -4,13 +4,13 @@
 """
     This module contains the shared API for parsing ASN.1
 """
-import configMT
-import asnParser
-import asnAST
-import utility
-import createInternalTypes
-import verify
-import recursiveMapper
-import cleanupNodes
+from . import configMT
+from . import asnParser
+from . import asnAST
+from . import utility
+from . import createInternalTypes
+from . import verify
+from . import recursiveMapper
+from . import cleanupNodes
 
 __version__ = "1.2.3"

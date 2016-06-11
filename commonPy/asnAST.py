@@ -75,10 +75,10 @@
 #                     |        AsnMetaMember        |
 #                     +-----------------------------+
 
-import utility
+from . import utility
 
 
-class AsnNode:
+class AsnNode(object):
 
     def __init__(self, asnFilename):
         self._leafType = "unknown"
@@ -293,7 +293,7 @@ class AsnOctetString(AsnString):
     '''This class stores the semantic content of an ASN.1 OCTET STRING.'''
 
     def __init__(self, **args):
-        apply(AsnString.__init__, (self,), args)
+        AsnString.__init__(self, **args)
         self._name = "OCTET STRING"  # default in case of SEQUENCE_OF OCTET STRING
         self._leafType = "OCTET STRING"
 
@@ -310,7 +310,7 @@ class AsnUTF8String(AsnString):
     '''This class stores the semantic content of an ASN.1 UTF8String.'''
 
     def __init__(self, **args):
-        apply(AsnString.__init__, (self,), args)  # pragma: no cover
+        AsnString.__init__(self, **args)  # pragma: no cover
         self._name = "UTF8String"  # default in case of SEQUENCE_OF UTF8String  # pragma: no cover
         self._leafType = "UTF8String"  # pragma: no cover
 
@@ -319,7 +319,7 @@ class AsnAsciiString(AsnString):
     '''This class stores the semantic content of an ASN.1 AsciiString.'''
 
     def __init__(self, **args):
-        apply(AsnString.__init__, (self,), args)  # pragma: no cover
+        AsnString.__init__(self, **args)  # pragma: no cover
         self._name = "AsciiString"  # default in case of SEQUENCE_OF AsciiString  # pragma: no cover
         self._leafType = "AsciiString"  # pragma: no cover
 
@@ -328,7 +328,7 @@ class AsnNumberString(AsnString):
     '''This class stores the semantic content of an ASN.1 NumberString.'''
 
     def __init__(self, **args):
-        apply(AsnString.__init__, (self,), args)  # pragma: no cover
+        AsnString.__init__(self, **args)  # pragma: no cover
         self._name = "NumberString"  # default in case of SEQUENCE_OF NumberString  # pragma: no cover
         self._leafType = "NumberString"  # pragma: no cover
 
@@ -337,7 +337,7 @@ class AsnVisibleString(AsnString):
     '''This class stores the semantic content of an ASN.1 VisibleString.'''
 
     def __init__(self, **args):
-        apply(AsnString.__init__, (self,), args)  # pragma: no cover
+        AsnString.__init__(self, **args)  # pragma: no cover
         self._name = "VisibleString"  # default in case of SEQUENCE_OF VisibleString  # pragma: no cover
         self._leafType = "VisibleString"  # pragma: no cover
 
@@ -346,7 +346,7 @@ class AsnPrintableString(AsnString):
     '''This class stores the semantic content of an ASN.1 PrintableString.'''
 
     def __init__(self, **args):
-        apply(AsnString.__init__, (self,), args)  # pragma: no cover
+        AsnString.__init__(self, **args)  # pragma: no cover
         self._name = "PrintableString"  # default in case of SEQUENCE_OF PrintableString  # pragma: no cover
         self._leafType = "PrintableString"  # pragma: no cover
 
@@ -410,7 +410,7 @@ def CommonIdenticalCheck(me, other, mynames, othernames):
     myMembers = [y[1] for y in sorted((x[0], x[1]) for x in me._members)]
     otherMembers = [y[1] for y in sorted((x[0], x[1]) for x in other._members)]
     for listOfNodes, d in [(myMembers, mynames), (otherMembers, othernames)]:
-        for i in xrange(len(listOfNodes)):
+        for i in range(len(listOfNodes)):
             while isinstance(listOfNodes[i], AsnMetaMember):
                 cont = listOfNodes[i]._containedType
                 while isinstance(cont, str):
@@ -567,7 +567,7 @@ def CommonIdenticalArrayCheck(me, other, mynames, othernames):
     if not CommonIdenticalRangePerSMP2(me._range, other._range):
         return False
     cont = [[me._containedType, mynames], [other._containedType, othernames]]
-    for e in xrange(0, 2):
+    for e in range(0, 2):
         node, typeDict = cont[e]
         while isinstance(node, str):
             if node not in typeDict:

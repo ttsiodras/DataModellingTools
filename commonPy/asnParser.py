@@ -52,11 +52,11 @@ import tempfile
 import re
 import distutils.spawn as spawn
 
-import configMT
-import utility
+from . import configMT
+from . import utility
 
-from asnAST import *
-import xmlASTtoAsnAST
+from .asnAST import *
+from . import xmlASTtoAsnAST
 
 
 g_asnFilename = ""
@@ -377,7 +377,7 @@ def p_typeAssignment2(p):
 def p_typeAssignment3(p):
     '''typeAssignment : NAME INTEGER DEF INTVALUE'''
     try:
-        g_symbolicConstants[p[1]] = long(p[4])
+        g_symbolicConstants[p[1]] = int(p[4])
     except:
         utility.panic("Symbolic constants can only contain INTEGER value (not '%s') (%s,%s)!\n" % (p[4], g_filename, p.lineno(1)))
 
@@ -438,7 +438,7 @@ def p_intRange(p):
     if len(p) == 1:
         p[0] = []
     else:
-        p[0] = [long(p[2]), long(p[4])]
+        p[0] = [int(p[2]), int(p[4])]
 
 
 def p_realType(p):
@@ -537,30 +537,30 @@ def p_rangeSpec(p):
     '''rangeSpec : LPAREN INTVALUE RPAREN
                  | LPAREN INTVALUE DOTDOT INTVALUE RPAREN'''
     if len(p)==4:
-        p[0] = [long(p[2])]
+        p[0] = [int(p[2])]
     else:
-        p[0] = [long(p[2]), long(p[4])]
+        p[0] = [int(p[2]), int(p[4])]
 
 
 def p_rangeSpecSymbol(p):
     '''rangeSpec : LPAREN NAME RPAREN'''
     if p[2] not in g_symbolicConstants:
         utility.panic("Symbolic constant '%s' not defined here (%s)!\n" % (p[2], p.lineno(1)))
-    p[0] = [long(g_symbolicConstants[p[2]])]
+    p[0] = [int(g_symbolicConstants[p[2]])]
 
 
 def p_rangeSpecSymbol1(p):
     '''rangeSpec : LPAREN NAME DOTDOT INTVALUE RPAREN'''
     if p[2] not in g_symbolicConstants:
         utility.panic("Symbolic constant '%s' not defined here (%s)!\n" % (p[2], p.lineno(1)))
-    p[0] = [long(g_symbolicConstants[p[2]]), long(p[4])]
+    p[0] = [int(g_symbolicConstants[p[2]]), int(p[4])]
 
 
 def p_rangeSpecSymbol2(p):
     '''rangeSpec : LPAREN INTVALUE DOTDOT NAME RPAREN'''
     if p[4] not in g_symbolicConstants:
         utility.panic("Symbolic constant '%s' not defined here (%s)!\n" % (p[4], p.lineno(1)))
-    p[0] = [long(p[2]), long(g_symbolicConstants[p[4]])]
+    p[0] = [int(p[2]), int(g_symbolicConstants[p[4]])]
 
 
 def p_rangeSpecSymbol3(p):
@@ -569,7 +569,7 @@ def p_rangeSpecSymbol3(p):
         utility.panic("Symbolic constant '%s' not defined here (%s)!\n" % (p[2], p.lineno(1)))
     if p[4] not in g_symbolicConstants:
         utility.panic("Symbolic constant '%s' not defined here (%s)!\n" % (p[4], p.lineno(1)))
-    p[0] = [long(g_symbolicConstants[p[2]]), long(g_symbolicConstants[p[4]])]
+    p[0] = [int(g_symbolicConstants[p[2]]), int(g_symbolicConstants[p[4]])]
 
 
 def p_complexType(p):
@@ -807,7 +807,7 @@ It returns a map providing the leafType of each type.
         lastUnknownTypes = copy.copy(unknownTypes)
         lastKnownTypes = copy.copy(knownTypes)
         lastEquivalents = copy.copy(equivalents)
-        for nodeTypename in g_names.keys():
+        for nodeTypename in list(g_names.keys()):
 
             node = g_names[nodeTypename]
 
@@ -866,7 +866,7 @@ It returns a map providing the leafType of each type.
         # We have completed a sweep over all AST entries.
         # now check the knownTypes and unknownTypes information
         # to see if we have figured out (leafType wise) all nodes
-        for known in knownTypes.keys():
+        for known in list(knownTypes.keys()):
             # for each of the nodes we know (leafType wise)
 
             # remove it from the unknownTypes dictionary
@@ -894,11 +894,11 @@ It returns a map providing the leafType of each type.
             break
 
     if len(unknownTypes) != 0:
-        utility.panic('AsnParser: Types remain unknown after symbol fixup:\n%s\n' % unknownTypes.keys())
+        utility.panic('AsnParser: Types remain unknown after symbol fixup:\n%s\n' % list(unknownTypes.keys()))
 
     # Remove all AsnMetaTypes from the ast
     # by using the g_names lookup on their _containedType
-    for nodeTypename in g_names.keys():
+    for nodeTypename in list(g_names.keys()):
         # Min, Max: to cope with ReferenceTypes that redefine their
         # constraints (for now, ASN1SCC provides only INTEGERs)
         Min = Max = None
@@ -929,11 +929,11 @@ It returns a map providing the leafType of each type.
         if isinstance(node, AsnInt) and Min is not None and Max is not None:
             target._range = [Min, Max]
 
-    for name, node in g_names.items():
+    for name, node in list(g_names.items()):
         if not KnownType(node, g_names):
             utility.panic("Node %s not resolvable (%s)!\n" % (name, node.Location()))
         for i in ["_Min", "_Max"]:
-            cast = float if isinstance(node, AsnReal) else long
+            cast = float if isinstance(node, AsnReal) else int
             if hasattr(node, i) and getattr(node, i) is not None:
                 setattr(node, i, cast(getattr(node, i)))
 
@@ -1015,14 +1015,14 @@ def ParseInput(asnFilename, bClearFirst=True, bFixAST=True):
         g_leafTypeDict = {}
 
     if not configMT.debugParser:
-        import lex
+        from . import lex
         lex.lex()
 
-        import yacc
+        from . import yacc
         yacc.yacc(debug=0, write_tables=0)
         yacc.parse(lines)
     else:
-        import lex
+        from . import lex
         lexer = lex.lex(debug=1)
         lexer.input(lines)
         lex.runmain()
@@ -1088,7 +1088,7 @@ def ParseAsnFileList(listOfFilenames):
             ParseInput(f, False, False)
         g_leafTypeDict.update(VerifyAndFixAST())
 
-        for nodeTypename in g_names.keys():
+        for nodeTypename in list(g_names.keys()):
             if nodeTypename not in g_checkedSoFarForKeywords:
                 g_checkedSoFarForKeywords[nodeTypename] = 1
                 CheckForInvalidKeywords(nodeTypename)
@@ -1127,7 +1127,7 @@ def ParseAsnFileList(listOfFilenames):
             line = re.sub(r'" />$', '', line)
             realTypes[line] = 1
         os.unlink(xmlAST + "2")
-        for nodeTypename in g_names.keys():
+        for nodeTypename in list(g_names.keys()):
             if nodeTypename not in realTypes:
                 g_names[nodeTypename]._isArtificial = True
 
@@ -1136,9 +1136,9 @@ def Dump():
     for nodeTypename in sorted(g_names.keys()):
         if g_names[nodeTypename]._isArtificial:
             continue
-        print "\n===== From", g_names[nodeTypename]._asnFilename
-        print nodeTypename
-        print "::", g_names[nodeTypename], g_leafTypeDict[nodeTypename]
+        print("\n===== From", g_names[nodeTypename]._asnFilename)
+        print(nodeTypename)
+        print("::", g_names[nodeTypename], g_leafTypeDict[nodeTypename])
 
 
 def main():
