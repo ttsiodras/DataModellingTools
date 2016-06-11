@@ -90,13 +90,7 @@ import commonPy.asnParser
 import commonPy.aadlAST
 import commonPy.cleanupNodes
 
-#import aadlParser
-from B_mappers import AadlLexer
-from B_mappers import AadlParser
-
-import antlr
-
-from commonPy.utility import panic, warn, inform
+from commonPy.utility import panic, inform
 
 import commonPy.verify as verify
 
@@ -181,29 +175,32 @@ def ParseAADLfilesAndResolveSignals():
     '''Invokes the ANTLR generated AADL parser, and resolves
 all references to AAADL Data types into the param._signal member
 of each SUBPROGRAM param.'''
-    for aadlFilename in sys.argv[1:]:
-        # Parse AADL system description files
-        inform("Parsing %s...", aadlFilename)
-        #aadlParser.ParseInput("\n".join(open(aadlFilename,'r').readlines()))
+    import tempfile
+    f = tempfile.NamedTemporaryFile(delete=False)
+    astFile = f.name
+    f.close()
+    os.unlink(astFile)
+    parserUtility = os.path.join(os.path.abspath(os.path.dirname(__file__)), "parse_aadl.py")
+    cmd = parserUtility + " -o " + astFile + ' ' + ' '.join(sys.argv[1:])
+    if os.system(cmd) != 0:
+        if os.path.exists(astFile):
+            os.unlink(astFile)
+        panic("AADL parsing failed. Aborting...")
 
-        L = AadlLexer.Lexer(aadlFilename)
-        P = AadlParser.Parser(L)
-        L.setFilename(aadlFilename)
-        P.setFilename(L.getFilename())
-        try:
-            P.aadl_specification()
-        except antlr.ANTLRException as e:  # pragma: no cover
-            panic("Error in file '%s': %s\n" % (e.fileName, str(e)))  # pragma: no cover
+    try:
+        import pickle
+        astInfo = pickle.load(open(astFile, 'rb'))
+        for k in ['g_signals', 'g_processImplementations',
+                  'g_apLevelContainers', 'g_systems',
+                  'g_subProgramImplementations', 'g_threadImplementations']:
+            setattr(commonPy.aadlAST, k, astInfo[k])
+    except Exception as e:
+        if os.path.exists(astFile):
+            os.unlink(astFile)
+        panic(str(e))
 
-    # Resolve signal definitions over all input AADL files
-    for subProgramName, subProgram in commonPy.aadlAST.g_apLevelContainers.items():
-        inform("Resolving data definitions in subprogram %s..." % subProgramName)
-        for param in subProgram._params:
-            if not isinstance(param._signal, commonPy.aadlAST.Signal):
-                if param._signal not in commonPy.aadlAST.g_signals:
-                    panic("Unknown data type %s in the definition of %s!\n" %  # pragma: no cover
-                          (param._signal, subProgramName))  # pragma: no cover
-                param._signal = commonPy.aadlAST.g_signals[param._signal]
+    import commonPy as commonPy2  # Hack of the century: make unpickled
+                                  # Python2 objects visible?
 
 
 def SpecialCodes(unused_SystemsAndImplementations, unused_uniqueDataFiles, asnFiles, unused_useOSS):
@@ -510,9 +507,4 @@ def main():
             b.OnFinal()  # pragma: no cover
 
 if __name__ == "__main__":
-    if "-pdb" in sys.argv:
-        sys.argv.remove("-pdb")  # pragma: no cover
-        import pdb  # pragma: no cover
-        pdb.run('main()')  # pragma: no cover
-    else:
-        main()
+    main()
