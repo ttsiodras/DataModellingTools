@@ -62,7 +62,7 @@ def MergeASN1_AST(smp2AsnAST):
     typesToAddVerbatim = []
     identicals = {}
     d = commonPy.asnParser.g_names
-    for k, v in smp2AsnAST.iteritems():
+    for k, v in smp2AsnAST.items():
         if k in d:
             # Type name exists in both trees - is it the same?
             if not v.IdenticalPerSMP2(d[k], smp2AsnAST, d):  # pragma: no cover
@@ -73,7 +73,7 @@ def MergeASN1_AST(smp2AsnAST):
                 info(1, green, k, white, "exists and is semantically equivalent.")  # pragma: no cover
         else:
             # Find an identical type if possible
-            for k2, v2 in d.iteritems():
+            for k2, v2 in d.items():
                 if v2._isArtificial:
                     # Avoid mapping to artificially generated inner types
                     # (see last part of VerifyAndFixAST in commonPy.asnParser)
@@ -105,11 +105,11 @@ def MergeASN1_AST(smp2AsnAST):
 
 def SaveASN_AST(bPruneUnnamedInnerTASTEtypes, outputAsn1Grammar, identicals):
     d = DashUnderscoreAgnosticDict()
-    for k, v in commonPy.asnParser.g_names.iteritems():
+    for k, v in commonPy.asnParser.g_names.items():
         d[k] = v
     with open(outputAsn1Grammar, 'w') as f:
         f.write('DATAVIEW DEFINITIONS AUTOMATIC TAGS ::= BEGIN\n\n')
-        for k, v in d.iteritems():
+        for k, v in d.items():
             if v._isArtificial:
                 # Don't emit artificially generated inner types
                 # (see last part of VerifyAndFixAST in commonPy.asnParser)
@@ -124,7 +124,7 @@ def SaveASN_AST(bPruneUnnamedInnerTASTEtypes, outputAsn1Grammar, identicals):
             f.write('-- From ' + v._asnFilename + ' line ' + str(v._lineno) + '\n')
             f.write(k + ' ::= ')
             f.write(v.AsASN1(d) + "\n\n")
-        for k, v in identicals.iteritems():
+        for k, v in identicals.items():
             f.write(k + ' ::= ' + v + '\n\n')
         f.write('END\n')
 
