@@ -188,20 +188,42 @@ of each SUBPROGRAM param.'''
             os.unlink(astFile)
         panic("AADL parsing failed. Aborting...")
 
+    def FixMetaClasses(sp):
+        def patchMe(o):
+            try:
+                python2className = str(o.__class__).split("'")[1]
+                if 'commonPy2' in python2className:
+                    klass = commonPy
+                    for step in python2className.split('.')[1:]:
+                        klass = getattr(klass, step)
+                    o.__class__ = klass
+            except Exception as e:
+                pass
+
+        patchMe(sp)
+        for param in sp._params:
+            patchMe(param)
+            patchMe(param._signal)
+            patchMe(param._sourceElement)
+        map(patchMe, sp._calls)
+        map(patchMe, sp._connections)
     try:
         import pickle
         astInfo = pickle.load(open(astFile, 'rb'))
-        for k in ['g_signals', 'g_processImplementations',
-                  'g_apLevelContainers', 'g_systems',
-                  'g_subProgramImplementations', 'g_threadImplementations']:
+        for k in ['g_processImplementations', 'g_apLevelContainers',
+                  'g_signals', 'g_systems', 'g_subProgramImplementations',
+                  'g_threadImplementations']:
             setattr(commonPy.aadlAST, k, astInfo[k])
+        for k in ['g_processImplementations',
+                  'g_subProgramImplementations', 'g_threadImplementations']:
+            for si in astInfo[k]:
+                sp, sp_impl, modelingLanguage, maybeFVname = si[0], si[1], si[2], si[3]
+                sp = commonPy.aadlAST.g_apLevelContainers[sp]
+                FixMetaClasses(sp)
     except Exception as e:
         if os.path.exists(astFile):
             os.unlink(astFile)
         panic(str(e))
-
-    import commonPy as commonPy2  # Hack of the century: make unpickled
-                                  # Python2 objects visible?
 
 
 def SpecialCodes(unused_SystemsAndImplementations, unused_uniqueDataFiles, asnFiles, unused_useOSS):

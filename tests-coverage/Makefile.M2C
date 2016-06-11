@@ -2,7 +2,7 @@ include common.mk
 
 VPATH=.:../B_mappers:../commonPy
 
-PYSRC_B := asynchronousTool.py synchronousTool.py ada_B_mapper.py c_B_mapper.py og_B_mapper.py simulink_B_mapper.py scade6_B_mapper.py pyside_B_mapper.py # vhdl_B_mapper.py
+PYSRC_B := asynchronousTool.py ada_B_mapper.py c_B_mapper.py og_B_mapper.py simulink_B_mapper.py scade6_B_mapper.py # pyside_B_mapper.py vhdl_B_mapper.py
 PYSRC_B_COVER := $(PYSRC_B:%.py=___B_mappers_%.py,cover)
 
 .PHONY:	check
