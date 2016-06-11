@@ -38,13 +38,13 @@ g_asnFiles = None
 
 
 def Version():
-    print "Code generator: " + "$Id: smp2_A_mapper.py 1932 2010-06-15 13:41:15Z ttsiodras $"  # pragma: no cover
+    print("Code generator: " + "$Id: smp2_A_mapper.py 1932 2010-06-15 13:41:15Z ttsiodras $")  # pragma: no cover
 
 
 def getUID(strIdentifier, idStore={}):
     def h(digits):
         ret = ""
-        for _ in xrange(0, digits):
+        for _ in range(0, digits):
             ret += random.choice('0123456789abcdef')
         return ret
     if strIdentifier not in idStore:
@@ -64,7 +64,7 @@ def FixupAstForSMP2():
     addedNewPseudoType = True
     while addedNewPseudoType:
         addedNewPseudoType = False
-        listOfTypenames = sorted(g_names.keys() + g_innerTypes.keys())
+        listOfTypenames = sorted(list(g_names.keys()) + list(g_innerTypes.keys()))
         for nodeTypename in listOfTypenames:
             node = g_names[nodeTypename]
             if isinstance(node, AsnChoice) or isinstance(node, AsnSequence) or isinstance(node, AsnSet):
@@ -309,7 +309,7 @@ def OnShutdown():
     g_catalogueXML.write('    <Description>Types used in "%s"</Description>\n' %
                          (g_asnFiles if isinstance(g_asnFiles, str) else '","'.join(g_asnFiles)))
     typenameList = []
-    for nodeTypename in sorted(g_innerTypes.keys() + g_names.keys()):
+    for nodeTypename in sorted(list(g_innerTypes.keys()) + list(g_names.keys())):
         if IsBadType(nodeTypename):
             continue
         if nodeTypename not in typenameList:

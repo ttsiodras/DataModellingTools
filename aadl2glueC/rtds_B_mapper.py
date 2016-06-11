@@ -31,10 +31,10 @@ It is used to model asynchronous processes (SDL)...
 from commonPy.utility import panic
 from commonPy.asnAST import isSequenceVariable, sourceSequenceLimit, AsnBasicNode, AsnEnumerated
 
-from recursiveMapper import RecursiveMapper
-from asynchronousTool import ASynchronousToolGlueGenerator
+from .recursiveMapper import RecursiveMapper
+from .asynchronousTool import ASynchronousToolGlueGenerator
 
-import c_B_mapper
+from . import c_B_mapper
 
 isAsynchronous = True
 rtdsBackend = None
@@ -42,7 +42,7 @@ cBackend = None
 
 
 def Version():
-    print "Code generator: " + "$Id: rtds_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $"
+    print("Code generator: " + "$Id: rtds_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")
 
 
 class FromRTDSToASN1SCC(RecursiveMapper):
@@ -450,7 +450,7 @@ class RTDS_GlueGenerator(ASynchronousToolGlueGenerator):
         self.FromOSStoRTDS = FromOSStoRTDS()
 
     def Version(self):
-        print "Code generator: " + "$Id: rtds_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $"
+        print("Code generator: " + "$Id: rtds_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")
 
     def HeadersOnStartup(self, unused_asnFile, unused_outputDir, unused_maybeFVname):
         self.C_HeaderFile.write("#include <assert.h>\n\n")

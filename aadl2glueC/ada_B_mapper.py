@@ -40,7 +40,7 @@ output parameters, which have Ada callable interfaces.
 # from recursiveMapper import RecursiveMapper
 # from asynchronousTool import ASynchronousToolGlueGenerator
 
-import c_B_mapper
+from . import c_B_mapper
 
 isAsynchronous = True
 adaBackend = None
@@ -48,7 +48,7 @@ cBackend = None
 
 
 def Version():
-    print "Code generator: " + "$Id: ada_B_mapper.py 2382 2012-06-22 08:35:33Z ttsiodras $"  # pragma: no cover
+    print("Code generator: " + "$Id: ada_B_mapper.py 2382 2012-06-22 08:35:33Z ttsiodras $")  # pragma: no cover
 
 # All the ada B mapper is now Obsolete, we are using ASN1SCC for Dumpables
 #

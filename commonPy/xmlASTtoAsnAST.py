@@ -45,10 +45,10 @@ import os
 from xml.sax.handler import ContentHandler
 import xml.sax
 
-from asnAST import AsnBool, AsnInt, AsnReal, AsnEnumerated, AsnOctetString, AsnAsciiString, \
+from .asnAST import AsnBool, AsnInt, AsnReal, AsnEnumerated, AsnOctetString, AsnAsciiString, \
     AsnMetaType, AsnSet, AsnSequence, AsnSetOf, AsnSequenceOf, AsnChoice, AsnMetaMember
-from utility import panic, warn
-import asnParser
+from .utility import panic, warn
+from . import asnParser
 
 g_xmlASTrootNode = None
 
@@ -74,7 +74,7 @@ class InputFormatXMLHandler(ContentHandler):
 
     def startElement(self, name, attrs):
         if self._debug:
-            print self._indent + "(", name, ")", ", ".join(attrs.keys())  # pragma: no cover
+            print(self._indent + "(", name, ")", ", ".join(list(attrs.keys())))  # pragma: no cover
             self._indent += "    "  # pragma: no cover
         newElement = Element(name, attrs)
         self._roots[-1]._children.append(newElement)
@@ -105,10 +105,10 @@ def VisitAll(node, expectedType, Action):
 
 
 def GetAttr(node, attrName):
-    if attrName not in node._attrs.keys():
+    if attrName not in list(node._attrs.keys()):
         return None
     else:
-        return node._attrs[attrName].encode('ascii')
+        return node._attrs[attrName]
 
 
 def GetChild(node, childName):
@@ -149,7 +149,7 @@ def GetRange(newModule, lineNo, nodeWithMinAndMax, valueType):
             panic("You missed a range specification, or used MIN/MAX (line %s)" % lineNo)  # pragma: no cover
         rangeh = valueType(mmax)
     except:  # pragma: no cover
-        descr = {long: "integer", float: "floating point"}  # pragma: no cover
+        descr = {int: "integer", float: "floating point"}  # pragma: no cover
         panic("Expecting %s value ranges (%s, %s)" %  # pragma: no cover
               (descr[valueType], newModule._asnFilename, lineNo))  # pragma: no cover
     return [rangel, rangeh]
@@ -159,7 +159,7 @@ def CreateInteger(newModule, lineNo, xmlIntegerNode):
     return AsnInt(
         asnFilename=newModule._asnFilename,
         lineno=lineNo,
-        range=GetRange(newModule, lineNo, xmlIntegerNode, long))
+        range=GetRange(newModule, lineNo, xmlIntegerNode, int))
 
 
 def CreateReal(newModule, lineNo, xmlRealNode):
@@ -195,7 +195,7 @@ def CreateOctetString(newModule, lineNo, xmlOctetString):
     return AsnOctetString(
         asnFilename=newModule._asnFilename,
         lineno=lineNo,
-        range=GetRange(newModule, lineNo, xmlOctetString, long))
+        range=GetRange(newModule, lineNo, xmlOctetString, int))
 
 
 def CreateIA5String(newModule, lineNo, xmlIA5StringNode):
@@ -205,7 +205,7 @@ def CreateIA5String(newModule, lineNo, xmlIA5StringNode):
     return AsnAsciiString(
         asnFilename=newModule._asnFilename,
         lineno=lineNo,
-        range=GetRange(newModule, lineNo, xmlIA5StringNode, long))
+        range=GetRange(newModule, lineNo, xmlIA5StringNode, int))
 
 
 def CreateNumericString(newModule, lineNo, xmlNumericStringNode):
@@ -214,14 +214,14 @@ def CreateNumericString(newModule, lineNo, xmlNumericStringNode):
 
 def CreateReference(newModule, lineNo, xmlReferenceNode):
     try:
-        mi=long(GetAttr(xmlReferenceNode, "Min"))
+        mi=int(GetAttr(xmlReferenceNode, "Min"))
     except:
         try:
             mi=float(GetAttr(xmlReferenceNode, "Min"))
         except:
             mi = None
     try:
-        ma=long(GetAttr(xmlReferenceNode, "Max"))
+        ma=int(GetAttr(xmlReferenceNode, "Max"))
     except:
         try:
             ma=float(GetAttr(xmlReferenceNode, "Max"))
@@ -243,13 +243,13 @@ def CommonSetSeqOf(newModule, lineNo, xmlSequenceOfNode, classToCreate):
         panic("CommonSetSeqOf: No children for Type (%s, %s)" %  # pragma: no cover
               (newModule._asnFilename, lineNo))  # pragma: no cover
     if xmlType._children[0]._name == "ReferenceType":
-        contained = GetAttr(xmlType._children[0], "ReferencedTypeName").encode('ascii')
+        contained = GetAttr(xmlType._children[0], "ReferencedTypeName")
     else:
         contained = GenericFactory(newModule, xmlType)
     return classToCreate(
         asnFilename=newModule._asnFilename,
         lineno=lineNo,
-        range=GetRange(newModule, lineNo, xmlSequenceOfNode, long),
+        range=GetRange(newModule, lineNo, xmlSequenceOfNode, int),
         containedType=contained)
 
 
@@ -334,7 +334,7 @@ def GenericFactory(newModule, xmlType):
         panic("GenericFactory: No children for Type (%s, %s)" %  # pragma: no cover
               (newModule._asnFilename, lineNo))  # pragma: no cover
     xmlContainedType = xmlType._children[0]
-    if xmlContainedType._name not in Factories.keys():
+    if xmlContainedType._name not in list(Factories.keys()):
         panic("Unsupported XML type node: '%s' (%s, %s)" %  # pragma: no cover
               (xmlContainedType._name, newModule._asnFilename, lineNo))  # pragma: no cover
     return Factories[xmlContainedType._name](
@@ -433,7 +433,7 @@ def ParseASN1SCC_AST(filename):
             asnParser.g_names[typeName] = typeData
     asnParser.g_leafTypeDict.update(asnParser.VerifyAndFixAST())
 
-    for nodeTypename in asnParser.g_names.keys():
+    for nodeTypename in list(asnParser.g_names.keys()):
         if nodeTypename not in asnParser.g_checkedSoFarForKeywords:
             asnParser.g_checkedSoFarForKeywords[nodeTypename] = 1
             asnParser.CheckForInvalidKeywords(nodeTypename)
@@ -570,7 +570,7 @@ def main():
 
     ParseASN1SCC_AST(sys.argv[1])
     asnParser.Dump()
-    print "\nRe-created grammar:\n\n"
+    print("\nRe-created grammar:\n\n")
     PrintGrammarFromASTtoStdOut()
 
 if __name__ == "__main__":

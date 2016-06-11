@@ -40,8 +40,8 @@ g_bHasStartupRunOnce = False
 
 
 def Version():
-    print "Code generator: " + \
-        "$Id: python_A_mapper.py 2400 2012-09-04 10:40:19Z ttsiodras $"  # pragma: no cover
+    print("Code generator: " + \
+        "$Id: python_A_mapper.py 2400 2012-09-04 10:40:19Z ttsiodras $")  # pragma: no cover
 
 
 def CleanNameAsPythonWants(name):
@@ -201,7 +201,7 @@ clean:
         g_outputGetSetC.write("void DestroyInstanceOf_%s(byte *pData) {\n" % typ)
         g_outputGetSetC.write('    free(pData);\n')
         g_outputGetSetC.write('}\n\n')
-    for nodeTypename, node in commonPy.asnParser.g_names.iteritems():
+    for nodeTypename, node in commonPy.asnParser.g_names.items():
         if node._isArtificial:
             continue
         WorkOnType(nodeTypename)

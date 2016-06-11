@@ -37,7 +37,7 @@ soFileNames = [
     if filename.endswith("_getset.so")
 ]
 if len(soFileNames) != 1:
-    print "Failed to locate a single _getset.so under", script_path
+    print("Failed to locate a single _getset.so under", script_path)
     sys.exit(1)
 
 JMP = cdll.LoadLibrary(os.path.join(script_path, soFileNames[0]))
@@ -71,8 +71,8 @@ DestroyInstanceOf_int = JMP.DestroyInstanceOf_int
 
 def panicWithCallStack(msg):
     """Print the panic msg in color, report the call stack, and die"""
-    print >>sys.stderr, "\n"+chr(27)+"[35m" + msg + chr(27) + "[0m\n"
-    print >>sys.stderr, "\nCall stack was:\n%s\n" % ("".join(traceback.format_stack()[:-1]))
+    print("\n"+chr(27)+"[35m" + msg + chr(27) + "[0m\n", file=sys.stderr)
+    print("\nCall stack was:\n%s\n" % ("".join(traceback.format_stack()[:-1])), file=sys.stderr)
     sys.exit(1)
 
 
@@ -108,7 +108,7 @@ class DataStream(object):
         # print "Reading",
         msg = ""
         pData = c_void_p(GetBitstreamBuffer(self._bs))
-        for i in xrange(0, GetStreamCurrentLength(self._bs)):
+        for i in range(0, GetStreamCurrentLength(self._bs)):
             b = GetBufferByte(pData, i)
             msg += chr(b)
             # print b, ",",
@@ -121,7 +121,7 @@ class DataStream(object):
         self._bs.count = strLength
         pData = c_void_p(GetBitstreamBuffer(self._bs))
         # print "Writing",
-        for i in xrange(0, strLength):
+        for i in range(0, strLength):
             b = ord(data[i])
             # print b, ",",
             SetBufferByte(pData, i, b)
@@ -245,7 +245,7 @@ An example for SetLength:
         try:
             bridgeFuncName = Clean(self._nodeTypeName) + "_" + self._Caccessor + "_Get"+args.get("postfix", "")
             if bridgeFuncName not in DV_Types.funcTypeLookup:
-                print "Function", bridgeFuncName, "not found in lookup - contact support."
+                print("Function", bridgeFuncName, "not found in lookup - contact support.")
                 raise Exception("")
             resType = DV_Types.funcTypeLookup[bridgeFuncName]
             if resType.endswith('*'):
@@ -260,7 +260,7 @@ An example for SetLength:
                     'long': c_long
                 }.get(resType, None)
                 if cTypesResultType is None:
-                    print "Result type of", resType, "is not yet supported in the Python mapper - contact support."
+                    print("Result type of", resType, "is not yet supported in the Python mapper - contact support.")
                     raise Exception("")
             bridgeFunc = getattr(JMP, bridgeFuncName)
             bridgeFunc.restype = cTypesResultType
@@ -280,18 +280,18 @@ An example for SetLength:
             bridgeFunc = getattr(JMP, Clean(self._nodeTypeName) + "_" + self._Caccessor + "_Set"+args.get("postfix", ""))
             if isinstance(value, float):
                 ctypesValue = c_double(value)
-            elif isinstance(value, (int, long)):
+            elif isinstance(value, int):
                 ctypesValue = c_longlong(value)
             else:
                 ctypesValue = value
             self._params.append(ctypesValue)
             bridgeFunc(self._ptr, *self._params)
             self._params.pop()
-        except Exception, e:
+        except Exception as e:
             oldAP = self._accessPath
             if args.get("reset", True):
                 self.Reset()
-            print str(e)
+            print(str(e))
             panicWithCallStack(
                 "The access path you used (%s) or the value you tried to assign (%s) is not valid." %
                 (oldAP, str(value)))
@@ -307,7 +307,7 @@ An example for SetLength:
     @staticmethod
     def getErrCode(pErr):
         errCode = 0
-        for i in xrange(4):
+        for i in range(4):
             errCode = (errCode << 8) | GetBufferByte(pErr, (3-i))
         return errCode
 
@@ -359,7 +359,7 @@ grep for the errorcode value inside ASN1SCC generated headers."""
         self.SetLength(strLength, False)
         self._Caccessor += "_iDx"
         accessPath = self._accessPath
-        for idx in xrange(0, strLength):
+        for idx in range(0, strLength):
             self._params.append(idx)
             self._accessPath = accessPath + "[" + str(idx) + "]"
             self.Set(ord(src[idx]), reset=False)
@@ -371,7 +371,7 @@ grep for the errorcode value inside ASN1SCC generated headers."""
         strLength = self.GetLength(False)
         self._Caccessor += "_iDx"
         accessPath = self._accessPath
-        for idx in xrange(0, strLength):
+        for idx in range(0, strLength):
             self._params.append(idx)
             self._accessPath = accessPath + "[" + str(idx) + "]"
             retval += chr(self.Get(reset=False))

@@ -40,14 +40,14 @@ from commonPy.utility import panic
 from commonPy.asnAST import sourceSequenceLimit, isSequenceVariable, targetSequenceLimit
 
 from commonPy.recursiveMapper import RecursiveMapper
-from asynchronousTool import ASynchronousToolGlueGenerator
+from .asynchronousTool import ASynchronousToolGlueGenerator
 
 isAsynchronous = True
 cBackend = None
 
 
 def Version():
-    print "Code generator: " + "$Id: c_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $"
+    print("Code generator: " + "$Id: c_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")
 
 
 class FromCtoOSS(RecursiveMapper):
@@ -229,7 +229,7 @@ class C_GlueGenerator(ASynchronousToolGlueGenerator):
         self.FromCtoOSS = FromCtoOSS()
 
     def Version(self):
-        print "Code generator: " + "$Id: c_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $"  # pragma: no cover
+        print("Code generator: " + "$Id: c_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")  # pragma: no cover
 
     def HeadersOnStartup(self, unused_asnFile, unused_outputDir, unused_maybeFVname):
         if self.useOSS:

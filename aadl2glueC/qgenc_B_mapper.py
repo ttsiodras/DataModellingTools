@@ -42,15 +42,15 @@ from commonPy.utility import panicWithCallStack
 from commonPy.asnAST import AsnInt, AsnReal, AsnBool, AsnEnumerated, isSequenceVariable, sourceSequenceLimit
 from commonPy.aadlAST import AadlPort, AadlParameter
 
-from recursiveMapper import RecursiveMapper
-from synchronousTool import SynchronousToolGlueGenerator
+from .recursiveMapper import RecursiveMapper
+from .synchronousTool import SynchronousToolGlueGenerator
 
 isAsynchronous = False
 qgencBackend = None
 
 
 def Version():
-    print "Code generator: " + "$Id: qgenc_B_mapper.py $"
+    print("Code generator: " + "$Id: qgenc_B_mapper.py $")
 
 
 def IsElementMappedToPrimitive(node, names):
@@ -74,7 +74,7 @@ class FromQGenCToASN1SCC(RecursiveMapper):
         lines = []
         if node._range == []:
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
-        for i in xrange(0, node._range[-1]):
+        for i in range(0, node._range[-1]):
             lines.append("%s.arr[%d] = %s.element_data[%d];\n" % (destVar, i, srcQGenC, i))
         if isSequenceVariable(node):
             lines.append("%s.nCount = %s.length;\n" % (destVar, srcQGenC))
@@ -122,7 +122,7 @@ class FromQGenCToASN1SCC(RecursiveMapper):
             panicWithCallStack("need a SIZE constraint or else we can't generate C code (%s)!\n" % node.Location())  # pragma: no cover
         isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
         lines = []
-        for i in xrange(0, node._range[-1]):
+        for i in range(0, node._range[-1]):
             lines.extend(self.Map(
                          isMappedToPrimitive and ("%s.element_data[%d]" % (srcQGenC, i)) or ("%s.element_%02d" % (srcQGenC, i)),
                          destVar + ".arr[%d]" % i,
@@ -156,7 +156,7 @@ class FromASN1SCCtoQGenC(RecursiveMapper):
 
         lines = []
         limit = sourceSequenceLimit(node, srcVar)
-        for i in xrange(0, node._range[-1]):
+        for i in range(0, node._range[-1]):
             lines.append("if (%s>=%d) %s.element_data[%d] = %s.arr[%d]; else %s.element_data[%d] = 0;\n" %
                          (limit, i+1, dstQGenC, i, srcVar, i, dstQGenC, i))
         if len(node._range)>1 and node._range[0]!=node._range[1]:
@@ -204,7 +204,7 @@ class FromASN1SCCtoQGenC(RecursiveMapper):
             panicWithCallStack("need a SIZE constraint or else we can't generate C code (%s)!\n" % node.Location())  # pragma: no cover
         isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
         lines = []
-        for i in xrange(0, node._range[-1]):
+        for i in range(0, node._range[-1]):
             lines.extend(self.Map(
                 srcVar + ".arr[%d]" % i,
                 isMappedToPrimitive and ("%s.element_data[%d]" % (dstQGenC, i)) or ("%s.element_%02d" % (dstQGenC, i)),
@@ -233,7 +233,7 @@ class FromQGenCToOSS(RecursiveMapper):
         lines = []
         if node._range == []:
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
-        for i in xrange(0, node._range[-1]):
+        for i in range(0, node._range[-1]):
             lines.append("%s.value[%d] = %s.element_data[%d];\n" % (destVar, i, srcQGenC, i))
         if len(node._range)>1 and node._range[0]!=node._range[1]:
             lines.append("%s.length = %s.length;\n" % (destVar, srcQGenC))
@@ -280,7 +280,7 @@ class FromQGenCToOSS(RecursiveMapper):
             panicWithCallStack("(%s) needs a SIZE constraint or else we can't generate C code!\n" % node.Location())  # pragma: no cover
         isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
         lines = []
-        for i in xrange(0, node._range[-1]):
+        for i in range(0, node._range[-1]):
             lines.extend(self.Map(
                          isMappedToPrimitive and ("%s.element_data[%d]" % (srcQGenC, i)) or ("%s.element_%02d" % (srcQGenC, i)),
                          destVar + ".value[%d]" % i,
@@ -311,7 +311,7 @@ class FromOSStoQGenC(RecursiveMapper):
         if node._range == []:
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
         lines = []
-        for i in xrange(0, node._range[-1]):
+        for i in range(0, node._range[-1]):
             lines.append("if (%s.length >= %d) %s.element_data[%d] = %s.value[%d]; else %s.element_data[%d] = 0;\n" %
                          (srcVar, i+1, dstQGenC, i, srcVar, i, dstQGenC, i))
         if len(node._range)>1 and node._range[0]!=node._range[1]:
@@ -359,7 +359,7 @@ class FromOSStoQGenC(RecursiveMapper):
             panicWithCallStack("(%s) needs a SIZE constraint or else we can't generate C code!\n" % node.Location())  # pragma: no cover
         isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
         lines = []
-        for i in xrange(0, node._range[-1]):
+        for i in range(0, node._range[-1]):
             lines.extend(self.Map(
                 srcVar + ".value[%d]" % i,
                 isMappedToPrimitive and ("%s.element_data[%d]" % (dstQGenC, i)) or ("%s.element_%02d" % (dstQGenC, i)),
@@ -376,7 +376,7 @@ class FromOSStoQGenC(RecursiveMapper):
 
 class QGenCGlueGenerator(SynchronousToolGlueGenerator):
     def Version(self):
-        print "Code generator: " + "$Id: qgenc_B_mapper.py 2390 2014-11-27 12:39:17Z dtuulik $"  # pragma: no cover
+        print("Code generator: " + "$Id: qgenc_B_mapper.py 2390 2014-11-27 12:39:17Z dtuulik $")  # pragma: no cover
 
     def FromToolToASN1SCC(self):
         return FromQGenCToASN1SCC()

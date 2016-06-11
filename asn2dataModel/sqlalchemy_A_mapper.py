@@ -73,7 +73,7 @@ def OnChoice(unused_nodeTypename, unused_unused_node,
 
 
 def Version():
-    print "$Id$"  # pragma: no cover
+    print("$Id$")  # pragma: no cover
 
 
 g_dependencyGraph = {}
@@ -88,7 +88,7 @@ def FixupAstForSQLAlchemy():
     addedNewPseudoType = True
     while addedNewPseudoType:
         addedNewPseudoType = False
-        listOfTypenames = sorted(g_names.keys() + g_innerTypes.keys())
+        listOfTypenames = sorted(list(g_names.keys()) + list(g_innerTypes.keys()))
         for nodeTypename in listOfTypenames:
             node = g_names[nodeTypename]
             if isinstance(node, (AsnChoice, AsnSequence, AsnSet)):
@@ -527,7 +527,7 @@ def OnShutdown():
         g_outputDir + os.sep + g_uniqueStringOfASN1files + "_model.py", 'w')
     d = g_asnFiles if isinstance(g_asnFiles, str) else '","'.join(g_asnFiles)
     typenameList = []
-    for nodeTypename in sorted(g_innerTypes.keys() + g_names.keys()):
+    for nodeTypename in sorted(list(g_innerTypes.keys()) + list(g_names.keys())):
         if IsBadType(nodeTypename):
             continue
         if nodeTypename not in typenameList:

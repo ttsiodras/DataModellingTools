@@ -1015,14 +1015,14 @@ def ParseInput(asnFilename, bClearFirst=True, bFixAST=True):
         g_leafTypeDict = {}
 
     if not configMT.debugParser:
-        from . import lex
+        import lex
         lex.lex()
 
-        from . import yacc
+        import yacc
         yacc.yacc(debug=0, write_tables=0)
         yacc.parse(lines)
     else:
-        from . import lex
+        import lex
         lexer = lex.lex(debug=1)
         lexer.input(lines)
         lex.runmain()

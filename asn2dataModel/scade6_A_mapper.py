@@ -58,7 +58,7 @@ g_Declarations = None
 
 
 def Version():
-    print "Code generator: " + "$Id: scade612_A_mapper.py 1842 2010-03-10 14:16:42Z ttsiodras $"  # pragma: no cover
+    print("Code generator: " + "$Id: scade612_A_mapper.py 1842 2010-03-10 14:16:42Z ttsiodras $")  # pragma: no cover
 
 
 def CleanNameAsScadeWants(name):
@@ -67,7 +67,7 @@ def CleanNameAsScadeWants(name):
 
 def RandomHex(digits):
     result = ""
-    for i in xrange(0, digits):
+    for i in range(0, digits):
         result += random.choice('0123456789abcdef')
     return result
 
@@ -75,7 +75,7 @@ def RandomHex(digits):
 def FixupNestedStringsAndEnumerated():
     names = commonPy.asnParser.g_names
     leafTypeDict = commonPy.asnParser.g_leafTypeDict
-    for nodeTypename in names.keys():
+    for nodeTypename in list(names.keys()):
         node = names[nodeTypename]
         if isinstance(node, AsnSequence) or isinstance(node, AsnChoice) or isinstance(node, AsnSet):
             for child in node._members:
@@ -189,7 +189,7 @@ def CheckPrerequisites(nodeTypename):
                 'SETOF': 'OnSetOf',
                 'ENUMERATED': 'OnEnumerated'
             }
-            if mappedName[leafType] not in globals().keys():
+            if mappedName[leafType] not in list(globals().keys()):
                 panic("ASN.1 grammar contains %s but no %s section found in the backend! Contact Semantix." %  # pragma: no cover
                       (nodeTypename, mappedName[leafType]))  # pragma: no cover
             processor = globals()[mappedName[leafType]]

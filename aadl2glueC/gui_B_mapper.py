@@ -606,7 +606,7 @@ def WriteCodeForGUIControls(prefix, parentControl, node, subProgram, subProgramI
         while isinstance(containedNode, str):
             containedNode = names[containedNode]
         control = "_itemStaticBoxSizer_%s" % varPrefix
-        for i in xrange(0, node._range[-1]):
+        for i in range(0, node._range[-1]):
             WriteCodeForGUIControls(
                 prefix + "::Elem_" + ("%02d"%i),
                 control, containedNode, subProgram, subProgramImplementation, param, leafTypeDict, names)
@@ -679,7 +679,7 @@ def CopyDataFromDlgToASN1(f, srcVar, destVar, node, leafTypeDict, names):
         #No nCount anymore!
         #else:
         #    f.write(destVar + ".nCount = %s;\n" % str(node._range[-1]))
-        for i in xrange(0, node._range[-1]):
+        for i in range(0, node._range[-1]):
             if isSequenceVariable(node):
                 f.write("if ("+destVar+".nCount>"+str(i)+") {\n")
             CopyDataFromDlgToASN1(f, srcVar + "_Elem_" + ("%02d"%i), destVar + ".arr[" + str(i) + "]", containedNode, leafTypeDict, names)
@@ -756,7 +756,7 @@ def CopyDataFromASN1ToDlg(fDesc, prefix, srcVar, destVar, node, leafTypeDict, na
         while isinstance(containedNode, str):
             containedNode = names[containedNode]
         # The decoding code has been executed, so the .nCount member is ready...
-        for i in xrange(0, node._range[-1]):
+        for i in range(0, node._range[-1]):
             if isSequenceVariable(node):
                 fDesc.write("if ("+str(i)+"<"+srcVar+".nCount) {\n")
                 CopyDataFromASN1ToDlg(fDesc, prefix, srcVar + ".arr[" + str(i) + "]", destVar + "_Elem_" + ("%02d"%i), containedNode, leafTypeDict, names, bClear)
@@ -868,7 +868,7 @@ def WriteCodeForGnuPlot(prefix, node, subProgram, param, names):
         containedNode = node._containedType
         while isinstance(containedNode, str):
             containedNode = names[containedNode]
-        for _ in xrange(0, node._range[-1]):
+        for _ in range(0, node._range[-1]):
             WriteCodeForGnuPlot(prefix + "::Elem", containedNode, subProgram, param, names)
 
 

@@ -91,15 +91,15 @@ hpredef.h :
 
 from commonPy.asnAST import isSequenceVariable, sourceSequenceLimit, AsnInt, AsnBool, AsnReal, AsnEnumerated
 
-from recursiveMapper import RecursiveMapper
-from asynchronousTool import ASynchronousToolGlueGenerator
+from .recursiveMapper import RecursiveMapper
+from .asynchronousTool import ASynchronousToolGlueGenerator
 
 isAsynchronous = True
 ogBackend = None
 
 
 def Version():
-    print "Code generator: " + "$Id: og_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $"
+    print("Code generator: " + "$Id: og_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")
 
 
 class FromObjectGeodeToASN1SCC(RecursiveMapper):
@@ -534,7 +534,7 @@ class OG_GlueGenerator(ASynchronousToolGlueGenerator):
         self.declarations = {}
 
     def Version(self):
-        print "Code generator: " + "$Id: og_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $"  # pragma: no cover
+        print("Code generator: " + "$Id: og_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")  # pragma: no cover
 
     def HeadersOnStartup(self, unused_asnFile, unused_outputDir, unused_maybeFVname):
         self.C_HeaderFile.write("#include <assert.h>\n\n")

@@ -24,6 +24,7 @@ from commonPy.utility import panic
 
 import commonPy.asnAST
 import commonPy.configMT
+from functools import reduce
 
 
 def VerifyNodeRange(node):

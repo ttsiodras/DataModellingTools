@@ -72,7 +72,7 @@ def OnChoice(unused_nodeTypename, unused_unused_node,
 
 
 def Version():
-    print "$Id: sql_A_mapper.py 1932 2010-06-15 13:41:15Z ttsiodras $"  # pragma: no cover
+    print("$Id: sql_A_mapper.py 1932 2010-06-15 13:41:15Z ttsiodras $")  # pragma: no cover
 
 
 g_dependencyGraph = {}
@@ -87,7 +87,7 @@ def FixupAstForSQL():
     addedNewPseudoType = True
     while addedNewPseudoType:
         addedNewPseudoType = False
-        listOfTypenames = sorted(g_names.keys() + g_innerTypes.keys())
+        listOfTypenames = sorted(list(g_names.keys()) + list(g_innerTypes.keys()))
         for nodeTypename in listOfTypenames:
             node = g_names[nodeTypename]
             if isinstance(node, (AsnChoice, AsnSequence, AsnSet)):
@@ -290,7 +290,7 @@ def OnShutdown():
     d = g_asnFiles if isinstance(g_asnFiles, str) else '","'.join(g_asnFiles)
     g_sqlOutput.write('--  SQL statements for types used in "%s"\n' % d)
     typenameList = []
-    for nodeTypename in sorted(g_innerTypes.keys() + g_names.keys()):
+    for nodeTypename in sorted(list(g_innerTypes.keys()) + list(g_names.keys())):
         if IsBadType(nodeTypename):
             continue
         if nodeTypename not in typenameList:

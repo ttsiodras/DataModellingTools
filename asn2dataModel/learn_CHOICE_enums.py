@@ -45,7 +45,7 @@ void main()
 f.close()
 if 0 != os.system(
         "gcc -o %s -I. %s.c" % (extractor_filename, extractor_filename)):
-    print "Failed to extract CHOICE enum values..."
+    print("Failed to extract CHOICE enum values...")
     sys.exit(1)
 os.system(extractor_filename)
 os.unlink(extractor_filename + ".c")

@@ -28,7 +28,7 @@ g_asnFile = ""
 
 
 def Version():
-    print "Code generator: " + "$Id: og_A_mapper.py 1879 2010-05-17 10:13:12Z ttsiodras $"  # pragma: no cover
+    print("Code generator: " + "$Id: og_A_mapper.py 1879 2010-05-17 10:13:12Z ttsiodras $")  # pragma: no cover
 
 
 def OnStartup(unused_modelingLanguage, asnFile, outputDir):

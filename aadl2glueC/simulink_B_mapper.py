@@ -39,15 +39,15 @@ from commonPy.utility import panicWithCallStack
 from commonPy.asnAST import AsnInt, AsnReal, AsnBool, AsnEnumerated, isSequenceVariable, sourceSequenceLimit
 from commonPy.aadlAST import AadlPort, AadlParameter
 
-from recursiveMapper import RecursiveMapper
-from synchronousTool import SynchronousToolGlueGenerator
+from .recursiveMapper import RecursiveMapper
+from .synchronousTool import SynchronousToolGlueGenerator
 
 isAsynchronous = False
 simulinkBackend = None
 
 
 def Version():
-    print "Code generator: " + "$Id: simulink_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $"
+    print("Code generator: " + "$Id: simulink_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")
 
 
 def IsElementMappedToPrimitive(node, names):
@@ -71,7 +71,7 @@ class FromSimulinkToASN1SCC(RecursiveMapper):
         lines = []
         if node._range == []:
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
-        for i in xrange(0, node._range[-1]):
+        for i in range(0, node._range[-1]):
             lines.append("%s.arr[%d] = %s.element_data[%d];\n" % (destVar, i, srcSimulink, i))
         if isSequenceVariable(node):
             lines.append("%s.nCount = %s.length;\n" % (destVar, srcSimulink))
@@ -119,7 +119,7 @@ class FromSimulinkToASN1SCC(RecursiveMapper):
             panicWithCallStack("need a SIZE constraint or else we can't generate C code (%s)!\n" % node.Location())  # pragma: no cover
         isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
         lines = []
-        for i in xrange(0, node._range[-1]):
+        for i in range(0, node._range[-1]):
             lines.extend(self.Map(
                          isMappedToPrimitive and ("%s.element_data[%d]" % (srcSimulink, i)) or ("%s.element_%02d" % (srcSimulink, i)),
                          destVar + ".arr[%d]" % i,
@@ -153,7 +153,7 @@ class FromASN1SCCtoSimulink(RecursiveMapper):
 
         lines = []
         limit = sourceSequenceLimit(node, srcVar)
-        for i in xrange(0, node._range[-1]):
+        for i in range(0, node._range[-1]):
             lines.append("if (%s>=%d) %s.element_data[%d] = %s.arr[%d]; else %s.element_data[%d] = 0;\n" %
                          (limit, i+1, dstSimulink, i, srcVar, i, dstSimulink, i))
         if len(node._range)>1 and node._range[0]!=node._range[1]:
@@ -201,7 +201,7 @@ class FromASN1SCCtoSimulink(RecursiveMapper):
             panicWithCallStack("need a SIZE constraint or else we can't generate C code (%s)!\n" % node.Location())  # pragma: no cover
         isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
         lines = []
-        for i in xrange(0, node._range[-1]):
+        for i in range(0, node._range[-1]):
             lines.extend(self.Map(
                 srcVar + ".arr[%d]" % i,
                 isMappedToPrimitive and ("%s.element_data[%d]" % (dstSimulink, i)) or ("%s.element_%02d" % (dstSimulink, i)),
@@ -230,7 +230,7 @@ class FromSimulinkToOSS(RecursiveMapper):
         lines = []
         if node._range == []:
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
-        for i in xrange(0, node._range[-1]):
+        for i in range(0, node._range[-1]):
             lines.append("%s.value[%d] = %s.element_data[%d];\n" % (destVar, i, srcSimulink, i))
         if len(node._range)>1 and node._range[0]!=node._range[1]:
             lines.append("%s.length = %s.length;\n" % (destVar, srcSimulink))
@@ -277,7 +277,7 @@ class FromSimulinkToOSS(RecursiveMapper):
             panicWithCallStack("(%s) needs a SIZE constraint or else we can't generate C code!\n" % node.Location())  # pragma: no cover
         isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
         lines = []
-        for i in xrange(0, node._range[-1]):
+        for i in range(0, node._range[-1]):
             lines.extend(self.Map(
                          isMappedToPrimitive and ("%s.element_data[%d]" % (srcSimulink, i)) or ("%s.element_%02d" % (srcSimulink, i)),
                          destVar + ".value[%d]" % i,
@@ -308,7 +308,7 @@ class FromOSStoSimulink(RecursiveMapper):
         if node._range == []:
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
         lines = []
-        for i in xrange(0, node._range[-1]):
+        for i in range(0, node._range[-1]):
             lines.append("if (%s.length >= %d) %s.element_data[%d] = %s.value[%d]; else %s.element_data[%d] = 0;\n" %
                          (srcVar, i+1, dstSimulink, i, srcVar, i, dstSimulink, i))
         if len(node._range)>1 and node._range[0]!=node._range[1]:
@@ -356,7 +356,7 @@ class FromOSStoSimulink(RecursiveMapper):
             panicWithCallStack("(%s) needs a SIZE constraint or else we can't generate C code!\n" % node.Location())  # pragma: no cover
         isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
         lines = []
-        for i in xrange(0, node._range[-1]):
+        for i in range(0, node._range[-1]):
             lines.extend(self.Map(
                 srcVar + ".value[%d]" % i,
                 isMappedToPrimitive and ("%s.element_data[%d]" % (dstSimulink, i)) or ("%s.element_%02d" % (dstSimulink, i)),
@@ -373,7 +373,7 @@ class FromOSStoSimulink(RecursiveMapper):
 
 class SimulinkGlueGenerator(SynchronousToolGlueGenerator):
     def Version(self):
-        print "Code generator: " + "$Id: simulink_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $"  # pragma: no cover
+        print("Code generator: " + "$Id: simulink_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")  # pragma: no cover
 
     def FromToolToASN1SCC(self):
         return FromSimulinkToASN1SCC()

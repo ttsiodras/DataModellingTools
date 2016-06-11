@@ -43,12 +43,12 @@ import re
 import platform
 import traceback
 
-import configMT
+from . import configMT
 
 
 def inform(format, *args):
     if configMT.verbose:
-        print format % args
+        print(format % args)
 
 
 def warn(format, *args):

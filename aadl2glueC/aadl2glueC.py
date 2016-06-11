@@ -91,8 +91,8 @@ import commonPy.aadlAST
 import commonPy.cleanupNodes
 
 #import aadlParser
-import AadlLexer
-import AadlParser
+from . import AadlLexer
+from . import AadlParser
 
 import antlr
 
@@ -192,11 +192,11 @@ of each SUBPROGRAM param.'''
         P.setFilename(L.getFilename())
         try:
             P.aadl_specification()
-        except antlr.ANTLRException, e:  # pragma: no cover
+        except antlr.ANTLRException as e:  # pragma: no cover
             panic("Error in file '%s': %s\n" % (e.fileName, str(e)))  # pragma: no cover
 
     # Resolve signal definitions over all input AADL files
-    for subProgramName, subProgram in commonPy.aadlAST.g_apLevelContainers.iteritems():
+    for subProgramName, subProgram in commonPy.aadlAST.g_apLevelContainers.items():
         inform("Resolving data definitions in subprogram %s..." % subProgramName)
         for param in subProgram._params:
             if not isinstance(param._signal, commonPy.aadlAST.Signal):
@@ -268,7 +268,7 @@ def main():
     ParseAADLfilesAndResolveSignals()
 
     uniqueDataFiles = {}
-    for sp in commonPy.aadlAST.g_apLevelContainers.values():
+    for sp in list(commonPy.aadlAST.g_apLevelContainers.values()):
         for param in sp._params:
             uniqueDataFiles.setdefault(param._signal._asnFilename, {})
             uniqueDataFiles[param._signal._asnFilename].setdefault(sp._language, [])
@@ -282,8 +282,8 @@ def main():
 #       panic("There are no data references anywhere in the given AADL files. Aborting...")
 #       sys.exit(0)
 
-    if len(uniqueDataFiles.keys()) != 0:
-        commonPy.asnParser.ParseAsnFileList(uniqueDataFiles.keys())
+    if len(list(uniqueDataFiles.keys())) != 0:
+        commonPy.asnParser.ParseAsnFileList(list(uniqueDataFiles.keys()))
 
     for asnFile in uniqueDataFiles:
         tmpNames = {}
@@ -296,7 +296,7 @@ def main():
             copy.copy(commonPy.asnParser.g_leafTypeDict)]   # map from Typename to leafType
 
         inform("Checking that all base nodes have mandatory ranges set in %s..." % asnFile)
-        for node in tmpNames.values():
+        for node in list(tmpNames.values()):
             verify.VerifyRanges(node, commonPy.asnParser.g_names)
 
 #    # For each ASN.1 grammar file referenced in the system level description

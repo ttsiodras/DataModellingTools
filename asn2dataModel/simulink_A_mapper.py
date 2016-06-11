@@ -22,7 +22,7 @@ import re
 import commonPy
 from commonPy.utility import panic, inform
 from commonPy.asnAST import AsnBool, AsnInt, AsnReal, AsnString, AsnEnumerated, AsnSequence, AsnSet, AsnChoice, AsnMetaMember, AsnSequenceOf, AsnSetOf
-from createInternalTypes import ScanChildren
+from .createInternalTypes import ScanChildren
 
 # The file written to
 g_outputFile = None
@@ -36,7 +36,7 @@ g_bHasStartupRunOnce = False
 
 
 def Version():
-    print "Code generator: " + "$Id: simulink_A_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $"  # pragma: no cover
+    print("Code generator: " + "$Id: simulink_A_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")  # pragma: no cover
 
 
 def CleanNameAsSimulinkWants(name):
@@ -120,7 +120,7 @@ def CreateAlias(nodeTypename, mappedType, description):
 
 
 def DeclareCollection(node, name, internal):
-    for i in xrange(0, node._range[-1]):
+    for i in range(0, node._range[-1]):
         g_outputFile.write('%s_member_%02d=Simulink.BusElement;\n' % (name, i))
         # Andreas(ESA) wants them to be called 'element_%02d'
         g_outputFile.write("%s_member_%02d.name='element_%02d';\n" % (name, i, i))
@@ -133,7 +133,7 @@ def DeclareCollection(node, name, internal):
     g_outputFile.write('%s=Simulink.Bus;\n' % name)
     g_outputFile.write("%s.Elements = " % name)
     g_outputFile.write('[')
-    for i in xrange(0, node._range[-1]):
+    for i in range(0, node._range[-1]):
         g_outputFile.write("%s_member_%02d " % (name, i))
     g_outputFile.write('%s_member_length' % name)
     g_outputFile.write(']')
@@ -260,7 +260,7 @@ def CreateDeclarationForType(nodeTypename, names, leafTypeDict):
         g_outputFile.write("%s.Elements = " % CleanNameAsSimulinkWants(nodeTypename))
         if elemNo>1:
             g_outputFile.write('[')
-        for i in xrange(0, elemNo):
+        for i in range(0, elemNo):
             g_outputFile.write("%s_elem%02d " % (CleanNameAsSimulinkWants(nodeTypename), i+1))
         if elemNo>1:
             g_outputFile.write(']')
@@ -297,5 +297,5 @@ def CreateDeclarationForType(nodeTypename, names, leafTypeDict):
 
 
 def CreateDeclarationsForAllTypes(names, leafTypeDict):
-    for nodeTypename in names.keys():
+    for nodeTypename in list(names.keys()):
         CreateDeclarationForType(nodeTypename, names, leafTypeDict)

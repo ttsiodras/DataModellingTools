@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-import AadlLexer
-import AadlParser
+from . import AadlLexer
+from . import AadlParser
 import commonPy.aadlAST
 import commonPy.utility
 import antlr
@@ -17,7 +17,7 @@ def main():
 
     try:
         P.aadl_specification()
-    except antlr.ANTLRException, e:
+    except antlr.ANTLRException as e:
         commonPy.utility.panic("Error: %s\n" % (str(e)))
 
     SystemsAndImplementations = commonPy.aadlAST.g_subProgramImplementations[:]
@@ -26,25 +26,25 @@ def main():
     for si in SystemsAndImplementations:
         sp, sp_impl, modelingLanguage, fv_name = si[0], si[1], si[2], si[3]
         sp = commonPy.aadlAST.g_apLevelContainers[sp]
-        print sp._id+"."+sp_impl, "(", modelingLanguage, ") FV_name:", fv_name
+        print(sp._id+"."+sp_impl, "(", modelingLanguage, ") FV_name:", fv_name)
         for param in sp._params:
-            print "\t",
+            print("\t", end=' ')
             if isinstance(param, commonPy.aadlAST.InParam):
-                print "IN",
+                print("IN", end=' ')
             elif isinstance(param, commonPy.aadlAST.OutParam):
-                print "OUT",
+                print("OUT", end=' ')
             elif isinstance(param, commonPy.aadlAST.InOutParam):
-                print "INOUT",
+                print("INOUT", end=' ')
             if isinstance(param._signal, commonPy.aadlAST.Signal):
-                print "\t", param._id, ":", param._signal._asnFilename, param._signal._asnNodename, "(", param._sourceElement._encoding, ")"
+                print("\t", param._id, ":", param._signal._asnFilename, param._signal._asnNodename, "(", param._sourceElement._encoding, ")")
             else:
-                print "\t", param._id, ":", param._signal, "(", param._sourceElement._encoding, ")"
-        print
+                print("\t", param._id, ":", param._signal, "(", param._sourceElement._encoding, ")")
+        print()
         if len(sp._connections):
-            print "\tConnections:"
+            print("\tConnections:")
             for pair in sp._connections:
-                print "\t\tfrom", pair._from._componentId+':'+pair._from._portId, "to", pair._to._componentId+':'+pair._to._portId
-            print
+                print("\t\tfrom", pair._from._componentId+':'+pair._from._portId, "to", pair._to._componentId+':'+pair._to._portId)
+            print()
 
 if __name__ == "__main__":
     main()

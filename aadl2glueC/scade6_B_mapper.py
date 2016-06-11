@@ -39,16 +39,16 @@ from commonPy.utility import panic, panicWithCallStack
 from commonPy.asnAST import isSequenceVariable, sourceSequenceLimit
 from commonPy.aadlAST import AadlPort, AadlParameter
 
-from recursiveMapper import RecursiveMapper
-from synchronousTool import SynchronousToolGlueGenerator
+from .recursiveMapper import RecursiveMapper
+from .synchronousTool import SynchronousToolGlueGenerator
 
 isAsynchronous = False
 scadeBackend = None
 
 
 def Version():
-    print "Code generator: " + \
-        "$Id: scade6_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $"
+    print("Code generator: " + \
+        "$Id: scade6_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")
 
 
 class FromSCADEtoASN1SCC(RecursiveMapper):
@@ -68,7 +68,7 @@ class FromSCADEtoASN1SCC(RecursiveMapper):
             panicWithCallStack(
                 "OCTET STRING (in %s) must have a SIZE constraint "  # pragma: no cover
                 "inside ASN.1,\nor else SCADE can't generate C code!" % node.Location())  # pragma: no cover
-        for i in xrange(0, node._range[-1]):
+        for i in range(0, node._range[-1]):
             lines.append("    %s.arr[%d] = %s[%d];\n" % (destVar, i, srcScadeMacro, i))
         if isSequenceVariable(node):
             lines.append("    %s.nCount = %d;\n" % (destVar, node._range[-1]))
@@ -116,7 +116,7 @@ class FromSCADEtoASN1SCC(RecursiveMapper):
                 "A SIZE constraint is required, or else SCADE can't generate C code (%s)!\n" %   # pragma: no cover
                 node.Location())  # pragma: no cover
         lines = []
-        for i in xrange(0, node._range[-1]):
+        for i in range(0, node._range[-1]):
             lines.extend(self.Map(
                          "%s[%d]" % (srcScadeMacro, i),
                          "%s.arr[%d]" % (destVar, i),
@@ -240,7 +240,7 @@ class FromSCADEtoOSS(RecursiveMapper):
             panicWithCallStack(
                 "OCTET STRING (in %s) must have a SIZE constraint "  # pragma: no cover
                 "inside ASN.1,\nor else SCADE can't generate C code!" % node.Location())  # pragma: no cover
-        for i in xrange(0, node._range[-1]):
+        for i in range(0, node._range[-1]):
             lines.append("    %s.value[%d] = %s[%d];\n" % (destVar, i, srcScadeMacro, i))
         lines.append("    %s.length = %d;\n" % (destVar, node._range[-1]))
         lines.append("}\n")
@@ -287,7 +287,7 @@ class FromSCADEtoOSS(RecursiveMapper):
                 "A SIZE constraint is required, or else SCADE can't generate C code (%s)!\n" %   # pragma: no cover
                 node.Location())  # pragma: no cover
         lines = []
-        for i in xrange(0, node._range[-1]):
+        for i in range(0, node._range[-1]):
             lines.extend(self.Map(
                          "%s[%d]" % (srcScadeMacro, i),
                          "%s.value[%d]" % (destVar, i),
@@ -391,7 +391,7 @@ class FromOSStoSCADE(RecursiveMapper):
 
 class ScadeGlueGenerator(SynchronousToolGlueGenerator):
     def Version(self):
-        print "Code generator: " + "$Id: scade6_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $"  # pragma: no cover
+        print("Code generator: " + "$Id: scade6_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")  # pragma: no cover
 
     def FromToolToASN1SCC(self):
         return FromSCADEtoASN1SCC()

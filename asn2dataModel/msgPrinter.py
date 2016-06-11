@@ -170,7 +170,7 @@ def main():
     uniqueASNfiles = {}
     for grammar in sys.argv[1:]:
         uniqueASNfiles[grammar]=1
-    commonPy.asnParser.ParseAsnFileList(uniqueASNfiles.keys())
+    commonPy.asnParser.ParseAsnFileList(list(uniqueASNfiles.keys()))
 
     for asnFile in uniqueASNfiles:
         tmpNames = {}
@@ -183,7 +183,7 @@ def main():
             copy.copy(commonPy.asnParser.g_leafTypeDict)]   # map from Typename to leafType
 
         inform("Checking that all base nodes have mandatory ranges set in %s..." % asnFile)
-        for node in tmpNames.values():
+        for node in list(tmpNames.values()):
             verify.VerifyRanges(node, commonPy.asnParser.g_names)
 
     # If some AST nodes must be skipped (for any reason), go learn about them

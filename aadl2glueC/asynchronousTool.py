@@ -144,7 +144,7 @@ class ASynchronousToolGlueGenerator:
         self.typesToWorkOn[nodeTypename]=[node, leafTypeDict, names]
 
     def OnShutdown(self, unused_modelingLanguage, unused_asnFile, unused_maybeFVname):
-        for nodeTypename, value in self.typesToWorkOn.items():
+        for nodeTypename, value in list(self.typesToWorkOn.items()):
             inform(str(self.__class__) + "Really working on " + nodeTypename)
             (node, leafTypeDict, names) = value
             self.Common(nodeTypename, node, leafTypeDict, names)

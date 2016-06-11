@@ -30,7 +30,7 @@ from commonPy.utility import panic
 
 
 def Version():
-    print "Code generator: " + "$Id: ada_A_mapper.py 2382 2012-06-22 08:35:33Z ttsiodras $"  # pragma: no cover
+    print("Code generator: " + "$Id: ada_A_mapper.py 2382 2012-06-22 08:35:33Z ttsiodras $")  # pragma: no cover
 
 
 # Especially for the C mapper, since we need to pass the complete ASN.1 files list to ASN1SCC,
