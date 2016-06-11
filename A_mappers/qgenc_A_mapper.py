@@ -22,6 +22,7 @@
 # generated code.
 #
 import re
+
 import commonPy
 from commonPy.utility import panic, inform
 from commonPy.asnAST import AsnBool, AsnInt, AsnReal, AsnString, AsnEnumerated, AsnSequence, AsnSet, AsnChoice, AsnMetaMember, AsnSequenceOf, AsnSetOf
@@ -68,11 +69,11 @@ def OnStartup(unused_modelingLanguage, unused_asnFile, outputDir):
 
 
 def OnBasic(nodeTypename, node, leafTypeDict):
-    pass
+    pass  # pragma: no cover
 
 
 def OnSequence(nodeTypename, node, leafTypeDict):
-    pass
+    pass  # pragma: no cover
 
 
 def OnSet(nodeTypename, node, leafTypeDict):
@@ -80,11 +81,11 @@ def OnSet(nodeTypename, node, leafTypeDict):
 
 
 def OnEnumerated(nodeTypename, node, leafTypeDict):
-    pass
+    pass  # pragma: no cover
 
 
 def OnSequenceOf(nodeTypename, node, leafTypeDict):
-    pass
+    pass  # pragma: no cover
 
 
 def OnSetOf(nodeTypename, node, leafTypeDict):
@@ -92,7 +93,7 @@ def OnSetOf(nodeTypename, node, leafTypeDict):
 
 
 def OnChoice(nodeTypename, node, leafTypeDict):
-    pass
+    pass  # pragma: no cover
 
 
 def OnShutdown():

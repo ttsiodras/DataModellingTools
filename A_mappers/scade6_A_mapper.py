@@ -103,7 +103,7 @@ def OnStartup(unused_modelingLanguage, asnFile, outputDir):
 
     inform("Scade612_A_mapper: Creating file '%s'...", outputFilename)
     global g_outputFile
-    g_outputFile = open(outputDir + outputFilename, 'w')
+    g_outputFile = open(outputDir + outputFilename, 'wb')
 
     global g_mainOid
     g_mainOid = "/" + RandomHex(4) + "/" + RandomHex(3) + "/"

@@ -28,6 +28,8 @@ code generator A.'''
 import os
 import sys
 import re
+import distutils.spawn as spawn
+
 import commonPy
 from commonPy.utility import panic, inform
 from commonPy.asnAST import AsnBool, AsnInt, AsnReal, AsnString, AsnEnumerated, AsnSequence, AsnSet, AsnChoice, AsnMetaMember, AsnSequenceOf, AsnSetOf
@@ -57,13 +59,13 @@ def CleanNameAsSimulinkWants(name):
 
 def OnStartup(unused_modelingLanguage, asnFiles, outputDir):
     #print "Use ASN1SCC to generate the structures for '%s'" % asnFile
-    if None == os.getenv("ASN1SCC"):
-        if None == os.getenv("DMT"):  # pragma: no cover
-            panic("DMT environment variable is not set, you must set it.")  # pragma: no cover
-        os.putenv("ASN1SCC", os.getenv("DMT") + os.sep + "asn1scc/asn1.exe")  # pragma: no cover
+    asn1SccPath = spawn.find_executable('asn1.exe')
+    if not asn1SccPath:
+        panic("ASN1SCC seems to be missing from your system (asn1.exe not found in PATH).\n")  # pragma: no cover
     os.system(
         ("mono " if sys.argv[0].endswith('.py') and sys.platform.startswith('linux') else "") +
-        "\"$ASN1SCC\" -wordSize 8 -typePrefix asn1Scc -Ada -uPER -o \"" + outputDir + "\" \"" + "\" \"".join(asnFiles) + "\"")
+        "\"{}\" -wordSize 8 -typePrefix asn1Scc -c -uPER -o \"".format(asn1SccPath) +
+        outputDir + "\" \"" + "\" \"".join(asnFiles) + "\"")
     os.system("rm -f \"" + outputDir + "\"/*.adb")
 
     global g_bHasStartupRunOnce
@@ -88,11 +90,11 @@ def OnStartup(unused_modelingLanguage, asnFiles, outputDir):
 
 
 def OnBasic(nodeTypename, node, leafTypeDict):
-    pass
+    pass  # pragma: nocover
 
 
 def OnSequence(nodeTypename, node, leafTypeDict):
-    pass
+    pass  # pragma: nocover
 
 
 def OnSet(nodeTypename, node, leafTypeDict):
@@ -100,11 +102,11 @@ def OnSet(nodeTypename, node, leafTypeDict):
 
 
 def OnEnumerated(nodeTypename, node, leafTypeDict):
-    pass
+    pass  # pragma: nocover
 
 
 def OnSequenceOf(nodeTypename, node, leafTypeDict):
-    pass
+    pass  # pragma: nocover
 
 
 def OnSetOf(nodeTypename, node, leafTypeDict):
@@ -112,7 +114,7 @@ def OnSetOf(nodeTypename, node, leafTypeDict):
 
 
 def OnChoice(nodeTypename, node, leafTypeDict):
-    pass
+    pass  # pragma: nocover
 
 
 def OnShutdown():

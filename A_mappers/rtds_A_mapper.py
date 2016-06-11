@@ -47,7 +47,7 @@ def OnSequence(nodeTypename, node, leafTypeDict):
 
 
 def OnSet(nodeTypename, node, leafTypeDict):
-    pass
+    pass  # pragma: no cover
 
 
 def OnEnumerated(nodeTypename, node, leafTypeDict):
@@ -59,7 +59,7 @@ def OnSequenceOf(nodeTypename, node, leafTypeDict):
 
 
 def OnSetOf(nodeTypename, node, leafTypeDict):
-    pass
+    pass  # pragma: no cover
 
 
 def OnChoice(nodeTypename, node, leafTypeDict):
