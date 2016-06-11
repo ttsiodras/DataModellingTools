@@ -12,9 +12,9 @@ if version < '2.3':
 
 ### header action <<< 
 ### preamble action>>>
-from commonPy.aadlAST import *
-from commonPy.utility import panic
-import commonPy.configMT
+from commonPy2.aadlAST import *
+from commonPy2.utility import panic
+import commonPy2.configMT
 global g_currentPackage
 g_currentPackage = ""
 ### preamble action <<<
@@ -498,7 +498,7 @@ class Parser(antlr.LLkParser):
                 if not commonPy.configMT.g_bOnlySubprograms:
                    for threadFeature in threadFeatures:
                       if threadFeature == None: continue
-                      if threadFeature._port._type not in g_signals:
+                      if not g_signals.has_key(threadFeature._port._type):
                          # panic("Line %d: Referenced datatype (%s) not defined yet" % \
                          #     (id.getLine(),threadFeature._port._type))
                          signal = threadFeature._port._type
@@ -538,7 +538,7 @@ class Parser(antlr.LLkParser):
             if not self.inputState.guessing:
                 if not commonPy.configMT.g_bOnlySubprograms:
                    if properties != None:
-                       if id.getText() not in g_apLevelContainers:
+                       if not g_apLevelContainers.has_key(id.getText()):
                           panic("Line %d: THREAD (%s) must first be declared before it is PROPERTIES-ed"  % (id.getLine(), id.getText()))
                        sp = g_apLevelContainers[id.getText()]
                        for property in properties:
@@ -583,7 +583,7 @@ class Parser(antlr.LLkParser):
         self.match(IDENT)
         if not self.inputState.guessing:
             if not commonPy.configMT.g_bOnlySubprograms:
-               if typeid.getText() not in g_apLevelContainers:
+               if not g_apLevelContainers.has_key(typeid.getText()):
                   panic("Line %d: Thread (%s) must first be declared before it is implemented" % (typeid.getLine(), typeid.getText()))
                sp = g_apLevelContainers[typeid.getText()]
                g_threadImplementations.append([typeid.getText(), defid.getText(), sp._language, ""])
@@ -665,7 +665,7 @@ class Parser(antlr.LLkParser):
         if not self.inputState.guessing:
             if not commonPy.configMT.g_bOnlySubprograms:
                if cci != None:
-                   if typeid.getText() not in g_apLevelContainers:
+                   if not g_apLevelContainers.has_key(typeid.getText()):
                        panic("Line %d: THREAD (%s) must first be declared before it is implemented" % (typeid.getLine(), typeid.getText()))
                    sp = g_apLevelContainers[typeid.getText()]
                    for assoc in cci:
@@ -1166,7 +1166,7 @@ class Parser(antlr.LLkParser):
             if not self.inputState.guessing:
                 for spFeature in features:
                   if spFeature == None: continue
-                  if spFeature._parameter._type not in g_signals:
+                  if not g_signals.has_key(spFeature._parameter._type):
                      # panic("Line %d: Referenced datatype (%s) not defined yet" % \
                      #    (id.getLine(),spFeature._parameter._type))
                      signal = spFeature._parameter._type
@@ -1205,7 +1205,7 @@ class Parser(antlr.LLkParser):
             properties=self.propertyAssociations_no_modes()
             if not self.inputState.guessing:
                 if properties != None:
-                   if id.getText() not in g_apLevelContainers:
+                   if not g_apLevelContainers.has_key(id.getText()):
                       panic("Line %d: SUBPROGRAM (%s) must first be declared before it is PROPERTIES-ed"  % (id.getLine(), id.getText()))
                    sp = g_apLevelContainers[id.getText()]
                    for property in properties:
@@ -1248,7 +1248,7 @@ class Parser(antlr.LLkParser):
         defid = self.LT(1)
         self.match(IDENT)
         if not self.inputState.guessing:
-            if typeid.getText() not in g_apLevelContainers:
+            if not g_apLevelContainers.has_key(typeid.getText()):
                panic("Line %d: Subprogram (%s) must first be declared before it is implemented" % (typeid.getLine(), typeid.getText()))
             sp = g_apLevelContainers[typeid.getText()]
             g_subProgramImplementations.append([typeid.getText(), defid.getText(), sp._language, "" ])
@@ -1317,7 +1317,7 @@ class Parser(antlr.LLkParser):
         c=self.common_component_impl()
         if not self.inputState.guessing:
             if c != None:
-               if typeid.getText() not in g_apLevelContainers:
+               if not g_apLevelContainers.has_key(typeid.getText()):
                    panic("Line %d: SUBPROGRAM (%s) must first be declared before it is implemented" % (typeid.getLine(), typeid.getText()))
                sp = g_apLevelContainers[typeid.getText()]
                for assoc in c:
@@ -1372,7 +1372,7 @@ class Parser(antlr.LLkParser):
                 if not commonPy.configMT.g_bOnlySubprograms:
                    for processFeature in processFeatures:
                       if processFeature == None: continue
-                      if processFeature._port._type not in g_signals:
+                      if not g_signals.has_key(processFeature._port._type):
                          # panic("Line %d: Referenced datatype (%s) not defined yet" % \
                          #     (id.getLine(),processFeature._port._type))
                          signal = processFeature._port._type
@@ -1412,7 +1412,7 @@ class Parser(antlr.LLkParser):
             if not self.inputState.guessing:
                 if not commonPy.configMT.g_bOnlySubprograms:
                    if properties != None:
-                       if id.getText() not in g_apLevelContainers:
+                       if not g_apLevelContainers.has_key(id.getText()):
                           panic("Line %d: PROCESS (%s) must first be declared before it is PROPERTIES-ed"  % (id.getLine(), id.getText()))
                        sp = g_apLevelContainers[id.getText()]
                        for property in properties:
@@ -1456,7 +1456,7 @@ class Parser(antlr.LLkParser):
         self.match(IDENT)
         if not self.inputState.guessing:
             if not commonPy.configMT.g_bOnlySubprograms:
-               if typeid.getText() not in g_apLevelContainers:
+               if not g_apLevelContainers.has_key(typeid.getText()):
                   panic("Line %d: Process (%s) must first be declared before it is implemented"  % (typeid.getLine(), typeid.getText()))
                sp = g_apLevelContainers[typeid.getText()]
                g_processImplementations.append([typeid.getText(), defid.getText(), sp._language, ""])
@@ -1527,7 +1527,7 @@ class Parser(antlr.LLkParser):
         if not self.inputState.guessing:
             if not commonPy.configMT.g_bOnlySubprograms:
                if cci != None:
-                   if typeid.getText() not in g_apLevelContainers:
+                   if not g_apLevelContainers.has_key(typeid.getText()):
                        panic("Line %d: PROCESS (%s) must first be declared before it is implemented" % (typeid.getLine(), typeid.getText()))
                    sp = g_apLevelContainers[typeid.getText()]
                    for assoc in cci:
@@ -5400,7 +5400,7 @@ class Parser(antlr.LLkParser):
                         pass
                         s=self.signed_aadlnumeric()
                         self.match(DOTDOT)
-                    except antlr.RecognitionException as pe:
+                    except antlr.RecognitionException, pe:
                         synPredMatched415 = False
                     self.rewind(_m415)
                     self.inputState.guessing -= 1
@@ -5586,7 +5586,7 @@ class Parser(antlr.LLkParser):
                         pass
                         self.signed_aadlnumeric()
                         self.match(DOTDOT)
-                    except antlr.RecognitionException as pe:
+                    except antlr.RecognitionException, pe:
                         synPredMatched443 = False
                     self.rewind(_m443)
                     self.inputState.guessing -= 1
@@ -5954,7 +5954,7 @@ class Parser(antlr.LLkParser):
                 self.match(LPAREN)
                 pe1=self.property_expression()
                 self.match(COMMA)
-            except antlr.RecognitionException as pe:
+            except antlr.RecognitionException, pe:
                 synPredMatched501 = False
             self.rewind(_m501)
             self.inputState.guessing -= 1
@@ -6013,7 +6013,7 @@ class Parser(antlr.LLkParser):
                     pass
                     self.property_name_constant_reference()
                     self.match(DOTDOT)
-                except antlr.RecognitionException as pe:
+                except antlr.RecognitionException, pe:
                     synPredMatched510 = False
                 self.rewind(_m510)
                 self.inputState.guessing -= 1
@@ -6189,7 +6189,7 @@ class Parser(antlr.LLkParser):
                 pass
                 self.signed_constant()
                 self.match(DOTDOT)
-            except antlr.RecognitionException as pe:
+            except antlr.RecognitionException, pe:
                 synPredMatched527 = False
             self.rewind(_m527)
             self.inputState.guessing -= 1
@@ -7672,259 +7672,259 @@ _tokenNames = [
 ### generate bit set
 def mk_tokenSet_0(): 
     ### var1
-    data = [ 85907705872, 2, 0, 0]
+    data = [ 85907705872L, 2L, 0L, 0L]
     return data
 _tokenSet_0 = antlr.BitSet(mk_tokenSet_0())
 
 ### generate bit set
 def mk_tokenSet_1(): 
     ### var1
-    data = [ 17188229120, 2, 0, 0]
+    data = [ 17188229120L, 2L, 0L, 0L]
     return data
 _tokenSet_1 = antlr.BitSet(mk_tokenSet_1())
 
 ### generate bit set
 def mk_tokenSet_2(): 
     ### var1
-    data = [ 576, 528, 0, 0]
+    data = [ 576L, 528L, 0L, 0L]
     return data
 _tokenSet_2 = antlr.BitSet(mk_tokenSet_2())
 
 ### generate bit set
 def mk_tokenSet_3(): 
     ### var1
-    data = [ 2359808, 22, 0, 0]
+    data = [ 2359808L, 22L, 0L, 0L]
     return data
 _tokenSet_3 = antlr.BitSet(mk_tokenSet_3())
 
 ### generate bit set
 def mk_tokenSet_4(): 
     ### var1
-    data = [ 1152921504674234880, 2, 0, 0]
+    data = [ 1152921504674234880L, 2L, 0L, 0L]
     return data
 _tokenSet_4 = antlr.BitSet(mk_tokenSet_4())
 
 ### generate bit set
 def mk_tokenSet_5(): 
     ### var1
-    data = [ 10748416, 67108886, 0, 0]
+    data = [ 10748416L, 67108886L, 0L, 0L]
     return data
 _tokenSet_5 = antlr.BitSet(mk_tokenSet_5())
 
 ### generate bit set
 def mk_tokenSet_6(): 
     ### var1
-    data = [ 576, 8704, 0, 0]
+    data = [ 576L, 8704L, 0L, 0L]
     return data
 _tokenSet_6 = antlr.BitSet(mk_tokenSet_6())
 
 ### generate bit set
 def mk_tokenSet_7(): 
     ### var1
-    data = [ 4621924670705238592, 0]
+    data = [ 4621924670705238592L, 0L]
     return data
 _tokenSet_7 = antlr.BitSet(mk_tokenSet_7())
 
 ### generate bit set
 def mk_tokenSet_8(): 
     ### var1
-    data = [ 4620719605961196096, 8320, 0, 0]
+    data = [ 4620719605961196096L, 8320L, 0L, 0L]
     return data
 _tokenSet_8 = antlr.BitSet(mk_tokenSet_8())
 
 ### generate bit set
 def mk_tokenSet_9(): 
     ### var1
-    data = [ 4621845505868038720, 8192, 0, 0]
+    data = [ 4621845505868038720L, 8192L, 0L, 0L]
     return data
 _tokenSet_9 = antlr.BitSet(mk_tokenSet_9())
 
 ### generate bit set
 def mk_tokenSet_10(): 
     ### var1
-    data = [ 4611712406706455104, 8192, 0, 0]
+    data = [ 4611712406706455104L, 8192L, 0L, 0L]
     return data
 _tokenSet_10 = antlr.BitSet(mk_tokenSet_10())
 
 ### generate bit set
 def mk_tokenSet_11(): 
     ### var1
-    data = [ 16888498602639872, 0]
+    data = [ 16888498602639872L, 0L]
     return data
 _tokenSet_11 = antlr.BitSet(mk_tokenSet_11())
 
 ### generate bit set
 def mk_tokenSet_12(): 
     ### var1
-    data = [ 16888498602639936, 128, 0, 0]
+    data = [ 16888498602639936L, 128L, 0L, 0L]
     return data
 _tokenSet_12 = antlr.BitSet(mk_tokenSet_12())
 
 ### generate bit set
 def mk_tokenSet_13(): 
     ### var1
-    data = [ 67109472, 0]
+    data = [ 67109472L, 0L]
     return data
 _tokenSet_13 = antlr.BitSet(mk_tokenSet_13())
 
 ### generate bit set
 def mk_tokenSet_14(): 
     ### var1
-    data = [ 16914886881706496, 128, 0, 0]
+    data = [ 16914886881706496L, 128L, 0L, 0L]
     return data
 _tokenSet_14 = antlr.BitSet(mk_tokenSet_14())
 
 ### generate bit set
 def mk_tokenSet_15(): 
     ### var1
-    data = [ 9033587533808128, 0]
+    data = [ 9033587533808128L, 0L]
     return data
 _tokenSet_15 = antlr.BitSet(mk_tokenSet_15())
 
 ### generate bit set
 def mk_tokenSet_16(): 
     ### var1
-    data = [ 15788986974863936, 0]
+    data = [ 15788986974863936L, 0L]
     return data
 _tokenSet_16 = antlr.BitSet(mk_tokenSet_16())
 
 ### generate bit set
 def mk_tokenSet_17(): 
     ### var1
-    data = [ 15788986974863968, 0]
+    data = [ 15788986974863968L, 0L]
     return data
 _tokenSet_17 = antlr.BitSet(mk_tokenSet_17())
 
 ### generate bit set
 def mk_tokenSet_18(): 
     ### var1
-    data = [ 800, 4195328, 0, 0]
+    data = [ 800L, 4195328L, 0L, 0L]
     return data
 _tokenSet_18 = antlr.BitSet(mk_tokenSet_18())
 
 ### generate bit set
 def mk_tokenSet_19(): 
     ### var1
-    data = [ 17179869728, 4195328, 0, 0]
+    data = [ 17179869728L, 4195328L, 0L, 0L]
     return data
 _tokenSet_19 = antlr.BitSet(mk_tokenSet_19())
 
 ### generate bit set
 def mk_tokenSet_20(): 
     ### var1
-    data = [ 159882184826524160, 1970176, 0, 0]
+    data = [ 159882184826524160L, 1970176L, 0L, 0L]
     return data
 _tokenSet_20 = antlr.BitSet(mk_tokenSet_20())
 
 ### generate bit set
 def mk_tokenSet_21(): 
     ### var1
-    data = [ 10146293301133824, 1019904, 0, 0]
+    data = [ 10146293301133824L, 1019904L, 0L, 0L]
     return data
 _tokenSet_21 = antlr.BitSet(mk_tokenSet_21())
 
 ### generate bit set
 def mk_tokenSet_22(): 
     ### var1
-    data = [ 161034473020823040, 2068480, 0, 0]
+    data = [ 161034473020823040L, 2068480L, 0L, 0L]
     return data
 _tokenSet_22 = antlr.BitSet(mk_tokenSet_22())
 
 ### generate bit set
 def mk_tokenSet_23(): 
     ### var1
-    data = [ 159895378966057472, 1048576, 0, 0]
+    data = [ 159895378966057472L, 1048576L, 0L, 0L]
     return data
 _tokenSet_23 = antlr.BitSet(mk_tokenSet_23())
 
 ### generate bit set
 def mk_tokenSet_24(): 
     ### var1
-    data = [ 4621836709775032896, 12288, 0, 0]
+    data = [ 4621836709775032896L, 12288L, 0L, 0L]
     return data
 _tokenSet_24 = antlr.BitSet(mk_tokenSet_24())
 
 ### generate bit set
 def mk_tokenSet_25(): 
     ### var1
-    data = [ 4628596524719277920, 4224000, 0, 0]
+    data = [ 4628596524719277920L, 4224000L, 0L, 0L]
     return data
 _tokenSet_25 = antlr.BitSet(mk_tokenSet_25())
 
 ### generate bit set
 def mk_tokenSet_26(): 
     ### var1
-    data = [ 159877786780013056, 1048576, 0, 0]
+    data = [ 159877786780013056L, 1048576L, 0L, 0L]
     return data
 _tokenSet_26 = antlr.BitSet(mk_tokenSet_26())
 
 ### generate bit set
 def mk_tokenSet_27(): 
     ### var1
-    data = [ 4398046511104, 921600, 0, 0]
+    data = [ 4398046511104L, 921600L, 0L, 0L]
     return data
 _tokenSet_27 = antlr.BitSet(mk_tokenSet_27())
 
 ### generate bit set
 def mk_tokenSet_28(): 
     ### var1
-    data = [ 4611690416473899072, 1028096, 0, 0]
+    data = [ 4611690416473899072L, 1028096L, 0L, 0L]
     return data
 _tokenSet_28 = antlr.BitSet(mk_tokenSet_28())
 
 ### generate bit set
 def mk_tokenSet_29(): 
     ### var1
-    data = [ 4611708026108248928, 5239808, 0, 0]
+    data = [ 4611708026108248928L, 5239808L, 0L, 0L]
     return data
 _tokenSet_29 = antlr.BitSet(mk_tokenSet_29())
 
 ### generate bit set
 def mk_tokenSet_30(): 
     ### var1
-    data = [ 4611778394860787552, 5241858, 0, 0]
+    data = [ 4611778394860787552L, 5241858L, 0L, 0L]
     return data
 _tokenSet_30 = antlr.BitSet(mk_tokenSet_30())
 
 ### generate bit set
 def mk_tokenSet_31(): 
     ### var1
-    data = [ 4621845505868038720, 12288, 0, 0]
+    data = [ 4621845505868038720L, 12288L, 0L, 0L]
     return data
 _tokenSet_31 = antlr.BitSet(mk_tokenSet_31())
 
 ### generate bit set
 def mk_tokenSet_32(): 
     ### var1
-    data = [ 4772720508888126304, 6190080, 0, 0]
+    data = [ 4772720508888126304L, 6190080L, 0L, 0L]
     return data
 _tokenSet_32 = antlr.BitSet(mk_tokenSet_32())
 
 ### generate bit set
 def mk_tokenSet_33(): 
     ### var1
-    data = [ 4772790877632321376, 6290562, 0, 0]
+    data = [ 4772790877632321376L, 6290562L, 0L, 0L]
     return data
 _tokenSet_33 = antlr.BitSet(mk_tokenSet_33())
 
 ### generate bit set
 def mk_tokenSet_34(): 
     ### var1
-    data = [ 8796093022272, 637542912, 0, 0]
+    data = [ 8796093022272L, 637542912L, 0L, 0L]
     return data
 _tokenSet_34 = antlr.BitSet(mk_tokenSet_34())
 
 ### generate bit set
 def mk_tokenSet_35(): 
     ### var1
-    data = [ 64, 67117568, 0, 0]
+    data = [ 64L, 67117568L, 0L, 0L]
     return data
 _tokenSet_35 = antlr.BitSet(mk_tokenSet_35())
 
 ### generate bit set
 def mk_tokenSet_36(): 
     ### var1
-    data = [ 8388672, 8704, 0, 0]
+    data = [ 8388672L, 8704L, 0L, 0L]
     return data
 _tokenSet_36 = antlr.BitSet(mk_tokenSet_36())
     
