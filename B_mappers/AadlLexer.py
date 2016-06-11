@@ -4,10 +4,6 @@ import sys
 import antlr
 
 version = sys.version.split()[0]
-if version < '2.2.1':
-    False = 0
-if version < '2.3':
-    True = not False
 ### header action >>> 
 
 ### header action <<< 

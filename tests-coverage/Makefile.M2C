@@ -21,9 +21,9 @@ ___B_mappers_%.py,cover:	../B_mappers/%.py mini_cv.aadl DataView.aadl DataViewVH
 	mkdir -p output
 	rm -rf output/*
 	# coverage run -a ../aadl2glueC.py -o output -verbose mini_cv_vhdl.aadl DataViewVHDL.aadl >/dev/null
-	COVERAGE=1 LANG=C LC_ALL=C ${COVERAGE} run -a ../aadl2glueC/aadl2glueC.py -o output -verbose mini_cv.aadl DataView.aadl >/dev/null
-	COVERAGE=1 LANG=C LC_ALL=C ${COVERAGE} run -a ../aadl2glueC/aadl2glueC.py -o output -verbose -useOSS mini_cv.aadl DataView.aadl >/dev/null
-	COVERAGE=1 LANG=C LC_ALL=C ${COVERAGE} annotate -d . ../aadl2glueC/*.py ../commonPy/*.py
+	LANG=C LC_ALL=C ${COVERAGE} run -a ../aadl2glueC.py -o output -verbose mini_cv.aadl DataView.aadl >/dev/null
+	LANG=C LC_ALL=C ${COVERAGE} run -a ../aadl2glueC.py -o output -verbose -useOSS mini_cv.aadl DataView.aadl >/dev/null
+	LANG=C LC_ALL=C ${COVERAGE} annotate -d . ../aadl2glueC.py ../aadl2glueC/*.py ../commonPy/*.py
 
 check:
 	@for i in $(PYSRC_B_COVER) ; do echo Checking $$i ... ; ./checkCoverage.pl $$i || { ( echo $$i ; ./review.pl $$i ) | less -RS ; echo $$i had issues... ; exit 1 ; } ; done
