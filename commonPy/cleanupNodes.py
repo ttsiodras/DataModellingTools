@@ -41,23 +41,30 @@ __doc__ = '''
 Rules to gather the list of types that must be skipped
 '''
 
+from typing import Dict, Union
+
 import commonPy.asnParser
-from commonPy.asnAST import AsnAsciiString, AsnChoice, AsnSet, AsnSequenceOf, AsnSequence, AsnMetaMember, AsnSetOf
+from commonPy.asnAST import (
+    AsnAsciiString, AsnChoice, AsnSet, AsnSequenceOf, AsnSequence,
+    AsnMetaMember, AsnSetOf, AsnNode
+)
 
-badTypes = {}
-cache = {}
+badTypes = {}  # type: Dict[str, bool]
+cache = {}  # type: Dict[AsnNode, bool]
 
 
-def CheckNodeForIA5(node):
+def CheckNodeForIA5(node_or_str: Union[AsnNode,str]) -> bool:
     names = commonPy.asnParser.g_names
-    if isinstance(node, str):
-        node = names[node]
+    if isinstance(node_or_str, str):
+        node = names[node_or_str]  # type: AsnNode
+    else:
+        node = node_or_str
     if node in cache:
         return cache[node]
     if isinstance(node, AsnAsciiString):
         cache[node] = True
         return True
-    elif isinstance(node, AsnChoice) or isinstance(node, AsnSequence) or isinstance(node, AsnSet):
+    elif isinstance(node, (AsnChoice, AsnSequence, AsnSet)):
         for child in node._members:
             if isinstance(child[1], AsnAsciiString):
                 cache[node] = True
@@ -67,7 +74,7 @@ def CheckNodeForIA5(node):
             for child in node._members
             if isinstance(child[1], AsnMetaMember))
         return cache[node]
-    elif isinstance(node, AsnSequenceOf) or isinstance(node, AsnSetOf):
+    elif isinstance(node, (AsnSequenceOf, AsnSetOf)):
         if isinstance(node._containedType, AsnAsciiString):
             cache[node] = True
             return True
@@ -91,5 +98,5 @@ def DiscoverBadTypes():
             break
 
 
-def IsBadType(nodeTypename):
+def IsBadType(nodeTypename: str) -> bool:
     return nodeTypename in badTypes
