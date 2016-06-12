@@ -19,6 +19,8 @@
 # generated code.
 #
 import re
+from typing import Any, Dict
+
 import commonPy.asnParser
 
 from commonPy.asnAST import AsnString, AsnBasicNode, AsnSetOf, AsnSequenceOf, AsnSet, AsnSequence, AsnChoice, AsnMetaMember, AsnEnumerated
@@ -26,7 +28,7 @@ from commonPy.utility import panic
 
 
 # Separate cache per ASN.1 AST dictionary (i.e. per 'names' parameter of ScanChildren)
-g_ScanChildrenCache = {}
+g_ScanChildrenCache = {}  # type: Dict[int, Dict[str, Any]]
 
 
 def CleanName(name):
