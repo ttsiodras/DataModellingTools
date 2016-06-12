@@ -40,8 +40,6 @@
 import os
 g_bOnlySubprograms = False
 debugParser = False
-inputAadlAST = None
 verbose = False
 showCode = False
-args = []
 outputDir = "." + os.sep

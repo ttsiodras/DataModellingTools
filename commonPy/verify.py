@@ -20,9 +20,13 @@
 #
 __doc__ = '''This module checks that all ASN.1 types are using the appropriate constraint (ASSERT-wise).'''
 
+from typing import Dict, Union
+
 from commonPy.utility import panic
 
 import commonPy.asnAST
+from commonPy.asnAST import AsnNode
+
 import commonPy.configMT
 from functools import reduce
 
@@ -38,29 +42,16 @@ def VerifyNodeRange(node):
 If they are not, a runtime error is generated, with a report
 on the exact location of the offending type in the ASN.1 grammar.'''
     if isinstance(node, commonPy.asnAST.AsnInt):
-        if "-ignoreINTEGERranges" in commonPy.configMT.args:
-            return
         if node._range == []:
             panic("INTEGER (in %s) must have a range constraint inside ASN.1,\n"
                   "or else we might lose accuracy during runtime!" % node.Location())
-#        else:
-#            # asn1c uses C long for ASN.1 INTEGER. Assuming that our platform is 32 bit,
-#            # this allows values from -2147483648 to 2147483647
-#            if node._range[0] < -2147483648L:
-#                panic("INTEGER (in %s) must have a low limit >= -2147483648\n"
-#                        % node.Location())
-#            if node._range[1] > 2147483647L:
-#                panic("INTEGER (in %s) must have a high limit <= 2147483647\n"
-#                        % node.Location())
 
     elif isinstance(node, commonPy.asnAST.AsnReal):
-        if "-ignoreREALranges" in commonPy.configMT.args:
-            return
         if node._range == []:
             panic("REAL (in %s) must have a range constraint inside ASN.1,\n"
                   "or else we might lose accuracy during runtime!" % node.Location())
         else:
-            # asn1c uses C double for ASN.1 REAL.
+            # ASN1SCC uses C double for ASN.1 REAL.
             # this allows values from -1.7976931348623157E308 to 1.7976931348623157E308
             if node._range[0] < -1.7976931348623157E308:
                 panic("REAL (in %s) must have a low limit >= -1.7976931348623157E308\n" %
@@ -82,17 +73,19 @@ on the exact location of the offending type in the ASN.1 grammar.'''
             panic("ENUMERATED must have integer value for each enum! (%s)" % node.Location())
 
 
-def VerifyRanges(node, names):
+def VerifyRanges(node_or_str: Union[str, AsnNode], names: Dict[str, AsnNode]) -> None:
     '''This function recursively traverses the AST,
 calling VerifyNodeRange for each Node.'''
-    if isinstance(node, str):
-        node = names[node]
+    if isinstance(node_or_str, str):
+        node = names[node_or_str]  # type: AsnNode
+    else:
+        node = node_or_str
     if isinstance(node, commonPy.asnAST.AsnMetaMember):
         node = names[node._containedType]
 
     if isinstance(node, commonPy.asnAST.AsnBasicNode):
         VerifyNodeRange(node)
-    elif isinstance(node, commonPy.asnAST.AsnSequence) or isinstance(node, commonPy.asnAST.AsnChoice) or isinstance(node, commonPy.asnAST.AsnSet):
+    elif isinstance(node, (commonPy.asnAST.AsnSequence, commonPy.asnAST.AsnChoice, commonPy.asnAST.AsnSet)):
         #Bug fixed in ASN1SCC - this check is no longer needed
         #if 0 == len(node._members):
         #    panic(
@@ -100,7 +93,7 @@ calling VerifyNodeRange for each Node.'''
         #        % node.Location())
         for child in node._members:
             VerifyRanges(child[1], names)
-    elif isinstance(node, commonPy.asnAST.AsnSequenceOf) or isinstance(node, commonPy.asnAST.AsnSetOf):
+    elif isinstance(node, (commonPy.asnAST.AsnSequenceOf, commonPy.asnAST.AsnSetOf)):
         VerifyNodeRange(node)
         VerifyRanges(node._containedType, names)
     elif isinstance(node, commonPy.asnAST.AsnEnumerated):
