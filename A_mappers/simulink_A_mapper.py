@@ -43,7 +43,7 @@ def CleanNameAsSimulinkWants(name):
     return re.sub(r'[^a-zA-Z0-9_]', '_', name)
 
 
-def OnStartup(unused_modelingLanguage, unused_asnFile, outputDir):
+def OnStartup(unused_modelingLanguage, unused_asnFile, outputDir, unused_badTypes):
     global g_bHasStartupRunOnce
     if g_bHasStartupRunOnce:
         # Don't rerun, it has already done all the work
@@ -92,7 +92,7 @@ def OnChoice(nodeTypename, node, leafTypeDict):
     pass
 
 
-def OnShutdown():
+def OnShutdown(unused_badTypes):
     pass
 
 

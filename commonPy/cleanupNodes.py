@@ -49,42 +49,48 @@ from commonPy.asnAST import (
     AsnMetaMember, AsnSetOf, AsnNode
 )
 
-badTypes = {}  # type: Dict[str, bool]
-cache = {}  # type: Dict[AsnNode, bool]
+def DiscoverBadTypes() -> Dict[str, bool]:
+    '''
+    This returns a dictionary that tells us which types to skip
+    pver during type mappings. For now, it includes IA5Strings
+    and types whose descendants end up having such a field.
+    '''
+    badTypes = {}  # type: Dict[str, bool]
+    cache = {}  # type: Dict[AsnNode, bool]
 
-
-def CheckNodeForIA5(node_or_str: Union[AsnNode,str]) -> bool:
-    names = commonPy.asnParser.g_names
-    if isinstance(node_or_str, str):
-        node = names[node_or_str]  # type: AsnNode
-    else:
-        node = node_or_str
-    if node in cache:
-        return cache[node]
-    if isinstance(node, AsnAsciiString):
-        cache[node] = True
-        return True
-    elif isinstance(node, (AsnChoice, AsnSequence, AsnSet)):
-        for child in node._members:
-            if isinstance(child[1], AsnAsciiString):
-                cache[node] = True
-                return cache[node]
-        cache[node] = any(
-            CheckNodeForIA5(names[child[1]._containedType])
-            for child in node._members
-            if isinstance(child[1], AsnMetaMember))
-        return cache[node]
-    elif isinstance(node, (AsnSequenceOf, AsnSetOf)):
-        if isinstance(node._containedType, AsnAsciiString):
+    def CheckNodeForIA5(node_or_str: Union[AsnNode, str]) -> bool:
+        names = commonPy.asnParser.g_names
+        if isinstance(node_or_str, str):
+            node = names[node_or_str]  # type: AsnNode
+        else:
+            node = node_or_str
+        if node in cache:
+            return cache[node]
+        if isinstance(node, AsnAsciiString):
             cache[node] = True
             return True
-        cache[node] = isinstance(node._containedType, str) and CheckNodeForIA5(names[node._containedType])
+        elif isinstance(node, (AsnChoice, AsnSequence, AsnSet)):
+            for child in node._members:
+                if isinstance(child[1], AsnAsciiString):
+                    cache[node] = True
+                    return cache[node]
+            cache[node] = any(
+                CheckNodeForIA5(names[child[1]._containedType])
+                for child in node._members
+                if isinstance(child[1], AsnMetaMember))
+            return cache[node]
+        elif isinstance(node, (AsnSequenceOf, AsnSetOf)):
+            if isinstance(node._containedType, AsnAsciiString):
+                cache[node] = True
+                return True
+            cache[node] = \
+                isinstance(node._containedType, str) \
+                and \
+                CheckNodeForIA5(names[node._containedType])
+            return cache[node]
+        cache[node] = False
         return cache[node]
-    cache[node] = False
-    return cache[node]
 
-
-def DiscoverBadTypes():
     # Hack for IA5Strings (IA5s are used in TASTE's runtime configuration spec)
     names = commonPy.asnParser.g_names
     while True:
@@ -96,7 +102,4 @@ def DiscoverBadTypes():
                 foundOne = True
         if not foundOne:
             break
-
-
-def IsBadType(nodeTypename: str) -> bool:
-    return nodeTypename in badTypes
+    return badTypes

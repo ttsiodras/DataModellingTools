@@ -37,7 +37,7 @@ def Version():
 # the second param is not asnFile, it is asnFiles
 
 
-def OnStartup(unused_modelingLanguage, asnFiles, outputDir):
+def OnStartup(unused_modelingLanguage, asnFiles, outputDir, unused_badTypes):
     #print "Use ASN1SCC to generate the structures for '%s'" % asnFile
     asn1SccPath = spawn.find_executable('asn1.exe')
     if not asn1SccPath:
@@ -77,5 +77,5 @@ def OnChoice(nodeTypename, node, leafTypeDict):
     pass  # pragma: no cover
 
 
-def OnShutdown():
+def OnShutdown(unused_badTypes):
     pass  # pragma: no cover

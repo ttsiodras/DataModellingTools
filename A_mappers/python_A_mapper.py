@@ -48,7 +48,7 @@ def CleanNameAsPythonWants(name):
     return re.sub(r'[^a-zA-Z0-9_]', '_', name)
 
 
-def OnStartup(unused_modelingLanguage, asnFile, outputDir):
+def OnStartup(unused_modelingLanguage, asnFile, outputDir, badTypes):
     os.system("bash -c '[ ! -f \"" + outputDir + "/" + asnFile + "\" ] && cp \"" + asnFile + "\" \"" + outputDir + "\"'")
     this_path = os.path.dirname(__file__)
     stubs = this_path + os.sep + 'Stubs.py'
@@ -172,7 +172,7 @@ clean:
 %(tab)srm -f $(BDIR)/$(GRAMMAR)_asn.py
 ''' % {'tab': '\t', 'base': base, 'origGrammarBase': origGrammarBase, 'mono': mono_exe})
     Makefile.close()
-    CreateDeclarationsForAllTypes(commonPy.asnParser.g_names, commonPy.asnParser.g_leafTypeDict)
+    CreateDeclarationsForAllTypes(commonPy.asnParser.g_names, commonPy.asnParser.g_leafTypeDict, badTypes)
     g_outputGetSetH.write('\n/* Helper functions for NATIVE encodings */\n\n')
     g_outputGetSetC.write('\n/* Helper functions for NATIVE encodings */\n\n')
 
@@ -249,7 +249,7 @@ def OnChoice(unused_nodeTypename, unused_node, unused_leafTypeDict):
     pass
 
 
-def OnShutdown():
+def OnShutdown(unused_badTypes):
     pass
 
 
@@ -497,7 +497,7 @@ def CreateDeclarationForType(nodeTypename, names, leafTypeDict):
         panic("Unexpected ASN.1 type... Send this grammar to Semantix")  # pragma: no cover
 
 
-def CreateDeclarationsForAllTypes(names, leafTypeDict):
+def CreateDeclarationsForAllTypes(names, leafTypeDict, badTypes):
     for nodeTypename in names:
-        if not names[nodeTypename]._isArtificial and not commonPy.cleanupNodes.IsBadType(nodeTypename):
+        if not names[nodeTypename]._isArtificial and nodeTypename not in badTypes):
             CreateDeclarationForType(nodeTypename, names, leafTypeDict)

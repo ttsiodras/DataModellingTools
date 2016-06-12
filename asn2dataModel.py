@@ -146,7 +146,7 @@ def main():
     loadedBackends = {}
 
     # If some AST nodes must be skipped (for any reason), go learn about them
-    commonPy.cleanupNodes.DiscoverBadTypes()
+    badTypes = commonPy.cleanupNodes.DiscoverBadTypes()
 
     # For each ASN.1 grammar file referenced in the system level description
     for arg, modelingLanguage in argsToTools.items():
@@ -166,14 +166,14 @@ def main():
             # instead of working per type:
             if modelingLanguage.lower() in ["c", "ada", "smp2", "qgenc", "qgenada"]:
                 if 'OnStartup' in dir(backend):
-                    backend.OnStartup(modelingLanguage, list(uniqueASNfiles.keys()), commonPy.configMT.outputDir)
+                    backend.OnStartup(modelingLanguage, list(uniqueASNfiles.keys()), commonPy.configMT.outputDir, badTypes)
                 if 'OnShutdown' in dir(backend):
                     backend.OnShutdown()
             else:
                 # Work on each ASN.1 file's types
                 for asnFile in uniqueASNfiles:
                     if 'OnStartup' in dir(backend):
-                        backend.OnStartup(modelingLanguage, asnFile, commonPy.configMT.outputDir)
+                        backend.OnStartup(modelingLanguage, asnFile, commonPy.configMT.outputDir, badTypes)
 
                     leafTypeDict = uniqueASNfiles[asnFile][2]
 
@@ -181,7 +181,7 @@ def main():
                     names = uniqueASNfiles[asnFile][0]
                     for nodeTypename in names:
                         # Check if this type must be skipped
-                        if commonPy.cleanupNodes.IsBadType(nodeTypename):
+                        if nodeTypename in badTypes:
                             continue
                         node = names[nodeTypename]
                         inform("Processing %s (%s)...", nodeTypename, modelingLanguage)
@@ -216,7 +216,7 @@ def main():
                             panic("Unexpected type of element: %s" % leafTypeDict[nodeTypename])  # pragma: no cover
 
                     if 'OnShutdown' in dir(backend):
-                        backend.OnShutdown()
+                        backend.OnShutdown(badTypes)
 
 if __name__ == "__main__":
     if "-pdb" in sys.argv:

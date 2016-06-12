@@ -28,7 +28,6 @@ import random
 from commonPy.asnAST import AsnMetaMember, AsnChoice, AsnSet, AsnSequence, AsnSequenceOf, AsnSetOf
 from commonPy.asnParser import g_names, g_leafTypeDict, CleanNameForAST
 from commonPy.utility import panic, warn
-from commonPy.cleanupNodes import IsBadType
 
 g_catalogueXML = None
 g_innerTypes = {}
@@ -107,7 +106,7 @@ def FixupAstForSMP2():
 g_bStartupRun = False
 
 
-def OnStartup(unused_modelingLanguage, asnFiles, outputDir):
+def OnStartup(unused_modelingLanguage, asnFiles, outputDir, unused_badTypes):
     '''
     Smp2 cannot represent constraint changes in unnamed inner types
     e.g. this...
@@ -291,7 +290,7 @@ def CreateChoice(nodeTypename, node, _):
 g_bShutdownRun = False
 
 
-def OnShutdown():
+def OnShutdown(badTypes):
     global g_bShutdownRun
     if g_bShutdownRun:
         return   # pragma: no cover
@@ -310,7 +309,7 @@ def OnShutdown():
                          (g_asnFiles if isinstance(g_asnFiles, str) else '","'.join(g_asnFiles)))
     typenameList = []
     for nodeTypename in sorted(list(g_innerTypes.keys()) + list(g_names.keys())):
-        if IsBadType(nodeTypename):
+        if nodeTypename in badTypes:
             continue
         if nodeTypename not in typenameList:
             typenameList.append(nodeTypename)

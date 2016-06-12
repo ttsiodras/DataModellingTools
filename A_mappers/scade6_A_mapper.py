@@ -96,7 +96,7 @@ def FixupNestedStringsAndEnumerated():
                 node._containedType = newName                                                                         # pragma: no cover
 
 
-def OnStartup(unused_modelingLanguage, asnFile, outputDir):
+def OnStartup(unused_modelingLanguage, asnFile, outputDir, unused_badTypes):
     outputFilename = CleanNameAsScadeWants(os.path.basename(os.path.splitext(asnFile)[0])) + ".xscade"
 
     FixupNestedStringsAndEnumerated()
@@ -338,5 +338,5 @@ def OnChoice(nodeTypename, node, leafTypeDict):
     OnSequence(nodeTypename, node, leafTypeDict, isChoice=True)
 
 
-def OnShutdown():
+def OnShutdown(unused_badTypes):
     g_outputFile.write(g_doc.toprettyxml(indent="    ", encoding="UTF-8"))

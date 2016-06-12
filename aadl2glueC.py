@@ -346,7 +346,7 @@ def main():
                 node._asnSize = param._signal._asnSize
 
     # If some AST nodes must be skipped (for any reason), go learn about them
-    commonPy.cleanupNodes.DiscoverBadTypes()
+    badTypes = commonPy.cleanupNodes.DiscoverBadTypes()
 
     if {"ada", "qgenada"} & {y[2].lower() for y in SystemsAndImplementations}:
         SpecialCodes(SystemsAndImplementations, uniqueDataFiles, uniqueASNfiles, useOSS)
@@ -417,7 +417,7 @@ def main():
             inform("This param uses definitions from %s", asnFile)
             for nodeTypename in names:
                 # Check if this type must be skipped
-                if commonPy.cleanupNodes.IsBadType(nodeTypename):
+                if nodeTypename in badTypes:
                     continue
 
                 # Async backends need to collect all types and create Encode/Decode functions for them.

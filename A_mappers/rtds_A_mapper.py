@@ -31,7 +31,7 @@ def Version():
     print("Code generator: " + "$Id: og_A_mapper.py 1879 2010-05-17 10:13:12Z ttsiodras $")  # pragma: no cover
 
 
-def OnStartup(unused_modelingLanguage, asnFile, outputDir):
+def OnStartup(unused_modelingLanguage, asnFile, outputDir, unused_badTypes):
     global g_asnFile
     g_asnFile = asnFile
     global g_outputDir
@@ -82,7 +82,7 @@ def OnChoice(nodeTypename, node, leafTypeDict):
 #            outputText += c
 #    return outputText
 
-def OnShutdown():
+def OnShutdown(unused_badTypes):
 #    text = open(g_asnFile, 'r').read()
 #    text = re.sub(r'^.*BEGIN', 'Datamodel DEFINITIONS ::= BEGIN', text)
 #    text = re.sub(r'--.*', '', text)

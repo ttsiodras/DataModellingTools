@@ -206,7 +206,7 @@ def main():
             verify.VerifyRanges(node, commonPy.asnParser.g_names)
 
     # If some AST nodes must be skipped (for any reason), go learn about them
-    commonPy.cleanupNodes.DiscoverBadTypes()
+    badTypes = commonPy.cleanupNodes.DiscoverBadTypes()
 
     C_HeaderFile = open(commonPy.configMT.outputDir + os.sep + "PrintTypesAsASN1.h", "w")
     C_HeaderFile.write('#ifndef __PRINTTYPESASASN1_H__\n')
@@ -236,7 +236,7 @@ def main():
 
         for nodeTypename in names:
             # Check if this type must be skipped
-            if commonPy.cleanupNodes.IsBadType(nodeTypename):
+            if nodeTypename in badTypes:
                 continue
             node = names[nodeTypename]
             if node._isArtificial:

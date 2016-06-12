@@ -28,7 +28,6 @@ from commonPy.asnAST import (
     AsnMetaMember, AsnChoice, AsnSet, AsnSequence, AsnSequenceOf, AsnSetOf)
 from commonPy.asnParser import g_names, g_leafTypeDict, CleanNameForAST
 from commonPy.utility import panic, warn
-from commonPy.cleanupNodes import IsBadType
 
 g_sqlOutput = None
 g_innerTypes = {}
@@ -136,7 +135,7 @@ def FixupAstForSQL():
 g_bStartupRun = False
 
 
-def OnStartup(unused_modelingLanguage, asnFiles, outputDir):
+def OnStartup(unused_modelingLanguage, asnFiles, outputDir, unused_badTypes):
     '''
     SQL cannot represent unnamed inner types
     e.g. this...
@@ -278,7 +277,7 @@ def CreateChoice(nodeTypename, node, _):
 g_bShutdownRun = False
 
 
-def OnShutdown():
+def OnShutdown(badTypes):
     global g_bShutdownRun
     if g_bShutdownRun:
         return   # pragma: no cover
@@ -291,7 +290,7 @@ def OnShutdown():
     g_sqlOutput.write('--  SQL statements for types used in "%s"\n' % d)
     typenameList = []
     for nodeTypename in sorted(list(g_innerTypes.keys()) + list(g_names.keys())):
-        if IsBadType(nodeTypename):
+        if nodeTypename in badTypes:
             continue
         if nodeTypename not in typenameList:
             typenameList.append(nodeTypename)
