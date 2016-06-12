@@ -168,7 +168,7 @@ def main():
                 if 'OnStartup' in dir(backend):
                     backend.OnStartup(modelingLanguage, list(uniqueASNfiles.keys()), commonPy.configMT.outputDir, badTypes)
                 if 'OnShutdown' in dir(backend):
-                    backend.OnShutdown()
+                    backend.OnShutdown(badTypes)
             else:
                 # Work on each ASN.1 file's types
                 for asnFile in uniqueASNfiles:

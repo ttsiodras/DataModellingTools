@@ -499,5 +499,5 @@ def CreateDeclarationForType(nodeTypename, names, leafTypeDict):
 
 def CreateDeclarationsForAllTypes(names, leafTypeDict, badTypes):
     for nodeTypename in names:
-        if not names[nodeTypename]._isArtificial and nodeTypename not in badTypes):
+        if not names[nodeTypename]._isArtificial and nodeTypename not in badTypes:
             CreateDeclarationForType(nodeTypename, names, leafTypeDict)
