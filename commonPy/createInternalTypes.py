@@ -19,23 +19,29 @@
 # generated code.
 #
 import re
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import commonPy.asnParser
 
-from commonPy.asnAST import AsnString, AsnBasicNode, AsnSetOf, AsnSequenceOf, AsnSet, AsnSequence, AsnChoice, AsnMetaMember, AsnEnumerated
+from commonPy.asnAST import (
+    AsnString, AsnBasicNode, AsnSetOf, AsnSequenceOf, AsnSet,
+    AsnSequence, AsnChoice, AsnMetaMember, AsnEnumerated,
+    AsnNode
+)
 from commonPy.utility import panic
 
 
 # Separate cache per ASN.1 AST dictionary (i.e. per 'names' parameter of ScanChildren)
-g_ScanChildrenCache = {}  # type: Dict[int, Dict[str, Any]]
+g_ScanChildrenCache = {}  # type: Dict[int, Dict[str, List[str]]]
 
 
-def CleanName(name):
+def CleanName(name: str) -> str:
     return re.sub(r'[^a-zA-Z0-9_]', '_', name)
 
 
-def CreatePseudoType(pseudoType, origASTnode, names, results):
+def CreatePseudoType(
+        pseudoType: str, origASTnode: AsnNode, 
+        names: Dict[str, AsnNode], results: List[str]) -> str:
     # if such a pseudo type already exists, add "_t" postfix until you get
     # one that doesn't exist.
     if pseudoType in names and names[pseudoType] != origASTnode:
@@ -50,7 +56,21 @@ def CreatePseudoType(pseudoType, origASTnode, names, results):
     return pseudoType
 
 
-def ScanChildren(nodeTypename, node, names, results, isRoot=False, createInnerNodesInNames=True):
+def ScanChildren(
+        nodeTypename: str,
+        node: AsnNode,
+        names: Dict[str, AsnNode],
+        results: List[str],
+        isRoot=False,
+        createInnerNodesInNames=True):
+    '''
+    Find all the types that this one (nodeTypename, node) depends on.
+    and return them in the 'results' list. Use 'names' to lookup
+    typedefs (AsnNode) from their type name, and if createInnerNodesInNames
+    is set, create names for unnamed inner types (used e.g. in the
+    Simulink/QGen mappers). isRoot is set to True by the caller, but is
+    not set in the recursive calls made here.
+    '''
     # only for the first call (and not the recursive ones done
     # from within ScanChildren), check to see if the descendants
     # are available in the cache
@@ -74,7 +94,7 @@ def ScanChildren(nodeTypename, node, names, results, isRoot=False, createInnerNo
     elif isinstance(node, AsnBasicNode):
         # for all the other Basic nodes (except strings), there's no dependency
         return
-    elif isinstance(node, AsnSetOf) or isinstance(node, AsnSequenceOf):
+    elif isinstance(node, (AsnSetOf, AsnSequenceOf)):
         # For arrays or sets of "stuff", if we are here via a recursive call
         # from a "parent" ScanChildren, add the nodeTypename to the dependency list.
         if (not isRoot) and nodeTypename not in results:
@@ -85,7 +105,7 @@ def ScanChildren(nodeTypename, node, names, results, isRoot=False, createInnerNo
             if node._containedType not in results:
                 results.append(node._containedType)
             # Also, find the dependency list of the contained type (SomeTypeName)
-            resultsInner = []
+            resultsInner = []  # type: List[str]
             ScanChildren(node._containedType, names[node._containedType], names, resultsInner,
                          False, createInnerNodesInNames)
             # ...and add its contents to this dependency list (uniquely)
@@ -101,7 +121,7 @@ def ScanChildren(nodeTypename, node, names, results, isRoot=False, createInnerNo
                 # ... and change the AST, placing the string value (pseudoType)
                 # inside the _containedType member (i.e. remove the pointer to the AST node)
                 node._containedType = pseudoType
-    elif isinstance(node, AsnSet) or isinstance(node, AsnSequence) or isinstance(node, AsnChoice):
+    elif isinstance(node, (AsnSet, AsnSequence, AsnChoice)):
         # If we are here via a recursive call from a "parent" ScanChildren,
         # add the SET/SEQUENCE/CHOICE nodeTypename to the dependency list.
         if (not isRoot) and nodeTypename not in results:
@@ -120,7 +140,7 @@ def ScanChildren(nodeTypename, node, names, results, isRoot=False, createInnerNo
                 for i in resultsInner:
                     if i not in results:
                         results.append(i)
-            elif isinstance(child[1], AsnSequenceOf) or isinstance(child[1], AsnSetOf):
+            elif isinstance(child[1], (AsnSequenceOf, AsnSetOf)):
                 # This code is not necessary (and is currently never called) because the
                 # asnParser uses VerifyAndFixAST to replace nameless types usage
                 # from within SEQUENCE/SET OFs, SEQUENCE/SET and CHOICEs (See end of VerifyAndFixAST)

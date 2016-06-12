@@ -266,6 +266,10 @@ Members:
         self._leafType = "unknown"
         self._lineno = args.get('lineno', None)
         self._range = args.get('range', [])
+        # Used by the Simulink and QGen mappers:
+        # nameless string types can't be used, so a unique pseudo-type name
+        # is created from the fieldname + "_type"
+        self._pseudoname = None
         for i in args.keys():
             assert(i in AsnString.validOptions)
 
@@ -376,6 +380,10 @@ Members:
         self._members = args.get('members', [])
         self._default = args.get('default', None)
         self._lineno = args.get('lineno', None)
+        # Used by the Simulink and QGen mappers:
+        # nameless string types can't be used, so a unique pseudo-type name
+        # is created from the fieldname + "_type"
+        self._pseudoname = None 
         for i in args.keys():
             assert(i in AsnEnumerated.validOptions)
         existing = {}
