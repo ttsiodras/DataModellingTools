@@ -282,13 +282,6 @@ def main():
             uniqueDataFiles[param._signal._asnFilename][sp._language].append(sp)
 
     uniqueASNfiles = {}
-#    for asnFile in uniqueDataFiles.iterkeys():
-#       commonPy.asnParser.ParseInput(asnFile)
-#       uniqueASNfiles[asnFile] = [copy.copy(commonPy.asnParser.g_names),copy.copy(commonPy.asnParser.g_inputAsnAST),copy.copy(commonPy.asnParser.g_leafTypeDict)]
-#    if 0 == len(uniqueDataFiles.iterkeys()):
-#       panic("There are no data references anywhere in the given AADL files. Aborting...")
-#       sys.exit(0)
-
     if len(list(uniqueDataFiles.keys())) != 0:
         commonPy.asnParser.ParseAsnFileList(list(uniqueDataFiles.keys()))
 

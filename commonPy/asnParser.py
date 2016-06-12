@@ -996,41 +996,6 @@ It returns a map providing the leafType of each type.
     return knownTypes
 
 
-def ParseInput(asnFilename, bClearFirst=True, bFixAST=True):
-    global g_asnFilename
-    g_asnFilename = asnFilename
-    try:
-        lines = "\n".join(open(asnFilename, 'r').readlines())
-    except:
-        utility.panic("AsnParser: Can't find file '%s'\n" % asnFilename)
-
-    if bClearFirst:
-        global g_names
-        g_names = {}
-        global g_typesOfFile
-        g_typesOfFile = {}
-        global g_inputAsnAST
-        g_inputAsnAST = []
-        global g_leafTypeDict
-        g_leafTypeDict = {}
-
-    if not configMT.debugParser:
-        import lex
-        lex.lex()
-
-        import yacc
-        yacc.yacc(debug=0, write_tables=0)
-        yacc.parse(lines)
-    else:
-        import lex
-        lexer = lex.lex(debug=1)
-        lexer.input(lines)
-        lex.runmain()
-
-    if bFixAST:
-        g_leafTypeDict.update(VerifyAndFixAST())
-
-
 def IsInvalidType(name):
     return \
         (name.lower() in g_invalidKeywords) or \
@@ -1079,19 +1044,6 @@ def ParseAsnFileList(listOfFilenames):
     asn1SccPath = spawn.find_executable('asn1.exe')
     if asn1SccPath is None:
         utility.panic("ASN1SCC seems not installed on your system (asn1.exe not found in PATH).\n")
-        sys.stderr.write("WARNING: ASN1SCC environment var unset, using naive ASN.1 parser...\n")
-        global g_filename
-        g_filename = listOfFilenames[0]
-        ParseInput(listOfFilenames[0], True, False)
-        for f in listOfFilenames[1:]:
-            g_filename = f
-            ParseInput(f, False, False)
-        g_leafTypeDict.update(VerifyAndFixAST())
-
-        for nodeTypename in list(g_names.keys()):
-            if nodeTypename not in g_checkedSoFarForKeywords:
-                g_checkedSoFarForKeywords[nodeTypename] = 1
-                CheckForInvalidKeywords(nodeTypename)
     else:
         (dummy, xmlAST) = tempfile.mkstemp()
         os.fdopen(dummy).close()
