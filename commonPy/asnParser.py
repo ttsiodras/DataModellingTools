@@ -52,6 +52,8 @@ import tempfile
 import re
 import distutils.spawn as spawn
 
+from typing import Union, Dict
+
 from . import configMT
 from . import utility
 
@@ -62,17 +64,14 @@ from . import xmlASTtoAsnAST
 g_asnFilename = ""
 
 g_filename = ''
-g_inputAsnAST = []
 g_leafTypeDict = {}
-g_names = {}
+g_names = {}  # type: Dict[str, AsnNode]
 g_metatypes = {}
 
-g_typesOfFile = {}
-g_astOfFile = {}
+g_typesOfFile = {}  # type: Dict[str, List[str]]
+g_astOfFile = {}  # type: Dict[str, List[AsnNode]]
 
-g_symbolicConstants = {}
-
-g_checkedSoFarForKeywords = {}
+g_checkedSoFarForKeywords = {}  # type: Dict[str, int]
 
 g_invalidKeywords = [
     "active", "adding", "all", "alternative", "and", "any", "as", "atleast", "axioms", "block", "call", "channel", "comment", "connect", "connection", "constant", "constants", "create", "dcl", "decision", "default", "else", "endalternative", "endblock", "endchannel", "endconnection", "enddecision", "endgenerator", "endmacro", "endnewtype", "endoperator", "endpackage", "endprocedure", "endprocess", "endrefinement", "endselect", "endservice", "endstate", "endsubstructure", "endsyntype", "endsystem", "env", "error", "export", "exported", "external", "fi", "finalized", "for", "fpar", "from", "gate", "generator", "if", "import", "imported", "in", "inherits", "input", "interface", "join", "literal", "literals", "macro", "macrodefinition", "macroid", "map", "mod", "nameclass", "newtype", "nextstate", "nodelay", "noequality", "none", "not", "now", "offspring", "operator", "operators", "or", "ordering", "out", "output", "package", "parent", "priority", "procedure", "process", "provided", "redefined", "referenced", "refinement", "rem", "remote", "reset", "return", "returns", "revealed", "reverse", "save", "select", "self", "sender", "service", "set", "signal", "signallist", "signalroute", "signalset", "spelling", "start", "state", "stop", "struct", "substructure", "synonym", "syntype", "system", "task", "then", "this", "timer", "to", "type", "use", "via", "view", "viewed", "virtual", "with", "xor", "end", "i", "j", "auto", "const",
@@ -140,62 +139,6 @@ tokens = (
 lotokens = [tkn.lower() for tkn in tokens]
 
 
-def t_newline(t):
-    r'\n+'
-    t.lexer.lineno += t.value.count("\n")/2
-    #print "New line, met ", t.value.count("\n"), "newlines, so now at line", t.lineno
-
-
-t_DEFINITIONS =   r'DEFINITIONS'
-t_APPLICATION =   r'APPLICATION'
-t_TAGS =          r'TAGS'
-t_BEGIN =         r'BEGIN'
-t_EXPORTS =       r'EXPORTS'
-t_IMPORTS =       r'IMPORTS'
-t_ALL =           r'ALL'
-t_FROM =          r'FROM'
-t_CHOICE =        r'CHOICE'
-t_SEQUENCE =      r'SEQUENCE'
-t_SET =           r'SET'
-t_OF =            r'OF'
-t_END =           r'END'
-t_OPTIONAL =      r'OPTIONAL'
-t_BOOLEAN =       r'BOOLEAN'
-t_INTEGER =       r'INTEGER'
-t_REAL =          r'REAL'
-t_OCTET =         r'OCTET'
-#t_BIT =           r'BIT'
-t_STRING =        r'STRING'
-t_UTF8STRING =    r'UTF8String'
-t_ASCIISTRING =   r'AsciiString'
-t_NUMBERSTRING =  r'NumberString'
-t_VISIBLESTRING = r'VisibleString'
-t_PRINTABLESTRING = r'PrintableString'
-t_ENUMERATED =    r'ENUMERATED'
-t_AUTOMATIC =     r'AUTOMATIC'
-t_IMPLICIT =      r'IMPLICIT'
-t_SIZE =          r'SIZE'
-t_TRUE =          r'TRUE'
-t_FALSE =         r'FALSE'
-t_DEFAULT =       r'DEFAULT'
-t_WITH =          r'WITH'
-t_COMPONENTS =    r'COMPONENTS'
-t_MANTISSA =      r'mantissa'
-t_BASE =          r'base'
-t_EXPONENT =      r'exponent'
-
-t_LPAREN      = r'\('
-t_RPAREN      = r'\)'
-t_LBRACKET    = r'\['
-t_RBRACKET    = r'\]'
-t_BLOCK_BEGIN = r'\{'
-t_BLOCK_END   = r'\}'
-t_DEF         = r'::='
-t_COMMA       = r','
-t_SEMI        = r';'
-t_DOTDOT      = r'\.\.'
-t_DOTDOTDOT   = r'\.\.\.'
-
 # Parsing rules
 
 #    'BIT': 'BIT',
@@ -238,533 +181,6 @@ reserved = {
     'ALL': 'ALL',
     'COMPONENTS': 'COMPONENTS'
 }
-
-
-def t_NAME(t):
-    r'[a-zA-Z_][a-zA-Z0-9_\-]*'
-    t.type = reserved.get(t.value, 'NAME')
-    return t
-
-
-def t_REALVALUE(t):
-    r'[+-]?[0-9]+\.[0-9]+'
-    t.type = 'REALVALUE'
-    return t
-
-
-def t_INTVALUE(t):
-    r'[+-]?[0-9]+'
-    t.type = 'INTVALUE'
-    return t
-
-t_ignore = " \t"
-
-
-def t_comment(t):
-    r'--.*'
-    pass
-
-
-# C or C++ comment (ignore)
-def t_ccode_comment(t):
-    r'(/\*(.|\n)*?\*/)|(//.*)'
-    t.lexer.lineno += t.value.count("\n")/2
-
-
-def t_error(t):
-    sys.stderr.write("Illegal character '%s'\n" % t.value[0])
-    t.skip(1)
-
-
-def p_file(p):
-    '''file : NAME definitiveObjs DEFINITIONS AUTOMATIC TAGS DEF BEGIN exportsList importsList typeAssignments END
-            | NAME definitiveObjs DEFINITIONS IMPLICIT  TAGS DEF BEGIN exportsList importsList typeAssignments END
-            | NAME definitiveObjs DEFINITIONS EXPLICIT  TAGS DEF BEGIN exportsList importsList typeAssignments END'''
-    g_inputAsnAST[:] = p[10]
-    g_astOfFile[g_filename] = copy.copy(p[10])
-    #g_leafTypeDict.clear()
-    #g_leafTypeDict.update( VerifyAndFixAST() )
-
-
-def p_file2(p):
-    '''file : NAME definitiveObjs DEFINITIONS DEF BEGIN exportsList importsList typeAssignments END'''
-    global g_inputAsnAST
-    g_inputAsnAST = p[8]
-    g_astOfFile[g_filename] = copy.copy(p[8])
-    #g_leafTypeDict.clear()
-    #g_leafTypeDict.update( VerifyAndFixAST() )
-
-
-def p_exports(p):
-    '''exportsList :
-                   | EXPORTS ALL SEMI
-                   | EXPORTS NAME typeList SEMI'''
-    pass
-
-
-def p_typeList(p):
-    '''typeList :
-                | COMMA NAME typeList'''
-    pass
-
-
-def p_imports(p):
-    '''importsList :
-                   | IMPORTS NAME typeList FROM NAME definitiveObjs importedTypes SEMI'''
-    pass
-
-
-def p_importedTypes(p):
-    '''importedTypes :
-                     | NAME typeList FROM NAME definitiveObjs importedTypes'''
-    pass
-
-
-def p_definitiveObjs(p):
-    '''definitiveObjs :
-                      | BLOCK_BEGIN definitiveObjIds BLOCK_END '''
-    pass
-
-
-def p_definitiveObjIds(p):
-    '''definitiveObjIds :
-                        | definitiveObjId definitiveObjIds'''
-    pass
-
-
-def p_definitiveObjId(p):
-    '''definitiveObjId : NAME
-                       | NAME LPAREN INTVALUE RPAREN
-                       | INTVALUE'''
-    pass
-
-
-def p_typeAssignments(p):
-    '''typeAssignments :
-                       | typeAssignment typeAssignments'''
-    if len(p) == 1:
-        p[0] = []
-    else:
-        if p[1] is not None:
-            temp = [p[1]]
-        else:
-            temp = []
-        temp.extend(p[2])
-        p[0] = temp
-
-
-def p_typeAssignment1(p):
-    '''typeAssignment : NAME DEF optionalApp typeBody'''
-    if p[1] in g_names:
-        utility.panic("'%s' defined more than once! (met again at (%s,%s))!\n" % (p[1], g_filename, p.lineno(1)))
-    g_names[p[1]] = p[4]
-    g_typesOfFile.setdefault(g_filename, [])
-    g_typesOfFile[g_filename].append(p[1])
-    p[0] = p[1]
-
-
-def p_typeAssignment2(p):
-    '''typeAssignment : ASCIISTRING DEF OCTET STRING
-                      | NUMBERSTRING DEF OCTET STRING
-                      | VISIBLESTRING DEF OCTET STRING
-                      | PRINTABLESTRING DEF OCTET STRING'''
-    g_names[p[1]] = AsnOctetString(asnFilename=g_asnFilename)
-    g_typesOfFile.setdefault(g_filename, [])
-    g_typesOfFile[g_filename].append(p[1])
-    p[0] = p[1]
-
-
-def p_typeAssignment3(p):
-    '''typeAssignment : NAME INTEGER DEF INTVALUE'''
-    try:
-        g_symbolicConstants[p[1]] = int(p[4])
-    except:
-        utility.panic("Symbolic constants can only contain INTEGER value (not '%s') (%s,%s)!\n" % (p[4], g_filename, p.lineno(1)))
-
-
-def p_optionalApp(p):
-    '''optionalApp :
-                   | LBRACKET INTVALUE RBRACKET
-                   | LBRACKET APPLICATION INTVALUE RBRACKET'''
-    pass
-
-
-def p_typeBody1(p):
-    '''typeBody : simpleType
-                | complexType'''
-    p[0] = p[1]
-
-
-def p_typeBody2(p):
-    '''typeBody : NAME'''
-    p[0] = AsnMetaType(asnFilename=g_asnFilename, containedType=p[1])
-
-
-def p_simpleType(p):
-    '''simpleType : booleanType
-                  | integerType
-                  | realType
-                  | stringType'''
-    p[0] = p[1]
-
-
-def p_booleanType(p):
-    '''booleanType : BOOLEAN
-                   | BOOLEAN DEFAULT boolValue'''
-    if len(p)==2:
-        p[0] = AsnBool(asnFilename=g_asnFilename, lineno=p.lineno(1))
-    else:
-        p[0] = AsnBool(asnFilename=g_asnFilename, bDefaultValue=p[3], lineno=p.lineno(1))
-
-
-def p_boolValue(p):
-    '''boolValue : TRUE
-                 | FALSE'''
-    p[0] = p[1]
-
-
-def p_integerType(p):
-    '''integerType : INTEGER intRange
-                   | INTEGER intRange DEFAULT INTVALUE'''
-    if len(p)==3:
-        p[0] = AsnInt(asnFilename=g_asnFilename, lineno=p.lineno(1), range=p[2])
-    else:
-        p[0] = AsnInt(asnFilename=g_asnFilename, lineno=p.lineno(1), range=p[2], iDefaultValue=p[4])
-
-
-def p_intRange(p):
-    '''intRange :
-                | LPAREN INTVALUE DOTDOT INTVALUE RPAREN'''
-    if len(p) == 1:
-        p[0] = []
-    else:
-        p[0] = [int(p[2]), int(p[4])]
-
-
-def p_realType(p):
-    '''realType : REAL optionalRealConstraint
-                | REAL optionalRealConstraint DEFAULT REALVALUE'''
-    if len(p)==3:
-        p[2].update({'lineno': p.lineno(1)})
-        p[2].update({'asnFilename': g_asnFilename})
-        p[0] = AsnReal(**p[2])
-    else:
-        p[2].update({'defaultValue': p[4]})
-        p[2].update({'lineno': p.lineno(1)})
-        p[2].update({'asnFilename': g_asnFilename})
-        p[0] = AsnReal(**p[2])
-
-
-def p_optionalRealConstraint(p):
-    '''optionalRealConstraint :
-                              | LPAREN INTVALUE DOTDOT INTVALUE RPAREN
-                              | LPAREN INTVALUE DOTDOT REALVALUE RPAREN
-                              | LPAREN REALVALUE DOTDOT REALVALUE RPAREN
-                              | LPAREN WITH COMPONENTS BLOCK_BEGIN realConstraint otherRealConstraints BLOCK_END RPAREN'''
-    if len(p)==1:
-        p[0] = {}
-    elif len(p)==6:
-        temp = {'range': [float(p[2]), float(p[4])]}
-        p[0] = temp
-    else:
-        temp = p[5]
-        temp.update(p[6])
-        p[0] = temp
-
-
-def p_otherRealConstraints(p):
-    '''otherRealConstraints :
-                            | COMMA realConstraint otherRealConstraints'''
-    if len(p)==1:
-        p[0] = {}
-    else:
-        temp = p[2]
-        temp.update(p[3])
-        p[0] = temp
-
-
-def p_realConstraint(p):
-    '''realConstraint : MANTISSA rangeSpec
-                      | BASE rangeSpec
-                      | EXPONENT rangeSpec'''
-    p[0] = {p[1]: p[2]}
-
-
-def p_stringType1(p):
-    '''stringType : UTF8STRING optionalLengthConstraint'''
-    p[0] = AsnUTF8String(asnFilename=g_asnFilename, lineno=p.lineno(1), range=p[2])
-
-
-def p_stringType2(p):
-    '''stringType : OCTET STRING optionalLengthConstraint'''
-    p[0] = AsnOctetString(asnFilename=g_asnFilename, lineno=p.lineno(1), range=p[3])
-
-
-def p_stringType3(p):
-    '''stringType : ASCIISTRING optionalLengthConstraint'''
-    p[0] = AsnAsciiString(asnFilename=g_asnFilename, lineno=p.lineno(1), range=p[2])
-
-
-def p_stringType4(p):
-    '''stringType : NUMBERSTRING optionalLengthConstraint'''
-    p[0] = AsnNumberString(asnFilename=g_asnFilename, lineno=p.lineno(1), range=p[2])
-
-
-def p_stringType5(p):
-    '''stringType : VISIBLESTRING optionalLengthConstraint'''
-    p[0] = AsnVisibleString(asnFilename=g_asnFilename, lineno=p.lineno(1), range=p[2])
-
-
-def p_stringType6(p):
-    '''stringType : PRINTABLESTRING optionalLengthConstraint'''
-    p[0] = AsnPrintableString(asnFilename=g_asnFilename, lineno=p.lineno(1), range=p[2])
-
-#def p_stringType7(p):
-#    '''stringType : BIT STRING optionalLengthConstraint'''
-#    p[0] = AsnBitString( lineno=p.lineno(1), range=p[2])
-
-
-def p_optionalLengthConstraint(p):
-    '''optionalLengthConstraint :
-                                | LPAREN SIZE rangeSpec RPAREN'''
-    if len(p)==1:
-        p[0] = []
-    else:
-        p[0] = p[3]
-
-
-def p_rangeSpec(p):
-    '''rangeSpec : LPAREN INTVALUE RPAREN
-                 | LPAREN INTVALUE DOTDOT INTVALUE RPAREN'''
-    if len(p)==4:
-        p[0] = [int(p[2])]
-    else:
-        p[0] = [int(p[2]), int(p[4])]
-
-
-def p_rangeSpecSymbol(p):
-    '''rangeSpec : LPAREN NAME RPAREN'''
-    if p[2] not in g_symbolicConstants:
-        utility.panic("Symbolic constant '%s' not defined here (%s)!\n" % (p[2], p.lineno(1)))
-    p[0] = [int(g_symbolicConstants[p[2]])]
-
-
-def p_rangeSpecSymbol1(p):
-    '''rangeSpec : LPAREN NAME DOTDOT INTVALUE RPAREN'''
-    if p[2] not in g_symbolicConstants:
-        utility.panic("Symbolic constant '%s' not defined here (%s)!\n" % (p[2], p.lineno(1)))
-    p[0] = [int(g_symbolicConstants[p[2]]), int(p[4])]
-
-
-def p_rangeSpecSymbol2(p):
-    '''rangeSpec : LPAREN INTVALUE DOTDOT NAME RPAREN'''
-    if p[4] not in g_symbolicConstants:
-        utility.panic("Symbolic constant '%s' not defined here (%s)!\n" % (p[4], p.lineno(1)))
-    p[0] = [int(p[2]), int(g_symbolicConstants[p[4]])]
-
-
-def p_rangeSpecSymbol3(p):
-    '''rangeSpec : LPAREN NAME DOTDOT NAME RPAREN'''
-    if p[2] not in g_symbolicConstants:
-        utility.panic("Symbolic constant '%s' not defined here (%s)!\n" % (p[2], p.lineno(1)))
-    if p[4] not in g_symbolicConstants:
-        utility.panic("Symbolic constant '%s' not defined here (%s)!\n" % (p[4], p.lineno(1)))
-    p[0] = [int(g_symbolicConstants[p[2]]), int(g_symbolicConstants[p[4]])]
-
-
-def p_complexType(p):
-    '''complexType : sequenceType
-                   | sequenceOfType
-                   | setType
-                   | setOfType
-                   | choiceType
-                   | enumeratedType'''
-    p[0] = p[1]
-
-
-def p_enumeratedType(p):
-    '''enumeratedType : ENUMERATED BLOCK_BEGIN enumMember optionalOtherEnumMembers BLOCK_END optionalDefaultEnum'''
-    temp = [p[3]]
-    temp.extend(p[4])
-    p[0] = AsnEnumerated(asnFilename=g_asnFilename, members=temp, default=p[6], lineno=p.lineno(1))
-
-
-def p_enumMembers(p):
-    '''optionalOtherEnumMembers :
-                                | COMMA enumMember optionalOtherEnumMembers'''
-    if len(p)==1:
-        p[0] = []
-    else:
-        if p[2] != []:
-            temp = [p[2]]
-        else:
-            temp = []
-        temp.extend(p[3])
-        p[0] = temp
-
-
-def p_enumMember(p):
-    '''enumMember : NAME optionalNumber'''
-    p[0] = [p[1], p[2]]
-
-
-def p_enumMember2(p):
-    '''enumMember : DOTDOTDOT'''
-    p[0] = []
-
-
-def p_optionalNumber(p):
-    '''optionalNumber :
-                      | LPAREN INTVALUE RPAREN'''
-    if len(p)==1:
-        p[0] = None
-    else:
-        p[0] = p[2]
-
-
-def p_optionalDefaultEnum(p):
-    '''optionalDefaultEnum :
-                           | DEFAULT NAME'''
-    if len(p)==1:
-        p[0] = None
-    else:
-        p[0] = p[2]
-
-
-def p_sequenceType(p):
-    '''sequenceType : SEQUENCE BLOCK_BEGIN member otherMembers BLOCK_END'''
-    temp = [p[3]]
-    temp.extend(p[4])
-    values = [x for x in temp if x is not None and x != []]
-    p[0] = AsnSequence(asnFilename=g_asnFilename, members=values, lineno=p.lineno(1))
-
-
-def p_setType(p):
-    '''setType : SET BLOCK_BEGIN member otherMembers BLOCK_END'''
-    temp = [p[3]]
-    temp.extend(p[4])
-    values = [x for x in temp if x is not None and x != []]
-    p[0] = AsnSet(asnFilename=g_asnFilename, members=values, lineno=p.lineno(1))
-
-
-def p_sequenceOfType(p):
-    '''sequenceOfType : SEQUENCE OF NAME
-                      | SEQUENCE SIZE rangeSpec OF NAME
-                      | SEQUENCE LPAREN SIZE rangeSpec RPAREN OF NAME '''
-    if len(p)==4:
-        p[0] = AsnSequenceOf(asnFilename=g_asnFilename, containedType=p[3], lineno=p.lineno(1))
-    elif len(p)==6:
-        p[0] = AsnSequenceOf(asnFilename=g_asnFilename, containedType=p[5], range=p[3], lineno=p.lineno(1))
-    else:
-        p[0] = AsnSequenceOf(asnFilename=g_asnFilename, containedType=p[7], range=p[4], lineno=p.lineno(1))
-
-
-def p_sequenceOfType2(p):
-    '''sequenceOfType : SEQUENCE OF simpleType
-                      | SEQUENCE SIZE rangeSpec OF simpleType
-                      | SEQUENCE LPAREN SIZE rangeSpec RPAREN OF simpleType
-                      | SEQUENCE SIZE rangeSpec OF complexType
-                      | SEQUENCE LPAREN SIZE rangeSpec RPAREN OF complexType'''
-    if len(p)==4:
-        p[0] = AsnSequenceOf(asnFilename=g_asnFilename, containedType=p[3], lineno=p.lineno(1))
-    elif len(p) == 6:
-        p[0] = AsnSequenceOf(asnFilename=g_asnFilename, containedType=p[5], range=p[3], lineno=p.lineno(1))
-    else:
-        p[0] = AsnSequenceOf(asnFilename=g_asnFilename, containedType=p[7], range=p[4], lineno=p.lineno(1))
-
-
-def p_setOfType(p):
-    '''setOfType : SET OF NAME
-                 | SET SIZE rangeSpec OF NAME
-                 | SET LPAREN SIZE rangeSpec RPAREN OF NAME '''
-    if len(p)==4:
-        p[0] = AsnSetOf(asnFilename=g_asnFilename, containedType=p[3], lineno=p.lineno(1))
-    elif len(p)==6:
-        p[0] = AsnSetOf(asnFilename=g_asnFilename, containedType=p[5], range=p[3], lineno=p.lineno(1))
-    else:
-        p[0] = AsnSetOf(asnFilename=g_asnFilename, containedType=p[7], range=p[4], lineno=p.lineno(1))
-
-
-def p_setOfType2(p):
-    '''setOfType : SET OF simpleType
-                 | SET SIZE rangeSpec OF simpleType
-                 | SET LPAREN SIZE rangeSpec RPAREN OF simpleType
-                 | SET SIZE rangeSpec OF complexType
-                 | SET LPAREN SIZE rangeSpec RPAREN OF complexType'''
-    if len(p)==4:
-        p[0] = AsnSetOf(asnFilename=g_asnFilename, containedType=p[3], lineno=p.lineno(1))
-    elif len(p) == 6:
-        p[0] = AsnSetOf(asnFilename=g_asnFilename, containedType=p[5], range=p[3], lineno=p.lineno(1))
-    else:
-        p[0] = AsnSetOf(asnFilename=g_asnFilename, containedType=p[7], range=p[4], lineno=p.lineno(1))
-
-
-def p_choiceType(p):
-    '''choiceType : CHOICE BLOCK_BEGIN member otherMembers BLOCK_END'''
-    if p[3] == []:
-        temp = []
-    else:
-        temp = [p[3]]
-    temp.extend(p[4])
-    while None in temp:
-        temp.remove(None)
-    p[0] = AsnChoice(asnFilename=g_asnFilename, members=temp, lineno=p.lineno(1))
-
-
-def p_otherMembers(p):
-    '''otherMembers :
-                    | COMMA member otherMembers'''
-    if len(p) == 1:
-        p[0] = []
-    else:
-        if p[2] == []:
-            temp = []
-        else:
-            temp = [p[2]]
-        temp.extend(p[3])
-        p[0] = temp
-
-
-def p_member1(p):
-    '''member : NAME simpleType optionality
-              | NAME complexType optionality'''
-    temp = [p[1]]
-    if len(p)>3 and p[3]:
-        p[2]._isOptional = True
-    temp.append(p[2])
-    p[0] = temp
-
-
-def p_member2(p):
-    '''member : NAME NAME optionality'''
-    if p[2] == 'NULL':
-        utility.panic("NULL types are not supported (yet) (%s,%s))!\n" % (g_filename, p.lineno(1)))
-    else:
-        temp = [p[1]]
-        mmbr = AsnMetaMember(asnFilename=g_asnFilename, containedType=p[2], lineno=p.lineno(1))
-        if len(p)>3 and p[3]:
-            mmbr._isOptional = True
-        temp.append(mmbr)
-        p[0] = temp
-
-
-def p_member3(p):
-    '''member : DOTDOTDOT'''
-    pass
-
-
-def p_optionality(p):
-    '''optionality :
-                   | OPTIONAL'''
-    if len(p) == 1:
-        p[0] = False
-    else:
-        p[0] = True
-
-
-def p_error(p):
-    utility.panic("'%s': AsnParser: Syntax error at '%s', near line %d\n" % (g_filename, p.value, p.lineno))
-
 
 def KnownType(node, names):
     if isinstance(node, str):
@@ -996,22 +412,25 @@ It returns a map providing the leafType of each type.
     return knownTypes
 
 
-def IsInvalidType(name):
+def IsInvalidType(name: str) -> bool:
     return \
         (name.lower() in g_invalidKeywords) or \
         (name.lower() in lotokens) or \
         any([name.lower().endswith(x) for x in ["-buffer", "-buffer-max"]])
 
 
-def CheckForInvalidKeywords(node):
-    if isinstance(node, str):
-        if IsInvalidType(node):
-            utility.panic("TASTE disallows certain type names for various reasons.\n'%s' is not allowed" % node)
-        node = g_names[node]
+def CheckForInvalidKeywords(node_or_str: Union[str, AsnNode]) -> None:
+    if isinstance(node_or_str, str):
+        if IsInvalidType(node_or_str):
+            utility.panic(
+                "TASTE disallows certain type names for various reasons.\n'%s' is not allowed" % node_or_str)
+        node = g_names[node_or_str]  # type: AsnNode
+    else:
+        node = node_or_str
 
-    if isinstance(node, AsnBasicNode) or isinstance(node, AsnEnumerated):
+    if isinstance(node, (AsnBasicNode, AsnEnumerated)):
         pass
-    elif isinstance(node, AsnSequence) or isinstance(node, AsnChoice) or isinstance(node, AsnSet):
+    elif isinstance(node, (AsnSequence, AsnChoice, AsnSet)):
         for child in node._members:
             if child[0].lower() in g_invalidKeywords or child[0].lower() in lotokens:
                 utility.panic(
@@ -1029,7 +448,7 @@ def CheckForInvalidKeywords(node):
                 utility.panic(
                     "Ada mappers won't allow SEQUENCE/CHOICE fields with same names as their types.\n" +
                     "Fix declaration at %s" % node.Location())
-    elif isinstance(node, AsnSequenceOf) or isinstance(node, AsnSetOf):
+    elif isinstance(node, (AsnSequenceOf, AsnSetOf)):
         if isinstance(node._containedType, str):
             if IsInvalidType(node._containedType):
                 utility.panic(
