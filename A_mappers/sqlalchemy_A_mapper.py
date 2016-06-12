@@ -31,7 +31,7 @@ from commonPy.asnParser import g_names, g_leafTypeDict, CleanNameForAST
 from commonPy.utility import panic, warn
 
 g_sqlalchemyOutput = None
-g_innerTypes = {}
+g_innerTypes = {}  # type: Dict[str, int]
 g_uniqueStringOfASN1files = ""
 g_outputDir = "."
 g_asnFiles = None
@@ -75,7 +75,7 @@ def Version():
     print("$Id$")  # pragma: no cover
 
 
-g_dependencyGraph = {}
+g_dependencyGraph = {}  # type: Dict[str, Dict[str, int]]
 
 
 def FixupAstForSQLAlchemy():

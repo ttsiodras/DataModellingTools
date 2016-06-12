@@ -19,20 +19,24 @@
 # generated code.
 #
 import re
+from typing import Union, List, Dict
 
 from commonPy.utility import panicWithCallStack
-from commonPy.asnAST import AsnBasicNode, AsnSequence, AsnSet, AsnChoice, AsnSequenceOf, AsnSetOf, AsnEnumerated, AsnMetaMember
+from commonPy.asnAST import (
+    AsnBasicNode, AsnSequence, AsnSet, AsnChoice, AsnSequenceOf,
+    AsnSetOf, AsnEnumerated, AsnMetaMember, AsnNode
+)
 
 
 class RecursiveMapper:
 
-    def maybeElse(self, childNo):
+    def maybeElse(self, childNo: int) -> str:
         if childNo == 1:
             return ""
         else:
             return "else "
 
-    def CleanName(self, fieldName):
+    def CleanName(self, fieldName: str) -> str:
         return re.sub(r'[^a-zA-Z0-9_]', '_', fieldName)
 
     def Version(self):
@@ -68,10 +72,17 @@ class RecursiveMapper:
     def MapSetOf(self, unused_srcVar, unused_destVar, unused_node, unused_leafTypeDict, unused_names):
         panicWithCallStack("Method undefined in a RecursiveMapper...")
 
-    def Map(self, srcVar, destVar, node, leafTypeDict, names):
-        if isinstance(node, str):
-            node = names[node]
-        lines = []
+    def Map(self,
+            srcVar,
+            destVar,
+            node_or_str: Union[str, AsnNode],
+            leafTypeDict: Dict[str, str],
+            names: Dict[str, AsnNode]) -> List[str]:
+        if isinstance(node_or_str, str):
+            node = names[node_or_str]  # type: AsnNode
+        else:
+            node = node_or_str
+        lines = []  # type: List[str]
         if isinstance(node, AsnBasicNode):
             realLeafType = leafTypeDict[node._leafType]
             if realLeafType == "INTEGER":
