@@ -43,7 +43,7 @@ import re
 import platform
 import traceback
 
-from typing import Dict
+from typing import Dict, Union, Match
 
 from . import configMT
 
@@ -110,9 +110,9 @@ def readContexts(tapNumbers: str) -> Dict[str, str]:
 class Matcher:
     def __init__(self, pattern, flags=0):
         self._pattern = re.compile(pattern, flags)
-        self._lastOne = None
-        self._match = None
-        self._search = None
+        self._lastOne = None  # type: Union[str, None]
+        self._match = None  # type: Union[Match, None]
+        self._search = None  # type: Union[Match, None]
 
     def match(self, line):
         self._match = re.match(self._pattern, line)

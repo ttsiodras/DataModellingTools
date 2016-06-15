@@ -75,6 +75,8 @@
 #                     |        AsnMetaMember        |
 #                     +-----------------------------+
 
+from typing import Union, Dict
+
 from . import utility
 
 
@@ -269,7 +271,7 @@ Members:
         # Used by the Simulink and QGen mappers:
         # nameless string types can't be used, so a unique pseudo-type name
         # is created from the fieldname + "_type"
-        self._pseudoname = None
+        self._pseudoname = None  # type: Union[None, str]
         for i in args.keys():
             assert(i in AsnString.validOptions)
 
@@ -383,17 +385,17 @@ Members:
         # Used by the Simulink and QGen mappers:
         # nameless string types can't be used, so a unique pseudo-type name
         # is created from the fieldname + "_type"
-        self._pseudoname = None 
+        self._pseudoname = None  # type: Union[None, str]
         for i in args.keys():
             assert(i in AsnEnumerated.validOptions)
-        existing = {}
+        existing = {}  # type: Dict[str, int]
         for elem in self._members:
             if elem[0] in existing:
                 utility.panic(
                     "member '%s' appears more than once in ENUMERATED %s" % (elem[0],  # pragma: no cover
                     ((self._lineno is not None) and ("defined in line %s" % self._lineno) or (""))))  # pragma: no cover
             else:
-                existing[elem[0]]=1
+                existing[elem[0]] = 1
 
     def __repr__(self):
         result = self._leafType
@@ -462,7 +464,7 @@ Members:
         self._lineno = args.get('lineno', None)
         for i in args.keys():
             assert(i in AsnSequence.validOptions)
-        existing = {}
+        existing = {}  # type: Dict[str, int]
         for elem in self._members:
             if elem[0] in existing:
                 utility.panic(
@@ -500,7 +502,7 @@ class AsnSet(AsnComplexNode):
         self._lineno = args.get('lineno', None)
         for i in args.keys():
             assert(i in AsnSequence.validOptions)
-        existing = {}
+        existing = {}  # type: Dict[str, int]
         for elem in self._members:
             if elem[0] in existing:
                 utility.panic(
@@ -547,7 +549,7 @@ Members:
         self._lineno = args.get('lineno', None)
         for i in args.keys():
             assert(i in AsnChoice.validOptions)
-        existing = {}
+        existing = {}  # type: Dict[str, int]
         for elem in self._members:
             if elem[0] in existing:
                 utility.panic(
