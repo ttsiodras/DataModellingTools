@@ -117,7 +117,8 @@ def OnStartup(modelingLanguage, asnFile, subProgram, unused_subProgramImplementa
 #include "gui_swig.h"
 #include "%(FVname)s_enums_def.h"
 %%}
-
+%%include "carrays.i"
+%%array_functions(byte,byte_SWIG_PTR)
 #include "gui_swig.h"
 #include "%(FVname)s_enums_def.h"
 
