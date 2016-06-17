@@ -31,7 +31,7 @@ from commonPy.utility import inform, panic
 import commonPy.cleanupNodes
 from commonPy.recursiveMapper import RecursiveMapper
 
-import commonPy.verify
+import commonPy.verify as verify
 
 __doc__ = '''\
 This is one of the code generators that Semantix developed for
