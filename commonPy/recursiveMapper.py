@@ -30,46 +30,46 @@ from commonPy.asnAST import (
 
 class RecursiveMapper:
 
-    def maybeElse(self, childNo: int) -> str:
+    def maybeElse(self, childNo: int) -> str:  # pylint: disable=no-self-use
         if childNo == 1:
             return ""
         else:
             return "else "
 
-    def CleanName(self, fieldName: str) -> str:
+    def CleanName(self, fieldName: str) -> str:  # pylint: disable=no-self-use
         return re.sub(r'[^a-zA-Z0-9_]', '_', fieldName)
 
-    def Version(self):
+    def Version(self):  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a RecursiveMapper...")
 
-    def MapInteger(self, unused_srcVar, unused_destVar, unused_node, unused_leafTypeDict, unused_names):
+    def MapInteger(self, unused_srcVar, unused_destVar, unused_node, unused_leafTypeDict, unused_names):  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a RecursiveMapper...")
 
-    def MapReal(self, unused_srcVar, unused_destVar, unused_node, unused_leafTypeDict, unused_names):
+    def MapReal(self, unused_srcVar, unused_destVar, unused_node, unused_leafTypeDict, unused_names):  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a RecursiveMapper...")
 
-    def MapBoolean(self, unused_srcVar, unused_destVar, unused_node, unused_leafTypeDict, unused_names):
+    def MapBoolean(self, unused_srcVar, unused_destVar, unused_node, unused_leafTypeDict, unused_names):  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a RecursiveMapper...")
 
-    def MapOctetString(self, unused_srcVar, unused_destVar, unused_node, unused_leafTypeDict, unused_names):
+    def MapOctetString(self, unused_srcVar, unused_destVar, unused_node, unused_leafTypeDict, unused_names):  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a RecursiveMapper...")
 
-    def MapEnumerated(self, unused_srcVar, unused_destVar, unused_node, unused_leafTypeDict, unused_names):
+    def MapEnumerated(self, unused_srcVar, unused_destVar, unused_node, unused_leafTypeDict, unused_names):  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a RecursiveMapper...")
 
-    def MapSequence(self, unused_srcVar, unused_destVar, unused_node, unused_leafTypeDict, unused_names):
+    def MapSequence(self, unused_srcVar, unused_destVar, unused_node, unused_leafTypeDict, unused_names):  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a RecursiveMapper...")
 
-    def MapSet(self, unused_srcVar, unused_destVar, unused_node, unused_leafTypeDict, unused_names):
+    def MapSet(self, unused_srcVar, unused_destVar, unused_node, unused_leafTypeDict, unused_names):  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a RecursiveMapper...")
 
-    def MapChoice(self, unused_srcVar, unused_destVar, unused_node, unused_leafTypeDict, unused_names):
+    def MapChoice(self, unused_srcVar, unused_destVar, unused_node, unused_leafTypeDict, unused_names):  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a RecursiveMapper...")
 
-    def MapSequenceOf(self, unused_srcVar, unused_destVar, unused_node, unused_leafTypeDict, unused_names):
+    def MapSequenceOf(self, unused_srcVar, unused_destVar, unused_node, unused_leafTypeDict, unused_names):  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a RecursiveMapper...")
 
-    def MapSetOf(self, unused_srcVar, unused_destVar, unused_node, unused_leafTypeDict, unused_names):
+    def MapSetOf(self, unused_srcVar, unused_destVar, unused_node, unused_leafTypeDict, unused_names):  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a RecursiveMapper...")
 
     def Map(self,
@@ -77,7 +77,7 @@ class RecursiveMapper:
             destVar: str,
             node_or_str: Union[str, AsnNode],
             leafTypeDict: Dict[str, str],
-            names: Dict[str, AsnNode]) -> List[str]:
+            names: Dict[str, AsnNode]) -> List[str]:  # pylint: disable=invalid-sequence-index
         if isinstance(node_or_str, str):
             node = names[node_or_str]  # type: AsnNode
         else:

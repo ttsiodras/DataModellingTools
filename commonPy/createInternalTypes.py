@@ -19,7 +19,7 @@
 # generated code.
 #
 import re
-from typing import Any, Dict, List  # NOQA
+from typing import Any, Dict, List  # NOQA pylint: disable=unused-import
 
 import commonPy.asnParser
 
@@ -41,7 +41,7 @@ def CleanName(name: str) -> str:
 
 def CreatePseudoType(
         pseudoType: str, origASTnode: AsnNode,
-        names: Dict[str, AsnNode], results: List[str]) -> str:
+        names: Dict[str, AsnNode], results: List[str]) -> str:  # pylint: disable=invalid-sequence-index
     # if such a pseudo type already exists, add "_t" postfix until you get
     # one that doesn't exist.
     if pseudoType in names and names[pseudoType] != origASTnode:
@@ -60,7 +60,8 @@ def ScanChildren(
         nodeTypename: str,
         node: AsnNode,
         names: Dict[str, AsnNode],
-        results: List[str],
+        results: List[str],  # pylint: disable=invalid-sequence-index
+
         isRoot=False,
         createInnerNodesInNames=True):
     '''
@@ -121,7 +122,7 @@ def ScanChildren(
                 # ... and change the AST, placing the string value (pseudoType)
                 # inside the _containedType member (i.e. remove the pointer to the AST node)
                 node._containedType = pseudoType
-    elif isinstance(node, (AsnSet, AsnSequence, AsnChoice)):
+    elif isinstance(node, (AsnSet, AsnSequence, AsnChoice)):  # pylint: disable=too-many-nested-blocks
         # If we are here via a recursive call from a "parent" ScanChildren,
         # add the SET/SEQUENCE/CHOICE nodeTypename to the dependency list.
         if (not isRoot) and nodeTypename not in results:

@@ -1,11 +1,12 @@
 import re
 import sys
+
+from typing import Any  # NOQA pylint: disable=unused-import
+
 from lxml import etree
 from commonPy.asnAST import AsnBool, AsnInt, AsnReal, \
     AsnEnumerated, AsnOctetString, AsnSequenceOf, AsnSet, \
     AsnSetOf, AsnSequence, AsnChoice, AsnMetaMember
-
-from typing import Any  # NOQA
 
 # Level of verbosity
 g_verboseLevel = 0
@@ -113,6 +114,9 @@ class Attributes:
             whatever = lxmlEtreeNode.get('href', None)
             print a.get('title', None)
     '''
+    base = None  # type: str
+    sourceline = None  # type: int
+
     def __init__(self, t):
         '''Argument t is an lxml Etree node.'''
         self._attrs = {}  # type: Dict[str, Any]
@@ -146,7 +150,8 @@ def MapSMP2Type(attrs, enumOptions, itemTypes, fields):
         except:  # pragma: no cover
             return None  # pragma: no cover
     dataDict = {"asnFilename": attrs.base, "lineno": attrs.sourceline}
-    if attrs.type == 'Types:Integer':
+
+    def HandleTypesInteger():
         low = getMaybe(int, attrs.Minimum)
         high = getMaybe(int, attrs.Maximum)
         if low == 0 and high == 1:
@@ -157,21 +162,15 @@ def MapSMP2Type(attrs, enumOptions, itemTypes, fields):
             span = [low, high] if low is not None and high is not None else []
             dataDict["range"] = span
             return AsnInt(**dataDict)
-    elif attrs.type == 'Types:Float':
+
+    def HandleTypesFloat():
         low = getMaybe(float, attrs.Minimum)
         high = getMaybe(float, attrs.Maximum)
         span = [low, high] if low is not None and high is not None else []
         dataDict["range"] = span
         return AsnReal(**dataDict)
-    elif attrs.type == 'Types:Enumeration':
-        dataDict["members"] = enumOptions
-        return AsnEnumerated(**dataDict)
-    elif attrs.type == 'Types:String':
-        high = getMaybe(int, attrs.Length)
-        span = [high, high] if high is not None else []
-        dataDict["range"] = span
-        return AsnOctetString(**dataDict)
-    elif attrs.type == 'Types:Array':
+
+    def HandleTypesArray():
         if itemTypes == []:
             panic("Missing mandatory ItemType element", location)  # pragma: no cover
         itemTypeAttrs = Attributes(itemTypes[0])
@@ -209,7 +208,8 @@ def MapSMP2Type(attrs, enumOptions, itemTypes, fields):
                 # in the FixupOutOfOrderIdReferences function.
                 dataDict['containedType'] = containedHref
             return AsnSequenceOf(**dataDict)
-    elif attrs.type == 'Types:Structure':  # pylint: disable=too-many-nested-blocks
+
+    def HandleTypesStructure():
         members = []
         for field in fields:
             try:
@@ -259,6 +259,23 @@ def MapSMP2Type(attrs, enumOptions, itemTypes, fields):
         else:
             dataDict['members'] = members
             return AsnSequence(**dataDict)
+
+    if attrs.type == 'Types:Integer':
+        return HandleTypesInteger()
+    elif attrs.type == 'Types:Float':
+        return HandleTypesFloat()
+    elif attrs.type == 'Types:Enumeration':
+        dataDict["members"] = enumOptions
+        return AsnEnumerated(**dataDict)
+    elif attrs.type == 'Types:String':
+        high = getMaybe(int, attrs.Length)
+        span = [high, high] if high is not None else []
+        dataDict["range"] = span
+        return AsnOctetString(**dataDict)
+    elif attrs.type == 'Types:Array':
+        return HandleTypesArray()
+    elif attrs.type == 'Types:Structure':  # pylint: disable=too-many-nested-blocks
+        return HandleTypesStructure()
     panic("Failed to map... (%s)" % attrs.type, location)  # pragma: no cover
 
 
@@ -384,7 +401,9 @@ def ConvertCatalogueToASN_AST(inputSmp2Files):
             enumOptions = []
             if a.type == 'Types:Enumeration':
                 for node in t.xpath("Literal"):
-                    enumOptions.append([x.replace('_', '-').lower() for x in map(node.get, ['Name', 'Value'])])
+                    enumOptions.append(
+                        [x.replace('_', '-').lower()
+                         for x in [node.get('Name'), node.get('Value')]])
 
             # 2. ItemType data (used in arrays)
             itemTypes = t.xpath("ItemType")

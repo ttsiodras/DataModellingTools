@@ -50,15 +50,15 @@ g_systems = {}
 
 
 class AadlParameter:
-    def __init__(self, direction, type):
+    def __init__(self, direction, typ):
         assert direction in ['IN', 'OUT', 'INOUT']
         self._direction = direction
-        self._type = type
+        self._type = typ
 
 
 class AadlSubProgramFeature:
-    def __init__(self, id, parameter):
-        self._id = id
+    def __init__(self, iid, parameter):
+        self._id = iid
         self._parameter = parameter
 
 
@@ -69,9 +69,9 @@ class AadlPropertyAssociationNoModes:
 
 
 class AadlPort:
-    def __init__(self, direction, type):
+    def __init__(self, direction, typ):
         self._direction = direction
-        self._type = type
+        self._type = typ
 
 
 class AadlEventPort:
@@ -88,21 +88,21 @@ class AadlEventPort:
 
 
 class AadlEventDataPort(AadlPort):
-    def __init__(self, direction, type):
-        AadlPort.__init__(self, direction, type)
+    def __init__(self, direction, typ):
+        AadlPort.__init__(self, direction, typ)
 
 
 class AadlThreadFeature:
-    def __init__(self, id, port):
-        assert(isinstance(port, AadlPort))
-        self._id = id
+    def __init__(self, iid, port):
+        assert isinstance(port, AadlPort)
+        self._id = iid
         self._port = port
 
 
 class AadlProcessFeature:
-    def __init__(self, id, port):
-        assert(isinstance(port, AadlPort))
-        self._id = id
+    def __init__(self, iid, port):
+        assert isinstance(port, AadlPort)
+        self._id = iid
         self._port = port
 
 
@@ -145,8 +145,8 @@ class OutgoingUniPort(UniPort):
 
 
 class ApLevelContainer:
-    def __init__(self, id):
-        self._id = id
+    def __init__(self, iid):
+        self._id = iid
         self._calls = []
         self._params = []
         self._connections = []
@@ -170,8 +170,8 @@ class ApLevelContainer:
 
 
 class Param:
-    def __init__(self, aplcID, id, signal, sourceElement):
-        self._id = id
+    def __init__(self, aplcID, iid, signal, sourceElement):
+        self._id = iid
         # It is the Process, Thread or Subprogram ID
         self._aplcID = aplcID
         # Could be string (i.e. AADL DataType name) or Signal (i.e. asnFilename, asnNodename)
@@ -180,18 +180,18 @@ class Param:
 
 
 class InParam(Param):
-    def __init__(self, aplcID, id, signal, sourceElement):
-        Param.__init__(self, aplcID, id, signal, sourceElement)
+    def __init__(self, aplcID, iid, signal, sourceElement):
+        Param.__init__(self, aplcID, iid, signal, sourceElement)
 
 
 class OutParam(Param):
-    def __init__(self, aplcID, id, signal, sourceElement):
-        Param.__init__(self, aplcID, id, signal, sourceElement)
+    def __init__(self, aplcID, iid, signal, sourceElement):
+        Param.__init__(self, aplcID, iid, signal, sourceElement)
 
 
 class InOutParam(Param):
-    def __init__(self, aplcID, id, signal, sourceElement):
-        Param.__init__(self, aplcID, id, signal, sourceElement)
+    def __init__(self, aplcID, iid, signal, sourceElement):
+        Param.__init__(self, aplcID, iid, signal, sourceElement)
 
 
 class UniquePortIdentifier:

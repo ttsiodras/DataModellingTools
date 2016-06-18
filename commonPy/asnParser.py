@@ -93,58 +93,8 @@ g_invalidKeywords = [
 ]
 
 tokens = (
-    'DEFINITIONS',
-    'APPLICATION',
-    'AUTOMATIC',
-    'IMPLICIT',
-    'EXPLICIT',
-    'TAGS',
-    'BEGIN',
-    'IMPORTS',
-    'EXPORTS',
-    'FROM',
-    'ALL',
-    'CHOICE',
-    'SEQUENCE',
-    'SET',
-    'OF',
-    'END',
-    'OPTIONAL',
-    'INTEGER',
-    'REAL',
-    'OCTET',
-    #    'BIT',
-    'STRING',
-    'BOOLEAN',
-    'TRUE',
-    'FALSE',
-    'ASCIISTRING',
-    'NUMBERSTRING',
-    'VISIBLESTRING',
-    'PRINTABLESTRING',
-    'UTF8STRING',
-    'ENUMERATED',
-    'SEMI',
-    'LPAREN',
-    'RPAREN',
-    'LBRACKET',
-    'RBRACKET',
-    'BLOCK_END',
-    'BLOCK_BEGIN',
-    'DEF',
-    'NAME',
-    'COMMA',
-    'INTVALUE',
-    'REALVALUE',
-    'DEFAULT',
-    'SIZE',
-    'DOTDOT',
-    'DOTDOTDOT',
-    'WITH',
-    'COMPONENTS',
-    'MANTISSA',
-    'BASE',
-    'EXPONENT'
+    'DEFINITIONS', 'APPLICATION', 'AUTOMATIC', 'IMPLICIT', 'EXPLICIT', 'TAGS', 'BEGIN', 'IMPORTS', 'EXPORTS', 'FROM', 'ALL', 'CHOICE', 'SEQUENCE', 'SET', 'OF', 'END', 'OPTIONAL', 'INTEGER', 'REAL', 'OCTET',  # 'BIT',
+    'STRING', 'BOOLEAN', 'TRUE', 'FALSE', 'ASCIISTRING', 'NUMBERSTRING', 'VISIBLESTRING', 'PRINTABLESTRING', 'UTF8STRING', 'ENUMERATED', 'SEMI', 'LPAREN', 'RPAREN', 'LBRACKET', 'RBRACKET', 'BLOCK_END', 'BLOCK_BEGIN', 'DEF', 'NAME', 'COMMA', 'INTVALUE', 'REALVALUE', 'DEFAULT', 'SIZE', 'DOTDOT', 'DOTDOTDOT', 'WITH', 'COMPONENTS', 'MANTISSA', 'BASE', 'EXPONENT'
 )
 
 lotokens = [tkn.lower() for tkn in tokens]
@@ -154,43 +104,20 @@ lotokens = [tkn.lower() for tkn in tokens]
 
 #    'BIT': 'BIT',
 reserved = {
-    'DEFINITIONS': 'DEFINITIONS',
-    'APPLICATION': 'APPLICATION',
-    'TAGS': 'TAGS',
-    'BEGIN': 'BEGIN',
-    'CHOICE': 'CHOICE',
-    'SEQUENCE': 'SEQUENCE',
-    'SET': 'SET',
-    'OF': 'OF',
-    'END': 'END',
-    'OPTIONAL': 'OPTIONAL',
-    'BOOLEAN': 'BOOLEAN',
-    'INTEGER': 'INTEGER',
-    'REAL': 'REAL',
-    'OCTET': 'OCTET',
-    'STRING': 'STRING',
-    'UTF8String': 'UTF8STRING',
-    'AsciiString': 'ASCIISTRING',
-    'NumberString': 'NUMBERSTRING',
-    'VisibleString': 'VISIBLESTRING',
-    'PrintableString': 'PRINTABLESTRING',
-    'ENUMERATED': 'ENUMERATED',
-    'AUTOMATIC': 'AUTOMATIC',
-    'IMPLICIT': 'IMPLICIT',
-    'EXPLICIT': 'EXPLICIT',
-    'SIZE': 'SIZE',
-    'TRUE': 'TRUE',
-    'FALSE': 'FALSE',
-    'DEFAULT': 'DEFAULT',
-    'mantissa': 'MANTISSA',
-    'base': 'BASE',
-    'exponent': 'EXPONENT',
-    'WITH': 'WITH',
-    'FROM': 'FROM',
-    'IMPORTS': 'IMPORTS',
-    'EXPORTS': 'EXPORTS',
-    'ALL': 'ALL',
-    'COMPONENTS': 'COMPONENTS'
+    'DEFINITIONS': 'DEFINITIONS', 'APPLICATION': 'APPLICATION',
+    'TAGS': 'TAGS', 'BEGIN': 'BEGIN', 'CHOICE': 'CHOICE',
+    'SEQUENCE': 'SEQUENCE', 'SET': 'SET', 'OF': 'OF',
+    'END': 'END', 'OPTIONAL': 'OPTIONAL', 'BOOLEAN': 'BOOLEAN',
+    'INTEGER': 'INTEGER', 'REAL': 'REAL', 'OCTET': 'OCTET',
+    'STRING': 'STRING', 'UTF8String': 'UTF8STRING',
+    'AsciiString': 'ASCIISTRING', 'NumberString': 'NUMBERSTRING',
+    'VisibleString': 'VISIBLESTRING', 'PrintableString': 'PRINTABLESTRING',
+    'ENUMERATED': 'ENUMERATED', 'AUTOMATIC': 'AUTOMATIC',
+    'IMPLICIT': 'IMPLICIT', 'EXPLICIT': 'EXPLICIT', 'SIZE': 'SIZE',
+    'TRUE': 'TRUE', 'FALSE': 'FALSE', 'DEFAULT': 'DEFAULT',
+    'mantissa': 'MANTISSA', 'base': 'BASE', 'exponent': 'EXPONENT',
+    'WITH': 'WITH', 'FROM': 'FROM', 'IMPORTS': 'IMPORTS',
+    'EXPORTS': 'EXPORTS', 'ALL': 'ALL', 'COMPONENTS': 'COMPONENTS'
 }
 
 
@@ -383,12 +310,7 @@ def VerifyAndFixAST() -> Dict[str, str]:
                             not isinstance(child[1], AsnEnumerated) and \
                             not isinstance(child[1], AsnMetaMember):
                         # It will be an internal sequence, choice or sequenceof
-                        assert \
-                            isinstance(child[1], AsnChoice) or \
-                            isinstance(child[1], AsnSequence) or \
-                            isinstance(child[1], AsnSet) or \
-                            isinstance(child[1], AsnSetOf) or \
-                            isinstance(child[1], AsnSequenceOf)
+                        assert isinstance(child[1], (AsnChoice, AsnSet, AsnSetOf, AsnSequence, AsnSequenceOf))
                         internalName = newname = nodeTypename + '_' + CleanNameForAST(child[0])
                         while internalName in g_names:
                             internalName = (newname + "_%d") % internalNo
@@ -498,7 +420,7 @@ def ParseAsnFileList(listOfFilenames):
         # and mark any types not inside it as artificial.
         os.system(mono + "\"" + asn1SccPath + "\" -customStg \"" + asn1SccDir + "/xml.stg:" + xmlAST + "2\" -customStgAstVerion 1 \"" + "\" \"".join(listOfFilenames) + "\"")
         realTypes = {}
-        for line in os.popen("grep  'ExportedType\>' \"" + xmlAST + "2\"").readlines():
+        for line in os.popen("grep  'ExportedType\>' \"" + xmlAST + "2\"").readlines():  # pylint: disable=anomalous-backslash-in-string
             line = re.sub(r'^.*Name="', '', line.strip())
             line = re.sub(r'" />$', '', line)
             realTypes[line] = 1
@@ -660,8 +582,7 @@ def CreateEnumerated(newModule, lineNo, xmlEnumeratedNode):
         asnFilename=newModule._asnFilename,
         lineno=lineNo,
         members=VisitAll(
-            xmlEnumeratedNode,
-            "EnumValue",
+            xmlEnumeratedNode, "EnumValue",
             # lambda x: [GetAttr(x, "StringValue"), GetAttr(x, "IntValue"), GetAttr(x, "EnumID")]))
             #  old code: used to check the ValuesAutoCalculated and use None for the integer values
             # lambda x: [GetAttr(x, "StringValue"), bSetIntValue and GetAttr(x, "IntValue") or None]))
@@ -695,26 +616,26 @@ def CreateNumericString(newModule, lineNo, xmlNumericStringNode):
     return CreateOctetString(newModule, lineNo, xmlNumericStringNode)  # pragma: no cover
 
 
+def getIntOrFloatOrNone(d: str) -> Union[int, float, None]:
+    i = f = None
+    try:
+        i = int(d)
+        return i
+    except:
+        try:
+            f = float(d)
+            return f
+        except:
+            return None
+
+
 def CreateReference(newModule, lineNo, xmlReferenceNode):
-    try:
-        mi = int(GetAttr(xmlReferenceNode, "Min"))  # type: Union[int, float]
-    except:
-        try:
-            mi = float(GetAttr(xmlReferenceNode, "Min"))
-        except:
-            mi = None
-    try:
-        ma = int(GetAttr(xmlReferenceNode, "Max"))  # type: Union[int, float]
-    except:
-        try:
-            ma = float(GetAttr(xmlReferenceNode, "Max"))
-        except:
-            ma = None
     return AsnMetaType(
         asnFilename=newModule._asnFilename,
         lineno=lineNo,
         containedType=GetAttr(xmlReferenceNode, "ReferencedTypeName"),
-        Min=mi, Max=ma)
+        Min=getIntOrFloatOrNone(GetAttr(xmlReferenceNode, "Min")),
+        Max=getIntOrFloatOrNone(GetAttr(xmlReferenceNode, "Max")))
 
 
 def CommonSetSeqOf(newModule, lineNo, xmlSequenceOfNode, classToCreate):
@@ -843,7 +764,6 @@ class Module(Pretty):
     _importedModules = None    # type: List[ Tuple[ str, List[str], List[str] ] ]
     # (tuples of Typename, AsnNode)
     _typeAssignments = None    # type: List[ Tuple[ str, AsnNode] ]
-    pass
 
 
 def VisitAsn1Module(xmlAsn1File, xmlModule, modules):
@@ -851,35 +771,26 @@ def VisitAsn1Module(xmlAsn1File, xmlModule, modules):
     newModule._id = GetAttr(xmlModule, "ID")
     newModule._asnFilename = GetAttr(xmlAsn1File, "FileName")
     newModule._exportedTypes = VisitAll(
-        GetChild(xmlModule, "ExportedTypes"),
-        "ExportedType",
+        GetChild(xmlModule, "ExportedTypes"), "ExportedType",
         lambda x: GetAttr(x, "Name"))
 
     newModule._exportedVariables = VisitAll(
-        GetChild(xmlModule, "ExportedVariables"),
-        "ExportedVariable",
+        GetChild(xmlModule, "ExportedVariables"), "ExportedVariable",
         lambda x: GetAttr(x, "Name"))
 
     newModule._importedModules = VisitAll(
-        GetChild(xmlModule, "ImportedModules"),
-        "ImportedModule",
-        lambda x:
-        (
+        GetChild(xmlModule, "ImportedModules"), "ImportedModule",
+        lambda x: (
             GetAttr(x, "ID"),
-            VisitAll(
-                GetChild(x, "ImportedTypes"),
-                "ImportedType",
-                lambda y: GetAttr(y, "Name")),
-            VisitAll(
-                GetChild(x, "ImportedVariables"),
-                "ImportedVariable",
-                lambda y: GetAttr(y, "Name")),
+            VisitAll(GetChild(x, "ImportedTypes"), "ImportedType",
+                     lambda y: GetAttr(y, "Name")),
+            VisitAll(GetChild(x, "ImportedVariables"), "ImportedVariable",
+                     lambda y: GetAttr(y, "Name")),
         )
     )
 
     newModule._typeAssignments = VisitAll(
-        GetChild(xmlModule, "TypeAssignments"),
-        "TypeAssignment",
+        GetChild(xmlModule, "TypeAssignments"), "TypeAssignment",
         lambda x: VisitTypeAssignment(newModule, x))
 
     g_typesOfFile.setdefault(newModule._asnFilename, [])
@@ -906,12 +817,9 @@ def ParseASN1SCC_AST(filename):
     # Travel("", handler._roots[0])
     modules = []  # type: List[Module]
     VisitAll(
-        handler._root._children[0],
-        "Asn1File",
-        lambda x: VisitAll(
-            x,
-            "Asn1Module",
-            lambda y: VisitAsn1Module(x, y, modules)))
+        handler._root._children[0], "Asn1File",
+        lambda x: VisitAll(x, "Asn1Module",
+                           lambda y: VisitAsn1Module(x, y, modules)))
 
     global g_xmlASTrootNode
     g_xmlASTrootNode = handler._root
@@ -968,7 +876,10 @@ def PrintType(f, xmlType, indent, nameCleaner):
     elif realType._name == "EnumeratedType":
         f.write('ENUMERATED {\n')
         options = []
-        VisitAll(realType, "EnumValue", lambda x: options.append(x))
+
+        def addNewOption(x):
+            options.append(x)
+        VisitAll(realType, "EnumValue", addNewOption)
         if len(options) > 0:
             f.write(indent + '    ' + nameCleaner(GetAttr(options[0], "StringValue")) + "(" + GetAttr(options[0], "IntValue") + ")")
             for otherOptions in options[1:]:
@@ -1038,12 +949,9 @@ def PrintType(f, xmlType, indent, nameCleaner):
 def PrintGrammarFromAST(f, nameCleaner=SimpleCleaner):
     ourtypeAssignments = []
     VisitAll(
-        g_xmlASTrootNode._children[0],
-        "Asn1File",
-        lambda x: VisitAll(
-            x,
-            "TypeAssignment",
-            lambda y: ourtypeAssignments.append((x, y))))
+        g_xmlASTrootNode._children[0], "Asn1File",
+        lambda x: VisitAll(x, "TypeAssignment",
+                           lambda y: ourtypeAssignments.append((x, y))))
 
     for a, t in ourtypeAssignments:
         f.write("-- " + GetAttr(a, "FileName") + "\n%s ::= " % nameCleaner(GetAttr(t, "Name")))

@@ -84,11 +84,10 @@ def DiscoverBadTypes() -> SetOfBadTypenames:
         elif isinstance(node, (AsnSequenceOf, AsnSetOf)):
             if isinstance(node._containedType, AsnAsciiString):
                 cache[node] = True
-                return True
-            cache[node] = \
-                isinstance(node._containedType, str) \
-                and \
-                CheckNodeForIA5(names[node._containedType])
+            else:
+                cache[node] = \
+                    isinstance(node._containedType, str) and \
+                    CheckNodeForIA5(names[node._containedType])
             return cache[node]
         cache[node] = False
         return cache[node]

@@ -46,7 +46,7 @@ from commonPy.utility import inform, panic
 import commonPy.cleanupNodes
 
 import commonPy.verify as verify
-import A_mappers  # NOQA
+import A_mappers  # NOQA pylint:disable=unused-import
 
 def usage(argsToTools):
     '''Print usage instructions.'''
@@ -149,78 +149,80 @@ def main():
 
     # For each ASN.1 grammar file referenced in the system level description
     for arg, modelingLanguage in argsToTools.items():
-        if toolSelected[arg]:
-            backendFilename = "." + modelingLanguage.lower() + "_A_mapper.py"
-            inform("Parsing %s...", backendFilename)
-            try:
-                backend = import_module(backendFilename[:-3], 'A_mappers')  # pragma: no cover
-                if backendFilename[:-3] not in loadedBackends:
-                    loadedBackends[backendFilename[:-3]] = 1
-                    if commonPy.configMT.verbose:
-                        backend.Version()
-            except ImportError as err:  # pragma: no cover
-                panic("Failed to load backend (%s): %s" % (backendFilename, str(err)))  # pragma: no cover
+        if not toolSelected[arg]:
+            continue
+        backendFilename = "." + modelingLanguage.lower() + "_A_mapper.py"
+        inform("Parsing %s...", backendFilename)
+        try:
+            backend = import_module(backendFilename[:-3], 'A_mappers')  # pragma: no cover
+            if backendFilename[:-3] not in loadedBackends:
+                loadedBackends[backendFilename[:-3]] = 1
+                if commonPy.configMT.verbose:
+                    backend.Version()
+        except ImportError as err:  # pragma: no cover
+            panic("Failed to load backend (%s): %s" % (backendFilename, str(err)))  # pragma: no cover
 
-            # Esp. for C, we want to pass the complete list of ASN.1 files to ASN1SCC,
-            # instead of working per type:
-            if modelingLanguage.lower() in ["c", "ada", "smp2", "qgenc", "qgenada"]:
-                if 'OnStartup' in dir(backend):
-                    backend.OnStartup(modelingLanguage, list(uniqueASNfiles.keys()), commonPy.configMT.outputDir, badTypes)
-                if 'OnShutdown' in dir(backend):
-                    backend.OnShutdown(badTypes)
-            else:
-                # Work on each ASN.1 file's types
-                for asnFile in uniqueASNfiles:
-                    if 'OnStartup' in dir(backend):
-                        backend.OnStartup(modelingLanguage, asnFile, commonPy.configMT.outputDir, badTypes)
+        # Esp. for C, we want to pass the complete list of ASN.1 files to ASN1SCC,
+        # instead of working per type:
+        if modelingLanguage.lower() in ["c", "ada", "smp2", "qgenc", "qgenada"]:
+            if 'OnStartup' in dir(backend):
+                backend.OnStartup(modelingLanguage, list(uniqueASNfiles.keys()), commonPy.configMT.outputDir, badTypes)
+            if 'OnShutdown' in dir(backend):
+                backend.OnShutdown(badTypes)
+            continue
 
-                    leafTypeDict = uniqueASNfiles[asnFile][2]
+        # Work on each ASN.1 file's types
+        for asnFile in uniqueASNfiles:
+            if 'OnStartup' in dir(backend):
+                backend.OnStartup(modelingLanguage, asnFile, commonPy.configMT.outputDir, badTypes)
 
-                    inform("Executing mappings for types inside %s...", asnFile)
-                    names = uniqueASNfiles[asnFile][0]
-                    for nodeTypename in names:
-                        # Check if this type must be skipped
-                        if nodeTypename in badTypes:
-                            continue
-                        node = names[nodeTypename]
-                        inform("Processing %s (%s)...", nodeTypename, modelingLanguage)
+            leafTypeDict = uniqueASNfiles[asnFile][2]
 
-                        # First, make sure we know what leaf type this node is
-                        assert nodeTypename in leafTypeDict
+            inform("Executing mappings for types inside %s...", asnFile)
+            names = uniqueASNfiles[asnFile][0]
+            for nodeTypename in names:
+                # Check if this type must be skipped
+                if nodeTypename in badTypes:
+                    continue
+                node = names[nodeTypename]
+                inform("Processing %s (%s)...", nodeTypename, modelingLanguage)
 
-                        leafType = leafTypeDict[nodeTypename]
-                        # If it is a base type,
-                        if leafType in ['BOOLEAN', 'INTEGER', 'REAL', 'OCTET STRING']:
-                            # make sure we have mapping instructions for BASE elements
-                            if 'OnBasic' not in dir(backend):
-                                panic("ASN.1 grammar contains literal(%s) but no BASE section found in the mapping grammar (%s)" % (nodeTypename, sys.argv[2]))  # pragma: no cover
-                            backend.OnBasic(nodeTypename, node, leafTypeDict)
-                        # if it is a complex type
-                        elif leafType in ['SEQUENCE', 'SET', 'CHOICE', 'SEQUENCEOF', 'SETOF', 'ENUMERATED']:
-                            # make sure we have mapping instructions for the element
-                            mappedName = {
-                                'SEQUENCE': 'OnSequence',
-                                'SET': 'OnSet',
-                                'CHOICE': 'OnChoice',
-                                'SEQUENCEOF': 'OnSequenceOf',
-                                'SETOF': 'OnSetOf',
-                                'ENUMERATED': 'OnEnumerated'
-                            }
-                            if mappedName[leafType] not in dir(backend):
-                                panic("ASN.1 grammar contains %s but no %s section found in the mapping grammar (%s)" % (nodeTypename, mappedName[leafType], backendFilename))  # pragma: no cover
-                            processor = backend.__dict__[mappedName[leafType]]
-                            processor(nodeTypename, node, leafTypeDict)
-                        # what type is it?
-                        else:  # pragma: no cover
-                            panic("Unexpected type of element: %s" % leafTypeDict[nodeTypename])  # pragma: no cover
+                # First, make sure we know what leaf type this node is
+                assert nodeTypename in leafTypeDict
 
-                    if 'OnShutdown' in dir(backend):
-                        backend.OnShutdown(badTypes)
+                leafType = leafTypeDict[nodeTypename]
+                # If it is a base type,
+                if leafType in ['BOOLEAN', 'INTEGER', 'REAL', 'OCTET STRING']:
+                    # make sure we have mapping instructions for BASE elements
+                    if 'OnBasic' not in dir(backend):
+                        panic("ASN.1 grammar contains literal(%s) but no BASE section found in the mapping grammar (%s)" % (nodeTypename, sys.argv[2]))  # pragma: no cover
+                    backend.OnBasic(nodeTypename, node, leafTypeDict)
+                # if it is a complex type
+                elif leafType in ['SEQUENCE', 'SET', 'CHOICE', 'SEQUENCEOF', 'SETOF', 'ENUMERATED']:
+                    # make sure we have mapping instructions for the element
+                    mappedName = {
+                        'SEQUENCE': 'OnSequence',
+                        'SET': 'OnSet',
+                        'CHOICE': 'OnChoice',
+                        'SEQUENCEOF': 'OnSequenceOf',
+                        'SETOF': 'OnSetOf',
+                        'ENUMERATED': 'OnEnumerated'
+                    }
+                    if mappedName[leafType] not in dir(backend):
+                        panic("ASN.1 grammar contains %s but no %s section found in the mapping grammar (%s)" % (nodeTypename, mappedName[leafType], backendFilename))  # pragma: no cover
+                    processor = backend.__dict__[mappedName[leafType]]
+                    processor(nodeTypename, node, leafTypeDict)
+                # what type is it?
+                else:  # pragma: no cover
+                    panic("Unexpected type of element: %s" % leafTypeDict[nodeTypename])  # pragma: no cover
+
+            if 'OnShutdown' in dir(backend):
+                backend.OnShutdown(badTypes)
 
 if __name__ == "__main__":
     if "-pdb" in sys.argv:
         sys.argv.remove("-pdb")  # pragma: no cover
-        import pdb  # pragma: no cover
+        import pdb  # pragma: no cover pylint: disable=wrong-import-position,wrong-import-order
         pdb.run('main()')  # pragma: no cover
     else:
         main()

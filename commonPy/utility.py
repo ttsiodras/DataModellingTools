@@ -43,7 +43,7 @@ import re
 import platform
 import traceback
 
-from typing import Dict, Union, Match  # NOQA
+from typing import Dict, Union, Match  # NOQA pylint: disable=unused-import
 
 from . import configMT
 

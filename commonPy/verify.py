@@ -31,7 +31,6 @@ import commonPy.asnAST
 from commonPy.asnAST import AsnNode
 
 import commonPy.configMT
-from functools import reduce
 
 
 def VerifyNodeRange(node):
@@ -72,7 +71,7 @@ on the exact location of the offending type in the ASN.1 grammar.'''
             panic("SequenceOf (in %s) must have SIZE range set!\n" % node.Location())
 
     elif isinstance(node, commonPy.asnAST.AsnEnumerated):
-        if reduce(lambda x, y: x or y, [x[1] is None for x in node._members]):
+        if any(x[1] is None for x in node._members):
             panic("ENUMERATED must have integer value for each enum! (%s)" % node.Location())
 
 
