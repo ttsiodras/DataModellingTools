@@ -93,7 +93,7 @@ import commonPy.cleanupNodes
 from commonPy.utility import panic, inform
 
 import commonPy.verify as verify
-import B_mappers
+import B_mappers  # NOQA pylint: disable=unused-import
 
 g_mappedName = {
     'SEQUENCE': 'OnSequence',
@@ -103,73 +103,6 @@ g_mappedName = {
     'SETOF': 'OnSetOf',
     'ENUMERATED': 'OnEnumerated'
 }
-
-
-# def CreateInitializationFiles(useOSS, unused_SystemsAndImplementations, asnFiles):
-#     '''This function is called once at the beginning of the
-# code generation process.'''
-#
-# Obsolete: No more support for OSS (ESA, 2009/Dec/04)
-#
-#    initializationFile = open(commonPy.configMT.outputDir + 'Initialization.c', 'w')
-#
-#    OssDefinition =""
-#    OssInit = ""
-#    OssInclude = ""
-#    if useOSS:
-#       OssDefinition = "OssGlobal w, *g_world = &w;"
-#       if len(asnFiles):
-#           asnFile = asnFiles[0]
-#           asnName = os.path.basename( os.path.splitext(asnFile)[0] )
-#           OssInit = "ossinit(g_world, %s);" % asnName
-#           OssInclude = "#include <ossasn1.h>\n#include \"%s.oss.h\"" % asnName
-#       else:  # pragma: no cover
-#           OssInclude = "#include <ossasn1.h>\n"  # pragma: no cover
-#    initializationFile.write('''
-#/* This file contains the initialization code for the "glue".
-#   InitializeGlue() must be called before calling any of the "glue" functions.
-#   It sets up the appropriately sized private heap for the encoding/decoding
-#   of the messages. */
-#
-#%(OssInclude)s
-#
-#%(OssDefinition)s
-#
-#void InitializeGlue()
-#{
-#    static int initialized = 0;
-#
-#    if (!initialized) {
-#       initialized = 1;
-#       %(OssInit)s
-#    }
-#}
-#''' % {"OssDefinition":OssDefinition, "OssInit":OssInit, "OssInclude":OssInclude})
-#
-#    initializationFile.close()
-#    initializationAdaFile = open(commonPy.configMT.outputDir + 'initializevmglue.adb', 'w')
-#    initializationAdaFile.write('''
-#package body InitializeVMGlue is
-#
-#procedure InitializeGlueMemory is
-#    procedure C_InitializeGlueMemory;
-#    pragma Import(C, C_InitializeGlueMemory, "InitializeGlue");
-#begin
-#    C_InitializeGlueMemory;
-#end InitializeGlueMemory;
-#
-#end InitializeVMGlue;
-#''')
-#    initializationAdaFile.close()
-#    initializationAdaHeader = open(commonPy.configMT.outputDir + 'initializevmglue.ads', 'w')
-#    initializationAdaHeader.write('''
-#package InitializeVMGlue is
-#
-#procedure InitializeGlueMemory;
-#
-#end InitializeVMGlue;
-#''')
-#    initializationAdaHeader.close()
 
 
 def ParseAADLfilesAndResolveSignals():
@@ -197,7 +130,7 @@ of each SUBPROGRAM param.'''
                     for step in python2className.split('.')[1:]:
                         klass = getattr(klass, step)
                     o.__class__ = klass
-            except Exception as e:
+            except Exception as _:
                 pass
 
         patchMe(sp)
@@ -205,8 +138,10 @@ of each SUBPROGRAM param.'''
             patchMe(param)
             patchMe(param._signal)
             patchMe(param._sourceElement)
-        map(patchMe, sp._calls)
-        map(patchMe, sp._connections)
+        for c in sp._calls:
+            patchMe(c)
+        for cn in sp._connections:
+            patchMe(cn)
     try:
         import pickle
         astInfo = pickle.load(open(astFile, 'rb'))
@@ -217,7 +152,8 @@ of each SUBPROGRAM param.'''
         for k in ['g_processImplementations',
                   'g_subProgramImplementations', 'g_threadImplementations']:
             for si in astInfo[k]:
-                sp, sp_impl, modelingLanguage, maybeFVname = si[0], si[1], si[2], si[3]
+                # sp, sp_impl, modelingLanguage, maybeFVname = si[0], si[1], si[2], si[3]
+                sp = si[0]
                 sp = commonPy.aadlAST.g_apLevelContainers[sp]
                 FixMetaClasses(sp)
     except Exception as e:
@@ -235,11 +171,8 @@ types). This used to cover Dumpable C/Ada Types and OG headers.'''
     if len(asnFiles) != 0:
         if not asn1SccPath:
             panic("ASN1SCC seems not installed on your system (asn1.exe not found in PATH).\n")  # pragma: no cover
-        #os.system("mono \"{asn$ASN1SCC\" -wordSize 8 -typePrefix asn1Scc -Ada -equal -uPER -o \"" + outputDir + "\" \"" + "\" \"".join(asnFiles) + "\"")
         os.system('mono "{}" -wordSize 8 -typePrefix asn1Scc -Ada -equal -uPER -o "{}" "{}"'
-                  .format(asn1SccPath,
-                          outputDir,
-                          '" "'.join(asnFiles)))
+                  .format(asn1SccPath, outputDir, '" "'.join(asnFiles)))
 
 
 def main():
@@ -402,9 +335,7 @@ def main():
         for param in sp._params:
             inform("Creating glue for param %s...", param._id)
             asnFile = param._signal._asnFilename
-            #names = uniqueASNfiles[asnFile][0]
             names = commonPy.asnParser.g_names
-            #leafTypeDict = uniqueASNfiles[asnFile][2]
             leafTypeDict = commonPy.asnParser.g_leafTypeDict
 
             inform("This param uses definitions from %s", asnFile)
@@ -499,8 +430,8 @@ def main():
             nodeTypename = param._signal._asnNodename
             node = names[nodeTypename]
             inform("ASN.1 node is %s", nodeTypename)
-            #if node._isArtificial:
-            #    continue # artificially created (inner) type pragma: no cover
+            # if node._isArtificial:
+            #     continue # artificially created (inner) type pragma: no cover
             leafType = leafTypeDict[nodeTypename]
             if leafType in ['BOOLEAN', 'INTEGER', 'REAL', 'OCTET STRING']:
                 for b in mappers(lang):
