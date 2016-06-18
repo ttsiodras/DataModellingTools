@@ -221,15 +221,15 @@ def OneTimeOnly(unused_modelingLanguage, asnFile, subProgram, subProgramImplemen
 ''')
     global g_IDs
     g_HeaderFile.write("#define ID_MENU_RI "+str(g_IDs)+"\n")
-    g_IDs+=1
+    g_IDs += 1
     g_HeaderFile.write("#define ID_MENU_SAVE "+str(g_IDs)+"\n")
-    g_IDs+=1
+    g_IDs += 1
     g_HeaderFile.write("#define ID_MENU_LOAD "+str(g_IDs)+"\n")
-    g_IDs+=1
+    g_IDs += 1
     g_HeaderFile.write("#define ID_MENU_ABOUT "+str(g_IDs)+"\n")
-    g_IDs+=1
+    g_IDs += 1
     g_HeaderFile.write("#define ID_MENU_QUIT "+str(g_IDs)+"\n")
-    g_IDs+=1
+    g_IDs += 1
     g_HeaderFile.write("\n")
     g_HeaderFile.write('''
 class TeleCmds : public wxFrame
@@ -338,7 +338,7 @@ public:
 
 # Called once per RI (i.e. per SUBPROGRAM IMPLEMENTATION)
 def OnStartup(modelingLanguage, asnFile, subProgram, subProgramImplementation, outputDir, maybeFVname, useOSS):
-    #print modelingLanguage, subProgram, subProgramImplementation, maybeFVname
+    # print modelingLanguage, subProgram, subProgramImplementation, maybeFVname
     g_langPerSP[subProgram] = modelingLanguage
     global g_bStarted
     if not g_bStarted:
@@ -347,7 +347,7 @@ def OnStartup(modelingLanguage, asnFile, subProgram, subProgramImplementation, o
     global g_IDs
     CleanSP = CleanName(subProgram._id)
     g_HeaderFile.write("#define ID_SCROLWND_"+CleanSP+" "+str(g_IDs)+"\n")
-    g_IDs+=1
+    g_IDs += 1
     g_MyEvents.write("    EVT_MENU( ID_MENU_RI, TeleCmds::OnMenu_Click )\n")
     g_MyEvents.write("    EVT_MENU( ID_MENU_LOAD, TeleCmds::OnMenu_Load )\n")
     g_MyEvents.write("    EVT_MENU( ID_MENU_SAVE, TeleCmds::OnMenu_Save )\n")
@@ -390,7 +390,7 @@ def OnStartup(modelingLanguage, asnFile, subProgram, subProgramImplementation, o
         if modelingLanguage.lower() == "gui_pi":
             # We have telemetry, we need a thread polling the /xyz_PI_queue (xyz: g_maybeFVname)
             cleanFVname = CleanName(g_maybeFVname)
-            #g_MyThreadsH.write("#include \"%s_GUI_reader.h\"\n" % cleanFVname)
+            # g_MyThreadsH.write("#include \"%s_GUI_reader.h\"\n" % cleanFVname)
             g_MyThreadsH.write("class %s_telemetry : public wxThread {\n" % cleanFVname)
             g_MyThreadsH.write("public:\n")
             g_MyThreadsH.write("    %s_telemetry(TeleCmds *);\n" % cleanFVname)
@@ -400,7 +400,7 @@ def OnStartup(modelingLanguage, asnFile, subProgram, subProgramImplementation, o
             g_MyThreadsH.write("    mqd_t _queue_id;\n")
             g_MyThreadsH.write("    char QName[1024];\n")
             g_MyThreadsH.write("    TeleCmds *_pFrame;\n")
-            #g_MyThreadsH.write("    int _queue_was_bad;\n")
+            # g_MyThreadsH.write("    int _queue_was_bad;\n")
             g_MyThreadsH.write("};\n\n")
             g_MyThreadsInc.write("%s_telemetry::%s_telemetry(TeleCmds *pFrame)\n{\n" % (cleanFVname, cleanFVname))
             g_MyThreadsInc.write("    _queue_id = (mqd_t)-1;\n")
@@ -410,11 +410,11 @@ def OnStartup(modelingLanguage, asnFile, subProgram, subProgramImplementation, o
             g_MyThreadsInc.write("        cerr << \"Failed to open communication channel with ASSERT binary\" << endl;\n")
             g_MyThreadsInc.write("        exit(1);\n")
             g_MyThreadsInc.write("    }\n")
-            #g_MyThreadsInc.write("    _queue_was_bad = GUI_%s_reader_initialize();\n" % cleanFVname)
+            # g_MyThreadsInc.write("    _queue_was_bad = GUI_%s_reader_initialize();\n" % cleanFVname)
             g_MyThreadsInc.write("}\n\n")
             g_MyThreadsInc.write("void *%s_telemetry::Entry()\n{\n" % cleanFVname)
             g_MyThreadsInc.write("    if (_queue_id == (mqd_t)-1) { cout << \"queue \" << QName << \" does not exist!\\n\"; return NULL; }\n")
-            #g_MyThreadsInc.write("    if (_queue_was_bad) { cout << \"queue for %s does not exist!\\n\"; return NULL; }\n" % g_maybeFVname)
+            # g_MyThreadsInc.write("    if (_queue_was_bad) { cout << \"queue for %s does not exist!\\n\"; return NULL; }\n" % g_maybeFVname)
             g_MyThreadsInc.write("    struct mq_attr mqstat;\n")
             g_MyThreadsInc.write("    mq_getattr(_queue_id, &mqstat);\n")
             g_MyThreadsInc.write("    void* message_data_received = malloc(mqstat.mq_msgsize);\n")
@@ -423,7 +423,7 @@ def OnStartup(modelingLanguage, asnFile, subProgram, subProgramImplementation, o
             g_MyThreadsInc.write("    while(1) {\n")
             g_MyThreadsInc.write("        if (TestDestroy()) break;\n")
             g_MyThreadsInc.write("        message_received_type = -1;\n")
-            #g_MyThreadsInc.write("        GUI_%s_read_data();\n" % cleanFVname)
+            # g_MyThreadsInc.write("        GUI_%s_read_data();\n" % cleanFVname)
             g_MyThreadsInc.write("        retrieve_message_from_queue(_queue_id, mqstat.mq_msgsize, message_data_received, &message_received_type);\n")
             g_MyThreadsInc.write("        if (message_received_type != -1) {\n")
             g_MyThreadsInc.write("            //cout << \"Received telemetry of type\" << message_received_type << endl;\n")
@@ -589,11 +589,11 @@ def WriteCodeForGUIControls(prefix, parentControl, node, subProgram, subProgramI
                            (varPrefix, varPrefix))
         g_MyCreation.write("%s->Add(_itemStaticBoxSizer_%s, 0, wxALIGN_LEFT|wxALL, 5);\n\n" %
                            (parentControl, varPrefix))
-        if len(node._range)==2 and node._range[0] != node._range[1]:
+        if len(node._range) == 2 and node._range[0] != node._range[1]:
             g_MyCreation.write("wxStaticText* itemStaticTextNoElements_%s =  new wxStaticText( %s, wxID_STATIC, _(\"Number of Elements\"), wxDefaultPosition, wxDefaultSize, 0 );\n" %
                                (varPrefix, ScrollWnd))
             g_MyCreation.write("%s->Add(itemStaticTextNoElements_%s, 0, wxALIGN_LEFT|wxALL, 5);\n" %
-                               ("_itemStaticBoxSizer_%s"%varPrefix, varPrefix))
+                               ("_itemStaticBoxSizer_%s" % varPrefix, varPrefix))
             g_MyControls.write("wxTextCtrl* _itemTextCtrl_%s;\n" % varPrefix)
             g_MyCreation.write("_itemTextCtrl_%s = new wxTextCtrl( %s, ID_TEXTCTRL_%s, _T(\"%s\"), wxDefaultPosition, wxDefaultSize, 0 );\n" %
                                (varPrefix, ScrollWnd, varPrefix, str(node._range[0])))
@@ -608,7 +608,7 @@ def WriteCodeForGUIControls(prefix, parentControl, node, subProgram, subProgramI
         control = "_itemStaticBoxSizer_%s" % varPrefix
         for i in range(0, node._range[-1]):
             WriteCodeForGUIControls(
-                prefix + "::Elem_" + ("%02d"%i),
+                prefix + "::Elem_" + ("%02d" % i),
                 control, containedNode, subProgram, subProgramImplementation, param, leafTypeDict, names)
     else:  # pragma: no cover
         panic("GUI codegen doesn't support this type yet (%s)" % str(node))  # pragma: no cover
@@ -642,7 +642,7 @@ def CopyDataFromDlgToASN1(f, srcVar, destVar, node, leafTypeDict, names):
     elif isinstance(node, AsnEnumerated):
         enumNo = 0
         for enumOption in node._members:
-            f.write(("%sif (_itemChoice_"%maybeElseZero(enumNo))+srcVar+"->GetCurrentSelection() == "+str(enumNo)+") {\n")
+            f.write(("%sif (_itemChoice_" % maybeElseZero(enumNo))+srcVar+"->GetCurrentSelection() == "+str(enumNo)+") {\n")
             f.write("    "+destVar+" = ENUM_asn1Scc" + CleanName(enumOption[0]) + ";\n")
             f.write("}\n")
             enumNo += 1
@@ -658,7 +658,7 @@ def CopyDataFromDlgToASN1(f, srcVar, destVar, node, leafTypeDict, names):
         for child in node._members:
             CleanChild = CleanName(child[0])
             childType = child[1]
-            f.write(("%sif (%d == _itemChoice_"%(maybeElseZero(childNo), childNo)) + srcVar + "->GetCurrentSelection()) {\n")
+            f.write(("%sif (%d == _itemChoice_" % (maybeElseZero(childNo), childNo)) + srcVar + "->GetCurrentSelection()) {\n")
             if isinstance(childType, AsnMetaMember):
                 childType = names[childType._containedType]
             CopyDataFromDlgToASN1(f, srcVar + "_" + CleanChild, destVar + ".u." + CleanChild, childType, leafTypeDict, names)
@@ -676,13 +676,13 @@ def CopyDataFromDlgToASN1(f, srcVar, destVar, node, leafTypeDict, names):
             f.write("    _itemTextCtrl_%s->SetFocus();\n" % srcVar)
             f.write("    return;\n")
             f.write("}\n")
-        #No nCount anymore!
-        #else:
-        #    f.write(destVar + ".nCount = %s;\n" % str(node._range[-1]))
+        # No nCount anymore!
+        # else:
+        #     f.write(destVar + ".nCount = %s;\n" % str(node._range[-1]))
         for i in range(0, node._range[-1]):
             if isSequenceVariable(node):
                 f.write("if ("+destVar+".nCount>"+str(i)+") {\n")
-            CopyDataFromDlgToASN1(f, srcVar + "_Elem_" + ("%02d"%i), destVar + ".arr[" + str(i) + "]", containedNode, leafTypeDict, names)
+            CopyDataFromDlgToASN1(f, srcVar + "_Elem_" + ("%02d" % i), destVar + ".arr[" + str(i) + "]", containedNode, leafTypeDict, names)
             if isSequenceVariable(node):
                 f.write("}\n")
 
@@ -723,7 +723,7 @@ def CopyDataFromASN1ToDlg(fDesc, prefix, srcVar, destVar, node, leafTypeDict, na
         enumNo = 0
         if not bClear:
             for enumOption in node._members:
-                fDesc.write(("%sif ("%maybeElseZero(enumNo))+srcVar+" == ENUM_asn1Scc" + CleanName(enumOption[0]) + ") {\n")
+                fDesc.write(("%sif (" % maybeElseZero(enumNo))+srcVar+" == ENUM_asn1Scc" + CleanName(enumOption[0]) + ") {\n")
                 fDesc.write("    "+prefix+"_itemChoice_"+destVar+"->SetSelection(%d);\n" % enumNo)
                 fDesc.write("}\n")
                 enumNo += 1
@@ -745,7 +745,7 @@ def CopyDataFromASN1ToDlg(fDesc, prefix, srcVar, destVar, node, leafTypeDict, na
                         (maybeElseZero(childNo), srcVar, child[2]))
             fDesc.write("    "+prefix+"_itemChoice_" + destVar + "->SetSelection(%d);\n" % childNo)
             fDesc.write("    wxCommandEvent dum;\n")
-            fDesc.write("    %sUpdateChoice_"%prefix + destVar + "(dum);\n")
+            fDesc.write("    %sUpdateChoice_" % prefix + destVar + "(dum);\n")
             if isinstance(childType, AsnMetaMember):
                 childType = names[childType._containedType]
             CopyDataFromASN1ToDlg(fDesc, prefix, srcVar + ".u." + CleanChild, destVar + "_" + CleanChild, childType, leafTypeDict, names, bClear)
@@ -759,12 +759,12 @@ def CopyDataFromASN1ToDlg(fDesc, prefix, srcVar, destVar, node, leafTypeDict, na
         for i in range(0, node._range[-1]):
             if isSequenceVariable(node):
                 fDesc.write("if ("+str(i)+"<"+srcVar+".nCount) {\n")
-                CopyDataFromASN1ToDlg(fDesc, prefix, srcVar + ".arr[" + str(i) + "]", destVar + "_Elem_" + ("%02d"%i), containedNode, leafTypeDict, names, bClear)
+                CopyDataFromASN1ToDlg(fDesc, prefix, srcVar + ".arr[" + str(i) + "]", destVar + "_Elem_" + ("%02d" % i), containedNode, leafTypeDict, names, bClear)
                 fDesc.write("} else {\n")
-                CopyDataFromASN1ToDlg(fDesc, prefix, srcVar + ".arr[" + str(i) + "]", destVar + "_Elem_" + ("%02d"%i), containedNode, leafTypeDict, names, True)
+                CopyDataFromASN1ToDlg(fDesc, prefix, srcVar + ".arr[" + str(i) + "]", destVar + "_Elem_" + ("%02d" % i), containedNode, leafTypeDict, names, True)
                 fDesc.write("}\n")
             else:
-                CopyDataFromASN1ToDlg(fDesc, prefix, srcVar + ".arr[" + str(i) + "]", destVar + "_Elem_" + ("%02d"%i), containedNode, leafTypeDict, names, bClear)
+                CopyDataFromASN1ToDlg(fDesc, prefix, srcVar + ".arr[" + str(i) + "]", destVar + "_Elem_" + ("%02d" % i), containedNode, leafTypeDict, names, bClear)
         if isSequenceVariable(node):
             fDesc.write("{\n")
             fDesc.write("    ostringstream s;\n")
@@ -923,7 +923,7 @@ def Common(nodeTypename, node, subProgram, subProgramImplementation, param, leaf
     control = "itemBoxSizer_%s" % CleanName(subProgram._id)
     WriteCodeForGUIControls('', control, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
     global g_bBraceOpen
-    if len(g_SPs)==0 or subProgram._id != g_SPs[-1]:
+    if len(g_SPs) == 0 or subProgram._id != g_SPs[-1]:
         if g_bBraceOpen:
             g_MyAction.write("} // %s\n" % g_SPs[-1])
             g_MySave.write("} // %s\n" % g_SPs[-1])

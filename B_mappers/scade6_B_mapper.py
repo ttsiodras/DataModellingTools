@@ -47,8 +47,8 @@ scadeBackend = None
 
 
 def Version():
-    print("Code generator: " + \
-        "$Id: scade6_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")
+    print("Code generator: " +
+          "$Id: scade6_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")
 
 
 class FromSCADEtoASN1SCC(RecursiveMapper):
@@ -151,8 +151,8 @@ class FromASN1SCCtoSCADE(RecursiveMapper):
                 "inside ASN.1,\nor else SCADE can't generate C code!" % node.Location())  # pragma: no cover
         lines = []
         limit = sourceSequenceLimit(node, srcVar)
-        #for i in xrange(0, node._range[-1]):
-        #       lines.append("%s[%d] = %s->buf[%d];\n" % (dstScadeMacro, i, srcVar, i))
+        # for i in xrange(0, node._range[-1]):
+        #     lines.append("%s[%d] = %s->buf[%d];\n" % (dstScadeMacro, i, srcVar, i))
         lines.append("{\n")
         lines.append("    int i;\n")
         lines.append("    for(i=0; i<%s; i++) %s[i] = %s.arr[i];\n" % (limit, dstScadeMacro, srcVar))
@@ -373,7 +373,7 @@ class FromOSStoSCADE(RecursiveMapper):
         lines.append("{\n")
         lines.append("    int i%d;\n" % seqIndex)
         lines.append("    for(i%d=0; i%d<%s.count; i%d++) {\n" % (seqIndex, seqIndex, srcVar, seqIndex))
-        #for i in xrange(0, node._range[-1]):
+        # for i in xrange(0, node._range[-1]):
         lines.extend(["        "+x for x in self.Map(
                      srcVar + ".value[i%d]" % seqIndex,
                      "%s[i%d]" % (dstScadeMacro, seqIndex),
@@ -415,10 +415,10 @@ class ScadeGlueGenerator(SynchronousToolGlueGenerator):
                 "#include \"%s.h\" // Space certified compiler generated\n\n" % self.asn_name)
         self.C_SourceFile.write("#include \"%s\"\n\n" % (self.CleanNameAsToolWants(maybeFVname) + ".h"))
         # Declare and define staging inputs and outputs
-        #self.C_SourceFile.write("AADL2SCADE_%s_%s_DECLARE(var_%s_%s);\n\n" % \
-        #    (subProgram._id, subProgramImplementation, subProgram._id, subProgramImplementation))
-        #self.C_SourceFile.write("AADL2SCADE_%s_%s_DEFINE(var_%s_%s);\n\n" % \
-        #    (subProgram._id, subProgramImplementation, subProgram._id, subProgramImplementation))
+        # self.C_SourceFile.write("AADL2SCADE_%s_%s_DECLARE(var_%s_%s);\n\n" % \
+        #     (subProgram._id, subProgramImplementation, subProgram._id, subProgramImplementation))
+        # self.C_SourceFile.write("AADL2SCADE_%s_%s_DEFINE(var_%s_%s);\n\n" % \
+        #     (subProgram._id, subProgramImplementation, subProgram._id, subProgramImplementation))
         for param in subProgram._params:
             self.C_SourceFile.write("%s %s;\n" % (self.CleanNameAsToolWants(param._signal._asnNodename), param._id))
         self.C_SourceFile.write("\n")
@@ -426,15 +426,15 @@ class ScadeGlueGenerator(SynchronousToolGlueGenerator):
     def SourceVar(self, unused_nodeTypename, unused_encoding, unused_node, subProgram, subProgramImplementation, param, unused_leafTypeDict, unused_names):
         if isinstance(param._sourceElement, AadlPort):  # Both AadlPort and AadlEventDataPort
             panic("Unsupported old construct")  # pragma: no cover
-            #srcScadeMacro = "AADL2SCADE_OUTPUT_DATA_PORT(var_%s, %s, %s)" % \
-            #   (self.CleanNameAsToolWants(subProgram._id + "_" + subProgramImplementation),
-            #    self.CleanNameAsToolWants(subProgram._id + "_" + subProgramImplementation),
-            #    self.CleanNameAsToolWants(param._id).upper())
+            # srcScadeMacro = "AADL2SCADE_OUTPUT_DATA_PORT(var_%s, %s, %s)" % \
+            #    (self.CleanNameAsToolWants(subProgram._id + "_" + subProgramImplementation),
+            #     self.CleanNameAsToolWants(subProgram._id + "_" + subProgramImplementation),
+            #     self.CleanNameAsToolWants(param._id).upper())
         elif isinstance(param._sourceElement, AadlParameter):
-            #srcScadeMacro = "AADL2SCADE_OUTPUT_PARAMETER(var_%s, %s, %s)" % \
-            #   (self.CleanNameAsToolWants(subProgram._id + "_" + subProgramImplementation),
-            #    self.CleanNameAsToolWants(subProgram._id + "_" + subProgramImplementation),
-            #    self.CleanNameAsToolWants(param._id).upper())
+            # srcScadeMacro = "AADL2SCADE_OUTPUT_PARAMETER(var_%s, %s, %s)" % \
+            #    (self.CleanNameAsToolWants(subProgram._id + "_" + subProgramImplementation),
+            #     self.CleanNameAsToolWants(subProgram._id + "_" + subProgramImplementation),
+            #     self.CleanNameAsToolWants(param._id).upper())
             srcScadeMacro = self.CleanNameAsToolWants(param._id)
         else:  # pragma: no cover
             panic(str(self.__class__) + ": %s not supported (yet?)\n" % str(param._sourceElement))  # pragma: no cover
@@ -443,15 +443,15 @@ class ScadeGlueGenerator(SynchronousToolGlueGenerator):
     def TargetVar(self, unused_nodeTypename, unused_encoding, unused_node, subProgram, subProgramImplementation, param, unused_leafTypeDict, unused_names):
         if isinstance(param._sourceElement, AadlPort):  # Both AadlPort and AadlEventDataPort
             panic("Unsupported old construct")  # pragma: no cover
-            #dstScadeMacro = "AADL2SCADE_INPUT_DATA_PORT(var_%s, %s, %s)" % \
-            #   (self.CleanNameAsToolWants(subProgram._id + "_" + subProgramImplementation),
-            #    self.CleanNameAsToolWants(subProgram._id + "_" + subProgramImplementation),
-            #    self.CleanNameAsToolWants(param._id).upper())
+            # dstScadeMacro = "AADL2SCADE_INPUT_DATA_PORT(var_%s, %s, %s)" % \
+            #    (self.CleanNameAsToolWants(subProgram._id + "_" + subProgramImplementation),
+            #     self.CleanNameAsToolWants(subProgram._id + "_" + subProgramImplementation),
+            #     self.CleanNameAsToolWants(param._id).upper())
         elif isinstance(param._sourceElement, AadlParameter):
-            #dstScadeMacro = "AADL2SCADE_INPUT_PARAMETER(var_%s, %s, %s)" % \
-            #   (self.CleanNameAsToolWants(subProgram._id + "_" + subProgramImplementation),
-            #    self.CleanNameAsToolWants(subProgram._id + "_" + subProgramImplementation),
-            #    self.CleanNameAsToolWants(param._id).upper())
+            # dstScadeMacro = "AADL2SCADE_INPUT_PARAMETER(var_%s, %s, %s)" % \
+            #    (self.CleanNameAsToolWants(subProgram._id + "_" + subProgramImplementation),
+            #     self.CleanNameAsToolWants(subProgram._id + "_" + subProgramImplementation),
+            #     self.CleanNameAsToolWants(param._id).upper())
             dstScadeMacro = self.CleanNameAsToolWants(param._id)
         else:  # pragma: no cover
             panic(str(self.__class__) + ": %s not supported (yet?)\n" % str(param._sourceElement))  # pragma: no cover

@@ -18,7 +18,7 @@
 # Note that in both cases, there are no charges (royalties) for the
 # generated code.
 #
-__doc__ = '''
+'''
 Base class for all asynchronous tools
 '''
 
@@ -117,31 +117,31 @@ class ASynchronousToolGlueGenerator:
     def OnBasic(self, nodeTypename, node, leafTypeDict, names):
         realLeafType = leafTypeDict[nodeTypename]
         inform(str(self.__class__) + ": BASE: %s (%s)", nodeTypename, realLeafType)
-        self.typesToWorkOn[nodeTypename]=[node, leafTypeDict, names]
+        self.typesToWorkOn[nodeTypename] = [node, leafTypeDict, names]
 
     def OnSequence(self, nodeTypename, node, leafTypeDict, names):
         inform(str(self.__class__) + ": SEQUENCE: %s", nodeTypename)
-        self.typesToWorkOn[nodeTypename]=[node, leafTypeDict, names]
+        self.typesToWorkOn[nodeTypename] = [node, leafTypeDict, names]
 
     def OnSet(self, nodeTypename, node, leafTypeDict, names):
         inform(str(self.__class__) + ": SET: %s", nodeTypename)  # pragma: nocover
-        self.typesToWorkOn[nodeTypename]=[node, leafTypeDict, names]  # pragma: nocover
+        self.typesToWorkOn[nodeTypename] = [node, leafTypeDict, names]  # pragma: nocover
 
     def OnEnumerated(self, nodeTypename, node, leafTypeDict, names):
         inform(str(self.__class__) + ": ENUMERATED: %s", nodeTypename)
-        self.typesToWorkOn[nodeTypename]=[node, leafTypeDict, names]
+        self.typesToWorkOn[nodeTypename] = [node, leafTypeDict, names]
 
     def OnSequenceOf(self, nodeTypename, node, leafTypeDict, names):
         inform(str(self.__class__) + ": SEQUENCEOF: %s", nodeTypename)
-        self.typesToWorkOn[nodeTypename]=[node, leafTypeDict, names]
+        self.typesToWorkOn[nodeTypename] = [node, leafTypeDict, names]
 
     def OnSetOf(self, nodeTypename, node, leafTypeDict, names):
         inform(str(self.__class__) + ": SETOF: %s", nodeTypename)  # pragma: nocover
-        self.typesToWorkOn[nodeTypename]=[node, leafTypeDict, names]  # pragma: nocover
+        self.typesToWorkOn[nodeTypename] = [node, leafTypeDict, names]  # pragma: nocover
 
     def OnChoice(self, nodeTypename, node, leafTypeDict, names):
         inform(str(self.__class__) + ": CHOICE: %s", nodeTypename)
-        self.typesToWorkOn[nodeTypename]=[node, leafTypeDict, names]
+        self.typesToWorkOn[nodeTypename] = [node, leafTypeDict, names]
 
     def OnShutdown(self, unused_modelingLanguage, unused_asnFile, unused_maybeFVname):
         for nodeTypename, value in list(self.typesToWorkOn.items()):

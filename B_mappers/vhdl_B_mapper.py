@@ -80,7 +80,7 @@ def RegistersAllocated(node):
         elif realLeafType == "OCTET STRING":
             if node._range == []:
                 panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
-            if len(node._range)>1 and node._range[0]!=node._range[1]:
+            if len(node._range) > 1 and node._range[0] != node._range[1]:
                 panicWithCallStack("VHDL OCTET STRING (in %s) must have a fixed SIZE constraint !" % node.Location())  # pragma: no cover
             if node._range[-1] not in g_octStr:
                 g_octStr.append(node._range[-1])
@@ -97,13 +97,13 @@ def RegistersAllocated(node):
     elif isinstance(node, AsnSequenceOf):
         if node._range == []:
             panicWithCallStack("For VHDL, a SIZE constraint is mandatory (%s)!\n" % node.Location())  # pragma: no cover
-        if len(node._range)>1 and node._range[0]!=node._range[1]:
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
             panicWithCallStack("Must have a fixed SIZE constraint (in %s) for VHDL code!" % node.Location())  # pragma: no cover
         return node._range[-1] * RegistersAllocated(node._containedType)
     elif isinstance(node, AsnSetOf):
         if node._range == []:
             panicWithCallStack("For VHDL, a SIZE constraint is mandatory (%s)!\n" % node.Location())  # pragma: no cover
-        if len(node._range)>1 and node._range[0]!=node._range[1]:
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
             panicWithCallStack("Must have a fixed SIZE constraint (in %s) for VHDL code!" % node.Location())  # pragma: no cover
         return node._range[-1] * RegistersAllocated(node._containedType)
     elif isinstance(node, AsnEnumerated):
@@ -147,17 +147,17 @@ class VHDL_Circuit:
         VHDL_Circuit.leafTypeDict = leafTypeDict
         self._params.append([param, nodeTypename, node])
 
-#def IsElementMappedToPrimitive(node, names):
-#    contained = node._containedType
-#    while isinstance(contained, str):
-#        contained = names[contained]
-#    return isinstance(contained, AsnInt) or isinstance(contained, AsnReal) or isinstance(contained, AsnBool) or isinstance(contained, AsnEnumerated)
+# def IsElementMappedToPrimitive(node, names):
+#     contained = node._containedType
+#     while isinstance(contained, str):
+#         contained = names[contained]
+#     return isinstance(contained, AsnInt) or isinstance(contained, AsnReal) or isinstance(contained, AsnBool) or isinstance(contained, AsnEnumerated)
 
 
 class FromVHDLToASN1SCC(RecursiveMapper):
     def MapInteger(self, srcVHDL, destVar, _, __, ___):
         register = srcVHDL[0] + srcVHDL[1]
-        lines=[]
+        lines = []
         lines.append("{\n")
         lines.append("    unsigned tmp, i;\n")
         lines.append("    asn1SccSint val = 0;\n")
@@ -176,7 +176,7 @@ class FromVHDLToASN1SCC(RecursiveMapper):
 
     def MapBoolean(self, srcVHDL, destVar, _, __, ___):
         register = srcVHDL[0] + srcVHDL[1]
-        lines=[]
+        lines = []
         lines.append("{\n")
         lines.append("    unsigned tmp;\n")
         lines.append("    tmp = ESAReadRegister(BASE_ADDR + %s);\n" % hex(register))
@@ -190,19 +190,19 @@ class FromVHDLToASN1SCC(RecursiveMapper):
         lines = []
         if node._range == []:
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
-        if len(node._range)>1 and node._range[0]!=node._range[1]:
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
             panicWithCallStack("VHDL OCTET STRING (in %s) must have a fixed SIZE constraint !" % node.Location())  # pragma: no cover
         for i in range(0, int((node._range[-1]+3)/4)):
             lines.append("{\n")
             lines.append("    unsigned tmp;\n")
             lines.append("    tmp = ESAReadRegister(BASE_ADDR + %s);\n" % hex(register+i*4))
-            if (i*4<node._range[-1]):
+            if (i*4 < node._range[-1]):
                 lines.append("    %s.arr[%d] = tmp & 0xFF;\n" % (destVar, i*4))
-            if (i*4+1<node._range[-1]):
+            if (i*4+1 < node._range[-1]):
                 lines.append("    %s.arr[%d] = (tmp & 0xFF00) >> 8;\n" % (destVar, i*4+1))
-            if (i*4+2<node._range[-1]):
+            if (i*4+2 < node._range[-1]):
                 lines.append("    %s.arr[%d] = (tmp & 0xFF0000) >> 16;\n" % (destVar, i*4+2))
-            if (i*4+3<node._range[-1]):
+            if (i*4+3 < node._range[-1]):
                 lines.append("    %s.arr[%d] = (tmp & 0xFF000000) >> 24;\n" % (destVar, i*4+3))
             lines.append("}\n")
         if isSequenceVariable(node):
@@ -212,7 +212,7 @@ class FromVHDLToASN1SCC(RecursiveMapper):
 
     def MapEnumerated(self, srcVHDL, destVar, _, __, ___):
         register = srcVHDL[0] + srcVHDL[1]
-        lines=[]
+        lines = []
         lines.append("{\n")
         lines.append("    unsigned char tmp;\n")
         lines.append("    tmp = ESAReadRegister(BASE_ADDR + %s);\n" % hex(register))
@@ -263,14 +263,14 @@ class FromVHDLToASN1SCC(RecursiveMapper):
     def MapSequenceOf(self, srcVHDL, destVar, node, leafTypeDict, names):
         if node._range == []:
             panicWithCallStack("need a SIZE constraint or else we can't generate C code (%s)!\n" % node.Location())  # pragma: no cover
-        if len(node._range)>1 and node._range[0]!=node._range[1]:
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
             panicWithCallStack("Must have a fixed SIZE constraint (in %s) for VHDL code!" % node.Location())  # pragma: no cover
-        #isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
+        # isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
         lines = []
         for i in range(0, node._range[-1]):
             lines.extend(
                 self.Map(
-                    #isMappedToPrimitive and ("%s.element_data[%d]" % (srcVHDL, i)) or ("%s.element_%02d" % (srcVHDL, i)),
+                    # isMappedToPrimitive and ("%s.element_data[%d]" % (srcVHDL, i)) or ("%s.element_%02d" % (srcVHDL, i)),
                     srcVHDL,
                     destVar + ".arr[%d]" % i,
                     node._containedType,
@@ -287,7 +287,7 @@ class FromVHDLToASN1SCC(RecursiveMapper):
 class FromASN1SCCtoVHDL(RecursiveMapper):
     def MapInteger(self, srcVar, dstVHDL, _, __, ___):
         register = dstVHDL[0] + dstVHDL[1]
-        lines=[]
+        lines = []
         lines.append("{\n")
         lines.append("    unsigned tmp, i;\n")
         lines.append("    asn1SccSint val = %s;\n" % srcVar)
@@ -302,11 +302,11 @@ class FromASN1SCCtoVHDL(RecursiveMapper):
 
     def MapReal(self, dummy, _, node, __, ___):
         panicWithCallStack("REALs (%s) cannot be used for synthesizeable VHDL" % node.Location())  # pragma: no cover
-        #return ["%s = %s;\n" % (dstVHDL, srcVar)]
+        # return ["%s = %s;\n" % (dstVHDL, srcVar)]
 
     def MapBoolean(self, srcVar, dstVHDL, _, __, ___):
         register = dstVHDL[0] + dstVHDL[1]
-        lines=[]
+        lines = []
         lines.append("{\n")
         lines.append("    unsigned tmp = %s;\n" % srcVar)
         lines.append("    ESAWriteRegister(BASE_ADDR + %s, tmp);\n" % hex(register))
@@ -326,7 +326,7 @@ class FromASN1SCCtoVHDL(RecursiveMapper):
             lines.append("{\n")
             lines.append("    unsigned tmp = 0;\n")
             for shift in range(0, 4):
-                if i*4+shift<node._range[-1]:
+                if i*4+shift < node._range[-1]:
                     if isSequenceVariable(node):
                         lines.append("    if (%s >= %d)\n" % (limit, i*4+shift+1))
                         lines.append("        tmp |= ((unsigned)%s.arr[%d]) << %d;\n" % (srcVar, i*4+shift, shift*8))
@@ -341,7 +341,7 @@ class FromASN1SCCtoVHDL(RecursiveMapper):
         if None in [x[1] for x in node._members]:
             panicWithCallStack("an ENUMERATED must have integer values! (%s)" % node.Location())  # pragma: no cover
         register = dstVHDL[0] + dstVHDL[1]
-        lines=[]
+        lines = []
         lines.append("{\n")
         lines.append("    unsigned tmp = %s;\n" % srcVar)
         lines.append("    ESAWriteRegister(BASE_ADDR + %s, tmp);\n" % hex(register))
@@ -388,7 +388,7 @@ class FromASN1SCCtoVHDL(RecursiveMapper):
     def MapSequenceOf(self, srcVar, dstVHDL, node, leafTypeDict, names):
         if node._range == []:
             panicWithCallStack("need a SIZE constraint or else we can't generate C code (%s)!\n" % node.Location())  # pragma: no cover
-        if len(node._range)>1 and node._range[0]!=node._range[1]:
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
             panicWithCallStack("Must have a fixed SIZE constraint (in %s) for VHDL code!" % node.Location())  # pragma: no cover
         # isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
         lines = []
@@ -396,7 +396,7 @@ class FromASN1SCCtoVHDL(RecursiveMapper):
             lines.extend(self.Map(
                 srcVar + ".arr[%d]" % i,
                 dstVHDL,
-                #isMappedToPrimitive and ("%s.element_data[%d]" % (dstVHDL, i)) or ("%s.element_%02d" % (dstVHDL, i)),
+                # isMappedToPrimitive and ("%s.element_data[%d]" % (dstVHDL, i)) or ("%s.element_%02d" % (dstVHDL, i)),
                 node._containedType,
                 leafTypeDict,
                 names))
@@ -489,8 +489,8 @@ class MapASN1ToVHDLCircuit(RecursiveMapper):
         if node._range == []:
             panicWithCallStack("INTEGERs need explicit ranges when generating VHDL code... (%s)" % node.Location())  # pragma: no cover
         bits = math.log(max(list(map(abs, node._range)))+1, 2)
-        bits += bits if node._range[0]<0 else 0
-        #return [dstVHDL + ' : ' + direction + ('std_logic_vector(63 downto 0); -- normally, %d instead of 63' % bits)]
+        bits += bits if node._range[0] < 0 else 0
+        # return [dstVHDL + ' : ' + direction + ('std_logic_vector(63 downto 0); -- normally, %d instead of 63' % bits)]
         return [dstVHDL + ' : ' + direction + ('std_logic_vector(63 downto 0); -- ASSERT uses 64 bit INTEGERs (optimal would be %d bits)' % bits)]
 
     def MapReal(self, _, __, node, ___, dummy):
@@ -502,7 +502,7 @@ class MapASN1ToVHDLCircuit(RecursiveMapper):
     def MapOctetString(self, direction, dstVHDL, node, _, __):
         if node._range == []:
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
-        if len(node._range)>1 and node._range[0]!=node._range[1]:
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
             panicWithCallStack("VHDL OCTET STRING (in %s) must have a fixed SIZE constraint !" % node.Location())  # pragma: no cover
         lines = []
         lines.append(dstVHDL + ': ' + direction + 'octStr_%d;' % node._range[-1])
@@ -529,7 +529,7 @@ class MapASN1ToVHDLCircuit(RecursiveMapper):
     def MapSequenceOf(self, direction, dstVHDL, node, leafTypeDict, names):
         if node._range == []:
             panicWithCallStack("For VHDL, a SIZE constraint is mandatory (%s)!\n" % node.Location())  # pragma: no cover
-        if len(node._range)>1 and node._range[0]!=node._range[1]:
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
             panicWithCallStack("Must have a fixed SIZE constraint (in %s) for VHDL code!" % node.Location())  # pragma: no cover
         maxlen = len(str(node._range[-1]))
         lines = []
@@ -547,8 +547,8 @@ class MapASN1ToVHDLregisters(RecursiveMapper):
         if node._range == []:
             panicWithCallStack("INTEGERs need explicit ranges when generating VHDL code... (%s)" % node.Location())  # pragma: no cover
         bits = math.log(max(list(map(abs, node._range)))+1, 2)
-        bits += (bits if node._range[0]<0 else 0)
-        #return ['signal ' + dstVHDL + ' : ' + ('std_logic_vector(63 downto 0); -- normally, %d bits instead of 63' % bits)]
+        bits += (bits if node._range[0] < 0 else 0)
+        # return ['signal ' + dstVHDL + ' : ' + ('std_logic_vector(63 downto 0); -- normally, %d bits instead of 63' % bits)]
         return ['signal ' + dstVHDL + ' : ' + ('std_logic_vector(63 downto 0); -- ASSERT uses 64 bit INTEGERs (optimal would be %d bits)' % bits)]
 
     def MapReal(self, _, __, node, ___, dummy):
@@ -560,7 +560,7 @@ class MapASN1ToVHDLregisters(RecursiveMapper):
     def MapOctetString(self, _, dstVHDL, node, __, ___):
         if node._range == []:
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
-        if len(node._range)>1 and node._range[0]!=node._range[1]:
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
             panicWithCallStack("VHDL OCTET STRING (in %s) must have a fixed SIZE constraint !" % node.Location())  # pragma: no cover
         lines = []
         lines.append('signal ' + dstVHDL + ': ' + 'octStr_%d;' % node._range[-1])
@@ -587,7 +587,7 @@ class MapASN1ToVHDLregisters(RecursiveMapper):
     def MapSequenceOf(self, _, dstVHDL, node, leafTypeDict, names):
         if node._range == []:
             panicWithCallStack("For VHDL, a SIZE constraint is mandatory (%s)!\n" % node.Location())  # pragma: no cover
-        if len(node._range)>1 and node._range[0]!=node._range[1]:
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
             panicWithCallStack("Must have a fixed SIZE constraint (in %s) for VHDL code!" % node.Location())  # pragma: no cover
         maxlen = len(str(node._range[-1]))
         lines = []
@@ -604,7 +604,7 @@ class MapASN1ToVHDLreadinputdata(RecursiveMapper):
     def MapInteger(self, reginfo, dstVHDL, node, _, __):
         if node._range == []:
             panicWithCallStack("INTEGERs need explicit ranges when generating VHDL code... (%s)" % node.Location())  # pragma: no cover
-        #bits = math.log(max(map(abs, node._range)+1),2)+(1 if node._range[0]<0 else 0)
+        # bits = math.log(max(map(abs, node._range)+1),2)+(1 if node._range[0]<0 else 0)
         lines = []
         lines.append('%s(31 downto  0) <= regs(%d);' % (dstVHDL, reginfo[0]))
         lines.append('%s(63 downto  32) <= regs(%d);' % (dstVHDL, reginfo[0]+1))
@@ -622,7 +622,7 @@ class MapASN1ToVHDLreadinputdata(RecursiveMapper):
     def MapOctetString(self, reginfo, dstVHDL, node, _, __):
         if node._range == []:
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
-        if len(node._range)>1 and node._range[0]!=node._range[1]:
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
             panicWithCallStack("VHDL OCTET STRING (in %s) must have a fixed SIZE constraint !" % node.Location())  # pragma: no cover
         lines = []
         for i in range(node._range[-1]):
@@ -657,7 +657,7 @@ class MapASN1ToVHDLreadinputdata(RecursiveMapper):
     def MapSequenceOf(self, reginfo, dstVHDL, node, leafTypeDict, names):
         if node._range == []:
             panicWithCallStack("For VHDL, a SIZE constraint is mandatory (%s)!\n" % node.Location())  # pragma: no cover
-        if len(node._range)>1 and node._range[0]!=node._range[1]:
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
             panicWithCallStack("Must have a fixed SIZE constraint (in %s) for VHDL code!" % node.Location())  # pragma: no cover
         maxlen = len(str(node._range[-1]))
         lines = []
@@ -674,7 +674,7 @@ class MapASN1ToVHDLwriteoutputdata(RecursiveMapper):
     def MapInteger(self, reginfo, dstVHDL, node, _, __):
         if node._range == []:
             panicWithCallStack("INTEGERs need explicit ranges when generating VHDL code... (%s)" % node.Location())  # pragma: no cover
-        #bits = math.log(max(map(abs, node._range)+1),2)+(1 if node._range[0]<0 else 0)
+        # bits = math.log(max(map(abs, node._range)+1),2)+(1 if node._range[0]<0 else 0)
         lines = []
         lines.append('regs(%d) := %s(31 downto  0);' % (reginfo[0], dstVHDL))
         lines.append('regs(%d) := %s(63 downto  32);' % (reginfo[0]+1, dstVHDL))
@@ -692,7 +692,7 @@ class MapASN1ToVHDLwriteoutputdata(RecursiveMapper):
     def MapOctetString(self, reginfo, dstVHDL, node, _, __):
         if node._range == []:
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
-        if len(node._range)>1 and node._range[0]!=node._range[1]:
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
             panicWithCallStack("VHDL OCTET STRING (in %s) must have a fixed SIZE constraint !" % node.Location())  # pragma: no cover
         lines = []
         for i in range(node._range[-1]):
@@ -727,7 +727,7 @@ class MapASN1ToVHDLwriteoutputdata(RecursiveMapper):
     def MapSequenceOf(self, reginfo, dstVHDL, node, leafTypeDict, names):
         if node._range == []:
             panicWithCallStack("For VHDL, a SIZE constraint is mandatory (%s)!\n" % node.Location())  # pragma: no cover
-        if len(node._range)>1 and node._range[0]!=node._range[1]:
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
             panicWithCallStack("Must have a fixed SIZE constraint (in %s) for VHDL code!" % node.Location())  # pragma: no cover
         maxlen = len(str(node._range[-1]))
         lines = []
@@ -753,11 +753,11 @@ class MapASN1ToSystemCconnections(RecursiveMapper):
     def MapOctetString(self, srcRegister, dstCircuitPort, node, __, ___):
         if node._range == []:
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
-        if len(node._range)>1 and node._range[0]!=node._range[1]:
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
             panicWithCallStack("VHDL OCTET STRING (in %s) must have a fixed SIZE constraint !" % node.Location())  # pragma: no cover
         lines = []
-        #for i in xrange(node._range[-1]):
-        #    lines.append(dstCircuitPort + ('(%d)' % (i)) + ' => ' + srcRegister + ('(%d)' % (i)))
+        # for i in xrange(node._range[-1]):
+        #     lines.append(dstCircuitPort + ('(%d)' % (i)) + ' => ' + srcRegister + ('(%d)' % (i)))
         lines.append(dstCircuitPort + ' => ' + srcRegister)
         return lines
 
@@ -782,7 +782,7 @@ class MapASN1ToSystemCconnections(RecursiveMapper):
     def MapSequenceOf(self, srcRegister, dstCircuitPort, node, leafTypeDict, names):
         if node._range == []:
             panicWithCallStack("For VHDL, a SIZE constraint is mandatory (%s)!\n" % node.Location())  # pragma: no cover
-        if len(node._range)>1 and node._range[0]!=node._range[1]:
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
             panicWithCallStack("Must have a fixed SIZE constraint (in %s) for VHDL code!" % node.Location())  # pragma: no cover
         maxlen = len(str(node._range[-1]))
         lines = []
@@ -810,11 +810,11 @@ class MapASN1ToSystemCheader(RecursiveMapper):
     def MapOctetString(self, state, systemCvar, node, __, ___):
         if node._range == []:
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
-        if len(node._range)>1 and node._range[0]!=node._range[1]:
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
             panicWithCallStack("VHDL OCTET STRING (in %s) must have a fixed SIZE constraint !" % node.Location())  # pragma: no cover
         maxlen = len(str(node._range[-1]))
         for i in range(node._range[-1]):
-            state.systemcHeader.write('    ' + state.directionPrefix + 'sc_uint<8> > ' + ('%s_elem_%0*d'%(systemCvar, maxlen, i)) + ';\n')
+            state.systemcHeader.write('    ' + state.directionPrefix + 'sc_uint<8> > ' + ('%s_elem_%0*d' % (systemCvar, maxlen, i)) + ';\n')
         return []
 
     def MapEnumerated(self, state, systemCvar, __, ___, dummy):
@@ -837,11 +837,11 @@ class MapASN1ToSystemCheader(RecursiveMapper):
     def MapSequenceOf(self, state, systemCvar, node, leafTypeDict, names):
         if node._range == []:
             panicWithCallStack("For VHDL, a SIZE constraint is mandatory (%s)!\n" % node.Location())  # pragma: no cover
-        if len(node._range)>1 and node._range[0]!=node._range[1]:
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
             panicWithCallStack("Must have a fixed SIZE constraint (in %s) for VHDL code!" % node.Location())  # pragma: no cover
         maxlen = len(str(node._range[-1]))
         for i in range(node._range[-1]):
-            self.Map(state, systemCvar+('_elem_%0*d'%(maxlen, i)), node._containedType, leafTypeDict, names)
+            self.Map(state, systemCvar+('_elem_%0*d' % (maxlen, i)), node._containedType, leafTypeDict, names)
         return []
 
     def MapSetOf(self, state, systemCvar, node, leafTypeDict, names):
@@ -861,7 +861,7 @@ class MapASN1ToOutputs(RecursiveMapper):
     def MapOctetString(self, paramName, _, node, __, ___):
         if node._range == []:
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
-        if len(node._range)>1 and node._range[0]!=node._range[1]:
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
             panicWithCallStack("VHDL OCTET STRING (in %s) must have a fixed SIZE constraint !" % node.Location())  # pragma: no cover
         # maxlen = len(str(node._range[-1]))
         lines = []
@@ -890,7 +890,7 @@ class MapASN1ToOutputs(RecursiveMapper):
     def MapSequenceOf(self, paramName, dummy, node, leafTypeDict, names):
         if node._range == []:
             panicWithCallStack("For VHDL, a SIZE constraint is mandatory (%s)!\n" % node.Location())  # pragma: no cover
-        if len(node._range)>1 and node._range[0]!=node._range[1]:
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
             panicWithCallStack("Must have a fixed SIZE constraint (in %s) for VHDL code!" % node.Location())  # pragma: no cover
         maxlen = len(str(node._range[-1]))
         lines = []
@@ -1000,7 +1000,7 @@ def OnFinal():
     systemcBody = open(vhdlBackend.dir + 'circuit.cpp', 'w')
     systemcBody.write('#include "circuit.h"\n\n')
 
-    if len(VHDL_Circuit.allCircuits)>1:
+    if len(VHDL_Circuit.allCircuits) > 1:
         panic("The ESA VHDL mapper can currently handle only one circuit.")  # pragma: no cover
 
     totalIn = 0
@@ -1085,8 +1085,8 @@ def OnFinal():
 
         AddToStr('reset', "                        %(pi)s_start <= '0';\n" % {'pi': c._spCleanName})
 
-        AddToStr('readinputdata', '\n'.join([' '*24 +x for x in readinputdataLines])+'\n')
-        AddToStr('writeoutputdata', '\n'.join([' '*24 +x for x in writeoutputdataLines])+'\n')
+        AddToStr('readinputdata', '\n'.join([' '*24 + x for x in readinputdataLines])+'\n')
+        AddToStr('writeoutputdata', '\n'.join([' '*24 + x for x in writeoutputdataLines])+'\n')
 
         AddToStr('connectionsToSystemC', '\n        Interface_%s : %s\n' % (c._spCleanName, c._spCleanName))
         AddToStr('connectionsToSystemC', '            port map (\n')
@@ -1201,21 +1201,21 @@ void ESAWriteRegister(unsigned offset, unsigned value);
 ''')
     esaHeader.close()
 
-    #msg = ""
-    #for c in VHDL_Circuit.allCircuits:
-    #    msg += '    circuit_%s.vhd         \\\n' % c._spCleanName
-    #    msg += '    circuit_%s_do_%s.vhd   \\\n' % (c._spCleanName, c._spCleanName)
-    #makefile = open(vhdlBackend.dir + 'Makefile', 'w')
-    #makefile.write(vhdlTemplate.makefile % {'circuit_autofiles':msg})
-    #makefile.close()
+    # msg = ""
+    # for c in VHDL_Circuit.allCircuits:
+    #     msg += '    circuit_%s.vhd         \\\n' % c._spCleanName
+    #     msg += '    circuit_%s_do_%s.vhd   \\\n' % (c._spCleanName, c._spCleanName)
+    # makefile = open(vhdlBackend.dir + 'Makefile', 'w')
+    # makefile.write(vhdlTemplate.makefile % {'circuit_autofiles':msg})
+    # makefile.close()
 
-    #systemcHeader.write('\n#endif\n')
-    #systemcHeader.close()
+    # systemcHeader.write('\n#endif\n')
+    # systemcHeader.close()
 
-    #msg = ""
-    #for c in VHDL_Circuit.allCircuits:
-    #    msg += 'vhdl work "circuit_%s.vhd"\n' % c._spCleanName
-    #    msg += 'vhdl work "circuit_%s_do_%s.vhd"\n' % (c._spCleanName, c._spCleanName)
-    #prj = open(vhdlBackend.dir + 'TASTE.prj', 'w')
-    #prj.write(vhdlTemplate.prj % {'circuits':msg})
-    #prj.close()
+    # msg = ""
+    # for c in VHDL_Circuit.allCircuits:
+    #     msg += 'vhdl work "circuit_%s.vhd"\n' % c._spCleanName
+    #     msg += 'vhdl work "circuit_%s_do_%s.vhd"\n' % (c._spCleanName, c._spCleanName)
+    # prj = open(vhdlBackend.dir + 'TASTE.prj', 'w')
+    # prj.write(vhdlTemplate.prj % {'circuits':msg})
+    # prj.close()

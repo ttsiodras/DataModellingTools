@@ -18,7 +18,7 @@
 # Note that in both cases, there are no charges (royalties) for the
 # generated code.
 #
-__doc__ = '''
+'''
 This is the code generator for the PragmaDev RTDS code mappers.
 This backend is called by aadl2glueC, when an RTDS subprogram
 is identified in the input concurrency view.
@@ -72,8 +72,8 @@ class FromRTDSToASN1SCC(RecursiveMapper):
         lines.append("    for(i=0; i<%s.__length; i++) {\n" % srcSDLVariable)
         lines.append("        %s.arr[i] = %s.__string[i];\n" % (destVar, srcSDLVariable))
         lines.append("    }\n")
-        #for i in xrange(0, node._range[-1]):
-        #       lines.append("    placeHolder[%d] = %s[%d];\n" % (i, srcSDLVariable, i))
+        # for i in xrange(0, node._range[-1]):
+        #     lines.append("    placeHolder[%d] = %s[%d];\n" % (i, srcSDLVariable, i))
         if isSequenceVariable(node):
             lines.append("    %s.nCount = %s.__length;\n" % (destVar, srcSDLVariable))
         lines.append("}\n")
@@ -172,8 +172,8 @@ class FromRTDSToOSS(RecursiveMapper):
         lines.append("        if(%s.cont[i].cont[7]) value |= 1;\n" % srcSDLVariable)
         lines.append("        %s.value[i] = value;\n" % destVar)
         lines.append("    }\n")
-        #for i in xrange(0, node._range[-1]):
-        #       lines.append("    placeHolder[%d] = %s[%d];\n" % (i, srcSDLVariable, i))
+        # for i in xrange(0, node._range[-1]):
+        #     lines.append("    placeHolder[%d] = %s[%d];\n" % (i, srcSDLVariable, i))
         lines.append("    %s.length = %s.length;\n" % (destVar, srcSDLVariable))
         lines.append("}\n")
         return lines
@@ -255,8 +255,8 @@ class FromASN1SCCtoRTDS(RecursiveMapper):
         return ["%s = (%s)?TRUE:FALSE;\n" % (dstSDLVariable, srcVar)]
 
     def MapOctetString(self, srcVar, dstSDLVariable, node, _, __):
-        #for i in xrange(0, node._range[-1]):
-        #       lines.append("%s[%d] = %s->buf[%d];\n" % (dstSDLVariable, i, srcVar, i))
+        # for i in xrange(0, node._range[-1]):
+        #     lines.append("%s[%d] = %s->buf[%d];\n" % (dstSDLVariable, i, srcVar, i))
         lines = []
         limit = sourceSequenceLimit(node, srcVar)
         lines.append("{\n")
@@ -352,8 +352,8 @@ class FromOSStoRTDS(RecursiveMapper):
 
     def MapOctetString(self, srcVar, dstSDLVariable, node, _, __):
         lines = []
-        #for i in xrange(0, node._range[-1]):
-        #       lines.append("%s[%d] = %s->buf[%d];\n" % (dstSDLVariable, i, srcVar, i))
+        # for i in xrange(0, node._range[-1]):
+        #     lines.append("%s[%d] = %s->buf[%d];\n" % (dstSDLVariable, i, srcVar, i))
         lines.append("{\n")
         lines.append("    int i;\n")
         lines.append("    for(i=0; i<%s.length; i++) {\n" % srcVar)
@@ -466,18 +466,13 @@ class RTDS_GlueGenerator(ASynchronousToolGlueGenerator):
         isPointer = True
         if isinstance(node, AsnBasicNode) or isinstance(node, AsnEnumerated):
             isPointer = False
+        cleaned = self.CleanNameAsToolWants(nodeTypename)
         fileOutHeader.write(
             "void Convert_%s_from_RTDS_to_ASN1SCC(asn1Scc%s *ptrASN1SCC, %s %sRTDS);\n" %
-            (self.CleanNameAsToolWants(nodeTypename),
-            self.CleanNameAsToolWants(nodeTypename),
-            self.CleanNameAsToolWants(nodeTypename),
-            "*" if isPointer else ""))
+            (cleaned, cleaned, cleaned, "*" if isPointer else ""))
         fileOutSource.write(
             "void Convert_%s_from_RTDS_to_ASN1SCC(asn1Scc%s *ptrASN1SCC, %s %sRTDS)\n{\n" %
-            (self.CleanNameAsToolWants(nodeTypename),
-            self.CleanNameAsToolWants(nodeTypename),
-            self.CleanNameAsToolWants(nodeTypename),
-            "*" if isPointer else ""))
+            (cleaned, cleaned, cleaned, "*" if isPointer else ""))
 
         # Write the mapping code for the message
         if self.useOSS:
@@ -504,17 +499,14 @@ class RTDS_GlueGenerator(ASynchronousToolGlueGenerator):
             return
         fileOutHeader = self.C_HeaderFile
         fileOutSource = self.C_SourceFile
+        cleaned = self.CleanNameAsToolWants(nodeTypename)
         fileOutHeader.write(
             "void Convert_%s_from_ASN1SCC_to_RTDS(%s *ptrRTDS, const asn1Scc%s *ptrASN1SCC);\n" %
-            (self.CleanNameAsToolWants(nodeTypename),
-            self.CleanNameAsToolWants(nodeTypename),
-            self.CleanNameAsToolWants(nodeTypename)))
+            (cleaned, cleaned, cleaned))
 
         fileOutSource.write(
             "void Convert_%s_from_ASN1SCC_to_RTDS(%s *ptrRTDS, const asn1Scc%s *ptrASN1SCC)\n{\n" %
-            (self.CleanNameAsToolWants(nodeTypename),
-            self.CleanNameAsToolWants(nodeTypename),
-            self.CleanNameAsToolWants(nodeTypename)))
+            (cleaned, cleaned, cleaned))
 
         if self.useOSS:
             lines = self.FromOSStoRTDS.Map(

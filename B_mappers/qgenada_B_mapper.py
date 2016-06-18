@@ -60,10 +60,10 @@ def OnStartup(unused_modelingLanguage, asnFile, outputDir, maybeFVname, useOSS):
     global cBackend
     # 2009-02-10: Since we now use ASN1SCC structures as dumpables (even for Ada)
     # we no longer need these Ada-specific Dumpable structures.
-    #global adaBackend
-    #adaBackend = Ada_GlueGenerator()
+    # global adaBackend
+    # adaBackend = Ada_GlueGenerator()
     cBackend = c_B_mapper.C_GlueGenerator()
-    #adaBackend.OnStartup(modelingLanguage, asnFile, outputDir, maybeFVname, useOSS)
+    # adaBackend.OnStartup(modelingLanguage, asnFile, outputDir, maybeFVname, useOSS)
     cBackend.OnStartup("C", asnFile, outputDir, maybeFVname, useOSS)
 
 

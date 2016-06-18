@@ -8,7 +8,7 @@ import sys
 
 
 def main():
-    if len(sys.argv)>1:
+    if len(sys.argv) > 1:
         L = AadlLexer.Lexer(sys.argv[1])
     else:
         L = AadlLexer.Lexer()

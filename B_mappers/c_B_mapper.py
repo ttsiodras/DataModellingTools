@@ -253,13 +253,13 @@ class C_GlueGenerator(ASynchronousToolGlueGenerator):
         self.C_HeaderFile.write(needDefine)
         self.C_HeaderFile.write(
             "size_t %s(void *pBuffer, size_t iMaxBufferSize, %sasn1Scc%s *pSrc);\n" %
-            (tmpSpName, "" if encoding.lower()=="acn" else "const ",
+            (tmpSpName, "" if encoding.lower() == "acn" else "const ",
              self.CleanNameAsToolWants(nodeTypename)))
         self.C_HeaderFile.write("#endif\n\n")
         self.C_SourceFile.write(needDefine)
         self.C_SourceFile.write(
             "size_t %s(void *pBuffer, size_t iMaxBufferSize, %sasn1Scc%s *pSrc)\n{\n" %
-            (tmpSpName, "" if encoding.lower()=="acn" else "const ",
+            (tmpSpName, "" if encoding.lower() == "acn" else "const ",
              self.CleanNameAsToolWants(nodeTypename)))
 
         if self.useOSS and encoding.lower() == "uper":
@@ -307,7 +307,7 @@ class C_GlueGenerator(ASynchronousToolGlueGenerator):
         elif encoding.lower() in ["uper", "acn"]:
             self.C_SourceFile.write("    if (asn1Scc%s_%sEncode(pSrc, &strm, &errorCode, TRUE) == FALSE) {\n" %
                                     (self.CleanNameAsToolWants(nodeTypename),
-                                     ("ACN_" if encoding.lower()=="acn" else "")))
+                                     ("ACN_" if encoding.lower() == "acn" else "")))
             self.C_SourceFile.write(
                 '\tfprintf(stderr, "Could not encode %s (at %%s, %%d), errorCode was %%d\\n", __FILE__, __LINE__, errorCode);\n' % (nodeTypename))
             self.C_SourceFile.write("        return -1;\n")
@@ -365,7 +365,7 @@ class C_GlueGenerator(ASynchronousToolGlueGenerator):
                 self.C_SourceFile.write("    BitStream_AttachBuffer(&strm, pBuffer, iBufferSize);\n\n")
                 self.C_SourceFile.write("    if (asn1Scc%s_%sDecode(pDst, &strm, &errorCode)) {\n" %
                                         (self.CleanNameAsToolWants(nodeTypename),
-                                         "ACN_" if encoding.lower()=="acn" else ""))
+                                         "ACN_" if encoding.lower() == "acn" else ""))
                 self.C_SourceFile.write("        /* Decoding succeeded */\n")
             elif encoding.lower() == "native":
                 self.C_SourceFile.write("    *pDst = *(asn1Scc%s *) pBuffer;\n    {\n" %

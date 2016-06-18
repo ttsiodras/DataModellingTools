@@ -79,8 +79,8 @@ class FromQGenCToASN1SCC(RecursiveMapper):
         if isSequenceVariable(node):
             lines.append("%s.nCount = %s.length;\n" % (destVar, srcQGenC))
         # No nCount anymore
-        #else:
-        #    lines.append("%s.nCount = %s;\n" % (destVar, node._range[-1]))
+        # else:
+        #     lines.append("%s.nCount = %s;\n" % (destVar, node._range[-1]))
         return lines
 
     def MapEnumerated(self, srcQGenC, destVar, _, __, ___):
@@ -132,8 +132,8 @@ class FromQGenCToASN1SCC(RecursiveMapper):
         if isSequenceVariable(node):
             lines.append("%s.nCount = %s.length;\n" % (destVar, srcQGenC))
         # No nCount anymore
-        #else:
-        #    lines.append("%s.nCount = %s;\n" % (destVar, node._range[-1]))
+        # else:
+        #     lines.append("%s.nCount = %s;\n" % (destVar, node._range[-1]))
         return lines
 
     def MapSetOf(self, srcQGenC, destVar, node, leafTypeDict, names):
@@ -159,7 +159,7 @@ class FromASN1SCCtoQGenC(RecursiveMapper):
         for i in range(0, node._range[-1]):
             lines.append("if (%s>=%d) %s.element_data[%d] = %s.arr[%d]; else %s.element_data[%d] = 0;\n" %
                          (limit, i+1, dstQGenC, i, srcVar, i, dstQGenC, i))
-        if len(node._range)>1 and node._range[0]!=node._range[1]:
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
             lines.append("%s.length = %s;\n" % (dstQGenC, limit))
         return lines
 
@@ -235,7 +235,7 @@ class FromQGenCToOSS(RecursiveMapper):
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
         for i in range(0, node._range[-1]):
             lines.append("%s.value[%d] = %s.element_data[%d];\n" % (destVar, i, srcQGenC, i))
-        if len(node._range)>1 and node._range[0]!=node._range[1]:
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
             lines.append("%s.length = %s.length;\n" % (destVar, srcQGenC))
         else:
             lines.append("%s.length = %s;\n" % (destVar, node._range[-1]))
@@ -287,7 +287,7 @@ class FromQGenCToOSS(RecursiveMapper):
                          node._containedType,
                          leafTypeDict,
                          names))
-        if len(node._range)>1 and node._range[0]!=node._range[1]:
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
             lines.append("%s.count = %s.length;\n" % (destVar, srcQGenC))
         else:
             lines.append("%s.count = %s;\n" % (destVar, node._range[-1]))
@@ -314,7 +314,7 @@ class FromOSStoQGenC(RecursiveMapper):
         for i in range(0, node._range[-1]):
             lines.append("if (%s.length >= %d) %s.element_data[%d] = %s.value[%d]; else %s.element_data[%d] = 0;\n" %
                          (srcVar, i+1, dstQGenC, i, srcVar, i, dstQGenC, i))
-        if len(node._range)>1 and node._range[0]!=node._range[1]:
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
             lines.append("%s.length = %s.length;" % (dstQGenC, srcVar))
         return lines
 
@@ -366,7 +366,7 @@ class FromOSStoQGenC(RecursiveMapper):
                 node._containedType,
                 leafTypeDict,
                 names))
-        if len(node._range)>1 and node._range[0]!=node._range[1]:
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
             lines.append("%s.length = %s.count;\n" % (dstQGenC, srcVar))
         return lines
 

@@ -200,7 +200,7 @@ def OnStartup(modelingLanguage, asnFile, subProgram, unused_subProgramImplementa
         for param in subProgram._params:
             nodeTypename = param._signal._asnNodename
             CleanParam = CleanName(param._id)
-            #parms.append("%s *p_%s" % (CleanName(nodeTypename), CleanParam))
+            # parms.append("%s *p_%s" % (CleanName(nodeTypename), CleanParam))
             parms.append("void *p_%s" % (CleanParam))
         g_HeaderFile.write('int SendTC_%s(%s);\n' % (CleanSP, ",".join(parms)))
         g_SourceFile.write('int SendTC_%s(%s)\n' % (CleanSP, ",".join(parms)))
@@ -209,7 +209,7 @@ def OnStartup(modelingLanguage, asnFile, subProgram, unused_subProgramImplementa
         g_SourceFile.write('    if (((mqd_t)-2) == q) {\n')
         g_SourceFile.write('        static char QName[1024];\n')
         g_SourceFile.write('        sprintf(QName, "%%d_%s_RI_queue", geteuid());\n' % cleanFVname)
-        #g_SourceFile.write('        q = mq_open(QName, O_RDWR | O_NONBLOCK);\n')
+        # g_SourceFile.write('        q = mq_open(QName, O_RDWR | O_NONBLOCK);\n')
         g_SourceFile.write('        open_exchange_queue_for_writing(QName, &q);\n')
         g_SourceFile.write('    }\n')
         g_SourceFile.write('    %s_TCDATA data;\n' % CleanSP)

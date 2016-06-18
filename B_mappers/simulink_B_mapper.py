@@ -76,8 +76,8 @@ class FromSimulinkToASN1SCC(RecursiveMapper):
         if isSequenceVariable(node):
             lines.append("%s.nCount = %s.length;\n" % (destVar, srcSimulink))
         # No nCount anymore
-        #else:
-        #    lines.append("%s.nCount = %s;\n" % (destVar, node._range[-1]))
+        # else:
+        #     lines.append("%s.nCount = %s;\n" % (destVar, node._range[-1]))
         return lines
 
     def MapEnumerated(self, srcSimulink, destVar, _, __, ___):
@@ -129,8 +129,8 @@ class FromSimulinkToASN1SCC(RecursiveMapper):
         if isSequenceVariable(node):
             lines.append("%s.nCount = %s.length;\n" % (destVar, srcSimulink))
         # No nCount anymore
-        #else:
-        #    lines.append("%s.nCount = %s;\n" % (destVar, node._range[-1]))
+        # else:
+        #     lines.append("%s.nCount = %s;\n" % (destVar, node._range[-1]))
         return lines
 
     def MapSetOf(self, srcSimulink, destVar, node, leafTypeDict, names):
@@ -156,7 +156,7 @@ class FromASN1SCCtoSimulink(RecursiveMapper):
         for i in range(0, node._range[-1]):
             lines.append("if (%s>=%d) %s.element_data[%d] = %s.arr[%d]; else %s.element_data[%d] = 0;\n" %
                          (limit, i+1, dstSimulink, i, srcVar, i, dstSimulink, i))
-        if len(node._range)>1 and node._range[0]!=node._range[1]:
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
             lines.append("%s.length = %s;\n" % (dstSimulink, limit))
         return lines
 
@@ -232,7 +232,7 @@ class FromSimulinkToOSS(RecursiveMapper):
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
         for i in range(0, node._range[-1]):
             lines.append("%s.value[%d] = %s.element_data[%d];\n" % (destVar, i, srcSimulink, i))
-        if len(node._range)>1 and node._range[0]!=node._range[1]:
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
             lines.append("%s.length = %s.length;\n" % (destVar, srcSimulink))
         else:
             lines.append("%s.length = %s;\n" % (destVar, node._range[-1]))
@@ -284,7 +284,7 @@ class FromSimulinkToOSS(RecursiveMapper):
                          node._containedType,
                          leafTypeDict,
                          names))
-        if len(node._range)>1 and node._range[0]!=node._range[1]:
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
             lines.append("%s.count = %s.length;\n" % (destVar, srcSimulink))
         else:
             lines.append("%s.count = %s;\n" % (destVar, node._range[-1]))
@@ -311,7 +311,7 @@ class FromOSStoSimulink(RecursiveMapper):
         for i in range(0, node._range[-1]):
             lines.append("if (%s.length >= %d) %s.element_data[%d] = %s.value[%d]; else %s.element_data[%d] = 0;\n" %
                          (srcVar, i+1, dstSimulink, i, srcVar, i, dstSimulink, i))
-        if len(node._range)>1 and node._range[0]!=node._range[1]:
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
             lines.append("%s.length = %s.length;" % (dstSimulink, srcVar))
         return lines
 
@@ -363,7 +363,7 @@ class FromOSStoSimulink(RecursiveMapper):
                 node._containedType,
                 leafTypeDict,
                 names))
-        if len(node._range)>1 and node._range[0]!=node._range[1]:
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
             lines.append("%s.length = %s.count;\n" % (dstSimulink, srcVar))
         return lines
 

@@ -138,8 +138,8 @@ class FromObjectGeodeToASN1SCC(RecursiveMapper):
         lines.append("        if(%s.cont[i].cont[7]) value |= 1;\n" % srcSDLVariable)
         lines.append("        %s.arr[i] = value;\n" % destVar)
         lines.append("    }\n")
-        #for i in xrange(0, node._range[-1]):
-        #       lines.append("    placeHolder[%d] = %s[%d];\n" % (i, srcSDLVariable, i))
+        # for i in xrange(0, node._range[-1]):
+        #     lines.append("    placeHolder[%d] = %s[%d];\n" % (i, srcSDLVariable, i))
         if isSequenceVariable(node):
             lines.append("    %s.nCount = %s.length;\n" % (destVar, srcSDLVariable))
         lines.append("}\n")
@@ -238,8 +238,8 @@ class FromObjectGeodeToOSS(RecursiveMapper):
         lines.append("        if(%s.cont[i].cont[7]) value |= 1;\n" % srcSDLVariable)
         lines.append("        %s.value[i] = value;\n" % destVar)
         lines.append("    }\n")
-        #for i in xrange(0, node._range[-1]):
-        #       lines.append("    placeHolder[%d] = %s[%d];\n" % (i, srcSDLVariable, i))
+        # for i in xrange(0, node._range[-1]):
+        #     lines.append("    placeHolder[%d] = %s[%d];\n" % (i, srcSDLVariable, i))
         lines.append("    %s.length = %s.length;\n" % (destVar, srcSDLVariable))
         lines.append("}\n")
         return lines
@@ -321,8 +321,8 @@ class FromASN1SCCtoObjectGeode(RecursiveMapper):
         return ["%s = (%s)?SDL_TRUE:SDL_FALSE;\n" % (dstSDLVariable, srcVar)]
 
     def MapOctetString(self, srcVar, dstSDLVariable, node, _, __):
-        #for i in xrange(0, node._range[-1]):
-        #       lines.append("%s[%d] = %s->buf[%d];\n" % (dstSDLVariable, i, srcVar, i))
+        # for i in xrange(0, node._range[-1]):
+        #     lines.append("%s[%d] = %s->buf[%d];\n" % (dstSDLVariable, i, srcVar, i))
         lines = []
         limit = sourceSequenceLimit(node, srcVar)
         lines.append("{\n")
@@ -435,8 +435,8 @@ class FromOSStoObjectGeode(RecursiveMapper):
 
     def MapOctetString(self, srcVar, dstSDLVariable, node, _, __):
         lines = []
-        #for i in xrange(0, node._range[-1]):
-        #       lines.append("%s[%d] = %s->buf[%d];\n" % (dstSDLVariable, i, srcVar, i))
+        # for i in xrange(0, node._range[-1]):
+        #     lines.append("%s[%d] = %s->buf[%d];\n" % (dstSDLVariable, i, srcVar, i))
         lines.append("{\n")
         lines.append("    int i;\n")
         lines.append("    for(i=0; i<%s.length; i++) {\n" % srcVar)
@@ -593,7 +593,7 @@ class OG_GlueGenerator(ASynchronousToolGlueGenerator):
                 (self.CleanNameAsToolWants(nodeTypename), self.CleanNameAsToolWants(nodeTypename)))
             fileOutHeader.write(
                 "\\\n    BitStream_Init(&strm, varName, asn1Scc%s_REQUIRED_BYTES_FOR_%sENCODING);\\\n" %
-                (self.CleanNameAsToolWants(nodeTypename), "ACN_" if encoding.lower()=="acn" else ""))
+                (self.CleanNameAsToolWants(nodeTypename), "ACN_" if encoding.lower() == "acn" else ""))
         else:
             fileOutHeader.write(
                 "    STATIC asn1Scc%s var_%s;\\\n" %
@@ -605,7 +605,7 @@ class OG_GlueGenerator(ASynchronousToolGlueGenerator):
         # Write the mapping code for the message
         if self.useOSS and encoding.lower() == "uper":
             lines = self.FromObjectGeodeToOSS.Map(
-                #(isinstance(node, AsnInt) or isinstance(node, AsnBool)) and "(param1)" or "(*(param1))",
+                # (isinstance(node, AsnInt) or isinstance(node, AsnBool)) and "(param1)" or "(*(param1))",
                 "(param1)",
                 "var_" + self.CleanNameAsToolWants(nodeTypename),
                 node,
@@ -613,7 +613,7 @@ class OG_GlueGenerator(ASynchronousToolGlueGenerator):
                 names)
         else:
             lines = self.FromObjectGeodeToASN1SCC.Map(
-                #(isinstance(node, AsnInt) or isinstance(node, AsnBool)) and "(param1)" or "(*(param1))",
+                # (isinstance(node, AsnInt) or isinstance(node, AsnBool)) and "(param1)" or "(*(param1))",
                 "(param1)",
                 "var_" + self.CleanNameAsToolWants(nodeTypename),
                 node,
@@ -715,7 +715,7 @@ class OG_GlueGenerator(ASynchronousToolGlueGenerator):
             fileOutHeader.write("    BitStream_AttachBuffer(&strm, pBuffer, iBufferSize);\\\n")
             fileOutHeader.write(
                 "    if(asn1Scc%s_%sDecode(&var_%s, &strm, &errorCode)) {\\\n" %
-                (self.CleanNameAsToolWants(nodeTypename), "ACN_" if encoding.lower()=="acn" else "", self.CleanNameAsToolWants(nodeTypename)))
+                (self.CleanNameAsToolWants(nodeTypename), "ACN_" if encoding.lower() == "acn" else "", self.CleanNameAsToolWants(nodeTypename)))
         else:
             fileOutHeader.write(
                 "    STATIC asn1Scc%s var_%s;\\\n" %
@@ -728,8 +728,8 @@ class OG_GlueGenerator(ASynchronousToolGlueGenerator):
                 (self.CleanNameAsToolWants(nodeTypename), self.CleanNameAsToolWants(nodeTypename)))
             fileOutHeader.write("    {\\\n")
 
-        #dstSDLVariable = (isinstance(node, AsnInt) or isinstance(node, AsnBool)) and "(pSdlVar)" or "(*(pSdlVar))"
-        #dstSDLVariable = (isinstance(node, AsnInt)) and "(pSdlVar)" or "(*(pSdlVar))"
+        # dstSDLVariable = (isinstance(node, AsnInt) or isinstance(node, AsnBool)) and "(pSdlVar)" or "(*(pSdlVar))"
+        # dstSDLVariable = (isinstance(node, AsnInt)) and "(pSdlVar)" or "(*(pSdlVar))"
         dstSDLVariable = "(*(pSdlVar))"
 
         if self.useOSS and encoding.lower() == "uper":
@@ -770,9 +770,9 @@ class OG_GlueGenerator(ASynchronousToolGlueGenerator):
             fileOutHeader.write("    }\\\n")
             fileOutHeader.write("}\n\n")
 
-        #fileOutHeader.write(
-        #       "#define DECODE_%s(pBuffer, iBufferSize, pSdlVar) DECODE_UPER_%s(pBuffer, iBufferSize, pSdlVar)\n\n" %
-        #           (self.CleanNameAsToolWants(nodeTypename), self.CleanNameAsToolWants(nodeTypename)))
+        # fileOutHeader.write(
+        #     "#define DECODE_%s(pBuffer, iBufferSize, pSdlVar) DECODE_UPER_%s(pBuffer, iBufferSize, pSdlVar)\n\n" %
+        #     (self.CleanNameAsToolWants(nodeTypename), self.CleanNameAsToolWants(nodeTypename)))
 
 
 def OnStartup(modelingLanguage, asnFile, outputDir, maybeFVname, useOSS):

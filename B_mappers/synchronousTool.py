@@ -17,7 +17,7 @@
 # Note that in both cases, there are no charges (royalties) for the
 # generated code.
 #
-__doc__ = '''
+'''
 Base class for all synchronous tools
 '''
 
@@ -179,10 +179,10 @@ class SynchronousToolGlueGenerator:
                       (subProgram._id + "." + subProgramImplementation, self.supportedEncodings, encoding))  # pragma: no cover
 
         tmpSpName = "Convert_From_%s_To_%s_In_%s_%s" % \
-                (self.CleanNameAsADAWants(nodeTypename),
-                 encoding.lower(),
-                 self.CleanNameAsADAWants(subProgram._id + "_" + subProgramImplementation),
-                 self.CleanNameAsADAWants(param._id))
+            (self.CleanNameAsADAWants(nodeTypename),
+             encoding.lower(),
+             self.CleanNameAsADAWants(subProgram._id + "_" + subProgramImplementation),
+             self.CleanNameAsADAWants(param._id))
 
         srcVar = self.SourceVar(nodeTypename, encoding, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
@@ -194,7 +194,7 @@ class SynchronousToolGlueGenerator:
                 "    procedure Ada_%s(QGen_OUT : in %s; T_OUT : out %s) is\n" %
                 (tmpSpName, self.CleanNameAsToolWants(nodeTypename), "asn1Scc" + self.CleanNameAsToolWants(nodeTypename)))
             self.ADA_SourceFile.write('begin\n')
-            
+
             toolToAsn1 = self.FromToolToASN1SCC()
             lines = toolToAsn1 and toolToAsn1.Map(
                 "QGen_OUT",
@@ -205,7 +205,7 @@ class SynchronousToolGlueGenerator:
 
             lines = ["        "+x for x in lines]
             self.ADA_SourceFile.write("".join(lines))
-            
+
             self.ADA_SourceFile.write(
                 "    end Ada_%s;\n\n" % tmpSpName)
         else:
@@ -281,7 +281,7 @@ class SynchronousToolGlueGenerator:
                 self.C_SourceFile.write(
                     "    if (asn1Scc%s_%sEncode(&var_%s, &strm, &errorCode, TRUE) == FALSE) {\n" %
                     (self.CleanNameAsToolWants(nodeTypename),
-                     "ACN_" if encoding.lower()=="acn" else "",
+                     "ACN_" if encoding.lower() == "acn" else "",
                      self.CleanNameAsToolWants(nodeTypename)))
                 self.C_SourceFile.write(
                     '        fprintf(stderr, "Could not encode %s (at %%s, %%d), errorCode was %%d\\n", __FILE__, __LINE__, errorCode);\n' % (nodeTypename))
@@ -300,9 +300,9 @@ class SynchronousToolGlueGenerator:
     def Decoder(self, nodeTypename, encoding, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
         tmpSpName = "Convert_From_%s_To_%s_In_%s_%s" % \
             (encoding.lower(),
-            self.CleanNameAsADAWants(nodeTypename),
-            self.CleanNameAsADAWants(subProgram._id + "_" + subProgramImplementation),
-            param._id)
+             self.CleanNameAsADAWants(nodeTypename),
+             self.CleanNameAsADAWants(subProgram._id + "_" + subProgramImplementation),
+             param._id)
 
         targetVar = self.TargetVar(nodeTypename, encoding, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
@@ -314,7 +314,7 @@ class SynchronousToolGlueGenerator:
                 "    procedure Ada_%s(T_IN : in %s; QGen_IN : out %s) is\n" %
                 (tmpSpName, "asn1Scc" + self.CleanNameAsToolWants(nodeTypename), self.CleanNameAsToolWants(nodeTypename)))
             self.ADA_SourceFile.write('    begin\n')
-            
+
             asn1ToTool = self.FromASN1SCCtoTool()
             lines = asn1ToTool and asn1ToTool.Map(
                 "T_IN",
@@ -325,7 +325,7 @@ class SynchronousToolGlueGenerator:
             lines = ["        "+x for x in lines]
 
             self.ADA_SourceFile.write("".join(lines))
-            
+
             self.ADA_SourceFile.write(
                 "    end Ada_%s;\n\n" % tmpSpName)
         else:
@@ -379,7 +379,7 @@ class SynchronousToolGlueGenerator:
                     self.C_SourceFile.write("    var_%s = *(asn1Scc%s *) pBuffer;\n    {\n" %
                                             (self.CleanNameAsToolWants(nodeTypename),
                                              self.CleanNameAsToolWants(nodeTypename)))
- 
+
             if self.useOSS and encoding.lower() == "uper":
                 asn1ToTool = self.FromOSStoTool()
                 lines = asn1ToTool and asn1ToTool.Map(
@@ -481,10 +481,11 @@ class SynchronousToolGlueGenerator:
                      self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation),
                      self.CleanNameAsADAWants(param._id))
                 if isinstance(param, InParam):
-                    self.ADA_SourceFile.write('        %s(%s.all, QGen_%s);\n' %
-                                            (tmpSpName,
-                                             self.CleanNameAsToolWants(param._id),
-                                             self.CleanNameAsToolWants(param._id)))
+                    self.ADA_SourceFile.write(
+                        '        %s(%s.all, QGen_%s);\n' % (
+                            tmpSpName,
+                            self.CleanNameAsToolWants(param._id),
+                            self.CleanNameAsToolWants(param._id)))
 
             self.ADA_SourceFile.write("\n        %s.comp (" % self.CleanNameAsADAWants(sp._id))
             for param in sp._params:
@@ -503,10 +504,11 @@ class SynchronousToolGlueGenerator:
                      self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation),
                      param._id)
                 if isinstance(param, InOutParam) or isinstance(param, OutParam):
-                    self.ADA_SourceFile.write('        %s(QGen_%s, %s.all);\n' %
-                                            (tmpSpName,
-                                             self.CleanNameAsToolWants(param._id),
-                                             self.CleanNameAsToolWants(param._id)))
+                    self.ADA_SourceFile.write(
+                        '        %s(QGen_%s, %s.all);\n' % (
+                            tmpSpName,
+                            self.CleanNameAsToolWants(param._id),
+                            self.CleanNameAsToolWants(param._id)))
             self.ADA_SourceFile.write("    end Execute_%s;\n" % self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation))
             self.ADA_SourceFile.write(
                 'end %s;\n' %
@@ -543,8 +545,8 @@ class SynchronousToolGlueGenerator:
                 self.C_SourceFile.write("void %s_init()\n" % self.CleanNameAsADAWants(sp._id))  # pragma: no cover
             self.C_SourceFile.write("{\n")
             self.InitializeBlock(modelingLanguage, asnFile, sp, subProgramImplementation, maybeFVname)
-            #self.C_SourceFile.write("    extern void InitializeGlue();\n")
-            #self.C_SourceFile.write("    InitializeGlue();\n")
+            # self.C_SourceFile.write("    extern void InitializeGlue();\n")
+            # self.C_SourceFile.write("    InitializeGlue();\n")
             self.C_SourceFile.write("}\n\n")
             if maybeFVname != "":
                 self.C_SourceFile.write("void %s_%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id)))
