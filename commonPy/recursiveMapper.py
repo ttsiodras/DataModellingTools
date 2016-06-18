@@ -73,8 +73,8 @@ class RecursiveMapper:
         panicWithCallStack("Method undefined in a RecursiveMapper...")
 
     def Map(self,
-            srcVar,
-            destVar,
+            srcVar: str,
+            destVar: str,
             node_or_str: Union[str, AsnNode],
             leafTypeDict: Dict[str, str],
             names: Dict[str, AsnNode]) -> List[str]:

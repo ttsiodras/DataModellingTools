@@ -88,7 +88,7 @@ def OnShutdown(unused_badTypes):
 #    text = re.sub(r'--.*', '', text)
     outputFile = open(g_outputDir + "DataView.pr", 'w')
     outputFile.write('Datamodel DEFINITIONS ::= BEGIN\n\n')
-    import commonPy.xmlASTtoAsnAST
-    commonPy.xmlASTtoAsnAST.PrintGrammarFromAST(outputFile)
+    import commonPy.asnParser
+    commonPy.asnParser.PrintGrammarFromAST(outputFile)
     outputFile.write('END\n')
     outputFile.close()

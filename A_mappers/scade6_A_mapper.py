@@ -18,17 +18,23 @@
 # Note that in both cases, there are no charges (royalties) for the
 # generated code.
 #
-__doc__ = '''Implementation of mapping ASN.1 constructs
-to SCADE's modeling language, using .xscade files. It is used by the
-backend of Semantix's code generator A.'''
+'''
+Implementation of mapping ASN.1 constructs to SCADE's modeling language,
+using .xscade files.
+'''
 
 import re
 import os
 import random
-from xml.dom.minidom import Document
+from xml.dom.minidom import Document, Node
+
+from typing import Set
 
 from commonPy.utility import inform, panic
-from commonPy.asnAST import AsnBasicNode, AsnString, AsnEnumerated, AsnMetaMember, AsnSet, AsnSetOf, AsnSequence, AsnSequenceOf, AsnChoice
+from commonPy.asnAST import (
+    AsnBasicNode, AsnString, AsnEnumerated, AsnMetaMember, AsnSet,
+    AsnSetOf, AsnSequence, AsnSequenceOf, AsnChoice
+)
 import commonPy.asnParser
 
 g_lookup = {
@@ -41,7 +47,7 @@ g_lookup = {
 g_outputFile = None
 
 # The assigned OIDs
-g_oid = {}
+g_oid = {}  # type: Dict[str, str]
 
 # The main OID for this module
 g_mainOid = ""
@@ -50,7 +56,7 @@ g_mainOid = ""
 g_currOid = 0x1f00
 
 # The types declared so far
-g_declaredTypes = {}
+g_declaredTypes = set()  # type: Set[str]
 
 # The DOM elements
 g_doc = None
@@ -67,7 +73,7 @@ def CleanNameAsScadeWants(name):
 
 def RandomHex(digits):
     result = ""
-    for i in range(0, digits):
+    for _ in range(0, digits):
         result += random.choice('0123456789abcdef')
     return result
 
@@ -77,23 +83,23 @@ def FixupNestedStringsAndEnumerated():
     leafTypeDict = commonPy.asnParser.g_leafTypeDict
     for nodeTypename in list(names.keys()):
         node = names[nodeTypename]
-        if isinstance(node, AsnSequence) or isinstance(node, AsnChoice) or isinstance(node, AsnSet):
+        if isinstance(node, (AsnSequence, AsnChoice, AsnSet)):
             for child in node._members:
                 if isinstance(child[1], AsnString) or isinstance(child[1], AsnEnumerated):
-                    newName = nodeTypename + "_" + child[0]                                                    # pragma: no cover
-                    while newName in names:                                                                    # pragma: no cover
-                        newName += "_t"                                                                        # pragma: no cover
-                    names[newName] = child[1]                                                                  # pragma: no cover
-                    leafTypeDict[newName] = isinstance(child[1], AsnString) and 'OCTET STRING' or 'ENUMERATED' # pragma: no cover
-                    child[1] = AsnMetaMember(asnFilename=child[1]._asnFilename, containedType=newName)         # pragma: no cover
-        elif isinstance(node, AsnSequenceOf) or isinstance(node, AsnSetOf):
-            if isinstance(node._containedType, AsnString) or isinstance(node._containedType, AsnEnumerated):
-                newName = nodeTypename + "_contained"                                                                 # pragma: no cover
-                while newName in names:                                                                               # pragma: no cover
-                    newName += "_t"                                                                                   # pragma: no cover
-                names[newName] = node._containedType                                                                  # pragma: no cover
-                leafTypeDict[newName] = isinstance(node._containedType, AsnString) and 'OCTET STRING' or 'ENUMERATED' # pragma: no cover
-                node._containedType = newName                                                                         # pragma: no cover
+                    newName = nodeTypename + "_" + child[0]                                                     # pragma: no cover
+                    while newName in names:                                                                     # pragma: no cover
+                        newName += "_t"                                                                         # pragma: no cover
+                    names[newName] = child[1]                                                                   # pragma: no cover
+                    leafTypeDict[newName] = isinstance(child[1], AsnString) and 'OCTET STRING' or 'ENUMERATED'  # pragma: no cover
+                    child[1] = AsnMetaMember(asnFilename=child[1]._asnFilename, containedType=newName)          # pragma: no cover
+        elif isinstance(node, (AsnSequenceOf, AsnSetOf)):
+            if isinstance(node._containedType, (AsnString, AsnEnumerated)):
+                newName = nodeTypename + "_contained"                                                                  # pragma: no cover
+                while newName in names:                                                                                # pragma: no cover
+                    newName += "_t"                                                                                    # pragma: no cover
+                names[newName] = node._containedType                                                                   # pragma: no cover
+                leafTypeDict[newName] = isinstance(node._containedType, AsnString) and 'OCTET STRING' or 'ENUMERATED'  # pragma: no cover
+                node._containedType = newName                                                                          # pragma: no cover
 
 
 def OnStartup(unused_modelingLanguage, asnFile, outputDir, unused_badTypes):
@@ -125,10 +131,10 @@ def OnStartup(unused_modelingLanguage, asnFile, outputDir, unused_badTypes):
     File.appendChild(g_Declarations)
 
 
-def RenderElements(controlString):
+def RenderElements(controlString: str):
     if controlString.endswith(","):
-        controlString=controlString[:-1]
-    createdElements = {}
+        controlString = controlString[:-1]
+    createdElements = {}  # type: Dict[str, Node]
     parent = g_Declarations
     for elem in controlString.split(","):
         if '`' in elem:
@@ -197,10 +203,10 @@ def CheckPrerequisites(nodeTypename):
         # what type is this?
         else:  # pragma: no cover
             panic("Unexpected type of element: %s" % leafTypeDict[nodeTypename])  # pragma: no cover
-        g_declaredTypes[nodeTypename] = True
+        g_declaredTypes.add(nodeTypename)
 
 
-def HandleTypedef(nodeTypename):
+def HandleTypedef(nodeTypename: str) -> bool:
     if nodeTypename not in commonPy.asnParser.g_metatypes:
         return False
     controlString = 'Type$name=%s,definition,NamedType,type,TypeRef$name=%s' % \
@@ -210,10 +216,10 @@ def HandleTypedef(nodeTypename):
 
 
 def OnBasic(nodeTypename, node, unused_leafTypeDict):
-    assert(isinstance(node, AsnBasicNode))
+    assert isinstance(node, AsnBasicNode)
     if nodeTypename in g_declaredTypes:
         return
-    g_declaredTypes[nodeTypename] = 1
+    g_declaredTypes.add(nodeTypename)
     if HandleTypedef(nodeTypename):
         return
     oid = GetOID(nodeTypename)
@@ -229,7 +235,7 @@ def OnBasic(nodeTypename, node, unused_leafTypeDict):
         # otherwise SCADE will not be able to create C code!
         if node._range == []:
             panic(("Scade612_A_mapper: string (in %s) must have a SIZE constraint inside ASN.1,\n" +  # pragma: no cover
-                  "or else SCADE can't generate C code!") % node.Location())  # pragma: no cover
+                   "or else SCADE can't generate C code!") % node.Location())  # pragma: no cover
         controlString += 'Table,type,NamedType,type,TypeRef$name=char,size`Table,ConstValue$value=%d,' % node._range[-1]
     else:
         # For the rest of the simple types, use the lookup table defined in g_lookup
@@ -239,14 +245,14 @@ def OnBasic(nodeTypename, node, unused_leafTypeDict):
         except KeyError:  # pragma: no cover
             panic("Scade612_A_mapper: Unsupported literal: %s (%s)\n" % (realLeafType, node.Location()))  # pragma: no cover
 
-    controlString += 'pragmas`Type,ed:Type$oid=!ed/%(oid)s' % {"nodeTypename": nodeTypename, "oid": oid}
+    controlString += 'pragmas`Type,ed:Type$oid=!ed/%(oid)s' % {"oid": oid}
     RenderElements(controlString)
 
 
 def OnSequence(nodeTypename, node, unused_leafTypeDict, isChoice=False):
     if nodeTypename in g_declaredTypes:
         return
-    g_declaredTypes[nodeTypename] = 1
+    g_declaredTypes.add(nodeTypename)
     if HandleTypedef(nodeTypename):
         return
     oid = GetOID(nodeTypename)
@@ -279,7 +285,7 @@ def OnSet(nodeTypename, node, leafTypeDict):
 def OnEnumerated(nodeTypename, node, unused_leafTypeDict):
     if nodeTypename in g_declaredTypes:
         return
-    g_declaredTypes[nodeTypename] = 1
+    g_declaredTypes.add(nodeTypename)
     if HandleTypedef(nodeTypename):
         return
     oid = GetOID(nodeTypename)
@@ -308,7 +314,7 @@ def OnEnumerated(nodeTypename, node, unused_leafTypeDict):
 def OnSequenceOf(nodeTypename, node, unused_leafTypeDict):
     if nodeTypename in g_declaredTypes:
         return
-    g_declaredTypes[nodeTypename] = 1
+    g_declaredTypes.add(nodeTypename)
     if HandleTypedef(nodeTypename):
         return
     if node._range == []:

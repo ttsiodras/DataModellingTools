@@ -5,6 +5,8 @@ from commonPy.asnAST import AsnBool, AsnInt, AsnReal, \
     AsnEnumerated, AsnOctetString, AsnSequenceOf, AsnSet, \
     AsnSetOf, AsnSequence, AsnChoice, AsnMetaMember
 
+from typing import Any
+
 # Level of verbosity
 g_verboseLevel = 0
 
@@ -14,7 +16,7 @@ red = ESC+"[31m"
 green = ESC+"[32m"
 white = ESC+"[0m"
 yellow = ESC+"[33m"
-colors=[red, green, white, yellow]
+colors = [red, green, white, yellow]
 
 
 # Lookup table for SMP2 types that map to AsnBasicNodes
@@ -25,15 +27,15 @@ class MagicSmp2SimpleTypesDict(dict):
         name = re.sub(r'/\d{4}/\d{2}/', '/', name)
         return super(MagicSmp2SimpleTypesDict, self).__getitem__(name)
 
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     def __contains__(self, name):
         name = re.sub(r'/\d{4}/\d{2}/', '/', name)
         return super(MagicSmp2SimpleTypesDict, self).__contains__(name)
 
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     def has_key(self, name):
         name = re.sub(r'/\d{4}/\d{2}/', '/', name)
-        return name in super(MagicSmp2SimpleTypesDict, self)
+        return name in super(MagicSmp2SimpleTypesDict, self)  # pylint: disable=unsupported-membership-test
 
 
 simpleTypesTable = MagicSmp2SimpleTypesDict({
@@ -67,9 +69,9 @@ def info(level, *args):
     '''
     if not args:
         panic("You called info without args")  # pragma: no cover
-    if level<=g_verboseLevel:
-        for i in range(len(args)):
-            if i !=0 and args[i-1] not in colors:
+    if level <= g_verboseLevel:
+        for i in range(len(args)):  # pylint: disable=consider-using-enumerate
+            if i != 0 and args[i-1] not in colors:
                 sys.stdout.write(' ')
             sys.stdout.write(args[i])
         for i in range(len(args)-1, -1, -1):
@@ -113,7 +115,7 @@ class Attributes:
     '''
     def __init__(self, t):
         '''Argument t is an lxml Etree node.'''
-        self._attrs = {}
+        self._attrs = {}  # type: Dict[str, Any]
         for k, v in list(t.items()):
             endBraceIdx = k.find('}')
             if endBraceIdx != -1:
@@ -147,7 +149,7 @@ def MapSMP2Type(attrs, enumOptions, itemTypes, fields):
     if attrs.type == 'Types:Integer':
         low = getMaybe(int, attrs.Minimum)
         high = getMaybe(int, attrs.Maximum)
-        if low==0 and high==1:
+        if low == 0 and high == 1:
             # Pseudo-boolean from TASTE mapping, as per SpaceBel instructions
             return AsnBool(**dataDict)
         else:
@@ -193,7 +195,7 @@ def MapSMP2Type(attrs, enumOptions, itemTypes, fields):
             if itemTypeAttrs.href in simpleTypesTable:
                 # Create the AsnBasicNode this child maps to.
                 cast, low, high = simpleTypesTable[itemTypeAttrs.href]
-                span=[low, high] if low is not None and high is not None else []
+                span = [low, high] if low is not None and high is not None else []
                 childDict = {
                     'asnFilename': itemTypes[0].base,
                     'lineno': itemTypes[0].sourceline
@@ -207,7 +209,7 @@ def MapSMP2Type(attrs, enumOptions, itemTypes, fields):
                 # in the FixupOutOfOrderIdReferences function.
                 dataDict['containedType'] = containedHref
             return AsnSequenceOf(**dataDict)
-    elif attrs.type == 'Types:Structure':
+    elif attrs.type == 'Types:Structure':  # pylint: disable=too-many-nested-blocks
         members = []
         for field in fields:
             try:
@@ -233,7 +235,7 @@ def MapSMP2Type(attrs, enumOptions, itemTypes, fields):
                         }
                         span = [low, high] if low is not None and high is not None else []
                         if span != []:
-                            containedDict['range']=[low, high]
+                            containedDict['range'] = [low, high]
                         basicNode = cast(**containedDict)
                         members.append((fieldName, basicNode))
                     else:
@@ -249,7 +251,7 @@ def MapSMP2Type(attrs, enumOptions, itemTypes, fields):
                       '2. The "Type" child element, with attribute '
                       '"xlink:title" also exists.',
                       'In %s, line %d:' % (field.base, field.sourceline))  # pragma: no cover
-        if 0 == len(members):
+        if not members:
             panic("Empty SEQUENCE is not supported", location)  # pragma: no cover
         if members[0][0] == 'choiceIdx':
             dataDict['members'] = members[1:]
@@ -293,13 +295,13 @@ def ConvertCatalogueToASN_AST(inputSmp2Files):
     which it returns to the caller.'''
     asnTypesDict = DashUnderscoreAgnosticDict()
     idToTypeDict = {}
-    allSMP2Types = {}
+    allSMP2Types = {}  # type: Dict[str, str]
     # Do a first pass, verifying the primary assumption:
     # That 'Id' elements of types are unique across our set of SMP2 files.
     for inputSmp2File in inputSmp2Files:
-        a=etree.parse(open(inputSmp2File))
-        root=a.getroot()
-        if len(root)<1 or not root.tag.endswith('Catalogue'):
+        a = etree.parse(open(inputSmp2File))
+        root = a.getroot()
+        if len(root) < 1 or not root.tag.endswith('Catalogue'):
             panic('', "You must use an XML file that contains an SMP2 Catalogue")  # pragma: no cover
         for t in root.xpath("//Type"):
             a = Attributes(t)
@@ -313,9 +315,9 @@ def ConvertCatalogueToASN_AST(inputSmp2Files):
             else:
                 allSMP2Types[a.Id] = inputSmp2File
     for inputSmp2File in inputSmp2Files:
-        a=etree.parse(open(inputSmp2File))
-        root=a.getroot()
-        if len(root)<1 or not root.tag.endswith('Catalogue'):
+        a = etree.parse(open(inputSmp2File))
+        root = a.getroot()
+        if len(root) < 1 or not root.tag.endswith('Catalogue'):
             panic('', "You must use an XML file that contains an SMP2 Catalogue")  # pragma: no cover
         for t in root.xpath("//Type"):
             # Find the enclosing Namespace element
@@ -326,10 +328,10 @@ def ConvertCatalogueToASN_AST(inputSmp2Files):
                       t.base, t.sourceline)  # pragma: no cover
 
             # Store the namespace 'Name' attribute, and use it to prefix our types
-            nsName = namespace.get('Name')
+            nsName = namespace.get('Name')  # pylint: disable=undefined-loop-variable
             if not nsName:
                 panic("Missing attribute Name from Namespace (file:%s, line:%d)" %
-                      namespace.base, namespace.sourceline)  # pragma: no cover
+                      namespace.base, namespace.sourceline)  # pragma: no cover pylint: disable=undefined-loop-variable
             cataloguePrefix = Clean(nsName).capitalize() + "_"
 
             a = Attributes(t)
@@ -353,7 +355,7 @@ def ConvertCatalogueToASN_AST(inputSmp2Files):
                     }
                     span = [low, high] if (low is not None and high is not None) else []
                     if span != []:
-                        containedDict['range']=[low, high]
+                        containedDict['range'] = [low, high]
                     # Especially for these hardcoded types, don't prefix with namespace.Name
                     asnTypesDict[nodeTypename] = cast(**containedDict)
                 else:

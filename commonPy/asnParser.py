@@ -52,8 +52,8 @@ import tempfile
 import re
 import distutils.spawn as spawn
 
-import xml.sax
-from typing import Union, Dict  # pylint: disable=W0611
+import xml.sax  # type: ignore
+from typing import Union, List, Dict, Tuple, Any  # pylint: disable=W0611
 
 from . import configMT
 from . import utility
@@ -64,16 +64,23 @@ from .asnAST import (
     AsnComplexNode, AsnBool, AsnOctetString, AsnAsciiString
 )
 
-
 g_asnFilename = ""
 
 g_filename = ''
-g_leafTypeDict = {}
-g_names = {}  # type: Dict[str, AsnNode]
 g_metatypes = {}
 
-g_typesOfFile = {}  # type: Dict[str, List[str]]
-g_astOfFile = {}  # type: Dict[str, List[AsnNode]]
+# MyPy type aliases
+Typename = str
+Filename = str
+AST_Lookup = Dict[Typename, AsnNode]
+AST_TypenamesOfFile = Dict[Filename, List[str]]  # pylint: disable=invalid-sequence-index
+AST_TypesOfFile = Dict[Filename, List[AsnNode]]  # pylint: disable=invalid-sequence-index
+AST_Leaftypes = Dict[Typename, str]
+
+g_names = {}         # type: AST_Lookup
+g_typesOfFile = {}   # type: AST_TypenamesOfFile
+g_leafTypeDict = {}  # type: AST_Leaftypes
+g_astOfFile = {}     # type: AST_TypesOfFile
 
 g_checkedSoFarForKeywords = {}  # type: Dict[str, int]
 
@@ -223,7 +230,7 @@ def VerifyAndFixAST() -> Dict[str, str]:
     unknownTypes = {}  # type: Dict[str, int]
     knownTypes = {}    # type: Dict[str, str]
     equivalents = {}   # type: Dict[str, List[str]]
-    while True:
+    while True:  # pylint: disable=too-many-nested-blocks
         lastUnknownTypes = copy.copy(unknownTypes)
         lastKnownTypes = copy.copy(knownTypes)
         lastEquivalents = copy.copy(equivalents)
@@ -319,17 +326,17 @@ def VerifyAndFixAST() -> Dict[str, str]:
         Min = Max = None
         node = g_names[nodeTypename]
         if hasattr(node, "_Min") and Min is None:
-            Min = node._Min
+            Min = node._Min  # type: ignore
         if hasattr(node, "_Max") and Max is None:
-            Max = node._Max
+            Max = node._Max  # type: ignore
         originalNode = node
         while isinstance(node, AsnMetaType):
             g_metatypes[nodeTypename] = node._containedType
             node = g_names[node._containedType]
             if hasattr(node, "_Min") and Min is None:
-                Min = node._Min
+                Min = node._Min  # type: ignore
             if hasattr(node, "_Max") and Max is None:
-                Max = node._Max
+                Max = node._Max  # type: ignore
         # To cope with ReferenceTypes that redefine their
         # constraints (for now, ASN1SCC provides only INTEGERs)
         if isinstance(originalNode, AsnMetaType):
@@ -337,12 +344,10 @@ def VerifyAndFixAST() -> Dict[str, str]:
             target._asnFilename = originalNode._asnFilename
         elif isinstance(node, AsnInt) and Min is not None and Max is not None:
             target = copy.copy(node)  # we need to keep the Min/Max
+            target._range = [Min, Max]
         else:
             target = node
-
         g_names[nodeTypename] = target
-        if isinstance(node, AsnInt) and Min is not None and Max is not None:
-            target._range = [Min, Max]
 
     for name, node in list(g_names.items()):
         if not KnownType(node, g_names):
@@ -367,7 +372,7 @@ def VerifyAndFixAST() -> Dict[str, str]:
     # define a name and use it... (for SEQUENCEOFs/SETOFs, allow also 'str')
     internalNo = 1
     addedNewPseudoType = True
-    while addedNewPseudoType:
+    while addedNewPseudoType:  # pylint: disable=too-many-nested-blocks
         addedNewPseudoType = False
         listOfTypenames = sorted(g_names.keys())
         for nodeTypename in listOfTypenames:
@@ -470,13 +475,14 @@ def ParseAsnFileList(listOfFilenames):
         mono = "mono " if sys.argv[0].endswith('.py') and sys.platform.startswith('linux') else ""
         spawnResult = os.system(mono + "\"" + asn1SccPath + "\" -customStg \"" + asn1SccDir + "/xml.stg:" + xmlAST + "\" -customStgAstVerion 4 \"" + "\" \"".join(listOfFilenames) + "\"")
         if spawnResult != 0:
-            if 1 == spawnResult / 256:
+            errCode = spawnResult/256
+            if errCode == 1:
                 utility.panic("ASN1SCC reported syntax errors. Aborting...")
-            elif 2 == spawnResult / 256:
+            elif errCode == 2:
                 utility.panic("ASN1SCC reported semantic errors (or mono failed). Aborting...")
-            elif 3 == spawnResult / 256:
+            elif errCode == 3:
                 utility.panic("ASN1SCC reported internal error. Contact Semantix with this input. Aborting...")
-            elif 4 == spawnResult / 256:
+            elif errCode == 4:
                 utility.panic("ASN1SCC reported usage error. Aborting...")
             else:
                 utility.panic("ASN1SCC generic error. Contact Semantix with this input. Aborting...")
@@ -536,7 +542,7 @@ class Element:
     def __init__(self, name, attrs):
         self._name = name
         self._attrs = attrs
-        self._children = []
+        self._children = []  # type: List[Element]
 
 
 class InputFormatXMLHandler(xml.sax.ContentHandler):
@@ -572,7 +578,7 @@ class InputFormatXMLHandler(xml.sax.ContentHandler):
 
 
 def VisitAll(node, expectedType, Action):
-    results = []
+    results = []  # type: List[Any]
     if node is not None:
         if node._name == expectedType:
             results = [Action(node)]
@@ -664,7 +670,7 @@ def CreateEnumerated(newModule, lineNo, xmlEnumeratedNode):
 
 # def CreateBitString(newModule, lineNo, xmlBitString):
 def CreateBitString(_, __, ___):
-    utility.panic("BitString type is not supported by the toolchain."+  # pragma: no cover
+    utility.panic("BitString type is not supported by the toolchain. "  # pragma: no cover
                   "Please use SEQUENCE OF BOOLEAN")  # pragma: no cover
 
 
@@ -691,14 +697,14 @@ def CreateNumericString(newModule, lineNo, xmlNumericStringNode):
 
 def CreateReference(newModule, lineNo, xmlReferenceNode):
     try:
-        mi = int(GetAttr(xmlReferenceNode, "Min"))
+        mi = int(GetAttr(xmlReferenceNode, "Min"))  # type: Union[int, float]
     except:
         try:
             mi = float(GetAttr(xmlReferenceNode, "Min"))
         except:
             mi = None
     try:
-        ma = int(GetAttr(xmlReferenceNode, "Max"))
+        ma = int(GetAttr(xmlReferenceNode, "Max"))  # type: Union[int, float]
     except:
         try:
             ma = float(GetAttr(xmlReferenceNode, "Max"))
@@ -827,9 +833,18 @@ def VisitTypeAssignment(newModule, xmlTypeAssignment):
         GenericFactory(newModule, xmlType))
 
 
+class Module(Pretty):
+    _id = None                 # type: str
+    _asnFilename = None        # type: str
+    _exportedTypes = None      # type: List[str]
+    _exportedVariables = None  # type: List[str]
+    _importedModules = None    # type: List[ Tuple[ str, List[str], List[str] ] ]
+                               # (tuples of ModuleName, imported types, imported vars)
+    _typeAssignments = None    # type: List[ Tuple[str, AsnNode] ]
+    pass
+
+
 def VisitAsn1Module(xmlAsn1File, xmlModule, modules):
-    class Module(Pretty):
-        pass
     newModule = Module()
     newModule._id = GetAttr(xmlModule, "ID")
     newModule._asnFilename = GetAttr(xmlAsn1File, "FileName")
@@ -867,11 +882,11 @@ def VisitAsn1Module(xmlAsn1File, xmlModule, modules):
 
     g_typesOfFile.setdefault(newModule._asnFilename, [])
     g_typesOfFile[newModule._asnFilename].extend(
-        [x for x, y in newModule._typeAssignments])
+        [x for x, _ in newModule._typeAssignments])
 
     g_astOfFile.setdefault(newModule._asnFilename, [])
     g_astOfFile[newModule._asnFilename].extend(
-        [x for x, y in newModule._typeAssignments])
+        [y for _, y in newModule._typeAssignments])
 
     modules.append(newModule)
 
@@ -887,7 +902,7 @@ def ParseASN1SCC_AST(filename):
         utility.panic("You must use an XML file that contains one ASN1AST node")  # pragma: no cover
 
     # Travel("", handler._roots[0])
-    modules = []
+    modules = []  # type: List[Module]
     VisitAll(
         handler._root._children[0],
         "Asn1File",
@@ -952,7 +967,7 @@ def PrintType(f, xmlType, indent, nameCleaner):
         f.write('ENUMERATED {\n')
         options = []
         VisitAll(realType, "EnumValue", lambda x: options.append(x))
-        if len(options)>0:
+        if len(options) > 0:
             f.write(indent + '    ' + nameCleaner(GetAttr(options[0], "StringValue")) + "(" + GetAttr(options[0], "IntValue") + ")")
             for otherOptions in options[1:]:
                 f.write(',\n' + indent + '    ' + nameCleaner(GetAttr(otherOptions, "StringValue")) + "(" + GetAttr(otherOptions, "IntValue") + ")")

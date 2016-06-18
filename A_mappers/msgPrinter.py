@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # vim: set expandtab ts=8 sts=4 shiftwidth=4
 #
 # (C) Semantix Information Technologies.
@@ -20,20 +20,7 @@
 # Note that in both cases, there are no charges (royalties) for the
 # generated code.
 #
-import os
-import sys
-import copy
-
-import commonPy.configMT
-#from commonPy.asnAST import AsnBool,AsnMetaMember,AsnInt,AsnReal,AsnOctetString,AsnEnumerated,AsnSequence,AsnSet,AsnChoice,sourceSequenceLimit
-from commonPy.asnAST import sourceSequenceLimit
-from commonPy.utility import inform, panic
-import commonPy.cleanupNodes
-from commonPy.recursiveMapper import RecursiveMapper
-
-import commonPy.verify
-
-__doc__ = '''\
+'''
 This is one of the code generators that Semantix developed for
 the European research project ASSERT. It is now enhanced in the
 context of Data Modelling and Data Modelling Tuning projects.
@@ -42,6 +29,23 @@ It reads the ASN.1 specification of the exchanged messages, and
 generates "printer" functions for their content.
 '''
 
+
+import os
+import sys
+import copy
+
+from typing import Tuple
+
+import commonPy.configMT
+from commonPy.asnAST import sourceSequenceLimit, AsnNode  # NOQA pylint: disable=unused-import
+from commonPy.asnParser import (
+    AST_Lookup, AST_TypesOfFile, AST_TypenamesOfFile, AST_Leaftypes,
+    Typename, Filename, ParseAsnFileList)
+from commonPy.utility import inform, panic
+import commonPy.cleanupNodes
+from commonPy.recursiveMapper import RecursiveMapper
+
+import commonPy.verify
 
 def usage():
     '''Print usage instructions.'''
@@ -89,7 +93,7 @@ class Printer(RecursiveMapper):
         return ['printf("%%s%s %%d\\n", paramName, (int)%s);' % (prefix, srcCVariable)]
 
     def MapSequence(self, srcCVariable, prefix, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         for child in node._members:
             lines.extend(
                 self.Map(
@@ -111,12 +115,13 @@ class Printer(RecursiveMapper):
             lines.append(
                 "%sif (%s.kind == %s) {" %
                 (self.maybeElse(childNo), srcCVariable, self.CleanName(child[2])))
-            lines.extend(['    '+x for x in self.Map(
-                          "%s.u.%s" % (srcCVariable, self.CleanName(child[0])),
-                          prefix + "::" + self.CleanName(child[0]),
-                          child[1],
-                          leafTypeDict,
-                          names)])
+            lines.extend(['    '+x
+                          for x in self.Map(
+                              "%s.u.%s" % (srcCVariable, self.CleanName(child[0])),
+                              prefix + "::" + self.CleanName(child[0]),
+                              child[1],
+                              leafTypeDict,
+                              names)])
             lines.append("}")
         return lines
 
@@ -127,12 +132,13 @@ class Printer(RecursiveMapper):
         lines.append("    int i%s;" % uniqueId)
         limit = sourceSequenceLimit(node, srcCVariable)
         lines.append("    for(i%s=0; i%s<%s; i%s++) {" % (uniqueId, uniqueId, limit, uniqueId))
-        lines.extend(["        " + x for x in self.Map(
-                     "%s.arr[i%s]" % (srcCVariable, uniqueId),
-                     prefix + "::Elem",
-                     node._containedType,
-                     leafTypeDict,
-                     names)])
+        lines.extend(["        "+x
+                      for x in self.Map(
+                          "%s.arr[i%s]" % (srcCVariable, uniqueId),
+                          prefix + "::Elem",
+                          node._containedType,
+                          leafTypeDict,
+                          names)])
         lines.append("    }")
         lines.append("}")
         return lines
@@ -167,24 +173,25 @@ def main():
         if not os.path.isfile(f):
             panic("'%s' is not a file!\n" % f)  # pragma: no cover
 
-    uniqueASNfiles = {}
-    for grammar in sys.argv[1:]:
-        uniqueASNfiles[grammar]=1
-    commonPy.asnParser.ParseAsnFileList(list(uniqueASNfiles.keys()))
+    ParseAsnFileList(sys.argv[1:])
+
+    Triples = Tuple[AST_Lookup, List[AsnNode], AST_Leaftypes]  # NOQA pylint: disable=unused-variable
+    uniqueASNfiles = {}  # type: Dict[Filename, Triples]
 
     for asnFile in uniqueASNfiles:
-        tmpNames = {}
+        tmpNames = {}  # Dict[Typename, AsnNode]
         for name in commonPy.asnParser.g_typesOfFile[asnFile]:
             tmpNames[name] = commonPy.asnParser.g_names[name]
 
-        uniqueASNfiles[asnFile] = [
+        uniqueASNfiles[asnFile] = (
             copy.copy(tmpNames),                            # map Typename to type definition class from asnAST
             copy.copy(commonPy.asnParser.g_astOfFile[asnFile]),    # list of nameless type definitions
-            copy.copy(commonPy.asnParser.g_leafTypeDict)]   # map from Typename to leafType
+            copy.copy(commonPy.asnParser.g_leafTypeDict)    # map from Typename to leafType
+        )
 
         inform("Checking that all base nodes have mandatory ranges set in %s..." % asnFile)
         for node in list(tmpNames.values()):
-            verify.VerifyRanges(node, commonPy.asnParser.g_names)
+            commonPy.verify.VerifyRanges(node, commonPy.asnParser.g_names)
 
     # If some AST nodes must be skipped (for any reason), go learn about them
     badTypes = commonPy.cleanupNodes.DiscoverBadTypes()
@@ -226,15 +233,20 @@ def main():
             inform("Processing %s...", nodeTypename)
 
             # First, make sure we know what leaf type this node is
-            assert(nodeTypename in leafTypeDict)
+            assert nodeTypename in leafTypeDict
 
             C_HeaderFile.write('void Print%s(const char *paramName, const asn1Scc%s *pData);\n' % (cleanNodeTypename, cleanNodeTypename))
             C_SourceFile.write('void Print%s(const char *paramName, const asn1Scc%s *pData)\n{\n' % (cleanNodeTypename, cleanNodeTypename))
             C_SourceFile.write('#ifdef __linux__\n')
             C_SourceFile.write('    pthread_mutex_lock(&g_printing_mutex);\n')
             C_SourceFile.write('#endif\n')
-            #C_SourceFile.write('\n'.join(printer.Map('(*pData)', '', node, leafTypeDict, commonPy.asnParser.g_names)))
-            lines = ["    "+x for x in printer.Map('(*pData)', '', node, leafTypeDict, commonPy.asnParser.g_names)]
+            lines = ["    "+x
+                     for x in printer.Map(
+                         '(*pData)',
+                         '',
+                         node,
+                         leafTypeDict,
+                         commonPy.asnParser.g_names)]
             C_SourceFile.write("\n".join(lines))
             C_SourceFile.write('\n#ifdef __linux__\n')
             C_SourceFile.write('    pthread_mutex_unlock(&g_printing_mutex);\n')
@@ -249,7 +261,7 @@ def main():
 if __name__ == "__main__":
     if "-pdb" in sys.argv:
         sys.argv.remove("-pdb")  # pragma: no cover
-        import pdb  # pragma: no cover
+        import pdb  # pylint: disable=wrong-import-position  pragma: nocover
         pdb.run('main()')  # pragma: no cover
     else:
         main()

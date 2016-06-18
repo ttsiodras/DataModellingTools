@@ -24,9 +24,13 @@ import os
 import sys
 import copy
 
+from typing import Tuple
+
 import commonPy.configMT
-#from commonPy.asnAST import AsnBool,AsnMetaMember,AsnInt,AsnReal,AsnOctetString,AsnEnumerated,AsnSequence,AsnSet,AsnChoice,sourceSequenceLimit
-from commonPy.asnAST import sourceSequenceLimit
+from commonPy.asnAST import sourceSequenceLimit, AsnNode  # NOQA pylint: disable=unused-import
+from commonPy.asnParser import (
+    AST_Lookup, AST_TypesOfFile, AST_TypenamesOfFile, AST_Leaftypes,
+    Typename, Filename, ParseAsnFileList)
 from commonPy.utility import inform, panic
 import commonPy.cleanupNodes
 from commonPy.recursiveMapper import RecursiveMapper
@@ -186,24 +190,25 @@ def main():
         if not os.path.isfile(f):
             panic("'%s' is not a file!\n" % f)  # pragma: no cover
 
-    uniqueASNfiles = {}
-    for grammar in sys.argv[1:]:
-        uniqueASNfiles[grammar] = 1
-    commonPy.asnParser.ParseAsnFileList(list(uniqueASNfiles.keys()))
+    ParseAsnFileList(sys.argv[1:])
+
+    Triples = Tuple[AST_Lookup, List[AsnNode], AST_Leaftypes]  # NOQA pylint: disable=unused-variable
+    uniqueASNfiles = {}  # type: Dict[Filename, Triples]
 
     for asnFile in uniqueASNfiles:
-        tmpNames = {}
+        tmpNames = {}  # Dict[Typename, AsnNode]
         for name in commonPy.asnParser.g_typesOfFile[asnFile]:
             tmpNames[name] = commonPy.asnParser.g_names[name]
 
-        uniqueASNfiles[asnFile] = [
+        uniqueASNfiles[asnFile] = (
             copy.copy(tmpNames),                            # map Typename to type definition class from asnAST
             copy.copy(commonPy.asnParser.g_astOfFile[asnFile]),    # list of nameless type definitions
-            copy.copy(commonPy.asnParser.g_leafTypeDict)]   # map from Typename to leafType
+            copy.copy(commonPy.asnParser.g_leafTypeDict)    # map from Typename to leafType
+        )
 
         inform("Checking that all base nodes have mandatory ranges set in %s..." % asnFile)
         for node in list(tmpNames.values()):
-            verify.VerifyRanges(node, commonPy.asnParser.g_names)
+            commonPy.verify.VerifyRanges(node, commonPy.asnParser.g_names)
 
     # If some AST nodes must be skipped (for any reason), go learn about them
     badTypes = commonPy.cleanupNodes.DiscoverBadTypes()
