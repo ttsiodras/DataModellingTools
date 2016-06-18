@@ -41,7 +41,7 @@ __doc__ = '''
 Rules to gather the list of types that must be skipped
 '''
 
-from typing import Dict, Union
+from typing import Set, Union
 
 import commonPy.asnParser
 from commonPy.asnAST import (
@@ -49,13 +49,15 @@ from commonPy.asnAST import (
     AsnMetaMember, AsnSetOf, AsnNode
 )
 
-def DiscoverBadTypes() -> Dict[str, bool]:
+SetOfBadTypenames = Set[str]
+
+def DiscoverBadTypes() -> SetOfBadTypenames:
     '''
     This returns a dictionary that tells us which types to skip
     pver during type mappings. For now, it includes IA5Strings
     and types whose descendants end up having such a field.
     '''
-    badTypes = {}  # type: Dict[str, bool]
+    badTypes = set()  # type: SetOfBadTypenames
     cache = {}  # type: Dict[AsnNode, bool]
 
     def CheckNodeForIA5(node_or_str: Union[AsnNode, str]) -> bool:
@@ -98,7 +100,7 @@ def DiscoverBadTypes() -> Dict[str, bool]:
         for nodeTypename in names.keys():
             node = names[nodeTypename]
             if nodeTypename not in badTypes and CheckNodeForIA5(node):
-                badTypes[nodeTypename] = True
+                badTypes.add(nodeTypename)
                 foundOne = True
         if not foundOne:
             break

@@ -27,7 +27,8 @@ from commonPy.asnAST import (
     AsnBool, AsnInt, AsnReal, AsnString, isSequenceVariable, AsnEnumerated,
     AsnSequence, AsnSet, AsnChoice, AsnMetaMember, AsnSequenceOf, AsnSetOf,
     AsnBasicNode)
-import commonPy.cleanupNodes
+from commonPy.asnParser import AST_Lookup, AST_Leaftypes
+from commonPy.cleanupNodes import SetOfBadTypenames
 
 # The Python file written to
 g_outputFile = None
@@ -44,11 +45,11 @@ def Version():
         "$Id: python_A_mapper.py 2400 2012-09-04 10:40:19Z ttsiodras $")  # pragma: no cover
 
 
-def CleanNameAsPythonWants(name):
+def CleanNameAsPythonWants(name: str) -> str:
     return re.sub(r'[^a-zA-Z0-9_]', '_', name)
 
 
-def OnStartup(unused_modelingLanguage, asnFile, outputDir, badTypes):
+def OnStartup(unused_modelingLanguage: str, asnFile: str, outputDir: str, badTypes: SetOfBadTypenames):
     os.system("bash -c '[ ! -f \"" + outputDir + "/" + asnFile + "\" ] && cp \"" + asnFile + "\" \"" + outputDir + "\"'")
     this_path = os.path.dirname(__file__)
     stubs = this_path + os.sep + 'Stubs.py'
@@ -138,7 +139,8 @@ def OnStartup(unused_modelingLanguage, asnFile, outputDir, badTypes):
 
     # mono_exe = "mono " if sys.argv[0].endswith('.py') and sys.platform.startswith('linux') else ""
     mono_exe = ""
-    Makefile.write('''
+    Makefile.write(
+    '''\
 ASN1SCC:=asn1.exe
 ASN2DATAMODEL:=asn2dataModel
 GRAMMAR := %(origGrammarBase)s
@@ -176,7 +178,7 @@ clean:
     g_outputGetSetH.write('\n/* Helper functions for NATIVE encodings */\n\n')
     g_outputGetSetC.write('\n/* Helper functions for NATIVE encodings */\n\n')
 
-    def WorkOnType(nodeTypename):
+    def WorkOnType(nodeTypename: str):
         typ = CleanNameAsPythonWants(nodeTypename)
         g_outputGetSetH.write('void SetDataFor_%s(void *dest, void *src);\n' % typ)
         g_outputGetSetH.write("byte* MovePtrBySizeOf_%s(byte *pData);\n" % typ)
@@ -262,9 +264,9 @@ class Params(object):
         "OCTET STRING": "byte*",
     }
 
-    def __init__(self, nodeTypename):
-        self._vars = []
-        self._types = []
+    def __init__(self, nodeTypename: str) -> None:
+        self._vars = []  # type: List[str]
+        self._types = []  # type: List[str]
         self._nodeTypeName = nodeTypename
 
     def AddParam(self, node, varName, unused_leafTypeDict):
@@ -452,7 +454,7 @@ def DumpTypeDumper(codeIndent, outputIndent, lines, variableName, node, names):
         lines.append(codeIndent + 'lines.append("}")')
 
 
-def CreateDeclarationForType(nodeTypename, names, leafTypeDict):
+def CreateDeclarationForType(nodeTypename: str, names: AST_Lookup, leafTypeDict: AST_Leaftypes):
     node = names[nodeTypename]
     name = CleanNameAsPythonWants(nodeTypename)
     if isinstance(node, AsnBasicNode) or isinstance(node, AsnEnumerated) or \
@@ -485,7 +487,7 @@ def CreateDeclarationForType(nodeTypename, names, leafTypeDict):
         g_outputFile.write("\n    def GSER(self):\n")
         g_outputFile.write("        ''' Return the GSER representation of the value '''\n")
         g_outputFile.write("        lines = []\n")
-        lines = []
+        lines = []  # type: List[str]
         DumpTypeDumper("        ", "", lines, "self", names[nodeTypename], names)
         g_outputFile.write("\n".join(lines) + "\n\n")
         g_outputFile.write("        return ' '.join(lines)")
@@ -497,7 +499,7 @@ def CreateDeclarationForType(nodeTypename, names, leafTypeDict):
         panic("Unexpected ASN.1 type... Send this grammar to Semantix")  # pragma: no cover
 
 
-def CreateDeclarationsForAllTypes(names, leafTypeDict, badTypes):
+def CreateDeclarationsForAllTypes(names, leafTypeDict, badTypes: SetOfBadTypenames):
     for nodeTypename in names:
         if not names[nodeTypename]._isArtificial and nodeTypename not in badTypes:
             CreateDeclarationForType(nodeTypename, names, leafTypeDict)

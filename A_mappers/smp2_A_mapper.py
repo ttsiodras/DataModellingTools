@@ -28,6 +28,7 @@ import random
 from commonPy.asnAST import AsnMetaMember, AsnChoice, AsnSet, AsnSequence, AsnSequenceOf, AsnSetOf
 from commonPy.asnParser import g_names, g_leafTypeDict, CleanNameForAST
 from commonPy.utility import panic, warn
+from commonPy.cleanupNodes import SetOfBadTypenames
 
 g_catalogueXML = None
 g_innerTypes = {}
@@ -290,7 +291,7 @@ def CreateChoice(nodeTypename, node, _):
 g_bShutdownRun = False
 
 
-def OnShutdown(badTypes):
+def OnShutdown(badTypes: SetOfBadTypenames):
     global g_bShutdownRun
     if g_bShutdownRun:
         return   # pragma: no cover

@@ -29,6 +29,7 @@ from commonPy.asnAST import (
     AsnSetOf, isSequenceVariable)
 from commonPy.asnParser import g_names, g_leafTypeDict, CleanNameForAST
 from commonPy.utility import panic, warn
+from commonPy.cleanupNodes import SetOfBadTypenames
 
 g_sqlalchemyOutput = None
 g_innerTypes = {}  # type: Dict[str, int]
@@ -515,7 +516,7 @@ def CreateChoice(nodeTypename, node, _):
 g_bShutdownRun = False
 
 
-def OnShutdown(badTypes):
+def OnShutdown(badTypes: SetOfBadTypenames):
     global g_bShutdownRun
     if g_bShutdownRun:
         return   # pragma: no cover
