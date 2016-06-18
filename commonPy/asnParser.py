@@ -53,7 +53,7 @@ import re
 import distutils.spawn as spawn
 
 import xml.sax  # type: ignore
-from typing import Union, List, Dict, Tuple, Any  # pylint: disable=W0611
+from typing import Union, List, Dict, Tuple, Any  # NOQA pylint: disable=W0611
 
 from . import configMT
 from . import utility
@@ -219,7 +219,7 @@ def KnownType(node, names):
     return retVal
 
 
-def CleanNameForAST(name):
+def CleanNameForAST(name: str) -> str:
     return re.sub(r'[^a-zA-Z0-9_]', '_', name)
 
 
@@ -838,9 +838,11 @@ class Module(Pretty):
     _asnFilename = None        # type: str
     _exportedTypes = None      # type: List[str]
     _exportedVariables = None  # type: List[str]
+
+    # (tuples of ModuleName, imported types, imported vars)
     _importedModules = None    # type: List[ Tuple[ str, List[str], List[str] ] ]
-                               # (tuples of ModuleName, imported types, imported vars)
-    _typeAssignments = None    # type: List[ Tuple[str, AsnNode] ]
+    # (tuples of Typename, AsnNode)
+    _typeAssignments = None    # type: List[ Tuple[ str, AsnNode] ]
     pass
 
 

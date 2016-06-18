@@ -5,7 +5,7 @@ from commonPy.asnAST import AsnBool, AsnInt, AsnReal, \
     AsnEnumerated, AsnOctetString, AsnSequenceOf, AsnSet, \
     AsnSetOf, AsnSequence, AsnChoice, AsnMetaMember
 
-from typing import Any
+from typing import Any  # NOQA
 
 # Level of verbosity
 g_verboseLevel = 0

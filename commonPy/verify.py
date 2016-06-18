@@ -18,9 +18,12 @@
 # Note that in both cases, there are no charges (royalties) for the
 # generated code.
 #
-__doc__ = '''This module checks that all ASN.1 types are using the appropriate constraint (ASSERT-wise).'''
+'''
+This module checks that all ASN.1 types are using the appropriate
+constraint (ASSERT-wise).
+'''
 
-from typing import Dict, Union
+from typing import Dict, Union  # NOQA
 
 from commonPy.utility import panic
 
@@ -86,11 +89,11 @@ calling VerifyNodeRange for each Node.'''
     if isinstance(node, commonPy.asnAST.AsnBasicNode):
         VerifyNodeRange(node)
     elif isinstance(node, (commonPy.asnAST.AsnSequence, commonPy.asnAST.AsnChoice, commonPy.asnAST.AsnSet)):
-        #Bug fixed in ASN1SCC - this check is no longer needed
-        #if 0 == len(node._members):
-        #    panic(
-        #        "Empty SEQUENCE/SETs are not allowed. Please add at least one field in (%s)\n"
-        #        % node.Location())
+        # Bug fixed in ASN1SCC - this check is no longer needed
+        # if 0 == len(node._members):
+        #     panic(
+        #         "Empty SEQUENCE/SETs are not allowed. Please add at least one field in (%s)\n"
+        #         % node.Location())
         for child in node._members:
             VerifyRanges(child[1], names)
     elif isinstance(node, (commonPy.asnAST.AsnSequenceOf, commonPy.asnAST.AsnSetOf)):

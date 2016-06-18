@@ -21,7 +21,7 @@
 # This is an evolving test implementation of mapping ASN.1 constructs
 # to SDL. It is used by the backend of Semantix's code generator A.
 
-#import re
+# import re
 
 g_outputDir = ""
 g_asnFile = ""
@@ -67,25 +67,25 @@ def OnChoice(nodeTypename, node, leafTypeDict):
 
 # obsolete, now the grammar is re-created from the AST (PrintGrammarFromAST)
 #
-#def ClearUp(text):
-#    outputText = ""
-#    lParen = 0
-#    for c in text:
-#        if c == '(':
-#            lParen += 1
-#        if c == ')':
-#            lParen -= 1
-#        if 0 == lParen:
-#            outputText += c.replace('-', '_')
-#        else:
-#            outputText += c
-#    return outputText
+# def ClearUp(text):
+#     outputText = ""
+#     lParen = 0
+#     for c in text:
+#         if c == '(':
+#             lParen += 1
+#         if c == ')':
+#             lParen -= 1
+#         if 0 == lParen:
+#             outputText += c.replace('-', '_')
+#         else:
+#             outputText += c
+#     return outputText
 
 
 def OnShutdown(unused_badTypes):
-#    text = open(g_asnFile, 'r').read()
-#    text = re.sub(r'^.*BEGIN', 'Datamodel DEFINITIONS ::= BEGIN', text)
-#    text = re.sub(r'--.*', '', text)
+    # text = open(g_asnFile, 'r').read()
+    # text = re.sub(r'^.*BEGIN', 'Datamodel DEFINITIONS ::= BEGIN', text)
+    # text = re.sub(r'--.*', '', text)
     outputFile = open(g_outputDir + "DataView.pr", 'w')
     outputFile.write('Datamodel DEFINITIONS ::= BEGIN\n\n')
     import commonPy.asnParser

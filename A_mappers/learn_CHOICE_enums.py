@@ -23,7 +23,7 @@ for line in open(sys.argv[1] + '.h', 'r'):
         enums.append(line.strip().replace(",", "").split("="))
 
 enums_dump = "\n    ".join(
-    'printf("%s = %%d\\n", %s);' % (e,e)
+    'printf("%s = %%d\\n", %s);' % (e, e)
     for e in choices
 )
 
@@ -32,7 +32,7 @@ enums_dump += "\n    ".join(
     for name, val in enums
 )
 uniq = os.getpid()
-extractor_filename ="/tmp/enums_%d" % uniq
+extractor_filename = "/tmp/enums_%d" % uniq
 f = open(extractor_filename + ".c", 'w')
 f.write("""
 #include <stdio.h>
@@ -41,7 +41,7 @@ f.write("""
 void main()
 {
 %(enums_dump)s
-}""" % {"enums_dump":enums_dump, "base":sys.argv[1]})
+}""" % {"enums_dump": enums_dump, "base": sys.argv[1]})
 f.close()
 if 0 != os.system(
         "gcc -o %s -I. %s.c" % (extractor_filename, extractor_filename)):

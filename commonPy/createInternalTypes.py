@@ -19,7 +19,7 @@
 # generated code.
 #
 import re
-from typing import Any, Dict, List
+from typing import Any, Dict, List  # NOQA
 
 import commonPy.asnParser
 
@@ -40,7 +40,7 @@ def CleanName(name: str) -> str:
 
 
 def CreatePseudoType(
-        pseudoType: str, origASTnode: AsnNode, 
+        pseudoType: str, origASTnode: AsnNode,
         names: Dict[str, AsnNode], results: List[str]) -> str:
     # if such a pseudo type already exists, add "_t" postfix until you get
     # one that doesn't exist.
@@ -145,9 +145,9 @@ def ScanChildren(
                 # asnParser uses VerifyAndFixAST to replace nameless types usage
                 # from within SEQUENCE/SET OFs, SEQUENCE/SET and CHOICEs (See end of VerifyAndFixAST)
 
-                # if the field is SET/SEQ OF, find the AST node for the contained type
+                # (see comment above about these pragma nocovers)
 
-                                                                               # See comment above about these pragmas:
+                # if the field is SET/SEQ OF, find the AST node for the contained type
                 if isinstance(child[1]._containedType, str):                                    # pragma: no cover
                     childNode = names[child[1]._containedType]                                  # pragma: no cover
                 else:                                                                           # pragma: no cover

@@ -41,8 +41,8 @@ g_bHasStartupRunOnce = False
 
 
 def Version():
-    print("Code generator: " + \
-        "$Id: python_A_mapper.py 2400 2012-09-04 10:40:19Z ttsiodras $")  # pragma: no cover
+    print("Code generator: " +
+          "$Id: python_A_mapper.py 2400 2012-09-04 10:40:19Z ttsiodras $")  # pragma: no cover
 
 
 def CleanNameAsPythonWants(name: str) -> str:
@@ -140,7 +140,7 @@ def OnStartup(unused_modelingLanguage: str, asnFile: str, outputDir: str, badTyp
     # mono_exe = "mono " if sys.argv[0].endswith('.py') and sys.platform.startswith('linux') else ""
     mono_exe = ""
     Makefile.write(
-    '''\
+        '''\
 ASN1SCC:=asn1.exe
 ASN2DATAMODEL:=asn2dataModel
 GRAMMAR := %(origGrammarBase)s

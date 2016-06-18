@@ -220,7 +220,7 @@ def CreateEnumerated(nodeTypename, node, unused_leafTypeDict):
         uido = getUID(nodeTypename + "_option_" + opt[0])
         g_catalogueXML.write('      <Literal Name="%s" Value="%s" Id="ID_%s" />\n' %
                              (opt[0], opt[1], uido))
-    #g_catalogueXML.write('      <NativeType xlink:href="http://www.esa.int/2005/10/Smp#%s" />\n' % nativeSMP2type)
+    # g_catalogueXML.write('      <NativeType xlink:href="http://www.esa.int/2005/10/Smp#%s" />\n' % nativeSMP2type)
     g_catalogueXML.write('    </Type>\n')
 
 

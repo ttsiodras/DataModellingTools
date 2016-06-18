@@ -46,8 +46,7 @@ from commonPy.utility import inform, panic
 import commonPy.cleanupNodes
 
 import commonPy.verify as verify
-from functools import reduce
-import A_mappers
+import A_mappers  # NOQA
 
 def usage(argsToTools):
     '''Print usage instructions.'''

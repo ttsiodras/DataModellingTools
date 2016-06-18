@@ -75,7 +75,7 @@
 #                     |        AsnMetaMember        |
 #                     +-----------------------------+
 
-from typing import Union, Dict
+from typing import Union, Dict  # NOQA
 
 from . import utility
 
@@ -115,17 +115,15 @@ class AsnComplexNode(AsnNode):
 def CommonIdenticalRangePerSMP2(range1, range2):
     '''Helper for SMP2 comparisons of types with ranges.'''
     def collapseSpan(r):
-        if len(r)==2 and r[0]==r[1]:
+        if len(r) == 2 and r[0] == r[1]:
             return [r[0]]
         return r
     mySpan = collapseSpan(range1)
     otherSpan = collapseSpan(range2)
     return (
-        (mySpan==[] and otherSpan==[])
-        or
-        (len(mySpan)==1 and len(otherSpan)==1 and mySpan[0]==otherSpan[0])
-        or
-        (len(mySpan)==2 and len(otherSpan)==2 and mySpan[-1]==otherSpan[-1]))
+        (mySpan == [] and otherSpan == []) or
+        (len(mySpan) == 1 and len(otherSpan) == 1 and mySpan[0] == otherSpan[0]) or
+        (len(mySpan) == 2 and len(otherSpan) == 2 and mySpan[-1] == otherSpan[-1]))
 
 
 class AsnBool(AsnBasicNode):
@@ -288,7 +286,7 @@ Members:
     def AsASN1(self, _={}):
         ret = 'OCTET STRING'
         if self._range:
-            if len(self._range)>1 and self._range[0] != self._range[1]:
+            if len(self._range) > 1 and self._range[0] != self._range[1]:
                 ret += ' (SIZE (' + str(self._range[0]) + ' .. ' + str(self._range[1]) + '))'
             else:
                 ret += ' (SIZE (' + str(self._range[0]) + '))'
@@ -303,13 +301,12 @@ class AsnOctetString(AsnString):
         self._name = "OCTET STRING"  # default in case of SEQUENCE_OF OCTET STRING
         self._leafType = "OCTET STRING"
 
-#class AsnBitString(AsnString):
-#    '''This class stores the semantic content of an ASN.1 BIT STRING.'''
-
-#    def __init__(self, **args):
-#       apply(AsnString.__init__, (self,), args)
-#       self._name = "BIT STRING" # default in case of SEQUENCE_OF BIT STRING
-#       self._leafType = "BIT STRING"
+# class AsnBitString(AsnString):
+#     '''This class stores the semantic content of an ASN.1 BIT STRING.'''
+#     def __init__(self, **args):
+#        apply(AsnString.__init__, (self,), args)
+#        self._name = "BIT STRING" # default in case of SEQUENCE_OF BIT STRING
+#        self._leafType = "BIT STRING"
 
 
 class AsnUTF8String(AsnString):
@@ -392,8 +389,9 @@ Members:
         for elem in self._members:
             if elem[0] in existing:
                 utility.panic(
-                    "member '%s' appears more than once in ENUMERATED %s" % (elem[0],  # pragma: no cover
-                    ((self._lineno is not None) and ("defined in line %s" % self._lineno) or (""))))  # pragma: no cover
+                    "member '%s' appears more than once in ENUMERATED %s" % (  # pragma: no cover
+                        elem[0],
+                        ((self._lineno is not None) and ("defined in line %s" % self._lineno) or (""))))  # pragma: no cover
             else:
                 existing[elem[0]] = 1
 
@@ -409,7 +407,7 @@ Members:
         return isinstance(other, AsnEnumerated) and sorted(self._members) == sorted(other._members)
 
     def AsASN1(self, _={}):
-        ret=[]
+        ret = []
         for m in self._members:
             ret.append(m[0] + '(' + m[1] + ')')
         return 'ENUMERATED {' + ", ".join(ret) + "}"
@@ -432,7 +430,7 @@ def CommonIdenticalCheck(me, other, mynames, othernames):
 
 
 def CommonAsASN1(kind, node, typeDict):
-    ret=[]
+    ret = []
     for m in node._members:
         child = m[1]
         if isinstance(child, AsnMetaMember):
@@ -468,10 +466,11 @@ Members:
         for elem in self._members:
             if elem[0] in existing:
                 utility.panic(
-                    "member '%s' appears more than once in %s" % (elem[0],  # pragma: no cover
-                    ((self._lineno is not None) and ("defined in line %s" % self._lineno) or (""))))  # pragma: no cover
+                    "member '%s' appears more than once in %s" % (  # pragma: no cover
+                        elem[0],
+                        ((self._lineno is not None) and ("defined in line %s" % self._lineno) or (""))))  # pragma: no cover
             else:
-                existing[elem[0]]=1
+                existing[elem[0]] = 1
 
     def __repr__(self):
         result = self._leafType
@@ -483,7 +482,7 @@ Members:
 
     def IdenticalPerSMP2(self, other, mynames, othernames):
         # to allow for SMP2 mappings, where there's no AsnSet
-        #return isinstance(other, AsnSequence) and CommonIdenticalCheck(self, other, mynames, othernames)
+        # return isinstance(other, AsnSequence) and CommonIdenticalCheck(self, other, mynames, othernames)
         return \
             (isinstance(other, AsnSet) or isinstance(other, AsnSequence)) and \
             CommonIdenticalCheck(self, other, mynames, othernames)
@@ -506,10 +505,11 @@ class AsnSet(AsnComplexNode):
         for elem in self._members:
             if elem[0] in existing:
                 utility.panic(
-                    "member '%s' appears more than once in %s" % (elem[0],  # pragma: no cover
-                    ((self._lineno is not None) and ("defined in line %s" % self._lineno) or (""))))  # pragma: no cover
+                    "member '%s' appears more than once in %s" % (  # pragma: no cover
+                        elem[0],
+                        ((self._lineno is not None) and ("defined in line %s" % self._lineno) or (""))))  # pragma: no cover
             else:
-                existing[elem[0]]=1
+                existing[elem[0]] = 1
 
     def __repr__(self):
         result = self._leafType
@@ -521,7 +521,7 @@ class AsnSet(AsnComplexNode):
 
     def IdenticalPerSMP2(self, other, mynames, othernames):
         # to allow for SMP2 mappings, where there's no AsnSet
-        #return isinstance(other, AsnSet) and CommonIdenticalCheck(self, other, mynames, othernames)
+        # return isinstance(other, AsnSet) and CommonIdenticalCheck(self, other, mynames, othernames)
         return \
             (isinstance(other, AsnSet) or isinstance(other, AsnSequence)) and \
             CommonIdenticalCheck(self, other, mynames, othernames)
@@ -553,10 +553,11 @@ Members:
         for elem in self._members:
             if elem[0] in existing:
                 utility.panic(
-                    "member '%s' appears more than once in CHOICE %s" % (elem[0],  # pragma: no cover
-                    ((self._lineno is not None) and ("defined in line %s" % self._lineno) or (""))))  # pragma: no cover
+                    "member '%s' appears more than once in CHOICE %s" % (  # pragma: no cover
+                        elem[0],
+                        ((self._lineno is not None) and ("defined in line %s" % self._lineno) or (""))))  # pragma: no cover
             else:
-                existing[elem[0]]=1
+                existing[elem[0]] = 1
 
     def __repr__(self):
         result = self._leafType
@@ -594,7 +595,7 @@ def CommonAsASN1array(kind, node, typeDict):
             utility.panic("There's no such type in typename dictionary: '%s'" % contained)
         contained = typeDict[contained]
     if node._range:
-        if len(node._range)>1 and node._range[0] != node._range[1]:
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
             span = ' (SIZE(' + str(node._range[0]) + ' .. ' + str(node._range[1]) + ')) OF '
         else:
             span = ' (SIZE(' + str(node._range[0]) + ')) OF '
@@ -737,12 +738,12 @@ e.g.:
 
 
 def isSequenceVariable(node):
-    return 2==len(node._range) and node._range[0]!=node._range[1]
+    return 2 == len(node._range) and node._range[0] != node._range[1]
 
 
 def sourceSequenceLimit(node, srcCVariable):
-    return str(node._range[-1]) if not isSequenceVariable(node) else "%s.nCount"%srcCVariable
+    return str(node._range[-1]) if not isSequenceVariable(node) else "%s.nCount" % srcCVariable
 
 
 def targetSequenceLimit(node, dstCVariable):
-    return str(node._range[-1]) if not isSequenceVariable(node) else "%s.nCount"%dstCVariable
+    return str(node._range[-1]) if not isSequenceVariable(node) else "%s.nCount" % dstCVariable

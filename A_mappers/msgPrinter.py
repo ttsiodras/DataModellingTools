@@ -38,7 +38,7 @@ from typing import Tuple
 
 import commonPy.configMT
 from commonPy.asnAST import sourceSequenceLimit, AsnNode  # NOQA pylint: disable=unused-import
-from commonPy.asnParser import (
+from commonPy.asnParser import (  # NOQA
     AST_Lookup, AST_TypesOfFile, AST_TypenamesOfFile, AST_Leaftypes,
     Typename, Filename, ParseAsnFileList)
 from commonPy.utility import inform, panic

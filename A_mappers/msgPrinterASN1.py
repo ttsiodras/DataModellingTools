@@ -28,7 +28,7 @@ from typing import Tuple
 
 import commonPy.configMT
 from commonPy.asnAST import sourceSequenceLimit, AsnNode  # NOQA pylint: disable=unused-import
-from commonPy.asnParser import (
+from commonPy.asnParser import (  # NOQA
     AST_Lookup, AST_TypesOfFile, AST_TypenamesOfFile, AST_Leaftypes,
     Typename, Filename, ParseAsnFileList)
 from commonPy.utility import inform, panic
@@ -259,7 +259,7 @@ def main():
             C_SourceFile.write('#endif\n')
             C_SourceFile.write('    //printf("%%s %s ::= ", paramName);\n' % nodeTypename)
             C_SourceFile.write('    printf("%s ", paramName);\n')
-            #C_SourceFile.write('\n'.join(printer.Map('(*pData)', '', node, leafTypeDict, commonPy.asnParser.g_names)))
+            # C_SourceFile.write('\n'.join(printer.Map('(*pData)', '', node, leafTypeDict, commonPy.asnParser.g_names)))
             lines = ["    "+x for x in printer.Map('(*pData)', '', node, leafTypeDict, commonPy.asnParser.g_names)]
             C_SourceFile.write("\n".join(lines))
             C_SourceFile.write('\n#ifdef __linux__\n')

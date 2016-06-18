@@ -26,9 +26,9 @@ using .xscade files.
 import re
 import os
 import random
-from xml.dom.minidom import Document, Node
 
-from typing import Set
+from xml.dom.minidom import Document, Node  # NOQA
+from typing import Set  # NOQA
 
 from commonPy.utility import inform, panic
 from commonPy.asnAST import (

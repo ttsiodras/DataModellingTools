@@ -101,15 +101,15 @@ def OnShutdown(unused_badTypes):
 
 
 def MapInteger(node):
-    if node._range[0]>=0 and node._range[1]<=255:
+    if node._range[0] >= 0 and node._range[1] <= 255:
         return "uint8"
-    elif node._range[0]>=-128 and node._range[1]<=127:
+    elif node._range[0] >= -128 and node._range[1] <= 127:
         return "int8"
-    elif node._range[0]>=0 and node._range[1]<=65535:
+    elif node._range[0] >= 0 and node._range[1] <= 65535:
         return "uint16"
-    elif node._range[0]>=-32768 and node._range[1]<=32767:
+    elif node._range[0] >= -32768 and node._range[1] <= 32767:
         return "int16"
-    elif node._range[0]>=0:
+    elif node._range[0] >= 0:
         return "uint32"
     else:
         return "int32"
@@ -151,7 +151,7 @@ def DeclareSimpleCollection(node, name, internal):
     g_outputFile.write("%s_member_data.dimensions=%d;\n\n" % (name, node._range[-1]))
 
     bNeedLength = False
-    if len(node._range)>1 and node._range[0]!=node._range[1]:
+    if len(node._range) > 1 and node._range[0] != node._range[1]:
         bNeedLength = True
 
     if bNeedLength:
@@ -173,7 +173,7 @@ def DeclareSimpleCollection(node, name, internal):
 def CreateDeclarationForType(nodeTypename, names, leafTypeDict):
     if nodeTypename in g_definedTypes:
         return
-    g_definedTypes[nodeTypename]=1
+    g_definedTypes[nodeTypename] = 1
     results = []
     ScanChildren(nodeTypename, names[nodeTypename], names, results, isRoot=True, createInnerNodesInNames=True)
     inform("Prerequisites of %s", nodeTypename)
@@ -250,7 +250,7 @@ def CreateDeclarationForType(nodeTypename, names, leafTypeDict):
             # so we will use the containedType_t for reference.
             elif isinstance(childNode, (AsnSequence, AsnSequenceOf, AsnSet, AsnSetOf, AsnChoice)):
 
-                #mappedType = CleanNameAsSimulinkWants(child[1]._containedType + "_t") XYZ
+                # mappedType = CleanNameAsSimulinkWants(child[1]._containedType + "_t") XYZ
                 mappedType = CleanNameAsSimulinkWants(child[1]._containedType)
             else:  # pragma: no cover
                 panic("QGenC_A_mapper: Unexpected category of child (%s)" % str(child[1]))  # pragma: no cover
@@ -260,11 +260,11 @@ def CreateDeclarationForType(nodeTypename, names, leafTypeDict):
 
         g_outputFile.write("%s = Simulink.Bus;\n" % CleanNameAsSimulinkWants(nodeTypename))
         g_outputFile.write("%s.Elements = " % CleanNameAsSimulinkWants(nodeTypename))
-        if elemNo>1:
+        if elemNo > 1:
             g_outputFile.write('[')
         for i in range(0, elemNo):
             g_outputFile.write("%s_elem%02d " % (CleanNameAsSimulinkWants(nodeTypename), i+1))
-        if elemNo>1:
+        if elemNo > 1:
             g_outputFile.write(']')
         g_outputFile.write(";\n\n")
     elif isinstance(node, AsnSequenceOf) or isinstance(node, AsnSetOf):

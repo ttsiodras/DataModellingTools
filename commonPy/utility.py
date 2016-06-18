@@ -43,7 +43,7 @@ import re
 import platform
 import traceback
 
-from typing import Dict, Union, Match
+from typing import Dict, Union, Match  # NOQA
 
 from . import configMT
 

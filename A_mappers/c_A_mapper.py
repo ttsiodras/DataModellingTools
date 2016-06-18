@@ -37,7 +37,7 @@ def Version():
 # the second param is not asnFile, it is asnFiles
 
 def OnStartup(unused_modelingLanguage, asnFiles, outputDir, unused_badTypes):
-    #print "Use ASN1SCC to generate the structures for '%s'" % asnFile
+    # print "Use ASN1SCC to generate the structures for '%s'" % asnFile
     asn1SccPath = spawn.find_executable('asn1.exe')
     if not asn1SccPath:
         panic("ASN1SCC seems to be missing from your system (asn1.exe not found in PATH).\n")  # pragma: no cover

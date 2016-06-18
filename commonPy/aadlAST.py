@@ -37,7 +37,6 @@
 #
 # Charge for Runtimes   None                    None
 #
-#g_nodes    = []
 g_signals = {}
 g_apLevelContainers = {}
 
@@ -83,8 +82,8 @@ class AadlEventPort:
     def __repr__(self):
         result = "AadlEventPort("+self._direction+","
         if self._sp:
-            result+=self._sp
-        result+=")"
+            result += self._sp
+        result += ")"
         return result
 
 

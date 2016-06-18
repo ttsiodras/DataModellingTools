@@ -201,10 +201,9 @@ class {cleanTypename}_SQL(Base):
     __table_args__ = (UniqueConstraint('iid'),)
     iid = Column(Integer, primary_key=True)
     data = Column({baseSqlType}{constraint})
-'''.format(
-        cleanTypename=cleanTypename,
-        baseSqlType=baseSqlType,
-        constraint=constraint))
+'''.format(cleanTypename=cleanTypename,
+           baseSqlType=baseSqlType,
+           constraint=constraint))
 
     getter = "Get"
     setter = "Set"
@@ -316,15 +315,14 @@ class {cleanTypename}_SQL(Base):
             '\n    fk_%s_iid = Column(Integer, ' % cleanFieldname)
         g_sqlalchemyOutput.write(
             "ForeignKey('{containedTypename}.iid'), nullable={nl})".format(
-            nl=nullable,
-            containedTypename=containedTypename))
+                nl=nullable,
+                containedTypename=containedTypename))
         g_sqlalchemyOutput.write(
             '''
     {relation} = relationship(
         "{containedTypename}_SQL",
-        foreign_keys=[fk_{relation}_iid])'''.format(
-            relation=cleanFieldname,
-            containedTypename=containedTypename))
+        foreign_keys=[fk_{relation}_iid])'''.format(relation=cleanFieldname,
+                                                    containedTypename=containedTypename))
     g_sqlalchemyOutput.write('\n\n    def __init__(self, pyObj):\n')
     g_sqlalchemyOutput.write('        state = pyObj.GetState()\n')
     if isChoice:
@@ -598,8 +596,8 @@ import DV
                 if t in g_dependencyGraph and \
                         nodeTypename in g_dependencyGraph[t]:
                     del g_dependencyGraph[t][nodeTypename]
-    #g_sqlalchemyOutput.write('if __name__ == "__main__":\n')
-    #g_sqlalchemyOutput.write('    Base.metadata.create_all(engine)\n')
+    # g_sqlalchemyOutput.write('if __name__ == "__main__":\n')
+    # g_sqlalchemyOutput.write('    Base.metadata.create_all(engine)\n')
     g_sqlalchemyOutput.close()
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4

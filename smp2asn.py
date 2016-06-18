@@ -116,7 +116,7 @@ def SaveASN_AST(bPruneUnnamedInnerTASTEtypes, outputAsn1Grammar, identicals):
                 continue
             if bPruneUnnamedInnerTASTEtypes and 'TaStE' in k:
                 # Don't emit artificially generated SMP2 types
-                # (see smp2_A_mapper) 
+                # (see smp2_A_mapper)
 
                 # Update 2013-Jul-8: after having ASN1SCC handle unnamed inner types,
                 # this is now impossible.

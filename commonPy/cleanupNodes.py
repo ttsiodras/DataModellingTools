@@ -37,7 +37,7 @@
 #
 # Charge for Runtimes   None                    None
 #
-__doc__ = '''
+'''
 Rules to gather the list of types that must be skipped
 '''
 

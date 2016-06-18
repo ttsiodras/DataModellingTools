@@ -203,7 +203,7 @@ def CreateSequence(nodeTypename, node, unused_leafTypeDict, isChoice=False):
     cleanTypename = CleanName(nodeTypename)
     g_sqlOutput.write(
         '\nCREATE TABLE {cleanTypename} (\n    id int NOT NULL,\n'.format(
-        cleanTypename=cleanTypename))
+            cleanTypename=cleanTypename))
     if isChoice:
         g_sqlOutput.write('    indexOfActualFieldUsed int NOT NULL,\n')
     nullable = "" if isChoice else " NOT NULL"
@@ -224,8 +224,8 @@ def CreateSequence(nodeTypename, node, unused_leafTypeDict, isChoice=False):
             ',\n    CONSTRAINT {cleanFieldname}_fk '
             'FOREIGN KEY ({cleanFieldname}_id)\n'
             '\tREFERENCES {cleanTypename}(id)'.format(
-            cleanFieldname=cleanFieldname,
-            cleanTypename=containedTypename))
+                cleanFieldname=cleanFieldname,
+                cleanTypename=containedTypename))
     g_sqlOutput.write(');\n\n')
 
 
