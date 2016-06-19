@@ -103,12 +103,14 @@ class FromCtoOSS(RecursiveMapper):
             childNo += 1
             lines.append("%sif (%s.kind == %s) {\n" %
                          (self.maybeElse(childNo), srcCVariable, self.CleanName(child[2])))
-            lines.extend(['    '+x for x in self.Map(
-                         "%s.u.%s" % (srcCVariable, self.CleanName(child[0])),
-                         destVar + ".u." + self.CleanName(child[0]),
-                         child[1],
-                         leafTypeDict,
-                         names)])
+            lines.extend(
+                ['    '+x
+                 for x in self.Map(
+                     "%s.u.%s" % (srcCVariable, self.CleanName(child[0])),
+                     destVar + ".u." + self.CleanName(child[0]),
+                     child[1],
+                     leafTypeDict,
+                     names)])
             lines.append("    %s.choice = OSS_%s_chosen;\n" % (destVar, self.CleanName(child[0])))
             lines.append("}\n")
         return lines
@@ -120,12 +122,14 @@ class FromCtoOSS(RecursiveMapper):
         lines.append("    int i%s;\n" % uniqueId)
         limit = sourceSequenceLimit(node, srcCVariable)
         lines.append("    for(i%s=0; i%s<%s; i%s++) {\n" % (uniqueId, uniqueId, limit, uniqueId))
-        lines.extend(["        " + x for x in self.Map(
-                     "%s.arr[i%s]" % (srcCVariable, uniqueId),
-                     "%s.value[i%s]" % (destVar, uniqueId),
-                     node._containedType,
-                     leafTypeDict,
-                     names)])
+        lines.extend(
+            ["        "+x
+             for x in self.Map(
+                 "%s.arr[i%s]" % (srcCVariable, uniqueId),
+                 "%s.value[i%s]" % (destVar, uniqueId),
+                 node._containedType,
+                 leafTypeDict,
+                 names)])
         lines.append("    }\n")
         lines.append("    %s.count = %s;\n" % (destVar, limit))
         lines.append("}\n")
@@ -189,12 +193,14 @@ class FromOSStoC(RecursiveMapper):
             childNo += 1
             lines.append("%sif (%s.choice == OSS_%s_chosen) {\n" %
                          (self.maybeElse(childNo), srcVar, self.CleanName(child[0])))
-            lines.extend(['    '+x for x in self.Map(
-                         srcVar + ".u." + self.CleanName(child[0]),
-                         "%s.u.%s" % (dstCVariable, self.CleanName(child[0])),
-                         child[1],
-                         leafTypeDict,
-                         names)])
+            lines.extend(
+                ['    '+x
+                 for x in self.Map(
+                     srcVar + ".u." + self.CleanName(child[0]),
+                     "%s.u.%s" % (dstCVariable, self.CleanName(child[0])),
+                     child[1],
+                     leafTypeDict,
+                     names)])
             lines.append("    %s.kind = %s;\n" % (dstCVariable, self.CleanName(child[2])))
             lines.append("}\n")
         return lines
@@ -208,12 +214,14 @@ class FromOSStoC(RecursiveMapper):
             lines.append("    %s.nCount = %s.count;\n" % (dstCVariable, srcVar))
         lines.append("    for(i%s=0; i%s<%s; i%s++) {\n" %
                      (uniqueId, uniqueId, targetSequenceLimit(node, dstCVariable), uniqueId))
-        lines.extend(["        " + x for x in self.Map(
-                     srcVar + ".value[i%s]" % uniqueId,
-                     "%s.arr[i%s]" % (dstCVariable, uniqueId),
-                     node._containedType,
-                     leafTypeDict,
-                     names)])
+        lines.extend(
+            ["        "+x
+             for x in self.Map(
+                 srcVar + ".value[i%s]" % uniqueId,
+                 "%s.arr[i%s]" % (dstCVariable, uniqueId),
+                 node._containedType,
+                 leafTypeDict,
+                 names)])
         lines.append("    }\n")
         lines.append("}\n")
         return lines

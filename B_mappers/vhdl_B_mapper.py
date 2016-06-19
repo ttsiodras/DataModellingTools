@@ -35,6 +35,7 @@ To that end, we create "glue" functions for input and output
 parameters, which have C callable interfaces. The necessary
 stubs (to allow calling from the VM side) are also generated.
 '''
+# pylint: disable=too-many-lines
 
 import re
 import os
@@ -68,6 +69,7 @@ def RegistersAllocated(node):
     names = commonPy.asnParser.g_names
     while isinstance(node, str):
         node = names[node]
+    retValue = None
     if isinstance(node, AsnBasicNode):
         retValue = 0
         realLeafType = commonPy.asnParser.g_leafTypeDict[node._leafType]
@@ -87,31 +89,29 @@ def RegistersAllocated(node):
             retValue = 4*(int((node._range[-1]+3)/4))
         else:  # pragma: no cover
             panicWithCallStack("Basic type %s can't be mapped..." % realLeafType)  # pragma: no cover
-        return retValue
-    elif isinstance(node, AsnSequence):
-        return sum(map(RegistersAllocated, [x[1] for x in node._members]))
-    elif isinstance(node, AsnSet):
-        return sum(map(RegistersAllocated, [x[1] for x in node._members]))
+    elif isinstance(node, (AsnSequence, AsnSet)):
+        retValue = sum(RegistersAllocated(x[1]) for x in node._members)
     elif isinstance(node, AsnChoice):
-        return 4 + sum(map(RegistersAllocated, [x[1] for x in node._members]))
+        retValue = 4 + sum(RegistersAllocated(x[1]) for x in node._members)
     elif isinstance(node, AsnSequenceOf):
         if node._range == []:
             panicWithCallStack("For VHDL, a SIZE constraint is mandatory (%s)!\n" % node.Location())  # pragma: no cover
         if len(node._range) > 1 and node._range[0] != node._range[1]:
             panicWithCallStack("Must have a fixed SIZE constraint (in %s) for VHDL code!" % node.Location())  # pragma: no cover
-        return node._range[-1] * RegistersAllocated(node._containedType)
+        retValue = node._range[-1] * RegistersAllocated(node._containedType)
     elif isinstance(node, AsnSetOf):
         if node._range == []:
             panicWithCallStack("For VHDL, a SIZE constraint is mandatory (%s)!\n" % node.Location())  # pragma: no cover
         if len(node._range) > 1 and node._range[0] != node._range[1]:
             panicWithCallStack("Must have a fixed SIZE constraint (in %s) for VHDL code!" % node.Location())  # pragma: no cover
-        return node._range[-1] * RegistersAllocated(node._containedType)
+        retValue = node._range[-1] * RegistersAllocated(node._containedType)
     elif isinstance(node, AsnEnumerated):
-        return 4
+        retValue = 4
     elif isinstance(node, AsnMetaMember):
-        return RegistersAllocated(names[node._containedType])
+        retValue = RegistersAllocated(names[node._containedType])
     else:  # pragma: no cover
         panicWithCallStack("unsupported %s (%s)" % (str(node.__class__), node.Location()))  # pragma: no cover
+    return retValue
 
 
 class VHDL_Circuit:
@@ -196,13 +196,13 @@ class FromVHDLToASN1SCC(RecursiveMapper):
             lines.append("{\n")
             lines.append("    unsigned tmp;\n")
             lines.append("    tmp = ESAReadRegister(BASE_ADDR + %s);\n" % hex(register+i*4))
-            if (i*4 < node._range[-1]):
+            if i*4 < node._range[-1]:
                 lines.append("    %s.arr[%d] = tmp & 0xFF;\n" % (destVar, i*4))
-            if (i*4+1 < node._range[-1]):
+            if i*4+1 < node._range[-1]:
                 lines.append("    %s.arr[%d] = (tmp & 0xFF00) >> 8;\n" % (destVar, i*4+1))
-            if (i*4+2 < node._range[-1]):
+            if i*4+2 < node._range[-1]:
                 lines.append("    %s.arr[%d] = (tmp & 0xFF0000) >> 16;\n" % (destVar, i*4+2))
-            if (i*4+3 < node._range[-1]):
+            if i*4+3 < node._range[-1]:
                 lines.append("    %s.arr[%d] = (tmp & 0xFF000000) >> 24;\n" % (destVar, i*4+3))
             lines.append("}\n")
         if isSequenceVariable(node):
@@ -247,12 +247,14 @@ class FromVHDLToASN1SCC(RecursiveMapper):
             childNo += 1
             lines.append("    %sif (choiceIdx == %d) {\n" % (self.maybeElse(childNo), childNo))
             srcVHDL[0] += 4
-            lines.extend(['        '+x for x in self.Map(
-                         srcVHDL,
-                         destVar + ".u." + self.CleanName(child[0]),
-                         child[1],
-                         leafTypeDict,
-                         names)])
+            lines.extend(
+                ['        '+x
+                 for x in self.Map(
+                     srcVHDL,
+                     destVar + ".u." + self.CleanName(child[0]),
+                     child[1],
+                     leafTypeDict,
+                     names)])
             srcVHDL[0] -= 4
             lines.append("        %s.kind = %s;\n" % (destVar, self.CleanName(child[2])))
             lines.append("    }\n")
@@ -374,12 +376,14 @@ class FromASN1SCCtoVHDL(RecursiveMapper):
             lines.append("    unsigned tmp = %d;\n" % childNo)
             lines.append("    ESAWriteRegister(BASE_ADDR + %s, tmp);\n" % hex(register))
             dstVHDL[0] += 4
-            lines.extend(['    '+x for x in self.Map(
-                         srcVar + ".u." + self.CleanName(child[0]),
-                         dstVHDL,
-                         child[1],
-                         leafTypeDict,
-                         names)])
+            lines.extend(
+                ['    '+x
+                 for x in self.Map(
+                     srcVar + ".u." + self.CleanName(child[0]),
+                     dstVHDL,
+                     child[1],
+                     leafTypeDict,
+                     names)])
             dstVHDL[0] -= 4
             lines.append("}\n")
         dstVHDL[0] += 4
@@ -407,6 +411,8 @@ class FromASN1SCCtoVHDL(RecursiveMapper):
 
 
 class VHDLGlueGenerator(SynchronousToolGlueGenerator):
+    g_FVname = None
+
     def Version(self):
         print("Code generator: " + "$Id: vhdl_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")  # pragma: no cover
 
@@ -488,7 +494,7 @@ class MapASN1ToVHDLCircuit(RecursiveMapper):
     def MapInteger(self, direction, dstVHDL, node, _, __):
         if node._range == []:
             panicWithCallStack("INTEGERs need explicit ranges when generating VHDL code... (%s)" % node.Location())  # pragma: no cover
-        bits = math.log(max(list(map(abs, node._range)))+1, 2)
+        bits = math.log(max(abs(x) for x in node._range)+1, 2)
         bits += bits if node._range[0] < 0 else 0
         # return [dstVHDL + ' : ' + direction + ('std_logic_vector(63 downto 0); -- normally, %d instead of 63' % bits)]
         return [dstVHDL + ' : ' + direction + ('std_logic_vector(63 downto 0); -- ASSERT uses 64 bit INTEGERs (optimal would be %d bits)' % bits)]
@@ -546,7 +552,7 @@ class MapASN1ToVHDLregisters(RecursiveMapper):
     def MapInteger(self, _, dstVHDL, node, __, ___):
         if node._range == []:
             panicWithCallStack("INTEGERs need explicit ranges when generating VHDL code... (%s)" % node.Location())  # pragma: no cover
-        bits = math.log(max(list(map(abs, node._range)))+1, 2)
+        bits = math.log(max(abs(x) for x in node._range)+1, 2)
         bits += (bits if node._range[0] < 0 else 0)
         # return ['signal ' + dstVHDL + ' : ' + ('std_logic_vector(63 downto 0); -- normally, %d bits instead of 63' % bits)]
         return ['signal ' + dstVHDL + ' : ' + ('std_logic_vector(63 downto 0); -- ASSERT uses 64 bit INTEGERs (optimal would be %d bits)' % bits)]
@@ -1105,7 +1111,8 @@ def OnFinal():
             prefix = 'sc_in<' if isinstance(p, InParam) else 'sc_out<'
 
             class State:
-                pass
+                systemcHeader = None
+                directionPrefix = None
             state = State()
             state.systemcHeader = systemcHeader
             state.directionPrefix = prefix

@@ -86,7 +86,7 @@ class FromQGenCToASN1SCC(RecursiveMapper):
     def MapEnumerated(self, srcQGenC, destVar, _, __, ___):
         return ["%s = %s;\n" % (destVar, srcQGenC)]
 
-    def MapSequence(self, srcQGenC, destVar, node, leafTypeDict, names):
+    def MapSequence(self, unused_srcQGenC, unused_destVar, node, leafTypeDict, names):
         lines = []
         for child in node._members:
             lines.extend(
@@ -107,12 +107,14 @@ class FromQGenCToASN1SCC(RecursiveMapper):
         for child in node._members:
             childNo += 1
             lines.append("%sif (%s.choiceIdx == %d) {\n" % (self.maybeElse(childNo), srcQGenC, childNo))
-            lines.extend(['    ' + x for x in self.Map(
-                         "%s.%s" % (srcQGenC, self.CleanName(child[0])),
-                         destVar + ".u." + self.CleanName(child[0]),
-                         child[1],
-                         leafTypeDict,
-                         names)])
+            lines.extend(
+                ['    '+x
+                 for x in self.Map(
+                     "%s.%s" % (srcQGenC, self.CleanName(child[0])),
+                     destVar + ".u." + self.CleanName(child[0]),
+                     child[1],
+                     leafTypeDict,
+                     names)])
             lines.append("    %s.kind = %s;\n" % (destVar, self.CleanName(child[2])))
             lines.append("}\n")
         return lines
@@ -123,8 +125,8 @@ class FromQGenCToASN1SCC(RecursiveMapper):
         isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
         lines = []
         for i in range(0, node._range[-1]):
-            lines.extend(self.Map(
-                         isMappedToPrimitive and ("%s.element_data[%d]" % (srcQGenC, i)) or ("%s.element_%02d" % (srcQGenC, i)),
+            lines.extend(
+                self.Map(isMappedToPrimitive and ("%s.element_data[%d]" % (srcQGenC, i)) or ("%s.element_%02d" % (srcQGenC, i)),
                          destVar + ".arr[%d]" % i,
                          node._containedType,
                          leafTypeDict,
@@ -189,12 +191,14 @@ class FromASN1SCCtoQGenC(RecursiveMapper):
         for child in node._members:
             childNo += 1
             lines.append("%sif (%s.kind == %s) {\n" % (self.maybeElse(childNo), srcVar, self.CleanName(child[2])))
-            lines.extend(['    '+x for x in self.Map(
-                         srcVar + ".u." + self.CleanName(child[0]),
-                         "%s.%s" % (dstQGenC, self.CleanName(child[0])),
-                         child[1],
-                         leafTypeDict,
-                         names)])
+            lines.extend(
+                ['    '+x
+                 for x in self.Map(
+                     srcVar + ".u." + self.CleanName(child[0]),
+                     "%s.%s" % (dstQGenC, self.CleanName(child[0])),
+                     child[1],
+                     leafTypeDict,
+                     names)])
             lines.append("    %s.choiceIdx = %d;\n" % (dstQGenC, childNo))
             lines.append("}\n")
         return lines
@@ -265,12 +269,14 @@ class FromQGenCToOSS(RecursiveMapper):
         for child in node._members:
             childNo += 1
             lines.append("%sif (%s.choiceIdx == %d) {\n" % (self.maybeElse(childNo), srcQGenC, childNo))
-            lines.extend(['    '+x for x in self.Map(
-                         "%s.%s" % (srcQGenC, self.CleanName(child[0])),
-                         destVar + ".u." + self.CleanName(child[0]),
-                         child[1],
-                         leafTypeDict,
-                         names)])
+            lines.extend(
+                ['    '+x
+                 for x in self.Map(
+                     "%s.%s" % (srcQGenC, self.CleanName(child[0])),
+                     destVar + ".u." + self.CleanName(child[0]),
+                     child[1],
+                     leafTypeDict,
+                     names)])
             lines.append("    %s.choice = OSS_%s_chosen;\n" % (destVar, self.CleanName(child[0])))
             lines.append("}\n")
         return lines
@@ -281,8 +287,8 @@ class FromQGenCToOSS(RecursiveMapper):
         isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
         lines = []
         for i in range(0, node._range[-1]):
-            lines.extend(self.Map(
-                         isMappedToPrimitive and ("%s.element_data[%d]" % (srcQGenC, i)) or ("%s.element_%02d" % (srcQGenC, i)),
+            lines.extend(
+                self.Map(isMappedToPrimitive and ("%s.element_data[%d]" % (srcQGenC, i)) or ("%s.element_%02d" % (srcQGenC, i)),
                          destVar + ".value[%d]" % i,
                          node._containedType,
                          leafTypeDict,
@@ -344,12 +350,14 @@ class FromOSStoQGenC(RecursiveMapper):
         for child in node._members:
             childNo += 1
             lines.append("%sif (%s.choice == OSS_%s_chosen) {\n" % (self.maybeElse(childNo), srcVar, self.CleanName(child[0])))
-            lines.extend(['    '+x for x in self.Map(
-                         srcVar + ".u." + self.CleanName(child[0]),
-                         "%s.%s" % (dstQGenC, self.CleanName(child[0])),
-                         child[1],
-                         leafTypeDict,
-                         names)])
+            lines.extend(
+                ['    '+x
+                 for x in self.Map(
+                     srcVar + ".u." + self.CleanName(child[0]),
+                     "%s.%s" % (dstQGenC, self.CleanName(child[0])),
+                     child[1],
+                     leafTypeDict,
+                     names)])
             lines.append("    %s.choiceIdx = %d;\n" % (dstQGenC, childNo))
             lines.append("}\n")
         return lines
@@ -375,6 +383,8 @@ class FromOSStoQGenC(RecursiveMapper):
 
 
 class QGenCGlueGenerator(SynchronousToolGlueGenerator):
+    g_FVname = None
+
     def Version(self):
         print("Code generator: " + "$Id: qgenc_B_mapper.py 2390 2014-11-27 12:39:17Z dtuulik $")  # pragma: no cover
 

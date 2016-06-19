@@ -103,12 +103,14 @@ class FromRTDSToASN1SCC(RecursiveMapper):
         for child in node._members:
             childNo += 1
             lines.append("%sif (%s.present == %d) {\n" % (self.maybeElse(childNo), srcSDLVariable, childNo))
-            lines.extend(["    "+x for x in self.Map(
-                         "%s.__value.%s" % (srcSDLVariable, self.CleanName(child[0])),
-                         destVar + (".u.%s" % self.CleanName(child[0])),
-                         child[1],
-                         leafTypeDict,
-                         names)])
+            lines.extend(
+                ["    "+x
+                 for x in self.Map(
+                     "%s.__value.%s" % (srcSDLVariable, self.CleanName(child[0])),
+                     destVar + (".u.%s" % self.CleanName(child[0])),
+                     child[1],
+                     leafTypeDict,
+                     names)])
             lines.append("    %s.kind = %s;\n" % (destVar, self.CleanName(child[2])))
             lines.append("}\n")
         return lines
@@ -119,12 +121,14 @@ class FromRTDSToASN1SCC(RecursiveMapper):
         uniqueId = self.UniqueID()
         lines.append("    int i%s;\n" % uniqueId)
         lines.append("    for(i%s=0; i%s<%s.length; i%s++) {\n" % (uniqueId, uniqueId, srcSDLVariable, uniqueId))
-        lines.extend(["        " + x for x in self.Map(
-                     "%s.elements[i%s]" % (srcSDLVariable, uniqueId),
-                     "%s.arr[i%s]" % (destVar, uniqueId),
-                     node._containedType,
-                     leafTypeDict,
-                     names)])
+        lines.extend(
+            ["        "+x
+             for x in self.Map(
+                 "%s.elements[i%s]" % (srcSDLVariable, uniqueId),
+                 "%s.arr[i%s]" % (destVar, uniqueId),
+                 node._containedType,
+                 leafTypeDict,
+                 names)])
         lines.append("    }\n")
         if isSequenceVariable(node):
             lines.append("    %s.nCount = %s.length;\n" % (destVar, srcSDLVariable))
@@ -202,12 +206,14 @@ class FromRTDSToOSS(RecursiveMapper):
         for child in node._members:
             childNo += 1
             lines.append("%sif (%s.present == %d) {\n" % (self.maybeElse(childNo), srcSDLVariable, childNo))
-            lines.extend(["    "+x for x in self.Map(
-                         "%s.u.u%d.%s" % (srcSDLVariable, childNo, self.CleanName(child[0])),
-                         destVar + (".u.%s" % self.CleanName(child[0])),
-                         child[1],
-                         leafTypeDict,
-                         names)])
+            lines.extend(
+                ["    "+x
+                 for x in self.Map(
+                     "%s.u.u%d.%s" % (srcSDLVariable, childNo, self.CleanName(child[0])),
+                     destVar + (".u.%s" % self.CleanName(child[0])),
+                     child[1],
+                     leafTypeDict,
+                     names)])
             lines.append("    %s.choice = OSS_%s_chosen;\n" % (destVar, self.CleanName(child[0])))
             lines.append("}\n")
         return lines
@@ -218,12 +224,14 @@ class FromRTDSToOSS(RecursiveMapper):
         uniqueId = self.UniqueID()
         lines.append("    int i%s;\n" % uniqueId)
         lines.append("    for(i%s=0; i%s<%s.length; i%s++) {\n" % (uniqueId, uniqueId, srcSDLVariable, uniqueId))
-        lines.extend(["        " + x for x in self.Map(
-                     "%s.cont[i%s]" % (srcSDLVariable, uniqueId),
-                     "%s.value[i%s]" % (destVar, uniqueId),
-                     node._containedType,
-                     leafTypeDict,
-                     names)])
+        lines.extend(
+            ["        "+x
+             for x in self.Map(
+                 "%s.cont[i%s]" % (srcSDLVariable, uniqueId),
+                 "%s.value[i%s]" % (destVar, uniqueId),
+                 node._containedType,
+                 leafTypeDict,
+                 names)])
         lines.append("    }\n")
         lines.append("    %s.count = %s.length;\n" % (destVar, srcSDLVariable))
         lines.append("}\n")
@@ -297,12 +305,14 @@ class FromASN1SCCtoRTDS(RecursiveMapper):
             childNo += 1
             lines.append("%sif (%s.kind == %s) {\n" %
                          (self.maybeElse(childNo), srcVar, self.CleanName(child[2])))
-            lines.extend(['    '+x for x in self.Map(
-                         srcVar + ".u." + self.CleanName(child[0]),
-                         "%s.__value.%s" % (dstSDLVariable, self.CleanName(child[0])),
-                         child[1],
-                         leafTypeDict,
-                         names)])
+            lines.extend(
+                ['    '+x
+                 for x in self.Map(
+                     srcVar + ".u." + self.CleanName(child[0]),
+                     "%s.__value.%s" % (dstSDLVariable, self.CleanName(child[0])),
+                     child[1],
+                     leafTypeDict,
+                     names)])
             lines.append("    %s.present = %d;\n" % (dstSDLVariable, childNo))
             lines.append("}\n")
         return lines
@@ -315,12 +325,14 @@ class FromASN1SCCtoRTDS(RecursiveMapper):
         lines.append("    int i%s;\n" % uniqueId)
         lines.append("    %s.length = %s;\n" % (dstSDLVariable, limit))
         lines.append("    for(i%s=0; i%s<%s; i%s++) {\n" % (uniqueId, uniqueId, limit, uniqueId))
-        lines.extend(["        " + x for x in self.Map(
-                     srcVar + ".arr[i%s]" % uniqueId,
-                     "%s.elements[i%s]" % (dstSDLVariable, uniqueId),
-                     node._containedType,
-                     leafTypeDict,
-                     names)])
+        lines.extend(
+            ["        "+x
+             for x in self.Map(
+                 srcVar + ".arr[i%s]" % uniqueId,
+                 "%s.elements[i%s]" % (dstSDLVariable, uniqueId),
+                 node._containedType,
+                 leafTypeDict,
+                 names)])
         lines.append("    }\n")
         lines.append("}\n")
         self.DecreaseUniqueID()
@@ -409,12 +421,14 @@ class FromOSStoRTDS(RecursiveMapper):
             childNo += 1
             lines.append("%sif (%s.choice == OSS_%s_chosen) {\n" %
                          (self.maybeElse(childNo), srcVar, self.CleanName(child[0])))
-            lines.extend(['    '+x for x in self.Map(
-                         srcVar + ".u." + self.CleanName(child[0]),
-                         "%s.u.u%d.%s" % (dstSDLVariable, childNo, self.CleanName(child[0])),
-                         child[1],
-                         leafTypeDict,
-                         names)])
+            lines.extend(
+                ['    '+x
+                 for x in self.Map(
+                     srcVar + ".u." + self.CleanName(child[0]),
+                     "%s.u.u%d.%s" % (dstSDLVariable, childNo, self.CleanName(child[0])),
+                     child[1],
+                     leafTypeDict,
+                     names)])
             lines.append("    %s.present = %d;\n" % (dstSDLVariable, childNo))
             lines.append("}\n")
         return lines
@@ -426,12 +440,14 @@ class FromOSStoRTDS(RecursiveMapper):
         lines.append("    int i%s;\n" % uniqueId)
         lines.append("    %s.length = %s.count;\n" % (dstSDLVariable, srcVar))
         lines.append("    for(i%s=0; i%s<%s.count; i%s++) {\n" % (uniqueId, uniqueId, srcVar, uniqueId))
-        lines.extend(["        " + x for x in self.Map(
-                     srcVar + ".value[i%s]" % uniqueId,
-                     "%s.cont[i%s]" % (dstSDLVariable, uniqueId),
-                     node._containedType,
-                     leafTypeDict,
-                     names)])
+        lines.extend(
+            ["        "+x
+             for x in self.Map(
+                 srcVar + ".value[i%s]" % uniqueId,
+                 "%s.cont[i%s]" % (dstSDLVariable, uniqueId),
+                 node._containedType,
+                 leafTypeDict,
+                 names)])
         lines.append("    }\n")
         lines.append("}\n")
         self.DecreaseUniqueID()

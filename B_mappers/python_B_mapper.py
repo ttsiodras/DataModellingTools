@@ -225,7 +225,7 @@ def OnStartup(modelingLanguage, asnFile, subProgram, unused_subProgramImplementa
         g_SourceFile.write('}\n')
 
 
-def Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+def Common(unused_nodeTypename, unused_node, unused_subProgram, unused_subProgramImplementation, unused_param, unused_leafTypeDict, unused_names):
     pass
 
 
@@ -257,7 +257,7 @@ def OnChoice(nodeTypename, node, subProgram, subProgramImplementation, param, le
     Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
-def OnShutdown(modelingLanguage, asnFile, sp, subProgramImplementation, maybeFVname):
+def OnShutdown(unused_modelingLanguage, unused_asnFile, unused_sp, unused_subProgramImplementation, unused_maybeFVname):
     pass
 
 

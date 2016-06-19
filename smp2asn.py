@@ -162,7 +162,8 @@ def main(args):
     def CheckFileExists(x):
         if not os.path.isfile(os.path.realpath(x)):
             usage("Input (%s) is not a file" % x)
-    map(CheckFileExists, inputSmp2Files)
+    for f in inputSmp2Files:
+        CheckFileExists(f)
     if inputAsn1Grammar:
         CheckFileExists(inputAsn1Grammar)
 
@@ -178,8 +179,9 @@ if __name__ == '__main__':
     for dbg in ["-d", "--debug"]:
         if dbg in sys.argv:
             sys.argv.remove(dbg)   # pragma: no cover
-            import pdb             # pragma: no cover
+            import pdb             # pragma: no cover pylint: disable=wrong-import-position,wrong-import-order
             pdb.run('main(sys.argv[1:])')      # pragma: no cover
+            break  # pragma: no cover
     else:
         sys.exit(main(sys.argv[1:]))
 

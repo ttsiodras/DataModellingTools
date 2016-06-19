@@ -41,7 +41,7 @@ def Version():
     print("Code generator: " + "$Id: smp2_A_mapper.py 1932 2010-06-15 13:41:15Z ttsiodras $")  # pragma: no cover
 
 
-def getUID(strIdentifier, idStore={}):
+def getUID(strIdentifier, idStore={}):  # pylint: disable=dangerous-default-value
     def h(digits):
         ret = ""
         for _ in range(0, digits):
@@ -61,13 +61,14 @@ def FixupAstForSMP2():
     and make sure the contained types are not "naked" (i.e. unnamed)
     '''
     internalNo = 1
-    addedNewPseudoType = True
-    while addedNewPseudoType:
+
+    def neededToAddPseudoType():
+        nonlocal internalNo
         addedNewPseudoType = False
         listOfTypenames = sorted(list(g_names.keys()) + list(g_innerTypes.keys()))
         for nodeTypename in listOfTypenames:
             node = g_names[nodeTypename]
-            if isinstance(node, AsnChoice) or isinstance(node, AsnSequence) or isinstance(node, AsnSet):
+            if isinstance(node, (AsnChoice, AsnSequence, AsnSet)):
                 for child in node._members:
                     if not isinstance(child[1], AsnMetaMember):
                         internalName = newname = "TaStE_" + CleanNameForAST(child[0].capitalize() + "_type")
@@ -85,7 +86,7 @@ def FixupAstForSMP2():
                     else:
                         g_dependencyGraph.setdefault(nodeTypename, {})
                         g_dependencyGraph[nodeTypename][child[1]._containedType] = 1
-            elif isinstance(node, AsnSequenceOf) or isinstance(node, AsnSetOf):
+            elif isinstance(node, (AsnSequenceOf, AsnSetOf)):
                 if not isinstance(node._containedType, str):
                     internalName = newname = "TaStE_" + "internalSeqOf_type"
                     while internalName in g_names:
@@ -102,6 +103,11 @@ def FixupAstForSMP2():
                 else:
                     g_dependencyGraph.setdefault(nodeTypename, {})
                     g_dependencyGraph[nodeTypename][node._containedType] = 1
+        return addedNewPseudoType
+
+    while True:
+        if not neededToAddPseudoType():
+            break
 
 
 g_bStartupRun = False
@@ -137,7 +143,7 @@ def CleanName(fieldName):
     return re.sub(r'[^a-zA-Z0-9_]', '_', fieldName)
 
 
-def OnBasic(nodeTypename, node, leafTypeDict):
+def OnBasic(unused_nodeTypename, unused_node, unused_leafTypeDict):
     pass  # pragma: no cover
 
 
@@ -174,7 +180,7 @@ def CreateBasic(nodeTypename, node, leafTypeDict):
     g_catalogueXML.write('    </Type>\n')
 
 
-def OnSequence(nodeTypename, node, leafTypeDict):
+def OnSequence(unused_nodeTypename, unused_node, unused_leafTypeDict):
     pass  # pragma: no cover
 
 
@@ -201,11 +207,11 @@ def CreateSequence(nodeTypename, node, unused_leafTypeDict):
     g_catalogueXML.write('    </Type>\n')
 
 
-def OnSet(nodeTypename, node, leafTypeDict):
+def OnSet(unused_nodeTypename, unused_node, unused_leafTypeDict):
     pass  # pragma: no cover
 
 
-def OnEnumerated(nodeTypename, node, leafTypeDict):
+def OnEnumerated(unused_nodeTypename, unused_node, unused_leafTypeDict):
     pass  # pragma: no cover
 
 
@@ -224,7 +230,7 @@ def CreateEnumerated(nodeTypename, node, unused_leafTypeDict):
     g_catalogueXML.write('    </Type>\n')
 
 
-def OnSequenceOf(nodeTypename, node, leafTypeDict):
+def OnSequenceOf(unused_nodeTypename, unused_node, unused_leafTypeDict):
     pass  # pragma: no cover
 
 
@@ -253,11 +259,11 @@ def CreateSequenceOf(nodeTypename, node, unused_leafTypeDict):
     g_catalogueXML.write('    </Type>\n')
 
 
-def OnSetOf(nodeTypename, node, leafTypeDict):
+def OnSetOf(unused_nodeTypename, unused_node, unused_leafTypeDict):
     pass  # pragma: no cover
 
 
-def OnChoice(nodeTypename, unused_node, unused_leafTypeDict):
+def OnChoice(unused_nodeTypename, unused_unused_node, unused_unused_leafTypeDict):
     pass  # pragma: no cover
 
 
@@ -335,7 +341,7 @@ def OnShutdown(badTypes: SetOfBadTypenames):
 
             # make sure we know what leaf type this node is
             node = g_names[nodeTypename]
-            assert(nodeTypename in g_leafTypeDict)
+            assert nodeTypename in g_leafTypeDict
             leafType = g_leafTypeDict[nodeTypename]
             if leafType in ['BOOLEAN', 'INTEGER', 'REAL', 'OCTET STRING']:
                 CreateBasic(nodeTypename, node, g_leafTypeDict)
@@ -390,4 +396,5 @@ def OnShutdown(badTypes: SetOfBadTypenames):
         pkgFile.write('    </Implementation>\n')
     pkgFile.write('</Package:Package>')
     pkgFile.close()
+
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4

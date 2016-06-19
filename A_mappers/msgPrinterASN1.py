@@ -1,5 +1,12 @@
 #!/usr/bin/env python
-# vim: set expandtab ts=8 sts=4 shiftwidth=4
+'''
+This is one of the code generators that Semantix developed for
+the European research project ASSERT. It is now enhanced in the
+context of Data Modelling and Data Modelling Tuning projects.
+
+It reads the ASN.1 specification of the exchanged messages, and
+generates printer-functions for their content.
+'''
 
 # (C) Semantix Information Technologies.
 #
@@ -24,27 +31,18 @@ import os
 import sys
 import copy
 
-from typing import Tuple
+from typing import Tuple, List
 
 import commonPy.configMT
 from commonPy.asnAST import sourceSequenceLimit, AsnNode  # NOQA pylint: disable=unused-import
-from commonPy.asnParser import (  # NOQA
-    AST_Lookup, AST_TypesOfFile, AST_TypenamesOfFile, AST_Leaftypes,
+from commonPy.asnParser import (  # NOQA pylint: disable=unused-import
+    AST_Lookup, AST_Leaftypes,
     Typename, Filename, ParseAsnFileList)
 from commonPy.utility import inform, panic
 import commonPy.cleanupNodes
 from commonPy.recursiveMapper import RecursiveMapper
 
 import commonPy.verify
-
-__doc__ = '''\
-This is one of the code generators that Semantix developed for
-the European research project ASSERT. It is now enhanced in the
-context of Data Modelling and Data Modelling Tuning projects.
-
-It reads the ASN.1 specification of the exchanged messages, and
-generates "printer" functions for their content.
-'''
 
 
 def usage():
@@ -62,7 +60,7 @@ class Printer(RecursiveMapper):
         self.uniqueID += 1 if self.uniqueID != 385 else 2
         return self.uniqueID
 
-    def MapInteger(self, srcCVariable, empty, _, __, ___):
+    def MapInteger(self, srcCVariable, unused, _, __, ___):
         lines = []
         lines.append('#if WORD_SIZE==8')
         lines.append('printf("%%lld", %s);' % srcCVariable)
@@ -71,13 +69,13 @@ class Printer(RecursiveMapper):
         lines.append('#endif')
         return lines
 
-    def MapReal(self, srcCVariable, empty, _, __, ___):
+    def MapReal(self, srcCVariable, unused, _, __, ___):
         return ['printf("%%f", %s);' % srcCVariable]
 
-    def MapBoolean(self, srcCVariable, empty, _, __, ___):
+    def MapBoolean(self, srcCVariable, unused, _, __, ___):
         return ['printf("%%s", (int)%s?"TRUE":"FALSE");' % srcCVariable]
 
-    def MapOctetString(self, srcCVariable, empty, node, __, ___):
+    def MapOctetString(self, srcCVariable, unused, node, __, ___):
         lines = []
         lines.append("{")
         lines.append("    int i;")
@@ -89,7 +87,7 @@ class Printer(RecursiveMapper):
         lines.append("}\n")
         return lines
 
-    def MapEnumerated(self, srcCVariable, empty, node, __, ___):
+    def MapEnumerated(self, srcCVariable, unused, node, __, ___):
         lines = []
         lines.append("switch(%s) {" % srcCVariable)
         for d in node._members:
@@ -130,12 +128,14 @@ class Printer(RecursiveMapper):
                 "%sif (%s.kind == %s) {" %
                 (self.maybeElse(childNo), srcCVariable, self.CleanName(child[2])))
             lines.append("    printf(\"%s:\");" % child[0])  # Choices need the field name printed
-            lines.extend(['    '+x for x in self.Map(
-                         "%s.u.%s" % (srcCVariable, self.CleanName(child[0])),
-                         prefix + "::" + self.CleanName(child[0]),
-                         child[1],
-                         leafTypeDict,
-                         names)])
+            lines.extend(
+                ['    '+x
+                 for x in self.Map(
+                     "%s.u.%s" % (srcCVariable, self.CleanName(child[0])),
+                     prefix + "::" + self.CleanName(child[0]),
+                     child[1],
+                     leafTypeDict,
+                     names)])
             lines.append("}")
         return lines
 
@@ -149,12 +149,14 @@ class Printer(RecursiveMapper):
         lines.append("    for(i%s=0; i%s<%s; i%s++) {" % (uniqueId, uniqueId, limit, uniqueId))
         lines.append("        if (i%s) " % uniqueId)
         lines.append("            printf(\",\");")
-        lines.extend(["        " + x for x in self.Map(
-                     "%s.arr[i%s]" % (srcCVariable, uniqueId),
-                     prefix + "::Elem",
-                     node._containedType,
-                     leafTypeDict,
-                     names)])
+        lines.extend(
+            ["        "+x
+             for x in self.Map(
+                 "%s.arr[i%s]" % (srcCVariable, uniqueId),
+                 prefix + "::Elem",
+                 node._containedType,
+                 leafTypeDict,
+                 names)])
         lines.append("    }")
         lines.append("    printf(\"}\");")
         lines.append("}")
@@ -192,7 +194,7 @@ def main():
 
     ParseAsnFileList(sys.argv[1:])
 
-    Triples = Tuple[AST_Lookup, List[AsnNode], AST_Leaftypes]  # NOQA pylint: disable=unused-variable
+    Triples = Tuple[AST_Lookup, List[AsnNode], AST_Leaftypes]  # NOQA pylint: disable=unused-variable,invalid-sequence-index
     uniqueASNfiles = {}  # type: Dict[Filename, Triples]
 
     for asnFile in uniqueASNfiles:
@@ -250,7 +252,7 @@ def main():
             inform("Processing %s...", nodeTypename)
 
             # First, make sure we know what leaf type this node is
-            assert(nodeTypename in leafTypeDict)
+            assert nodeTypename in leafTypeDict
 
             C_HeaderFile.write('void PrintASN1%s(const char *paramName, const asn1Scc%s *pData);\n' % (cleanNodeTypename, cleanNodeTypename))
             C_SourceFile.write('void PrintASN1%s(const char *paramName, const asn1Scc%s *pData)\n{\n' % (cleanNodeTypename, cleanNodeTypename))
@@ -275,7 +277,9 @@ def main():
 if __name__ == "__main__":
     if "-pdb" in sys.argv:
         sys.argv.remove("-pdb")  # pragma: no cover
-        import pdb  # pragma: no cover
+        import pdb  # pragma: no cover pylint: disable=wrong-import-position,wrong-import-order
         pdb.run('main()')  # pragma: no cover
     else:
         main()
+
+# vim: set expandtab ts=8 sts=4 shiftwidth=4

@@ -457,11 +457,8 @@ def DumpTypeDumper(codeIndent, outputIndent, lines, variableName, node, names):
 def CreateDeclarationForType(nodeTypename: str, names: AST_Lookup, leafTypeDict: AST_Leaftypes):
     node = names[nodeTypename]
     name = CleanNameAsPythonWants(nodeTypename)
-    if isinstance(node, AsnBasicNode) or isinstance(node, AsnEnumerated) or \
-            isinstance(node, AsnSequence) or isinstance(node, AsnSet) or \
-            isinstance(node, AsnChoice) or isinstance(node, AsnSequenceOf) or \
-            isinstance(node, AsnSetOf):
-
+    if isinstance(node, (AsnBasicNode, AsnEnumerated, AsnSequence, AsnSet,
+                         AsnChoice, AsnSequenceOf, AsnSetOf)):
         g_outputFile.write("class " + name + "(COMMON):\n")
         if isinstance(node, AsnEnumerated):
             g_outputFile.write("    # Allowed enumerants:\n")

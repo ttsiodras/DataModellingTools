@@ -43,8 +43,8 @@ void main()
 %(enums_dump)s
 }""" % {"enums_dump": enums_dump, "base": sys.argv[1]})
 f.close()
-if 0 != os.system(
-        "gcc -o %s -I. %s.c" % (extractor_filename, extractor_filename)):
+cmd = "gcc -o %s -I. %s.c" % (extractor_filename, extractor_filename)
+if os.system(cmd) != 0:
     print("Failed to extract CHOICE enum values...")
     sys.exit(1)
 os.system(extractor_filename)

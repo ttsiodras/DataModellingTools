@@ -84,8 +84,9 @@ def FixupAstForSQL():
     and make sure the contained types are not "naked" (i.e. unnamed)
     '''
     internalNo = 1
-    addedNewPseudoType = True
-    while addedNewPseudoType:
+
+    def neededToAddPseudoType():
+        nonlocal internalNo
         addedNewPseudoType = False
         listOfTypenames = sorted(list(g_names.keys()) + list(g_innerTypes.keys()))
         for nodeTypename in listOfTypenames:
@@ -131,7 +132,11 @@ def FixupAstForSQL():
                 else:
                     g_dependencyGraph.setdefault(nodeTypename, {})
                     g_dependencyGraph[nodeTypename][node._containedType] = 1
+        return addedNewPseudoType
 
+    while True:
+        if not neededToAddPseudoType():
+            break
 
 g_bStartupRun = False
 
@@ -193,10 +198,9 @@ CREATE TABLE {cleanTypename} (
     id int PRIMARY KEY,
     data {baseSqlType} {constraint}
 );
-'''.format(
-        cleanTypename=CleanName(nodeTypename),
-        baseSqlType=baseSqlType,
-        constraint=constraint))
+'''.format(cleanTypename=CleanName(nodeTypename),
+           baseSqlType=baseSqlType,
+           constraint=constraint))
 
 
 def CreateSequence(nodeTypename, node, unused_leafTypeDict, isChoice=False):
@@ -242,9 +246,8 @@ CREATE TABLE {cleanTypename} (
 {options}
     )
 );
-'''.format(
-        cleanTypename=CleanName(nodeTypename),
-        options='\n        OR\n'.join(optionsCheck)))
+'''.format(cleanTypename=CleanName(nodeTypename),
+           options='\n        OR\n'.join(optionsCheck)))
 
 
 def CreateSequenceOf(nodeTypename, node, unused_leafTypeDict):
@@ -318,7 +321,7 @@ def OnShutdown(badTypes: SetOfBadTypenames):
 
             # make sure we know what leaf type this node is
             node = g_names[nodeTypename]
-            assert(nodeTypename in g_leafTypeDict)
+            assert nodeTypename in g_leafTypeDict
             leafType = g_leafTypeDict[nodeTypename]
             if leafType in ['BOOLEAN', 'INTEGER', 'REAL', 'OCTET STRING']:
                 CreateBasic(nodeTypename, node, g_leafTypeDict)

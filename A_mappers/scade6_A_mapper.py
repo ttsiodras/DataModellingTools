@@ -27,8 +27,8 @@ import re
 import os
 import random
 
-from xml.dom.minidom import Document, Node  # NOQA
-from typing import Set  # NOQA
+from xml.dom.minidom import Document, Node  # type: ignore  # NOQA  pylint: disable=unused-import
+from typing import Set  # NOQA pylint: disable=unused-import
 
 from commonPy.utility import inform, panic
 from commonPy.asnAST import (
@@ -67,11 +67,11 @@ def Version():
     print("Code generator: " + "$Id: scade612_A_mapper.py 1842 2010-03-10 14:16:42Z ttsiodras $")  # pragma: no cover
 
 
-def CleanNameAsScadeWants(name):
+def CleanNameAsScadeWants(name: str) -> str:
     return re.sub(r'[^a-zA-Z0-9_]', '_', name)
 
 
-def RandomHex(digits):
+def RandomHex(digits: int) -> str:
     result = ""
     for _ in range(0, digits):
         result += random.choice('0123456789abcdef')
@@ -86,23 +86,23 @@ def FixupNestedStringsAndEnumerated():
         if isinstance(node, (AsnSequence, AsnChoice, AsnSet)):
             for child in node._members:
                 if isinstance(child[1], AsnString) or isinstance(child[1], AsnEnumerated):
-                    newName = nodeTypename + "_" + child[0]                                                     # pragma: no cover
-                    while newName in names:                                                                     # pragma: no cover
-                        newName += "_t"                                                                         # pragma: no cover
-                    names[newName] = child[1]                                                                   # pragma: no cover
-                    leafTypeDict[newName] = isinstance(child[1], AsnString) and 'OCTET STRING' or 'ENUMERATED'  # pragma: no cover
-                    child[1] = AsnMetaMember(asnFilename=child[1]._asnFilename, containedType=newName)          # pragma: no cover
+                    newName = nodeTypename + "_" + child[0]                                                      # pragma: no cover
+                    while newName in names:                                                                      # pragma: no cover
+                        newName += "_t"                                                                          # pragma: no cover
+                    names[newName] = child[1]                                                                    # pragma: no cover
+                    leafTypeDict[newName] = 'OCTET STRING' if isinstance(child[1], AsnString) else 'ENUMERATED'  # pragma: no cover
+                    child[1] = AsnMetaMember(asnFilename=child[1]._asnFilename, containedType=newName)           # pragma: no cover
         elif isinstance(node, (AsnSequenceOf, AsnSetOf)):
             if isinstance(node._containedType, (AsnString, AsnEnumerated)):
-                newName = nodeTypename + "_contained"                                                                  # pragma: no cover
-                while newName in names:                                                                                # pragma: no cover
-                    newName += "_t"                                                                                    # pragma: no cover
-                names[newName] = node._containedType                                                                   # pragma: no cover
-                leafTypeDict[newName] = isinstance(node._containedType, AsnString) and 'OCTET STRING' or 'ENUMERATED'  # pragma: no cover
-                node._containedType = newName                                                                          # pragma: no cover
+                newName = nodeTypename + "_contained"                                                                   # pragma: no cover
+                while newName in names:                                                                                 # pragma: no cover
+                    newName += "_t"                                                                                     # pragma: no cover
+                names[newName] = node._containedType                                                                    # pragma: no cover
+                leafTypeDict[newName] = 'OCTET STRING' if isinstance(node._containedType, AsnString) else 'ENUMERATED'  # pragma: no cover
+                node._containedType = newName                                                                           # pragma: no cover
 
 
-def OnStartup(unused_modelingLanguage, asnFile, outputDir, unused_badTypes):
+def OnStartup(unused_modelingLanguage, asnFile: str, outputDir: str, unused_badTypes) -> None:
     outputFilename = CleanNameAsScadeWants(os.path.basename(os.path.splitext(asnFile)[0])) + ".xscade"
 
     FixupNestedStringsAndEnumerated()
@@ -135,7 +135,7 @@ def RenderElements(controlString: str):
     if controlString.endswith(","):
         controlString = controlString[:-1]
     createdElements = {}  # type: Dict[str, Node]
-    parent = g_Declarations
+    parent = g_Declarations  # type: Node
     for elem in controlString.split(","):
         if '`' in elem:
             element = elem.split("`")[0]
@@ -161,7 +161,7 @@ def RenderElements(controlString: str):
             parent = createdElements[under]
         parent.appendChild(newElement)
         createdElements[finalElementName] = newElement
-        parent = newElement
+        parent = newElement  # pylint: disable=redefined-variable-type
 
 
 def GetOID(nodeTypename):

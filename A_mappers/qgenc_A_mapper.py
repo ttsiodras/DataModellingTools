@@ -68,31 +68,31 @@ def OnStartup(unused_modelingLanguage, unused_asnFile, outputDir, unused_badType
     CreateDeclarationsForAllTypes(commonPy.asnParser.g_names, commonPy.asnParser.g_leafTypeDict)
 
 
-def OnBasic(nodeTypename, node, leafTypeDict):
+def OnBasic(unused_nodeTypename, unused_node, unused_leafTypeDict):
     pass  # pragma: no cover
 
 
-def OnSequence(nodeTypename, node, leafTypeDict):
+def OnSequence(unused_nodeTypename, unused_node, unused_leafTypeDict):
     pass  # pragma: no cover
 
 
-def OnSet(nodeTypename, node, leafTypeDict):
+def OnSet(unused_nodeTypename, unused_node, unused_leafTypeDict):
     pass  # pragma: nocover
 
 
-def OnEnumerated(nodeTypename, node, leafTypeDict):
+def OnEnumerated(unused_nodeTypename, unused_node, unused_leafTypeDict):
     pass  # pragma: no cover
 
 
-def OnSequenceOf(nodeTypename, node, leafTypeDict):
+def OnSequenceOf(unused_nodeTypename, unused_node, unused_leafTypeDict):
     pass  # pragma: no cover
 
 
-def OnSetOf(nodeTypename, node, leafTypeDict):
+def OnSetOf(unused_nodeTypename, unused_node, unused_leafTypeDict):
     pass  # pragma: nocover
 
 
-def OnChoice(nodeTypename, node, leafTypeDict):
+def OnChoice(unused_nodeTypename, unused_node, unused_leafTypeDict):
     pass  # pragma: no cover
 
 

@@ -18,6 +18,9 @@
 # Note that in both cases, there are no charges (royalties) for the
 # generated code.
 #
+
+# pylint: disable=anomalous-backslash-in-string
+
 vhd = '''library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_ARITH.ALL;

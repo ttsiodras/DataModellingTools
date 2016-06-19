@@ -104,12 +104,14 @@ class FromSimulinkToASN1SCC(RecursiveMapper):
         for child in node._members:
             childNo += 1
             lines.append("%sif (%s.choiceIdx == %d) {\n" % (self.maybeElse(childNo), srcSimulink, childNo))
-            lines.extend(['    ' + x for x in self.Map(
-                         "%s.%s" % (srcSimulink, self.CleanName(child[0])),
-                         destVar + ".u." + self.CleanName(child[0]),
-                         child[1],
-                         leafTypeDict,
-                         names)])
+            lines.extend(
+                ['    '+x
+                 for x in self.Map(
+                     "%s.%s" % (srcSimulink, self.CleanName(child[0])),
+                     destVar + ".u." + self.CleanName(child[0]),
+                     child[1],
+                     leafTypeDict,
+                     names)])
             lines.append("    %s.kind = %s;\n" % (destVar, self.CleanName(child[2])))
             lines.append("}\n")
         return lines
@@ -120,8 +122,8 @@ class FromSimulinkToASN1SCC(RecursiveMapper):
         isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
         lines = []
         for i in range(0, node._range[-1]):
-            lines.extend(self.Map(
-                         isMappedToPrimitive and ("%s.element_data[%d]" % (srcSimulink, i)) or ("%s.element_%02d" % (srcSimulink, i)),
+            lines.extend(
+                self.Map(isMappedToPrimitive and ("%s.element_data[%d]" % (srcSimulink, i)) or ("%s.element_%02d" % (srcSimulink, i)),
                          destVar + ".arr[%d]" % i,
                          node._containedType,
                          leafTypeDict,
@@ -186,12 +188,14 @@ class FromASN1SCCtoSimulink(RecursiveMapper):
         for child in node._members:
             childNo += 1
             lines.append("%sif (%s.kind == %s) {\n" % (self.maybeElse(childNo), srcVar, self.CleanName(child[2])))
-            lines.extend(['    '+x for x in self.Map(
-                         srcVar + ".u." + self.CleanName(child[0]),
-                         "%s.%s" % (dstSimulink, self.CleanName(child[0])),
-                         child[1],
-                         leafTypeDict,
-                         names)])
+            lines.extend(
+                ['    '+x
+                 for x in self.Map(
+                     srcVar + ".u." + self.CleanName(child[0]),
+                     "%s.%s" % (dstSimulink, self.CleanName(child[0])),
+                     child[1],
+                     leafTypeDict,
+                     names)])
             lines.append("    %s.choiceIdx = %d;\n" % (dstSimulink, childNo))
             lines.append("}\n")
         return lines
@@ -262,12 +266,14 @@ class FromSimulinkToOSS(RecursiveMapper):
         for child in node._members:
             childNo += 1
             lines.append("%sif (%s.choiceIdx == %d) {\n" % (self.maybeElse(childNo), srcSimulink, childNo))
-            lines.extend(['    '+x for x in self.Map(
-                         "%s.%s" % (srcSimulink, self.CleanName(child[0])),
-                         destVar + ".u." + self.CleanName(child[0]),
-                         child[1],
-                         leafTypeDict,
-                         names)])
+            lines.extend(
+                ['    '+x
+                 for x in self.Map(
+                     "%s.%s" % (srcSimulink, self.CleanName(child[0])),
+                     destVar + ".u." + self.CleanName(child[0]),
+                     child[1],
+                     leafTypeDict,
+                     names)])
             lines.append("    %s.choice = OSS_%s_chosen;\n" % (destVar, self.CleanName(child[0])))
             lines.append("}\n")
         return lines
@@ -278,8 +284,8 @@ class FromSimulinkToOSS(RecursiveMapper):
         isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
         lines = []
         for i in range(0, node._range[-1]):
-            lines.extend(self.Map(
-                         isMappedToPrimitive and ("%s.element_data[%d]" % (srcSimulink, i)) or ("%s.element_%02d" % (srcSimulink, i)),
+            lines.extend(
+                self.Map(isMappedToPrimitive and ("%s.element_data[%d]" % (srcSimulink, i)) or ("%s.element_%02d" % (srcSimulink, i)),
                          destVar + ".value[%d]" % i,
                          node._containedType,
                          leafTypeDict,
@@ -341,12 +347,14 @@ class FromOSStoSimulink(RecursiveMapper):
         for child in node._members:
             childNo += 1
             lines.append("%sif (%s.choice == OSS_%s_chosen) {\n" % (self.maybeElse(childNo), srcVar, self.CleanName(child[0])))
-            lines.extend(['    '+x for x in self.Map(
-                         srcVar + ".u." + self.CleanName(child[0]),
-                         "%s.%s" % (dstSimulink, self.CleanName(child[0])),
-                         child[1],
-                         leafTypeDict,
-                         names)])
+            lines.extend(
+                ['    '+x
+                 for x in self.Map(
+                     srcVar + ".u." + self.CleanName(child[0]),
+                     "%s.%s" % (dstSimulink, self.CleanName(child[0])),
+                     child[1],
+                     leafTypeDict,
+                     names)])
             lines.append("    %s.choiceIdx = %d;\n" % (dstSimulink, childNo))
             lines.append("}\n")
         return lines
@@ -372,6 +380,8 @@ class FromOSStoSimulink(RecursiveMapper):
 
 
 class SimulinkGlueGenerator(SynchronousToolGlueGenerator):
+    g_FVname = None
+
     def Version(self):
         print("Code generator: " + "$Id: simulink_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")  # pragma: no cover
 

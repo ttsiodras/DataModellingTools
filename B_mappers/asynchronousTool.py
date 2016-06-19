@@ -33,22 +33,22 @@ class ASynchronousToolGlueGenerator:
     ################################################
     # Parts to override for each asynchronous tool
 
-    def Version(self):
+    def Version(self):  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a ASynchronousToolGlueGenerator...")  # pragma: no cover
 
-    def HeadersOnStartup(self, unused_asnFile, unused_outputDir, unused_maybeFVname):
+    def HeadersOnStartup(self, unused_asnFile, unused_outputDir, unused_maybeFVname):  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a ASynchronousToolGlueGenerator...")  # pragma: no cover
 
-    def Encoder(self, unused_nodeTypename, unused_node, unused_leafTypeDict, unused_names, unused_encoding):
+    def Encoder(self, unused_nodeTypename, unused_node, unused_leafTypeDict, unused_names, unused_encoding):  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a ASynchronousToolGlueGenerator...")  # pragma: no cover
 
-    def Decoder(self, unused_nodeTypename, unused_node, unused_leafTypeDict, unused_names, unused_encoding):
+    def Decoder(self, unused_nodeTypename, unused_node, unused_leafTypeDict, unused_names, unused_encoding):  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a ASynchronousToolGlueGenerator...")  # pragma: no cover
 
     ########################################################
     # Parts to possibly override for each synchronous tool
 
-    def CleanNameAsToolWants(self, name):
+    def CleanNameAsToolWants(self, name):  # pylint: disable=no-self-use
         return re.sub(r'[^a-zA-Z0-9_]', '_', name)
 
     ##########################################
@@ -60,6 +60,8 @@ class ASynchronousToolGlueGenerator:
         self.C_SourceFile = None
         self.asn_name = ""
         self.supportedEncodings = ['native', 'uper', 'acn']
+        self.useOSS = None
+        self.typesToWorkOn = {}
 
     def OnStartup(self, modelingLanguage, asnFile, outputDir, maybeFVname, useOSS):
         self.useOSS = useOSS

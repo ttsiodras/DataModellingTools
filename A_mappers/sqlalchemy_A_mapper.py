@@ -85,8 +85,9 @@ def FixupAstForSQLAlchemy():
     and make sure the contained types are not "naked" (i.e. unnamed)
     '''
     internalNo = 1
-    addedNewPseudoType = True
-    while addedNewPseudoType:
+
+    def neededToAddPseudoType():
+        nonlocal internalNo
         addedNewPseudoType = False
         listOfTypenames = sorted(list(g_names.keys()) + list(g_innerTypes.keys()))
         for nodeTypename in listOfTypenames:
@@ -132,6 +133,11 @@ def FixupAstForSQLAlchemy():
                 else:
                     g_dependencyGraph.setdefault(nodeTypename, {})
                     g_dependencyGraph[nodeTypename][node._containedType] = 1
+        return addedNewPseudoType
+
+    while True:
+        if not neededToAddPseudoType():
+            break
 
 
 g_bStartupRun = False
@@ -186,13 +192,13 @@ def CreateBasic(nodeTypename, node, leafTypeDict):
     constraint = ""
     if baseType == 'OCTET STRING':
         constraint += "(" + str(node._range[-1]) + ")"
-        defValue = '""'
+        # defValue = '""'
     elif baseType in ['INTEGER', 'REAL'] and node._range:
         constraint += ", CheckConstraint('data>=%s and data<=%s')" % (
             node._range[0], node._range[-1])
-        defValue = node._range[-1]
-    else:
-        defValue = 'False'
+        # defValue = node._range[-1]
+    # else:
+        # defValue = 'False'
     constraint += ", nullable=False"
     g_sqlalchemyOutput.write(
         '''
@@ -237,9 +243,8 @@ class {cleanTypename}_SQL(Base):
         session.commit()
         return self.iid
 
-'''.format(
-        setter=setter, getter=getter,
-        cleanTypename=cleanTypename, defValue=defValue))
+'''.format(setter=setter, getter=getter,
+           cleanTypename=cleanTypename))
 
 
 def CreateSequence(nodeTypename, node, unused_leafTypeDict, isChoice=False):
@@ -361,8 +366,7 @@ def CreateEnumerated(nodeTypename, node, unused_leafTypeDict):
     checkConstraint = ' OR '.join('data='+x[1] for x in node._members)
     constants = '\n    '.join(CleanName(x[0])+' = '+x[1]
                               for x in node._members)
-    defValue = CleanName(nodeTypename) + "_SQL." + \
-        CleanName(node._members[0][0])
+    # defValue = CleanName(nodeTypename) + "_SQL." + CleanName(node._members[0][0])
     g_sqlalchemyOutput.write('''
 class {cleanTypename}_SQL(Base):
     __tablename__ = '{cleanTypename}'
@@ -396,11 +400,9 @@ class {cleanTypename}_SQL(Base):
         session.commit()
         return self.iid
 
-'''.format(
-        cleanTypename=CleanName(nodeTypename),
-        constraint=checkConstraint,
-        constants=constants,
-        defValue=defValue))
+'''.format(cleanTypename=CleanName(nodeTypename),
+           constraint=checkConstraint,
+           constants=constants))
 
 
 def CreateSequenceOf(nodeTypename, node, unused_leafTypeDict):
@@ -409,8 +411,8 @@ def CreateSequenceOf(nodeTypename, node, unused_leafTypeDict):
     reftype = CleanName(reftype)
     constraint = ""
     if node._range != []:
-        constraint = ", CheckConstraint('idx>=0 AND idx<%s')" % (
-                     node._range[-1])
+        constraint = \
+            ", CheckConstraint('idx>=0 AND idx<%s')" % (node._range[-1])
 
     # The detail table, containing the index of the cell
     # and the foreign key to the actual data
@@ -501,7 +503,7 @@ class {cleanTypename}_SQL(Base):
         pyObj.Reset(state)
 
 '''.format(cleanTypename=cleanTypename, setLength=setLength,
-           constraint=constraint, reftype=reftype))
+           reftype=reftype))
 
     if not isinstance(reftype, str):
         panic("FixupAstForSQLAlchemy failed to create a pseudoType for %s" %
@@ -575,7 +577,7 @@ import DV
 
             # make sure we know what leaf type this node is
             node = g_names[nodeTypename]
-            assert(nodeTypename in g_leafTypeDict)
+            assert nodeTypename in g_leafTypeDict
             leafType = g_leafTypeDict[nodeTypename]
             if leafType in ['BOOLEAN', 'INTEGER', 'REAL', 'OCTET STRING']:
                 CreateBasic(nodeTypename, node, g_leafTypeDict)

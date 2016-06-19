@@ -33,43 +33,43 @@ class SynchronousToolGlueGenerator:
     ##############################################
     # Parts to override for each synchronous tool
 
-    def Version(self):
+    def Version(self):  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a SynchronousToolGlueGenerator...")  # pragma: no cover
 
-    def FromToolToASN1SCC(self):
+    def FromToolToASN1SCC(self):  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a SynchronousToolGlueGenerator...")  # pragma: no cover
 
-    def FromToolToOSS(self):
+    def FromToolToOSS(self):  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a SynchronousToolGlueGenerator...")  # pragma: no cover
 
-    def FromASN1SCCtoTool(self):
+    def FromASN1SCCtoTool(self):  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a SynchronousToolGlueGenerator...")  # pragma: no cover
 
-    def FromOSStoTool(self):
+    def FromOSStoTool(self):  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a SynchronousToolGlueGenerator...")  # pragma: no cover
 
-    def HeadersOnStartup(self, unused_modelingLanguage, unused_asnFile, unused_subProgram, unused_subProgramImplementation, unused_outputDir, unused_maybeFVname):
+    def HeadersOnStartup(self, unused_modelingLanguage, unused_asnFile, unused_subProgram, unused_subProgramImplementation, unused_outputDir, unused_maybeFVname):  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a SynchronousToolGlueGenerator...")  # pragma: no cover
 
-    def SourceVar(self, unused_nodeTypename, unused_encoding, unused_node, unused_subProgram, unused_subProgramImplementation, unused_param, unused_leafTypeDict, unused_names):
+    def SourceVar(self, unused_nodeTypename, unused_encoding, unused_node, unused_subProgram, unused_subProgramImplementation, unused_param, unused_leafTypeDict, unused_names):  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a SynchronousToolGlueGenerator...")  # pragma: no cover
 
-    def TargetVar(self, unused_nodeTypename, unused_encoding, unused_node, unused_subProgram, unused_subProgramImplementation, unused_param, unused_leafTypeDict, unused_names):
+    def TargetVar(self, unused_nodeTypename, unused_encoding, unused_node, unused_subProgram, unused_subProgramImplementation, unused_param, unused_leafTypeDict, unused_names):  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a SynchronousToolGlueGenerator...")  # pragma: no cover
 
-    def InitializeBlock(self, unused_modelingLanguage, unused_asnFile, unused_sp, unused_subProgramImplementation, unused_maybeFVname):
+    def InitializeBlock(self, unused_modelingLanguage, unused_asnFile, unused_sp, unused_subProgramImplementation, unused_maybeFVname):  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a SynchronousToolGlueGenerator...")  # pragma: no cover
 
-    def ExecuteBlock(self, unused_modelingLanguage, unused_asnFile, unused_sp, unused_subProgramImplementation, unused_maybeFVname):
+    def ExecuteBlock(self, unused_modelingLanguage, unused_asnFile, unused_sp, unused_subProgramImplementation, unused_maybeFVname):  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a SynchronousToolGlueGenerator...")  # pragma: no cover
 
     ########################################################
     # Parts to possibly override for each synchronous tool
 
-    def CleanNameAsToolWants(self, name):
+    def CleanNameAsToolWants(self, name):  # pylint: disable=no-self-use
         return re.sub(r'[^a-zA-Z0-9_]', '_', name)
 
-    def CleanNameAsADAWants(self, name):
+    def CleanNameAsADAWants(self, name):  # pylint: disable=no-self-use
         return re.sub(r'[^a-zA-Z0-9_]', '_', name)
 
     ##########################################
@@ -84,6 +84,7 @@ class SynchronousToolGlueGenerator:
         self.asn_name = ""
         self.supportedEncodings = ['native', 'uper', 'acn']
         self.dir = None
+        self.useOSS = None
 
     def OnStartup(self, modelingLanguage, asnFile, subProgram, subProgramImplementation, outputDir, maybeFVname, useOSS):
         if modelingLanguage == "QGenAda":
@@ -175,8 +176,8 @@ class SynchronousToolGlueGenerator:
 
     def Encoder(self, nodeTypename, encoding, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
         if encoding.lower() not in self.supportedEncodings:
-                panic(str(self.__class__) + ": in (%s), encoding can be one of %s (not '%s')" %  # pragma: no cover
-                      (subProgram._id + "." + subProgramImplementation, self.supportedEncodings, encoding))  # pragma: no cover
+            panic(str(self.__class__) + ": in (%s), encoding can be one of %s (not '%s')" % (  # pragma: no cover
+                subProgram._id + "." + subProgramImplementation, self.supportedEncodings, encoding))  # pragma: no cover
 
         tmpSpName = "Convert_From_%s_To_%s_In_%s_%s" % \
             (self.CleanNameAsADAWants(nodeTypename),

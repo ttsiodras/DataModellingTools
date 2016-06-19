@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# vim: set expandtab ts=8 sts=4 shiftwidth=4
 #
 # (C) Semantix Information Technologies.
 #
@@ -34,12 +33,12 @@ import os
 import sys
 import copy
 
-from typing import Tuple
+from typing import Tuple, List
 
 import commonPy.configMT
 from commonPy.asnAST import sourceSequenceLimit, AsnNode  # NOQA pylint: disable=unused-import
-from commonPy.asnParser import (  # NOQA
-    AST_Lookup, AST_TypesOfFile, AST_TypenamesOfFile, AST_Leaftypes,
+from commonPy.asnParser import (  # NOQA pylint: disable=unused-import
+    AST_Lookup, AST_Leaftypes,
     Typename, Filename, ParseAsnFileList)
 from commonPy.utility import inform, panic
 import commonPy.cleanupNodes
@@ -175,7 +174,7 @@ def main():
 
     ParseAsnFileList(sys.argv[1:])
 
-    Triples = Tuple[AST_Lookup, List[AsnNode], AST_Leaftypes]  # NOQA pylint: disable=unused-variable
+    Triples = Tuple[AST_Lookup, List[AsnNode], AST_Leaftypes]  # NOQA pylint: disable=unused-variable,invalid-sequence-index
     uniqueASNfiles = {}  # type: Dict[Filename, Triples]
 
     for asnFile in uniqueASNfiles:
@@ -261,7 +260,9 @@ def main():
 if __name__ == "__main__":
     if "-pdb" in sys.argv:
         sys.argv.remove("-pdb")  # pragma: no cover
-        import pdb  # pylint: disable=wrong-import-position  pragma: nocover
+        import pdb  # pragma: nocover  pylint: disable=wrong-import-position,wrong-import-order
         pdb.run('main()')  # pragma: no cover
     else:
         main()
+
+# vim: set expandtab ts=8 sts=4 shiftwidth=4

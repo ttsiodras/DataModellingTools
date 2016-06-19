@@ -978,7 +978,7 @@ def OnChoice(nodeTypename, node, subProgram, subProgramImplementation, param, le
     Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
-def OnShutdown(modelingLanguage, asnFile, sp, subProgramImplementation, maybeFVname):
+def OnShutdown(unused_modelingLanguage, unused_asnFile, unused_sp, unused_subProgramImplementation, unused_maybeFVname):
     pass
 
 

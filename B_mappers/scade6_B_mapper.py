@@ -100,12 +100,14 @@ class FromSCADEtoASN1SCC(RecursiveMapper):
             childNo += 1
             lines.append("%sif (%s.choiceIdx == %d) {\n" %
                          (self.maybeElse(childNo), srcScadeMacro, childNo))
-            lines.extend(['    '+x for x in self.Map(
-                         "%s.%s" % (srcScadeMacro, self.CleanName(child[0])),
-                         destVar + ".u." + self.CleanName(child[0]),
-                         child[1],
-                         leafTypeDict,
-                         names)])
+            lines.extend(
+                ['    '+x
+                 for x in self.Map(
+                     "%s.%s" % (srcScadeMacro, self.CleanName(child[0])),
+                     destVar + ".u." + self.CleanName(child[0]),
+                     child[1],
+                     leafTypeDict,
+                     names)])
             lines.append("    %s.kind = %s;\n" % (destVar, self.CleanName(child[2])))
             lines.append("}")
         return lines
@@ -117,8 +119,8 @@ class FromSCADEtoASN1SCC(RecursiveMapper):
                 node.Location())  # pragma: no cover
         lines = []
         for i in range(0, node._range[-1]):
-            lines.extend(self.Map(
-                         "%s[%d]" % (srcScadeMacro, i),
+            lines.extend(
+                self.Map("%s[%d]" % (srcScadeMacro, i),
                          "%s.arr[%d]" % (destVar, i),
                          node._containedType,
                          leafTypeDict,
@@ -185,12 +187,14 @@ class FromASN1SCCtoSCADE(RecursiveMapper):
             childNo += 1
             lines.append("%sif (%s.kind == %s) {\n" %
                          (self.maybeElse(childNo), srcVar, self.CleanName(child[2])))
-            lines.extend(['    '+x for x in self.Map(
-                         srcVar + ".u." + self.CleanName(child[0]),
-                         "%s.%s" % (dstScadeMacro, self.CleanName(child[0])),
-                         child[1],
-                         leafTypeDict,
-                         names)])
+            lines.extend(
+                ['    '+x
+                 for x in self.Map(
+                     srcVar + ".u." + self.CleanName(child[0]),
+                     "%s.%s" % (dstScadeMacro, self.CleanName(child[0])),
+                     child[1],
+                     leafTypeDict,
+                     names)])
             lines.append("    %s.choiceIdx = %d;\n" % (dstScadeMacro, childNo))
             lines.append("}\n")
         return lines
@@ -208,12 +212,14 @@ class FromASN1SCCtoSCADE(RecursiveMapper):
         # Bugfix for Astrium/Nicolas Gillet: always use the array max conf
         # lines.append("    for(i%d=0; i%d<%s.nCount; i%d++) {\n" % (seqIndex, seqIndex, srcVar, seqIndex))
         lines.append("    for(i%d=0; i%d<%d; i%d++) {\n" % (seqIndex, seqIndex, node._range[-1], seqIndex))
-        lines.extend(["        "+x for x in self.Map(
-                     srcVar + ".arr[i%d]" % seqIndex,
-                     "%s[i%d]" % (dstScadeMacro, seqIndex),
-                     node._containedType,
-                     leafTypeDict,
-                     names)])
+        lines.extend(
+            ["        "+x
+             for x in self.Map(
+                 srcVar + ".arr[i%d]" % seqIndex,
+                 "%s[i%d]" % (dstScadeMacro, seqIndex),
+                 node._containedType,
+                 leafTypeDict,
+                 names)])
         lines.append("    }\n")
         # How to reset the remaining elements in SCADE? No idea...
         lines.append("}\n")
@@ -271,12 +277,14 @@ class FromSCADEtoOSS(RecursiveMapper):
             childNo += 1
             lines.append("%sif (%s.choiceIdx == %d) {\n" %
                          (self.maybeElse(childNo), srcScadeMacro, childNo))
-            lines.extend(['    '+x for x in self.Map(
-                         "%s.%s" % (srcScadeMacro, self.CleanName(child[0])),
-                         destVar + ".u." + self.CleanName(child[0]),
-                         child[1],
-                         leafTypeDict,
-                         names)])
+            lines.extend(
+                ['    '+x
+                 for x in self.Map(
+                     "%s.%s" % (srcScadeMacro, self.CleanName(child[0])),
+                     destVar + ".u." + self.CleanName(child[0]),
+                     child[1],
+                     leafTypeDict,
+                     names)])
             lines.append("    %s.choice = OSS_%s_chosen;\n" % (destVar, self.CleanName(child[0])))
             lines.append("}")
         return lines
@@ -288,8 +296,8 @@ class FromSCADEtoOSS(RecursiveMapper):
                 node.Location())  # pragma: no cover
         lines = []
         for i in range(0, node._range[-1]):
-            lines.extend(self.Map(
-                         "%s[%d]" % (srcScadeMacro, i),
+            lines.extend(
+                self.Map("%s[%d]" % (srcScadeMacro, i),
                          "%s.value[%d]" % (destVar, i),
                          node._containedType,
                          leafTypeDict,
@@ -352,12 +360,14 @@ class FromOSStoSCADE(RecursiveMapper):
             childNo += 1
             lines.append("%sif (%s.choice == OSS_%s_chosen) {\n" %
                          (self.maybeElse(childNo), srcVar, self.CleanName(child[0])))
-            lines.extend(['    '+x for x in self.Map(
-                         srcVar + ".u." + self.CleanName(child[0]),
-                         "%s.%s" % (dstScadeMacro, self.CleanName(child[0])),
-                         child[1],
-                         leafTypeDict,
-                         names)])
+            lines.extend(
+                ['    '+x
+                 for x in self.Map(
+                     srcVar + ".u." + self.CleanName(child[0]),
+                     "%s.%s" % (dstScadeMacro, self.CleanName(child[0])),
+                     child[1],
+                     leafTypeDict,
+                     names)])
             lines.append("    %s.choiceIdx = %d;\n" % (dstScadeMacro, childNo))
             lines.append("}\n")
         return lines
@@ -374,12 +384,14 @@ class FromOSStoSCADE(RecursiveMapper):
         lines.append("    int i%d;\n" % seqIndex)
         lines.append("    for(i%d=0; i%d<%s.count; i%d++) {\n" % (seqIndex, seqIndex, srcVar, seqIndex))
         # for i in xrange(0, node._range[-1]):
-        lines.extend(["        "+x for x in self.Map(
-                     srcVar + ".value[i%d]" % seqIndex,
-                     "%s[i%d]" % (dstScadeMacro, seqIndex),
-                     node._containedType,
-                     leafTypeDict,
-                     names)])
+        lines.extend(
+            ["        "+x
+             for x in self.Map(
+                 srcVar + ".value[i%d]" % seqIndex,
+                 "%s[i%d]" % (dstScadeMacro, seqIndex),
+                 node._containedType,
+                 leafTypeDict,
+                 names)])
         lines.append("    }\n")
         # How to reset the remaining elements in SCADE? No idea...
         lines.append("}\n")
@@ -423,7 +435,7 @@ class ScadeGlueGenerator(SynchronousToolGlueGenerator):
             self.C_SourceFile.write("%s %s;\n" % (self.CleanNameAsToolWants(param._signal._asnNodename), param._id))
         self.C_SourceFile.write("\n")
 
-    def SourceVar(self, unused_nodeTypename, unused_encoding, unused_node, subProgram, subProgramImplementation, param, unused_leafTypeDict, unused_names):
+    def SourceVar(self, unused_nodeTypename, unused_encoding, unused_node, unused_subProgram, unused_subProgramImplementation, param, unused_leafTypeDict, unused_names):
         if isinstance(param._sourceElement, AadlPort):  # Both AadlPort and AadlEventDataPort
             panic("Unsupported old construct")  # pragma: no cover
             # srcScadeMacro = "AADL2SCADE_OUTPUT_DATA_PORT(var_%s, %s, %s)" % \
@@ -440,7 +452,7 @@ class ScadeGlueGenerator(SynchronousToolGlueGenerator):
             panic(str(self.__class__) + ": %s not supported (yet?)\n" % str(param._sourceElement))  # pragma: no cover
         return srcScadeMacro
 
-    def TargetVar(self, unused_nodeTypename, unused_encoding, unused_node, subProgram, subProgramImplementation, param, unused_leafTypeDict, unused_names):
+    def TargetVar(self, unused_nodeTypename, unused_encoding, unused_node, unused_subProgram, unused_subProgramImplementation, param, unused_leafTypeDict, unused_names):
         if isinstance(param._sourceElement, AadlPort):  # Both AadlPort and AadlEventDataPort
             panic("Unsupported old construct")  # pragma: no cover
             # dstScadeMacro = "AADL2SCADE_INPUT_DATA_PORT(var_%s, %s, %s)" % \

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-   asn2dataModel converts ASN.1 modules to a variety of target languages 
+   asn2dataModel converts ASN.1 modules to a variety of target languages
 """
 from . import msgPrinter
 from . import msgPrinterASN1

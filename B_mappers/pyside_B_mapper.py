@@ -202,7 +202,7 @@ def setSharedLib(dll=None):
 '''.format(fvName=FVname, tcName=CleanSP))
         g_PyDataModel.write('\ntc["{tcName}"] = '.format(tcName=CleanSP))
         buttons = ([["sendButton", "Send TC"], ["loadButton", "Load TC"],
-                   ["saveButton", "Save TC"]])
+                    ["saveButton", "Save TC"]])
         classType = "asn1Editor"
     elif modelingLanguage.lower() == 'gui_pi':
         g_BackendFile.write('''
@@ -249,10 +249,10 @@ def setSharedLib(dll=None):
 '''.format(tmName=CleanSP, fvName=FVname))
         g_PyDataModel.write('\ntm["{tmName}"] = '.format(tmName=CleanSP))
         buttons = ([["plotButton", "Plot"], ["meterButton", "Meter"],
-                   ["unusedButton", "Unused"]])
+                    ["unusedButton", "Unused"]])
         classType = "asn1Viewer"
 
-    global g_QUiFile
+    # global g_QUiFile
     global g_IFCount
     Left = 1
     Right = 2
@@ -508,8 +508,8 @@ def WriteCodeForGUIControls(prefixes, parentControl, node, subProgram,
                             subProgramImplementation, param, leafTypeDict,
                             names, nodeTypename=''):
     global g_firstElem
-    global g_fromPysideToASN1
-    global g_fromASN1ToPyside
+    # global g_fromPysideToASN1
+    # global g_fromASN1ToPyside
     global g_onceOnly
     global g_iter
     for prefix in prefixes:
@@ -524,14 +524,14 @@ def WriteCodeForGUIControls(prefixes, parentControl, node, subProgram,
     pyStr = ""
     asnStr = prefixes[0]
     for i in range(1, len(prefixes)):
-        if (len(parentControl) >= i):
+        if len(parentControl) >= i:
             asnStr += "[{index}]".format(index=parentControl[i-1])
         asnStr += prefixes[i][len(prefixes[i-1]):]
 
     for item in prefixes[0].split('.'):
         pyStr += '''["{prefixKey}"]'''.format(prefixKey=item)
     for i in range(1, len(prefixes)):
-        if (len(parentControl) >= i):
+        if len(parentControl) >= i:
             pyStr += "[{index}]".format(index=parentControl[i-1])
         for item in prefixes[i][len(prefixes[i-1]):].split('.'):
             if len(item) > 0:
@@ -583,31 +583,30 @@ def WriteCodeForGUIControls(prefixes, parentControl, node, subProgram,
     if isinstance(node, (AsnInt, AsnReal, AsnOctetString)):
         if isinstance(node, (AsnInt, AsnReal)):
             if g_onceOnly:
-                g_PyDataModel.write('''\
-{'nodeTypename': '%s', 'type': '%s', 'id': '%s', 'minR': %d, 'maxR': %d}''' % (
-                    nodeTypename, node._name, txtPrefix,
-                    node._range[0], node._range[1]))
+                g_PyDataModel.write(
+                    '''{'nodeTypename': '%s', 'type': '%s', 'id': '%s', 'minR': %d, 'maxR': %d}''' % (
+                        nodeTypename, node._name, txtPrefix,
+                        node._range[0], node._range[1]))
 
         elif isinstance(node, AsnOctetString):
             if g_onceOnly:
-                g_PyDataModel.write('''\
-{'nodeTypename': '%s', 'type': 'STRING',\
- 'id': '%s', 'minSize': %d, 'maxSize': %d}''' % (
-                    nodeTypename, txtPrefix, node._range[0], node._range[1]))
+                g_PyDataModel.write(
+                    '''{'nodeTypename': '%s', 'type': 'STRING', 'id': '%s', 'minSize': %d, 'maxSize': %d}''' % (
+                        nodeTypename, txtPrefix, node._range[0], node._range[1]))
 
     elif isinstance(node, AsnBool):
         if g_onceOnly:
-            g_PyDataModel.write('''\
-{'nodeTypename': '%s', 'type': '%s', 'id': '%s', 'default': 'False'}''' % (
-                nodeTypename, node._name, txtPrefix))
+            g_PyDataModel.write(
+                '''{'nodeTypename': '%s', 'type': '%s', 'id': '%s', 'default': 'False'}''' % (
+                    nodeTypename, node._name, txtPrefix))
 
     elif isinstance(node, AsnEnumerated):
         if g_onceOnly:
             global g_needsComa
             g_needsComa = False
-            g_PyDataModel.write('''\
-{'nodeTypename': '%s', 'type': '%s', 'id': '%s', 'values':[''' % (
-                nodeTypename, node._name, txtPrefix))
+            g_PyDataModel.write(
+                '''{'nodeTypename': '%s', 'type': '%s', 'id': '%s', 'values':[''' % (
+                    nodeTypename, node._name, txtPrefix))
             for enum_value in node._members:
                 if g_needsComa:
                     g_PyDataModel.write(',')
@@ -618,9 +617,9 @@ def WriteCodeForGUIControls(prefixes, parentControl, node, subProgram,
     elif isinstance(node, AsnSequence) or isinstance(
             node, AsnChoice) or isinstance(node, AsnSet):
         if g_onceOnly:
-            g_PyDataModel.write('''\
-{'nodeTypename': '%s', 'type': '%s', 'id': '%s', ''' % (
-                nodeTypename, node._name, txtPrefix))
+            g_PyDataModel.write(
+                '''{'nodeTypename': '%s', 'type': '%s', 'id': '%s', ''' % (
+                    nodeTypename, node._name, txtPrefix))
             if isinstance(node, AsnChoice):
                 g_PyDataModel.write('''"choices":[''')
             elif isinstance(node, AsnSequence) or isinstance(node, AsnSet):
@@ -667,10 +666,9 @@ def WriteCodeForGUIControls(prefixes, parentControl, node, subProgram,
 
     elif isinstance(node, AsnSequenceOf) or isinstance(node, AsnSetOf):
         if g_onceOnly:
-            g_PyDataModel.write('''\
-{'nodeTypename': '%s', 'type': 'SEQOF', 'id': '%s', 'minSize': %d,\
- 'maxSize': %d, 'seqoftype':''' % (
-                nodeTypename, txtPrefix, node._range[0], node._range[1]))
+            g_PyDataModel.write(
+                '''{'nodeTypename': '%s', 'type': 'SEQOF', 'id': '%s', 'minSize': %d, 'maxSize': %d, 'seqoftype':''' % (
+                    nodeTypename, txtPrefix, node._range[0], node._range[1]))
 
         containedNode = node._containedType
         if isinstance(containedNode, str):
@@ -719,9 +717,9 @@ def Common(nodeTypename, node, subProgram,
     WriteCodeForGUIControls(
         [control], [], node, subProgram,
         subProgramImplementation, param, leafTypeDict, names, nodeTypename)
-    global g_BackendFile
-    global g_fromPysideToASN1
-    global g_fromASN1ToPyside
+    # global g_BackendFile
+    # global g_fromPysideToASN1
+    # global g_fromASN1ToPyside
     g_fromPysideToASN1.append("    return %s\n" % CleanName(subProgram._id))
     g_fromASN1ToPyside.append("    return val\n")
     g_BackendFile.write(''.join(g_fromPysideToASN1))
@@ -771,14 +769,13 @@ def OnChoice(nodeTypename, node, subProgram, subProgramImplementation,
            param, leafTypeDict, names)
 
 
-def OnShutdown(modelingLanguage, asnFile, sp, subProgramImplementation,
-               FVname):
+def OnShutdown(unused_modelingLanguage, unused_asnFile, unused_sp, unused_subProgramImplementation, unused_FVname):
     pass
 
 
 def OnFinal():
-    global g_PyDataModel
-    global g_QUiFile
+    # global g_PyDataModel
+    # global g_QUiFile
     g_PyDataModel.write("\n")
     g_QUiFile.write(''' </widget>
  <layoutdefault spacing="6" margin="11"/>
