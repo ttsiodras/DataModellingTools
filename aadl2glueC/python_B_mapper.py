@@ -187,6 +187,7 @@ def OnStartup(modelingLanguage, asnFile, subProgram, unused_subProgramImplementa
     if modelingLanguage.lower() == "gui_ri":
         g_SourceFile.write('T_' + cleanFVname + '_RI_list ii_'  + CleanSP + ' = i_' + CleanSP + ';\n');
 
+        g_headerPython.append('SendTC_' + CleanSP + ' = PythonAccess.SendTC_' + CleanSP)
         decl = '\ndef Invoke_%s(' % CleanSP
         parms = []
         for param in subProgram._params:
