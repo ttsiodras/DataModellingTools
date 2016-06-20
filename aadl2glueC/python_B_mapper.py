@@ -179,7 +179,7 @@ def OnStartup(modelingLanguage, asnFile, subProgram, unused_subProgramImplementa
             g_TMprocessors.append('        print "Parameter %s:"' % CleanParam)
             g_TMprocessors.append('        var_%s.PrintAll()' % CleanParam)
             g_TMprocessors.append('        print')
-            g_TMprocessors.append("        self._pMem = DV.MovePtrBySizeOf_%s(self._pMem)" % CleanName(param._signal._asnNodename))
+            g_TMprocessors.append("        #self._pMem = DV.MovePtrBySizeOf_%s(self._pMem)" % CleanName(param._signal._asnNodename))
         g_TMprocessors.append("        # Revert the pointer to start of the data")
         g_TMprocessors.append('        self._pMem = backup')
 
