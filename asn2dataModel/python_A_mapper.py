@@ -75,7 +75,7 @@ def OnStartup(unused_modelingLanguage, asnFile, outputDir):
     g_outputFile.write("import DV\n\n")
     g_outputFile.write("from Stubs import (\n")
     g_outputFile.write(
-        "    myassert, panicWithCallStack, Clean, DataStream, COMMON)\n\n")
+        "    myassert, Clean, DataStream, COMMON)\n\n")
     global g_outputGetSetH
     g_outputGetSetH = open(outputDir + base + "_getset.h", "w")
     g_outputGetSetH.write('#ifndef __GETSET_H__\n#define __GETSET_H__\n\n')
