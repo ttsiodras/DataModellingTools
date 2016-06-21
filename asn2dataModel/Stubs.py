@@ -19,10 +19,8 @@
 # generated code.
 #
 import os
-import sys
 import re
 import copy
-import traceback
 import DV_Types
 from ctypes import (
     cdll, c_void_p, c_ubyte, c_double, c_uint,
@@ -37,8 +35,7 @@ soFileNames = [
     if filename.endswith("_getset.so")
 ]
 if len(soFileNames) != 1:
-    print "Failed to locate a single _getset.so under", script_path
-    sys.exit(1)
+    raise Exception("Failed to locate a single _getset.so under " + script_path)
 
 JMP = cdll.LoadLibrary(os.path.join(script_path, soFileNames[0]))
 
@@ -69,11 +66,8 @@ CreateInstanceOf_int.restype = c_void_p
 DestroyInstanceOf_int = JMP.DestroyInstanceOf_int
 
 
-def panicWithCallStack(msg):
-    """Print the panic msg in color, report the call stack, and die"""
-    print >>sys.stderr, "\n"+chr(27)+"[35m" + msg + chr(27) + "[0m\n"
-    print >>sys.stderr, "\nCall stack was:\n%s\n" % ("".join(traceback.format_stack()[:-1]))
-    sys.exit(1)
+class AsnCoderError(Exception):
+    pass
 
 
 def CleanNameAsPythonWants(name):
@@ -85,7 +79,7 @@ Clean = CleanNameAsPythonWants
 def myassert(b):
     """assert that shows the call stack when it fails"""
     if not b:
-        panicWithCallStack("Assertion failed...")
+        raise AsnCoderError("Assertion failed...")
 
 
 class DataStream(object):
@@ -232,7 +226,7 @@ An example for SetLength:
     def __setattr__(self, name, value):
         if name not in COMMON.allowed:
             self.Reset()
-            panicWithCallStack("You can only use .Set(XYZ) and .SetLength(XYZ) to assign values, don't use '='")
+            raise AsnCoderError("You can only use .Set(XYZ) and .SetLength(XYZ) to assign values, don't use '='")
         object.__setattr__(self, name, value)
 
     def __getitem__(self, idx):
@@ -245,8 +239,7 @@ An example for SetLength:
         try:
             bridgeFuncName = Clean(self._nodeTypeName) + "_" + self._Caccessor + "_Get"+args.get("postfix", "")
             if bridgeFuncName not in DV_Types.funcTypeLookup:
-                print "Function", bridgeFuncName, "not found in lookup - contact support."
-                raise Exception("")
+                raise AsnCoderError("Function %s not found in lookup - contact support." % bridgeFuncName)
             resType = DV_Types.funcTypeLookup[bridgeFuncName]
             if resType.endswith('*'):
                 cTypesResultType = c_void_p
@@ -260,8 +253,7 @@ An example for SetLength:
                     'long': c_long
                 }.get(resType, None)
                 if cTypesResultType is None:
-                    print "Result type of", resType, "is not yet supported in the Python mapper - contact support."
-                    raise Exception("")
+                    raise AsnCoderError("Result type of %s is not yet supported in the Python mapper - contact support." % resType)
             bridgeFunc = getattr(JMP, bridgeFuncName)
             bridgeFunc.restype = cTypesResultType
             retVal = bridgeFunc(self._ptr, *self._params)
@@ -269,7 +261,7 @@ An example for SetLength:
             oldAP = self._accessPath
             if args.get("reset", True):
                 self.Reset()
-            panicWithCallStack("The access path you used (%s) is not valid." % oldAP)
+            raise AsnCoderError("The access path you used (%s) is not valid." % oldAP)
         if args.get("reset", True):
             self.Reset()
         return retVal
@@ -291,10 +283,8 @@ An example for SetLength:
             oldAP = self._accessPath
             if args.get("reset", True):
                 self.Reset()
-            print str(e)
-            panicWithCallStack(
-                "The access path you used (%s) or the value you tried to assign (%s) is not valid." %
-                (oldAP, str(value)))
+            raise AsnCoderError("The access path you used (%s) or the value you tried to assign (%s) is not valid. %s" %
+                (oldAP, str(value), str(e)))
         if args.get("reset", True):
             self.Reset()
 
@@ -321,19 +311,20 @@ grep for the errorcode value inside ASN1SCC generated headers."""
         EncodeFunc = getattr(JMP, EncodeFuncName)
         success = EncodeFunc(self._ptr, bitstream._bs, self._pErr, True)
         if not success:
-            panicWithCallStack(
-                "Error in %s, code:%d" % (
-                    EncodeFuncName, COMMON.getErrCode(self._pErr)))
+            raise AsnCoderError("Error in %s, code: %d" % (EncodeFuncName,
+                                                           COMMON.getErrCode(self._pErr)))
 
     def Decode(self, bitstream, bACN=False):
         """Returns (booleanSuccess, ASN1SCC iErrorCode)
 grep for the errorcode value inside ASN1SCC generated headers."""
         myassert(isinstance(bitstream, DataStream))
         suffix = "_ACN_Decode" if bACN else "_Decode"
-        DecodeFunc = getattr(JMP, Clean(self._nodeTypeName) + suffix)
+        DecodeFuncName = Clean(self._nodeTypeName) + suffix
+        DecodeFunc = getattr(JMP, DecodeFuncName)
         success = DecodeFunc(self._ptr, bitstream._bs, self._pErr)
         if not success:
-            panicWithCallStack("Error in Decode, code:%d" % COMMON.getErrCode(self._pErr))
+            raise AsnCoderError("Error in %s, code: %d" % (DecodeFuncName,
+                                                           COMMON.getErrCode(self._pErr)))
 
     def EncodeACN(self, bitstream):
         self.Encode(bitstream, True)
