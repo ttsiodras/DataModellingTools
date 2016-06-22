@@ -5,10 +5,10 @@ Installation
 ------------
 
     $ sudo apt-get install libxslt-dev libxml2-dev
-    $ pip install --user -r requirements.txt
+    $ pip3 install --user -r requirements.txt
     $ make flake8  # optional, check for pep8 compliance
     $ make pylint  # optional, static analysis with pylint
-    $ pip install --user .
+    $ pip3 install --user .
 
 Contents
 --------
