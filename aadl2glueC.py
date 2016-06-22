@@ -180,7 +180,7 @@ def main():
     if sys.argv.count("-o") != 0:
         idx = sys.argv.index("-o")
         try:
-            commonPy.configMT.outputDir = os.path.normpath(sys.argv[idx+1]) + os.sep
+            commonPy.configMT.outputDir = os.path.normpath(sys.argv[idx + 1]) + os.sep
         except:  # pragma: no cover
             panic('Usage: %s [-verbose] [-useOSS] [-o dirname] input1.aadl [input2.aadl] ...\n' % sys.argv[0])  # pragma: no cover
         del sys.argv[idx]

@@ -26,7 +26,7 @@ def main():
     for si in SystemsAndImplementations:
         sp, sp_impl, modelingLanguage, fv_name = si[0], si[1], si[2], si[3]
         sp = commonPy.aadlAST.g_apLevelContainers[sp]
-        print(sp._id+"."+sp_impl, "(", modelingLanguage, ") FV_name:", fv_name)
+        print(sp._id + "." + sp_impl, "(", modelingLanguage, ") FV_name:", fv_name)
         for param in sp._params:
             print("\t", end=' ')
             if isinstance(param, commonPy.aadlAST.InParam):
@@ -43,7 +43,7 @@ def main():
         if len(sp._connections):
             print("\tConnections:")
             for pair in sp._connections:
-                print("\t\tfrom", pair._from._componentId+':'+pair._from._portId, "to", pair._to._componentId+':'+pair._to._portId)
+                print("\t\tfrom", pair._from._componentId + ':' + pair._from._portId, "to", pair._to._componentId + ':' + pair._to._portId)
             print()
 
 if __name__ == "__main__":

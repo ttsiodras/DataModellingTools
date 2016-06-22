@@ -204,7 +204,7 @@ class SynchronousToolGlueGenerator:
                 leafTypeDict,
                 names) or []
 
-            lines = ["        "+x for x in lines]
+            lines = ["        " + x for x in lines]
             self.ADA_SourceFile.write("".join(lines))
 
             self.ADA_SourceFile.write(
@@ -258,7 +258,7 @@ class SynchronousToolGlueGenerator:
                 leafTypeDict,
                 names) or []
 
-            lines = ["    "+x for x in lines]
+            lines = ["    " + x for x in lines]
             self.C_SourceFile.write("".join(lines))
 
             if self.useOSS and encoding.lower() == "uper":
@@ -323,7 +323,7 @@ class SynchronousToolGlueGenerator:
                 node,
                 leafTypeDict,
                 names) or []
-            lines = ["        "+x for x in lines]
+            lines = ["        " + x for x in lines]
 
             self.ADA_SourceFile.write("".join(lines))
 
@@ -397,7 +397,7 @@ class SynchronousToolGlueGenerator:
                     node,
                     leafTypeDict,
                     names) or []
-            lines = ["        "+x for x in lines]
+            lines = ["        " + x for x in lines]
             self.C_SourceFile.write("".join(lines))
 
             if self.useOSS and encoding.lower() == "uper":

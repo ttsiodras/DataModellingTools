@@ -91,7 +91,7 @@ def MergeASN1_AST(smp2AsnAST):
         node = smp2AsnAST[nodeTypename]
         # Take care to add dependencies first
         ScanChildren(nodeTypename, node, smp2AsnAST, results, isRoot=True, createInnerNodesInNames=False)
-        info(1, "Will copy", nodeTypename, "("+str(node.__class__)+")", ("and "+str(results) if results else ''))
+        info(1, "Will copy", nodeTypename, "(" + str(node.__class__) + ")", ("and " + str(results) if results else ''))
         results.append(nodeTypename)
         for r in results:
             node = smp2AsnAST[r]

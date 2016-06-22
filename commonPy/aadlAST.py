@@ -80,7 +80,7 @@ class AadlEventPort:
         self._sp = sp
 
     def __repr__(self):
-        result = "AadlEventPort("+self._direction+","
+        result = "AadlEventPort(" + self._direction + ","
         if self._sp:
             result += self._sp
         result += ")"

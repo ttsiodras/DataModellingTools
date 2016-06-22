@@ -115,7 +115,7 @@ errCodes = {{}}
 '''.format(fvName=FVname))
     if FVname == "":
         panic("GUI APLCs must have an FV_Name attribute! (%s)\n" %
-              subProgram._id+"."+subProgramImplementation)  # pragma: no cover
+              subProgram._id + "." + subProgramImplementation)  # pragma: no cover
 
 
 def OnStartup(modelingLanguage, asnFile, subProgram, subProgramImplementation,
@@ -525,15 +525,15 @@ def WriteCodeForGUIControls(prefixes, parentControl, node, subProgram,
     asnStr = prefixes[0]
     for i in range(1, len(prefixes)):
         if len(parentControl) >= i:
-            asnStr += "[{index}]".format(index=parentControl[i-1])
-        asnStr += prefixes[i][len(prefixes[i-1]):]
+            asnStr += "[{index}]".format(index=parentControl[i - 1])
+        asnStr += prefixes[i][len(prefixes[i - 1]):]
 
     for item in prefixes[0].split('.'):
         pyStr += '''["{prefixKey}"]'''.format(prefixKey=item)
     for i in range(1, len(prefixes)):
         if len(parentControl) >= i:
-            pyStr += "[{index}]".format(index=parentControl[i-1])
-        for item in prefixes[i][len(prefixes[i-1]):].split('.'):
+            pyStr += "[{index}]".format(index=parentControl[i - 1])
+        for item in prefixes[i][len(prefixes[i - 1]):].split('.'):
             if len(item) > 0:
                 pyStr += '''["{prefixKey}"]'''.format(prefixKey=item)
 
@@ -565,7 +565,7 @@ def WriteCodeForGUIControls(prefixes, parentControl, node, subProgram,
             g_iter * "    " + "val" + pyStr + " = " + asnStr + ".GetPyString()\n")
 
     if isinstance(node, AsnEnumerated):
-        g_fromASN1ToPyside.append(g_iter * "    "+"val" + pyStr + " = {}\n")
+        g_fromASN1ToPyside.append(g_iter * "    " + "val" + pyStr + " = {}\n")
         for enum_value in node._members:
             g_fromPysideToASN1.append(
                 g_iter * "    " + "if val" + pyStr +

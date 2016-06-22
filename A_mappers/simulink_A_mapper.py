@@ -261,7 +261,7 @@ def CreateDeclarationForType(nodeTypename, names, leafTypeDict):
         if elemNo > 1:
             g_outputFile.write('[')
         for i in range(0, elemNo):
-            g_outputFile.write("%s_elem%02d " % (CleanNameAsSimulinkWants(nodeTypename), i+1))
+            g_outputFile.write("%s_elem%02d " % (CleanNameAsSimulinkWants(nodeTypename), i + 1))
         if elemNo > 1:
             g_outputFile.write(']')
         g_outputFile.write(";\n\n")

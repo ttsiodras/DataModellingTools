@@ -46,6 +46,7 @@ from commonPy.recursiveMapper import RecursiveMapper
 
 import commonPy.verify
 
+
 def usage():
     '''Print usage instructions.'''
     msg = 'Usage: %s <options> input1.asn1 [input2.asn1]...\nWhere options are:\n'
@@ -114,7 +115,7 @@ class Printer(RecursiveMapper):
             lines.append(
                 "%sif (%s.kind == %s) {" %
                 (self.maybeElse(childNo), srcCVariable, self.CleanName(child[2])))
-            lines.extend(['    '+x
+            lines.extend(['    ' + x
                           for x in self.Map(
                               "%s.u.%s" % (srcCVariable, self.CleanName(child[0])),
                               prefix + "::" + self.CleanName(child[0]),
@@ -131,7 +132,7 @@ class Printer(RecursiveMapper):
         lines.append("    int i%s;" % uniqueId)
         limit = sourceSequenceLimit(node, srcCVariable)
         lines.append("    for(i%s=0; i%s<%s; i%s++) {" % (uniqueId, uniqueId, limit, uniqueId))
-        lines.extend(["        "+x
+        lines.extend(["        " + x
                       for x in self.Map(
                           "%s.arr[i%s]" % (srcCVariable, uniqueId),
                           prefix + "::Elem",
@@ -153,7 +154,7 @@ def main():
     if sys.argv.count("-o") != 0:
         idx = sys.argv.index("-o")
         try:
-            commonPy.configMT.outputDir = os.path.normpath(sys.argv[idx+1]) + os.sep
+            commonPy.configMT.outputDir = os.path.normpath(sys.argv[idx + 1]) + os.sep
         except:  # pragma: no cover
             usage()  # pragma: no cover
         del sys.argv[idx]
@@ -239,7 +240,7 @@ def main():
             C_SourceFile.write('#ifdef __linux__\n')
             C_SourceFile.write('    pthread_mutex_lock(&g_printing_mutex);\n')
             C_SourceFile.write('#endif\n')
-            lines = ["    "+x
+            lines = ["    " + x
                      for x in printer.Map(
                          '(*pData)',
                          '',

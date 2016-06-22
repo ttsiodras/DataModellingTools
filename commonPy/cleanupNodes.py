@@ -51,6 +51,7 @@ from commonPy.asnAST import (
 
 SetOfBadTypenames = Set[str]
 
+
 def DiscoverBadTypes() -> SetOfBadTypenames:
     '''
     This returns a dictionary that tells us which types to skip

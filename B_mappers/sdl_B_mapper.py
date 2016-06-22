@@ -170,7 +170,7 @@ class FromObjectGeodeToASN1SCC(RecursiveMapper):
             childNo += 1
             lines.append("%sif (%s.present == %d) {\n" % (self.maybeElse(childNo), srcSDLVariable, childNo))
             lines.extend(
-                ["    "+x
+                ["    " + x
                  for x in self.Map(
                      "%s.u.u%d.fd_%s" % (srcSDLVariable, childNo, self.CleanName(child[0]).lower()),
                      destVar + (".u.%s" % self.CleanName(child[0])),
@@ -188,7 +188,7 @@ class FromObjectGeodeToASN1SCC(RecursiveMapper):
         lines.append("    int i%s;\n" % uniqueId)
         lines.append("    for(i%s=0; i%s<%s.length; i%s++) {\n" % (uniqueId, uniqueId, srcSDLVariable, uniqueId))
         lines.extend(
-            ["        "+x
+            ["        " + x
              for x in self.Map(
                  "%s.cont[i%s]" % (srcSDLVariable, uniqueId),
                  "%s.arr[i%s]" % (destVar, uniqueId),
@@ -273,7 +273,7 @@ class FromObjectGeodeToOSS(RecursiveMapper):
             childNo += 1
             lines.append("%sif (%s.present == %d) {\n" % (self.maybeElse(childNo), srcSDLVariable, childNo))
             lines.extend(
-                ["    "+x
+                ["    " + x
                  for x in self.Map(
                      "%s.u.u%d.fd_%s" % (srcSDLVariable, childNo, self.CleanName(child[0]).lower()),
                      destVar + (".u.%s" % self.CleanName(child[0])),
@@ -291,7 +291,7 @@ class FromObjectGeodeToOSS(RecursiveMapper):
         lines.append("    int i%s;\n" % uniqueId)
         lines.append("    for(i%s=0; i%s<%s.length; i%s++) {\n" % (uniqueId, uniqueId, srcSDLVariable, uniqueId))
         lines.extend(
-            ["        "+x
+            ["        " + x
              for x in self.Map(
                  "%s.cont[i%s]" % (srcSDLVariable, uniqueId),
                  "%s.value[i%s]" % (destVar, uniqueId),
@@ -389,7 +389,7 @@ class FromASN1SCCtoObjectGeode(RecursiveMapper):
             lines.append("%sif (%s.kind == %s) {\n" %
                          (self.maybeElse(childNo), srcVar, self.CleanName(child[2])))
             lines.extend(
-                ['    '+x
+                ['    ' + x
                  for x in self.Map(
                      srcVar + ".u." + self.CleanName(child[0]),
                      "%s.u.u%d.fd_%s" % (dstSDLVariable, childNo, self.CleanName(child[0]).lower()),
@@ -409,7 +409,7 @@ class FromASN1SCCtoObjectGeode(RecursiveMapper):
         lines.append("    %s.length = %s;\n" % (dstSDLVariable, limit))
         lines.append("    for(i%s=0; i%s<%s; i%s++) {\n" % (uniqueId, uniqueId, limit, uniqueId))
         lines.extend(
-            ["        "+x
+            ["        " + x
              for x in self.Map(
                  srcVar + ".arr[i%s]" % uniqueId,
                  "%s.cont[i%s]" % (dstSDLVariable, uniqueId),
@@ -505,7 +505,7 @@ class FromOSStoObjectGeode(RecursiveMapper):
             lines.append("%sif (%s.choice == OSS_%s_chosen) {\n" %
                          (self.maybeElse(childNo), srcVar, self.CleanName(child[0])))
             lines.extend(
-                ['    '+x
+                ['    ' + x
                  for x in self.Map(
                      srcVar + ".u." + self.CleanName(child[0]),
                      "%s.u.u%d.fd_%s" % (dstSDLVariable, childNo, self.CleanName(child[0]).lower()),
@@ -524,7 +524,7 @@ class FromOSStoObjectGeode(RecursiveMapper):
         lines.append("    %s.length = %s.count;\n" % (dstSDLVariable, srcVar))
         lines.append("    for(i%s=0; i%s<%s.count; i%s++) {\n" % (uniqueId, uniqueId, srcVar, uniqueId))
         lines.extend(
-            ["        "+x
+            ["        " + x
              for x in self.Map(
                  srcVar + ".value[i%s]" % uniqueId,
                  "%s.cont[i%s]" % (dstSDLVariable, uniqueId),
@@ -636,7 +636,7 @@ class OG_GlueGenerator(ASynchronousToolGlueGenerator):
                 leafTypeDict,
                 names)
 
-        lines = ["    "+x.rstrip()+"\\" for x in lines]
+        lines = ["    " + x.rstrip() + "\\" for x in lines]
         fileOutHeader.write("\n".join(lines))
 
         # Call the encoder
@@ -763,7 +763,7 @@ class OG_GlueGenerator(ASynchronousToolGlueGenerator):
                 leafTypeDict,
                 names)
 
-        lines = ["        "+x.rstrip()+"\\" for x in lines]
+        lines = ["        " + x.rstrip() + "\\" for x in lines]
         fileOutHeader.write("\n".join(lines))
 
         if self.useOSS and encoding.lower() == "uper":

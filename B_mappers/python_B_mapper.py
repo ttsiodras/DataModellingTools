@@ -71,8 +71,8 @@ def OnStartup(modelingLanguage, asnFile, subProgram, unused_subProgramImplementa
     global g_HeaderFile
     if g_HeaderFile is None:
         g_HeaderFile = open(outputDir + "python/gui_swig.h", "w")
-        g_HeaderFile.write('#ifndef __HEADER_'+cleanFVname+"_H__\n")
-        g_HeaderFile.write('#define __HEADER_'+cleanFVname+"_H__\n\n")
+        g_HeaderFile.write('#ifndef __HEADER_' + cleanFVname + "_H__\n")
+        g_HeaderFile.write('#define __HEADER_' + cleanFVname + "_H__\n\n")
         g_HeaderFile.write('typedef unsigned char byte;\n\n')
         g_HeaderFile.write("int OpenMsgQueueForReading(char *queueName);\n")
         g_HeaderFile.write("void CloseMsgQueue(int queue_id);\n")
@@ -123,9 +123,9 @@ def OnStartup(modelingLanguage, asnFile, subProgram, unused_subProgramImplementa
 
 ''' % {"FVname": maybeFVname})
     # have we ever seen before the combination of FVname and Language?
-    if maybeFVname+modelingLanguage.lower() not in g_perFV:
+    if maybeFVname + modelingLanguage.lower() not in g_perFV:
         # No, check for things that must be instantiated once per FV+Lang
-        g_perFV[maybeFVname+modelingLanguage.lower()] = maybeFVname
+        g_perFV[maybeFVname + modelingLanguage.lower()] = maybeFVname
 
         # The first time you see an FV with an sp_impl that is also a GUI_PI, create a thread to poll /FVName_PI_queue
         if modelingLanguage.lower() == "gui_pi":
@@ -159,7 +159,7 @@ def OnStartup(modelingLanguage, asnFile, subProgram, unused_subProgramImplementa
             g_footerPython.append('        poll_' + cleanFVname + '._bDie = True')
             g_footerPython.append('        poll_' + cleanFVname + '.join()')
     if modelingLanguage.lower() == "gui_pi":
-        g_TMprocessors.append('    if self.messageReceivedType == i_'+CleanSP+':')
+        g_TMprocessors.append('    if self.messageReceivedType == i_' + CleanSP + ':')
         g_TMprocessors.append('        print "\\n"+chr(27)+"[32m" + "Received Telemetry: ' + CleanSP + '" + chr(27) + "[0m\\n"')
         g_TMprocessors.append('        backup = self._pMem')
         for param in subProgram._params:
@@ -180,11 +180,11 @@ def OnStartup(modelingLanguage, asnFile, subProgram, unused_subProgramImplementa
         for param in subProgram._params:
             CleanParam = CleanName(param._id)
             nodeTypename = param._signal._asnNodename
-            parms.append("var_"+CleanName(nodeTypename))
+            parms.append("var_" + CleanName(nodeTypename))
         decl += ",".join(parms)
         decl += "):"
         g_bodyPython.append(decl)
-        g_bodyPython.append("    if -1 == SendTC_%s(%s):" % (CleanSP, ",".join([x+"._ptr" for x in parms])))
+        g_bodyPython.append("    if -1 == SendTC_%s(%s):" % (CleanSP, ",".join([x + "._ptr" for x in parms])))
         g_bodyPython.append("        print 'Failed to send TC: %s...\\n'" % CleanSP)
         g_bodyPython.append("        raise IOError(\"%s\")" % CleanSP)
 

@@ -13,10 +13,10 @@ g_verboseLevel = 0
 
 # colors (used when calling 'info')
 ESC = chr(27)
-red = ESC+"[31m"
-green = ESC+"[32m"
-white = ESC+"[0m"
-yellow = ESC+"[33m"
+red = ESC + "[31m"
+green = ESC + "[32m"
+white = ESC + "[0m"
+yellow = ESC + "[33m"
 colors = [red, green, white, yellow]
 
 
@@ -72,10 +72,10 @@ def info(level, *args):
         panic("You called info without args")  # pragma: no cover
     if level <= g_verboseLevel:
         for i in range(len(args)):  # pylint: disable=consider-using-enumerate
-            if i != 0 and args[i-1] not in colors:
+            if i != 0 and args[i - 1] not in colors:
                 sys.stdout.write(' ')
             sys.stdout.write(args[i])
-        for i in range(len(args)-1, -1, -1):
+        for i in range(len(args) - 1, -1, -1):
             if args[i] in colors:
                 continue
             if not args[i].endswith('\n'):
@@ -123,7 +123,7 @@ class Attributes:
         for k, v in list(t.items()):
             endBraceIdx = k.find('}')
             if endBraceIdx != -1:
-                k = k[endBraceIdx+1:]
+                k = k[endBraceIdx + 1:]
             self._attrs[k] = v
 
     def __getattr__(self, x):
@@ -190,7 +190,7 @@ def MapSMP2Type(attrs, enumOptions, itemTypes, fields):
                       itemTypeAttrs.base, itemTypeAttrs.sourceline)  # pragma: no cover
             idxHash = containedHref.find('#')
             if -1 != idxHash:
-                containedHref = containedHref[idxHash+1:]
+                containedHref = containedHref[idxHash + 1:]
             if itemTypeAttrs.href in simpleTypesTable:
                 # Create the AsnBasicNode this child maps to.
                 cast, low, high = simpleTypesTable[itemTypeAttrs.href]
@@ -226,7 +226,7 @@ def MapSMP2Type(attrs, enumOptions, itemTypes, fields):
                     refTypeHref = refTypeAttrs.href
                     idxHash = refTypeHref.find('#')
                     if -1 != idxHash:
-                        refTypeHref = refTypeHref[idxHash+1:]
+                        refTypeHref = refTypeHref[idxHash + 1:]
                     if refTypeAttrs.href in simpleTypesTable:
                         cast, low, high = simpleTypesTable[refTypeAttrs.href]
                         containedDict = {
@@ -417,7 +417,7 @@ def ConvertCatalogueToASN_AST(inputSmp2Files):
                 location = 'from %s, in line %s' % \
                     (t.base, t.sourceline)  # pragma: no cover
                 panic("Missing Description child element", location)  # pragma: no cover
-            info(2, "Creating type:", cataloguePrefix+nodeTypename)
+            info(2, "Creating type:", cataloguePrefix + nodeTypename)
             asnNode = MapSMP2Type(a, enumOptions, itemTypes, fields)
             if 'artificial' in description:
                 asnNode._isArtificial = True

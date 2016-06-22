@@ -104,7 +104,7 @@ class FromCtoOSS(RecursiveMapper):
             lines.append("%sif (%s.kind == %s) {\n" %
                          (self.maybeElse(childNo), srcCVariable, self.CleanName(child[2])))
             lines.extend(
-                ['    '+x
+                ['    ' + x
                  for x in self.Map(
                      "%s.u.%s" % (srcCVariable, self.CleanName(child[0])),
                      destVar + ".u." + self.CleanName(child[0]),
@@ -123,7 +123,7 @@ class FromCtoOSS(RecursiveMapper):
         limit = sourceSequenceLimit(node, srcCVariable)
         lines.append("    for(i%s=0; i%s<%s; i%s++) {\n" % (uniqueId, uniqueId, limit, uniqueId))
         lines.extend(
-            ["        "+x
+            ["        " + x
              for x in self.Map(
                  "%s.arr[i%s]" % (srcCVariable, uniqueId),
                  "%s.value[i%s]" % (destVar, uniqueId),
@@ -194,7 +194,7 @@ class FromOSStoC(RecursiveMapper):
             lines.append("%sif (%s.choice == OSS_%s_chosen) {\n" %
                          (self.maybeElse(childNo), srcVar, self.CleanName(child[0])))
             lines.extend(
-                ['    '+x
+                ['    ' + x
                  for x in self.Map(
                      srcVar + ".u." + self.CleanName(child[0]),
                      "%s.u.%s" % (dstCVariable, self.CleanName(child[0])),
@@ -215,7 +215,7 @@ class FromOSStoC(RecursiveMapper):
         lines.append("    for(i%s=0; i%s<%s; i%s++) {\n" %
                      (uniqueId, uniqueId, targetSequenceLimit(node, dstCVariable), uniqueId))
         lines.extend(
-            ["        "+x
+            ["        " + x
              for x in self.Map(
                  srcVar + ".value[i%s]" % uniqueId,
                  "%s.arr[i%s]" % (dstCVariable, uniqueId),
@@ -291,7 +291,7 @@ class C_GlueGenerator(ASynchronousToolGlueGenerator):
                 node,
                 leafTypeDict,
                 names)
-            lines = ["    "+x for x in lines]
+            lines = ["    " + x for x in lines]
             self.C_SourceFile.write("".join(lines))
 
         if self.useOSS and encoding.lower() == "uper":
@@ -386,7 +386,7 @@ class C_GlueGenerator(ASynchronousToolGlueGenerator):
                 node,
                 leafTypeDict,
                 names)
-            lines = ["        "+x for x in lines]
+            lines = ["        " + x for x in lines]
             self.C_SourceFile.write("".join(lines))
 
         if self.useOSS and encoding.lower() == "uper":

@@ -108,7 +108,7 @@ class FromQGenCToASN1SCC(RecursiveMapper):
             childNo += 1
             lines.append("%sif (%s.choiceIdx == %d) {\n" % (self.maybeElse(childNo), srcQGenC, childNo))
             lines.extend(
-                ['    '+x
+                ['    ' + x
                  for x in self.Map(
                      "%s.%s" % (srcQGenC, self.CleanName(child[0])),
                      destVar + ".u." + self.CleanName(child[0]),
@@ -160,7 +160,7 @@ class FromASN1SCCtoQGenC(RecursiveMapper):
         limit = sourceSequenceLimit(node, srcVar)
         for i in range(0, node._range[-1]):
             lines.append("if (%s>=%d) %s.element_data[%d] = %s.arr[%d]; else %s.element_data[%d] = 0;\n" %
-                         (limit, i+1, dstQGenC, i, srcVar, i, dstQGenC, i))
+                         (limit, i + 1, dstQGenC, i, srcVar, i, dstQGenC, i))
         if len(node._range) > 1 and node._range[0] != node._range[1]:
             lines.append("%s.length = %s;\n" % (dstQGenC, limit))
         return lines
@@ -192,7 +192,7 @@ class FromASN1SCCtoQGenC(RecursiveMapper):
             childNo += 1
             lines.append("%sif (%s.kind == %s) {\n" % (self.maybeElse(childNo), srcVar, self.CleanName(child[2])))
             lines.extend(
-                ['    '+x
+                ['    ' + x
                  for x in self.Map(
                      srcVar + ".u." + self.CleanName(child[0]),
                      "%s.%s" % (dstQGenC, self.CleanName(child[0])),
@@ -270,7 +270,7 @@ class FromQGenCToOSS(RecursiveMapper):
             childNo += 1
             lines.append("%sif (%s.choiceIdx == %d) {\n" % (self.maybeElse(childNo), srcQGenC, childNo))
             lines.extend(
-                ['    '+x
+                ['    ' + x
                  for x in self.Map(
                      "%s.%s" % (srcQGenC, self.CleanName(child[0])),
                      destVar + ".u." + self.CleanName(child[0]),
@@ -319,7 +319,7 @@ class FromOSStoQGenC(RecursiveMapper):
         lines = []
         for i in range(0, node._range[-1]):
             lines.append("if (%s.length >= %d) %s.element_data[%d] = %s.value[%d]; else %s.element_data[%d] = 0;\n" %
-                         (srcVar, i+1, dstQGenC, i, srcVar, i, dstQGenC, i))
+                         (srcVar, i + 1, dstQGenC, i, srcVar, i, dstQGenC, i))
         if len(node._range) > 1 and node._range[0] != node._range[1]:
             lines.append("%s.length = %s.length;" % (dstQGenC, srcVar))
         return lines
@@ -351,7 +351,7 @@ class FromOSStoQGenC(RecursiveMapper):
             childNo += 1
             lines.append("%sif (%s.choice == OSS_%s_chosen) {\n" % (self.maybeElse(childNo), srcVar, self.CleanName(child[0])))
             lines.extend(
-                ['    '+x
+                ['    ' + x
                  for x in self.Map(
                      srcVar + ".u." + self.CleanName(child[0]),
                      "%s.%s" % (dstQGenC, self.CleanName(child[0])),

@@ -743,9 +743,9 @@ e.g.:
     def __repr__(self):
         result = "typedefed to " + self._leafType  # pragma: no cover
         if self._Min is not None:
-            result += ", min="+str(self._Min)  # pragma: no cover
+            result += ", min=" + str(self._Min)  # pragma: no cover
         if self._Max is not None:
-            result += ", max="+str(self._Max)  # pragma: no cover
+            result += ", max=" + str(self._Max)  # pragma: no cover
         assert self._leafType is not None   # pragma: no cover
         return result  # pragma: no cover
 

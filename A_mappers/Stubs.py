@@ -219,8 +219,8 @@ An example for SetLength:
         return "Choose the information you want - whole-structure or sequence dump not supported."
 
     def __getattr__(self, x):
-        self._Caccessor += "_"+Clean(x)
-        self._accessPath += "."+x
+        self._Caccessor += "_" + Clean(x)
+        self._accessPath += "." + x
         return self
 
     def __setattr__(self, name, value):
@@ -237,7 +237,7 @@ An example for SetLength:
 
     def Get(self, **args):  # postfix="", reset=True
         try:
-            bridgeFuncName = Clean(self._nodeTypeName) + "_" + self._Caccessor + "_Get"+args.get("postfix", "")
+            bridgeFuncName = Clean(self._nodeTypeName) + "_" + self._Caccessor + "_Get" + args.get("postfix", "")
             if bridgeFuncName not in DV_Types.funcTypeLookup:
                 raise AsnCoderError("Function %s not found in lookup - contact support." % bridgeFuncName)
             resType = DV_Types.funcTypeLookup[bridgeFuncName]
@@ -269,7 +269,7 @@ An example for SetLength:
     def Set(self, value, **args):  # postfix="", reset=True
         try:
             # print Clean(self._nodeTypeName) + "_" + self._Caccessor + "_Set"+postfix
-            bridgeFunc = getattr(JMP, Clean(self._nodeTypeName) + "_" + self._Caccessor + "_Set"+args.get("postfix", ""))
+            bridgeFunc = getattr(JMP, Clean(self._nodeTypeName) + "_" + self._Caccessor + "_Set" + args.get("postfix", ""))
             if isinstance(value, float):
                 ctypesValue = c_double(value)
             elif isinstance(value, int):
@@ -283,8 +283,9 @@ An example for SetLength:
             oldAP = self._accessPath
             if args.get("reset", True):
                 self.Reset()
-            raise AsnCoderError("The access path you used (%s) or the value you tried to assign (%s) is not valid. %s" %
-                (oldAP, str(value), str(e)))
+            raise AsnCoderError(
+                "The access path you used (%s) or the value you tried to assign (%s) is not valid. %s" % (
+                    oldAP, str(value), str(e)))
         if args.get("reset", True):
             self.Reset()
 
@@ -298,7 +299,7 @@ An example for SetLength:
     def getErrCode(pErr):
         errCode = 0
         for i in range(4):
-            errCode = (errCode << 8) | GetBufferByte(pErr, (3-i))
+            errCode = (errCode << 8) | GetBufferByte(pErr, (3 - i))
         return errCode
 
     def Encode(self, bitstream, bACN=False):

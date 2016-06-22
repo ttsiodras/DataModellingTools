@@ -350,17 +350,17 @@ def CreateGettersAndSetters(path, params, accessPathInC, node, names, leafTypeDi
         if node._range == []:
             panic("Python_A_mapper: string (in %s) must have a SIZE constraint!\n" % node.Location())  # pragma: no cover
         if isSequenceVariable(node):
-            CommonBaseImpl("OCTETSTRING", "long", path, params, accessPathInC+".nCount", "Length")
+            CommonBaseImpl("OCTETSTRING", "long", path, params, accessPathInC + ".nCount", "Length")
         else:
-            CommonBaseImplSequenceFixed("OCTETSTRING", "long", path, params, accessPathInC+".nCount", node, "Length")
+            CommonBaseImplSequenceFixed("OCTETSTRING", "long", path, params, accessPathInC + ".nCount", node, "Length")
         params.AddParam('int', "iDx", leafTypeDict)
-        CommonBaseImpl("OCTETSTRING_bytes", "byte", path+"_iDx", params, accessPathInC + (".arr["+params._vars[-1]+"]"), "")
+        CommonBaseImpl("OCTETSTRING_bytes", "byte", path + "_iDx", params, accessPathInC + (".arr[" + params._vars[-1] + "]"), "")
         params.Pop()
     elif isinstance(node, AsnEnumerated):
         CommonBaseImpl("ENUMERATED", "int", path, params, accessPathInC)
     elif isinstance(node, AsnSequence) or isinstance(node, AsnSet) or isinstance(node, AsnChoice):
         if isinstance(node, AsnChoice):
-            CommonBaseImpl("CHOICE selector", "int", path+"_kind", params, accessPathInC+".kind")
+            CommonBaseImpl("CHOICE selector", "int", path + "_kind", params, accessPathInC + ".kind")
         union = ""
         if isinstance(node, AsnChoice):
             union = ".u"
@@ -372,18 +372,18 @@ def CreateGettersAndSetters(path, params, accessPathInC, node, names, leafTypeDi
                 baseTypeOfChild = leafTypeDict.get(baseTypeOfChild, baseTypeOfChild)
                 if baseTypeOfChild not in ['INTEGER', 'REAL', 'BOOLEAN', 'OCTET STRING', 'ENUMERATED']:
                     useStar = '' if baseTypeOfChild.endswith('OF') else '*'
-                    CommonBaseImpl("Field " + childVarname + " selector", CleanNameAsPythonWants(childNode._containedType)+useStar, path+"_"+childVarname, params, accessPathInC+union+"."+childVarname, returnPointer=not baseTypeOfChild.endswith('OF'))
-            CreateGettersAndSetters(path+"_"+childVarname, params, accessPathInC+union+"."+childVarname, child[1], names, leafTypeDict)
+                    CommonBaseImpl("Field " + childVarname + " selector", CleanNameAsPythonWants(childNode._containedType) + useStar, path + "_" + childVarname, params, accessPathInC + union + "." + childVarname, returnPointer=not baseTypeOfChild.endswith('OF'))
+            CreateGettersAndSetters(path + "_" + childVarname, params, accessPathInC + union + "." + childVarname, child[1], names, leafTypeDict)
     elif isinstance(node, AsnSequenceOf) or isinstance(node, AsnSetOf):
         containedNode = node._containedType
         if isinstance(containedNode, str):
             containedNode = names[containedNode]
         if isSequenceVariable(node):
-            CommonBaseImpl("SEQUENCEOF/SETOF", "long", path, params, accessPathInC+".nCount", "Length")
+            CommonBaseImpl("SEQUENCEOF/SETOF", "long", path, params, accessPathInC + ".nCount", "Length")
         else:
-            CommonBaseImplSequenceFixed("SEQUENCEOF/SETOF", "long", path, params, accessPathInC+".nCount", node, "Length")
+            CommonBaseImplSequenceFixed("SEQUENCEOF/SETOF", "long", path, params, accessPathInC + ".nCount", node, "Length")
         params.AddParam('int', "iDx", leafTypeDict)
-        CreateGettersAndSetters(path+"_iDx", params, accessPathInC + (".arr["+params._vars[-1]+"]"), node._containedType, names, leafTypeDict)
+        CreateGettersAndSetters(path + "_iDx", params, accessPathInC + (".arr[" + params._vars[-1] + "]"), node._containedType, names, leafTypeDict)
         params.Pop()
 
 
@@ -448,8 +448,8 @@ def DumpTypeDumper(codeIndent, outputIndent, lines, variableName, node, names):
         lines.append(codeIndent + 'def emitElem(i):')
         lines.append(codeIndent + '    if i>0:')
         lines.append(codeIndent + '        lines.append(",")')
-        DumpTypeDumper(codeIndent+"    ", outputIndent+" ", lines,
-                       variableName+'[i]', containedNode, names)
+        DumpTypeDumper(codeIndent + "    ", outputIndent + " ", lines,
+                       variableName + '[i]', containedNode, names)
         lines.append(codeIndent + "map(emitElem, xrange(%s.GetLength()))" % variableName)
         lines.append(codeIndent + 'lines.append("}")')
 
@@ -480,7 +480,7 @@ def CreateDeclarationForType(nodeTypename: str, names: AST_Lookup, leafTypeDict:
         g_outputFile.write("        super(" + name + ", self).__init__(\"" + name + "\", ptr)\n")
         if isinstance(node, AsnString):
             g_outputFile.write('''#\n''')
-        CreateGettersAndSetters(name+"_", Params(nodeTypename), "", node, names, leafTypeDict)
+        CreateGettersAndSetters(name + "_", Params(nodeTypename), "", node, names, leafTypeDict)
         g_outputFile.write("\n    def GSER(self):\n")
         g_outputFile.write("        ''' Return the GSER representation of the value '''\n")
         g_outputFile.write("        lines = []\n")

@@ -129,7 +129,7 @@ class Printer(RecursiveMapper):
                 (self.maybeElse(childNo), srcCVariable, self.CleanName(child[2])))
             lines.append("    printf(\"%s:\");" % child[0])  # Choices need the field name printed
             lines.extend(
-                ['    '+x
+                ['    ' + x
                  for x in self.Map(
                      "%s.u.%s" % (srcCVariable, self.CleanName(child[0])),
                      prefix + "::" + self.CleanName(child[0]),
@@ -150,7 +150,7 @@ class Printer(RecursiveMapper):
         lines.append("        if (i%s) " % uniqueId)
         lines.append("            printf(\",\");")
         lines.extend(
-            ["        "+x
+            ["        " + x
              for x in self.Map(
                  "%s.arr[i%s]" % (srcCVariable, uniqueId),
                  prefix + "::Elem",
@@ -173,7 +173,7 @@ def main():
     if sys.argv.count("-o") != 0:
         idx = sys.argv.index("-o")
         try:
-            commonPy.configMT.outputDir = os.path.normpath(sys.argv[idx+1]) + os.sep
+            commonPy.configMT.outputDir = os.path.normpath(sys.argv[idx + 1]) + os.sep
         except:  # pragma: no cover
             usage()  # pragma: no cover
         del sys.argv[idx]
@@ -262,7 +262,7 @@ def main():
             C_SourceFile.write('    //printf("%%s %s ::= ", paramName);\n' % nodeTypename)
             C_SourceFile.write('    printf("%s ", paramName);\n')
             # C_SourceFile.write('\n'.join(printer.Map('(*pData)', '', node, leafTypeDict, commonPy.asnParser.g_names)))
-            lines = ["    "+x for x in printer.Map('(*pData)', '', node, leafTypeDict, commonPy.asnParser.g_names)]
+            lines = ["    " + x for x in printer.Map('(*pData)', '', node, leafTypeDict, commonPy.asnParser.g_names)]
             C_SourceFile.write("\n".join(lines))
             C_SourceFile.write('\n#ifdef __linux__\n')
             C_SourceFile.write('    pthread_mutex_unlock(&g_printing_mutex);\n')

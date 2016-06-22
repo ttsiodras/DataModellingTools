@@ -101,7 +101,7 @@ class FromSCADEtoASN1SCC(RecursiveMapper):
             lines.append("%sif (%s.choiceIdx == %d) {\n" %
                          (self.maybeElse(childNo), srcScadeMacro, childNo))
             lines.extend(
-                ['    '+x
+                ['    ' + x
                  for x in self.Map(
                      "%s.%s" % (srcScadeMacro, self.CleanName(child[0])),
                      destVar + ".u." + self.CleanName(child[0]),
@@ -188,7 +188,7 @@ class FromASN1SCCtoSCADE(RecursiveMapper):
             lines.append("%sif (%s.kind == %s) {\n" %
                          (self.maybeElse(childNo), srcVar, self.CleanName(child[2])))
             lines.extend(
-                ['    '+x
+                ['    ' + x
                  for x in self.Map(
                      srcVar + ".u." + self.CleanName(child[0]),
                      "%s.%s" % (dstScadeMacro, self.CleanName(child[0])),
@@ -213,7 +213,7 @@ class FromASN1SCCtoSCADE(RecursiveMapper):
         # lines.append("    for(i%d=0; i%d<%s.nCount; i%d++) {\n" % (seqIndex, seqIndex, srcVar, seqIndex))
         lines.append("    for(i%d=0; i%d<%d; i%d++) {\n" % (seqIndex, seqIndex, node._range[-1], seqIndex))
         lines.extend(
-            ["        "+x
+            ["        " + x
              for x in self.Map(
                  srcVar + ".arr[i%d]" % seqIndex,
                  "%s[i%d]" % (dstScadeMacro, seqIndex),
@@ -278,7 +278,7 @@ class FromSCADEtoOSS(RecursiveMapper):
             lines.append("%sif (%s.choiceIdx == %d) {\n" %
                          (self.maybeElse(childNo), srcScadeMacro, childNo))
             lines.extend(
-                ['    '+x
+                ['    ' + x
                  for x in self.Map(
                      "%s.%s" % (srcScadeMacro, self.CleanName(child[0])),
                      destVar + ".u." + self.CleanName(child[0]),
@@ -361,7 +361,7 @@ class FromOSStoSCADE(RecursiveMapper):
             lines.append("%sif (%s.choice == OSS_%s_chosen) {\n" %
                          (self.maybeElse(childNo), srcVar, self.CleanName(child[0])))
             lines.extend(
-                ['    '+x
+                ['    ' + x
                  for x in self.Map(
                      srcVar + ".u." + self.CleanName(child[0]),
                      "%s.%s" % (dstScadeMacro, self.CleanName(child[0])),
@@ -385,7 +385,7 @@ class FromOSStoSCADE(RecursiveMapper):
         lines.append("    for(i%d=0; i%d<%s.count; i%d++) {\n" % (seqIndex, seqIndex, srcVar, seqIndex))
         # for i in xrange(0, node._range[-1]):
         lines.extend(
-            ["        "+x
+            ["        " + x
              for x in self.Map(
                  srcVar + ".value[i%d]" % seqIndex,
                  "%s[i%d]" % (dstScadeMacro, seqIndex),

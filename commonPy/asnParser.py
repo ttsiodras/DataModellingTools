@@ -397,7 +397,7 @@ def ParseAsnFileList(listOfFilenames):
         mono = "mono " if sys.argv[0].endswith('.py') and sys.platform.startswith('linux') else ""
         spawnResult = os.system(mono + "\"" + asn1SccPath + "\" -customStg \"" + asn1SccDir + "/xml.stg:" + xmlAST + "\" -customStgAstVerion 4 \"" + "\" \"".join(listOfFilenames) + "\"")
         if spawnResult != 0:
-            errCode = spawnResult/256
+            errCode = spawnResult / 256
             if errCode == 1:
                 utility.panic("ASN1SCC reported syntax errors. Aborting...")
             elif errCode == 2:

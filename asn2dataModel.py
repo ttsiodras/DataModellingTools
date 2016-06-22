@@ -48,6 +48,7 @@ import commonPy.cleanupNodes
 import commonPy.verify as verify
 import A_mappers  # NOQA pylint:disable=unused-import
 
+
 def usage(argsToTools):
     '''Print usage instructions.'''
     msg = 'Usage: %s <options> input1.asn1 [input2.asn1]...\nWhere options are:\n'
@@ -94,7 +95,7 @@ def main():
     if sys.argv.count("-o") != 0:
         idx = sys.argv.index("-o")
         try:
-            commonPy.configMT.outputDir = os.path.normpath(sys.argv[idx+1]) + os.sep
+            commonPy.configMT.outputDir = os.path.normpath(sys.argv[idx + 1]) + os.sep
         except:   # pragma: no cover
             usage(argsToTools)  # pragma: no cover
         del sys.argv[idx]
@@ -105,9 +106,9 @@ def main():
         commonPy.configMT.verbose = True
         sys.argv.remove("-verbose")
     for i in argsToTools:
-        if "-"+i in sys.argv:
+        if "-" + i in sys.argv:
             toolSelected[i] = True
-            sys.argv.remove("-"+i)
+            sys.argv.remove("-" + i)
 
     if len(sys.argv) < 2:
         usage(argsToTools)

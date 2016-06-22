@@ -86,7 +86,7 @@ def RegistersAllocated(node):
                 panicWithCallStack("VHDL OCTET STRING (in %s) must have a fixed SIZE constraint !" % node.Location())  # pragma: no cover
             if node._range[-1] not in g_octStr:
                 g_octStr.append(node._range[-1])
-            retValue = 4*(int((node._range[-1]+3)/4))
+            retValue = 4 * (int((node._range[-1] + 3) / 4))
         else:  # pragma: no cover
             panicWithCallStack("Basic type %s can't be mapped..." % realLeafType)  # pragma: no cover
     elif isinstance(node, (AsnSequence, AsnSet)):
@@ -135,11 +135,11 @@ class VHDL_Circuit:
             self._paramOffset[p._id] = VHDL_Circuit.currentOffset
             VHDL_Circuit.currentOffset += RegistersAllocated(p._signal._asnNodename)
         if VHDL_Circuit.currentOffset > 256:
-            panicWithCallStack("For the ESA FPGA, there is a limit of 63 registers (252/4) - your design required %d." % (VHDL_Circuit.currentOffset/4))
+            panicWithCallStack("For the ESA FPGA, there is a limit of 63 registers (252/4) - your design required %d." % (VHDL_Circuit.currentOffset / 4))
 
     def __str__(self):
         msg = "PI:%s\n" % self._sp._id  # pragma: no cover
-        msg += ''.join([p[0]._id+':'+p[0]._signal._asnNodename+("(in)" if isinstance(p[0], InParam) else "(out)")+'\n' for p in self._params])  # pragma: no cover
+        msg += ''.join([p[0]._id + ':' + p[0]._signal._asnNodename + ("(in)" if isinstance(p[0], InParam) else "(out)") + '\n' for p in self._params])  # pragma: no cover
         return msg  # pragma: no cover
 
     def AddParam(self, nodeTypename, node, param, leafTypeDict, names):
@@ -192,22 +192,22 @@ class FromVHDLToASN1SCC(RecursiveMapper):
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
         if len(node._range) > 1 and node._range[0] != node._range[1]:
             panicWithCallStack("VHDL OCTET STRING (in %s) must have a fixed SIZE constraint !" % node.Location())  # pragma: no cover
-        for i in range(0, int((node._range[-1]+3)/4)):
+        for i in range(0, int((node._range[-1] + 3) / 4)):
             lines.append("{\n")
             lines.append("    unsigned tmp;\n")
-            lines.append("    tmp = ESAReadRegister(BASE_ADDR + %s);\n" % hex(register+i*4))
-            if i*4 < node._range[-1]:
-                lines.append("    %s.arr[%d] = tmp & 0xFF;\n" % (destVar, i*4))
-            if i*4+1 < node._range[-1]:
-                lines.append("    %s.arr[%d] = (tmp & 0xFF00) >> 8;\n" % (destVar, i*4+1))
-            if i*4+2 < node._range[-1]:
-                lines.append("    %s.arr[%d] = (tmp & 0xFF0000) >> 16;\n" % (destVar, i*4+2))
-            if i*4+3 < node._range[-1]:
-                lines.append("    %s.arr[%d] = (tmp & 0xFF000000) >> 24;\n" % (destVar, i*4+3))
+            lines.append("    tmp = ESAReadRegister(BASE_ADDR + %s);\n" % hex(register + i * 4))
+            if i * 4 < node._range[-1]:
+                lines.append("    %s.arr[%d] = tmp & 0xFF;\n" % (destVar, i * 4))
+            if i * 4 + 1 < node._range[-1]:
+                lines.append("    %s.arr[%d] = (tmp & 0xFF00) >> 8;\n" % (destVar, i * 4 + 1))
+            if i * 4 + 2 < node._range[-1]:
+                lines.append("    %s.arr[%d] = (tmp & 0xFF0000) >> 16;\n" % (destVar, i * 4 + 2))
+            if i * 4 + 3 < node._range[-1]:
+                lines.append("    %s.arr[%d] = (tmp & 0xFF000000) >> 24;\n" % (destVar, i * 4 + 3))
             lines.append("}\n")
         if isSequenceVariable(node):
             lines.append("%s.nCount = %s;\n" % (destVar, node._range[-1]))
-        srcVHDL[0] += 4*int((node._range[-1]+3)/4)
+        srcVHDL[0] += 4 * int((node._range[-1] + 3) / 4)
         return lines
 
     def MapEnumerated(self, srcVHDL, destVar, _, __, ___):
@@ -248,7 +248,7 @@ class FromVHDLToASN1SCC(RecursiveMapper):
             lines.append("    %sif (choiceIdx == %d) {\n" % (self.maybeElse(childNo), childNo))
             srcVHDL[0] += 4
             lines.extend(
-                ['        '+x
+                ['        ' + x
                  for x in self.Map(
                      srcVHDL,
                      destVar + ".u." + self.CleanName(child[0]),
@@ -324,19 +324,19 @@ class FromASN1SCCtoVHDL(RecursiveMapper):
         register = dstVHDL[0] + dstVHDL[1]
         limit = sourceSequenceLimit(node, srcVar)
         lines = []
-        for i in range(0, int((node._range[-1]+3)/4)):
+        for i in range(0, int((node._range[-1] + 3) / 4)):
             lines.append("{\n")
             lines.append("    unsigned tmp = 0;\n")
             for shift in range(0, 4):
-                if i*4+shift < node._range[-1]:
+                if i * 4 + shift < node._range[-1]:
                     if isSequenceVariable(node):
-                        lines.append("    if (%s >= %d)\n" % (limit, i*4+shift+1))
-                        lines.append("        tmp |= ((unsigned)%s.arr[%d]) << %d;\n" % (srcVar, i*4+shift, shift*8))
+                        lines.append("    if (%s >= %d)\n" % (limit, i * 4 + shift + 1))
+                        lines.append("        tmp |= ((unsigned)%s.arr[%d]) << %d;\n" % (srcVar, i * 4 + shift, shift * 8))
                     else:
-                        lines.append("    tmp |= ((unsigned)%s.arr[%d]) << %d;\n" % (srcVar, i*4+shift, shift*8))
-            lines.append("    ESAWriteRegister(BASE_ADDR + %s + %d, tmp);\n" % (hex(register), i*4))
+                        lines.append("    tmp |= ((unsigned)%s.arr[%d]) << %d;\n" % (srcVar, i * 4 + shift, shift * 8))
+            lines.append("    ESAWriteRegister(BASE_ADDR + %s + %d, tmp);\n" % (hex(register), i * 4))
             lines.append("}\n")
-        dstVHDL[0] += 4*int((node._range[-1]+3)/4)
+        dstVHDL[0] += 4 * int((node._range[-1] + 3) / 4)
         return lines
 
     def MapEnumerated(self, srcVar, dstVHDL, node, __, ___):
@@ -377,7 +377,7 @@ class FromASN1SCCtoVHDL(RecursiveMapper):
             lines.append("    ESAWriteRegister(BASE_ADDR + %s, tmp);\n" % hex(register))
             dstVHDL[0] += 4
             lines.extend(
-                ['    '+x
+                ['    ' + x
                  for x in self.Map(
                      srcVar + ".u." + self.CleanName(child[0]),
                      dstVHDL,
@@ -494,7 +494,7 @@ class MapASN1ToVHDLCircuit(RecursiveMapper):
     def MapInteger(self, direction, dstVHDL, node, _, __):
         if node._range == []:
             panicWithCallStack("INTEGERs need explicit ranges when generating VHDL code... (%s)" % node.Location())  # pragma: no cover
-        bits = math.log(max(abs(x) for x in node._range)+1, 2)
+        bits = math.log(max(abs(x) for x in node._range) + 1, 2)
         bits += bits if node._range[0] < 0 else 0
         # return [dstVHDL + ' : ' + direction + ('std_logic_vector(63 downto 0); -- normally, %d instead of 63' % bits)]
         return [dstVHDL + ' : ' + direction + ('std_logic_vector(63 downto 0); -- ASSERT uses 64 bit INTEGERs (optimal would be %d bits)' % bits)]
@@ -520,7 +520,7 @@ class MapASN1ToVHDLCircuit(RecursiveMapper):
     def MapSequence(self, direction, dstVHDL, node, leafTypeDict, names):
         lines = []
         for x in node._members:
-            lines.extend(self.Map(direction, dstVHDL+"_"+CleanName(x[0]), x[1], leafTypeDict, names))
+            lines.extend(self.Map(direction, dstVHDL + "_" + CleanName(x[0]), x[1], leafTypeDict, names))
         return lines
 
     def MapSet(self, direction, dstVHDL, node, leafTypeDict, names):
@@ -552,7 +552,7 @@ class MapASN1ToVHDLregisters(RecursiveMapper):
     def MapInteger(self, _, dstVHDL, node, __, ___):
         if node._range == []:
             panicWithCallStack("INTEGERs need explicit ranges when generating VHDL code... (%s)" % node.Location())  # pragma: no cover
-        bits = math.log(max(abs(x) for x in node._range)+1, 2)
+        bits = math.log(max(abs(x) for x in node._range) + 1, 2)
         bits += (bits if node._range[0] < 0 else 0)
         # return ['signal ' + dstVHDL + ' : ' + ('std_logic_vector(63 downto 0); -- normally, %d bits instead of 63' % bits)]
         return ['signal ' + dstVHDL + ' : ' + ('std_logic_vector(63 downto 0); -- ASSERT uses 64 bit INTEGERs (optimal would be %d bits)' % bits)]
@@ -578,7 +578,7 @@ class MapASN1ToVHDLregisters(RecursiveMapper):
     def MapSequence(self, _, dstVHDL, node, leafTypeDict, names):
         lines = []
         for x in node._members:
-            lines.extend(self.Map(_, dstVHDL+"_"+CleanName(x[0]), x[1], leafTypeDict, names))
+            lines.extend(self.Map(_, dstVHDL + "_" + CleanName(x[0]), x[1], leafTypeDict, names))
         return lines
 
     def MapSet(self, _, dstVHDL, node, leafTypeDict, names):
@@ -613,7 +613,7 @@ class MapASN1ToVHDLreadinputdata(RecursiveMapper):
         # bits = math.log(max(map(abs, node._range)+1),2)+(1 if node._range[0]<0 else 0)
         lines = []
         lines.append('%s(31 downto  0) <= regs(%d);' % (dstVHDL, reginfo[0]))
-        lines.append('%s(63 downto  32) <= regs(%d);' % (dstVHDL, reginfo[0]+1))
+        lines.append('%s(63 downto  32) <= regs(%d);' % (dstVHDL, reginfo[0] + 1))
         reginfo[0] += 2
         return lines
 
@@ -632,12 +632,12 @@ class MapASN1ToVHDLreadinputdata(RecursiveMapper):
             panicWithCallStack("VHDL OCTET STRING (in %s) must have a fixed SIZE constraint !" % node.Location())  # pragma: no cover
         lines = []
         for i in range(node._range[-1]):
-            realOffset = 4*reginfo[0] + i
-            bitStart = 31 - 8*(realOffset % 4)
+            realOffset = 4 * reginfo[0] + i
+            bitStart = 31 - 8 * (realOffset % 4)
             bitEnd = bitStart - 7
             lines.append('%s(%d)(7 downto 0) <= regs(%d)(%d downto %d);' %
-                         (dstVHDL, i, realOffset/4, bitStart, bitEnd))
-        reginfo[0] += (node._range[-1]+3)/4
+                         (dstVHDL, i, realOffset / 4, bitStart, bitEnd))
+        reginfo[0] += (node._range[-1] + 3) / 4
         return lines
 
     def MapEnumerated(self, reginfo, dstVHDL, _, __, ___):
@@ -648,7 +648,7 @@ class MapASN1ToVHDLreadinputdata(RecursiveMapper):
     def MapSequence(self, reginfo, dstVHDL, node, leafTypeDict, names):
         lines = []
         for x in node._members:
-            lines.extend(self.Map(reginfo, dstVHDL+"_"+CleanName(x[0]), x[1], leafTypeDict, names))
+            lines.extend(self.Map(reginfo, dstVHDL + "_" + CleanName(x[0]), x[1], leafTypeDict, names))
         return lines
 
     def MapSet(self, reginfo, dstVHDL, node, leafTypeDict, names):
@@ -683,7 +683,7 @@ class MapASN1ToVHDLwriteoutputdata(RecursiveMapper):
         # bits = math.log(max(map(abs, node._range)+1),2)+(1 if node._range[0]<0 else 0)
         lines = []
         lines.append('regs(%d) := %s(31 downto  0);' % (reginfo[0], dstVHDL))
-        lines.append('regs(%d) := %s(63 downto  32);' % (reginfo[0]+1, dstVHDL))
+        lines.append('regs(%d) := %s(63 downto  32);' % (reginfo[0] + 1, dstVHDL))
         reginfo[0] += 2
         return lines
 
@@ -702,12 +702,12 @@ class MapASN1ToVHDLwriteoutputdata(RecursiveMapper):
             panicWithCallStack("VHDL OCTET STRING (in %s) must have a fixed SIZE constraint !" % node.Location())  # pragma: no cover
         lines = []
         for i in range(node._range[-1]):
-            realOffset = 4*reginfo[0] + i
-            bitStart = 31 - 8*(realOffset % 4)
+            realOffset = 4 * reginfo[0] + i
+            bitStart = 31 - 8 * (realOffset % 4)
             bitEnd = bitStart - 7
             lines.append('regs(%d)(%d downto %d) := %s(%d)(7 downto 0);' %
-                         (realOffset/4, bitStart, bitEnd, dstVHDL, i))
-        reginfo[0] += (node._range[-1]+3)/4
+                         (realOffset / 4, bitStart, bitEnd, dstVHDL, i))
+        reginfo[0] += (node._range[-1] + 3) / 4
         return lines
 
     def MapEnumerated(self, reginfo, dstVHDL, _, __, ___):
@@ -718,7 +718,7 @@ class MapASN1ToVHDLwriteoutputdata(RecursiveMapper):
     def MapSequence(self, reginfo, dstVHDL, node, leafTypeDict, names):
         lines = []
         for x in node._members:
-            lines.extend(self.Map(reginfo, dstVHDL+"_"+CleanName(x[0]), x[1], leafTypeDict, names))
+            lines.extend(self.Map(reginfo, dstVHDL + "_" + CleanName(x[0]), x[1], leafTypeDict, names))
         return lines
 
     def MapSet(self, reginfo, dstVHDL, node, leafTypeDict, names):
@@ -773,7 +773,7 @@ class MapASN1ToSystemCconnections(RecursiveMapper):
     def MapSequence(self, srcRegister, dstCircuitPort, node, leafTypeDict, names):
         lines = []
         for x in node._members:
-            lines.extend(self.Map(srcRegister+"_"+CleanName(x[0]), dstCircuitPort+"_"+CleanName(x[0]), x[1], leafTypeDict, names))
+            lines.extend(self.Map(srcRegister + "_" + CleanName(x[0]), dstCircuitPort + "_" + CleanName(x[0]), x[1], leafTypeDict, names))
         return lines
 
     def MapSet(self, srcRegister, dstCircuitPort, node, leafTypeDict, names):
@@ -794,7 +794,7 @@ class MapASN1ToSystemCconnections(RecursiveMapper):
         lines = []
         for i in range(node._range[-1]):
             lines.extend(self.Map(
-                srcRegister+('_elem_%0*d' % (maxlen, i)), dstCircuitPort+('_elem_%0*d' % (maxlen, i)), node._containedType, leafTypeDict, names))
+                srcRegister + ('_elem_%0*d' % (maxlen, i)), dstCircuitPort + ('_elem_%0*d' % (maxlen, i)), node._containedType, leafTypeDict, names))
         return lines
 
     def MapSetOf(self, srcRegister, dstCircuitPort, node, leafTypeDict, names):
@@ -829,7 +829,7 @@ class MapASN1ToSystemCheader(RecursiveMapper):
 
     def MapSequence(self, state, systemCvar, node, leafTypeDict, names):
         for x in node._members:
-            self.Map(state, systemCvar+"_"+CleanName(x[0]), x[1], leafTypeDict, names)
+            self.Map(state, systemCvar + "_" + CleanName(x[0]), x[1], leafTypeDict, names)
         return []
 
     def MapSet(self, state, systemCvar, node, leafTypeDict, names):
@@ -847,7 +847,7 @@ class MapASN1ToSystemCheader(RecursiveMapper):
             panicWithCallStack("Must have a fixed SIZE constraint (in %s) for VHDL code!" % node.Location())  # pragma: no cover
         maxlen = len(str(node._range[-1]))
         for i in range(node._range[-1]):
-            self.Map(state, systemCvar+('_elem_%0*d' % (maxlen, i)), node._containedType, leafTypeDict, names)
+            self.Map(state, systemCvar + ('_elem_%0*d' % (maxlen, i)), node._containedType, leafTypeDict, names)
         return []
 
     def MapSetOf(self, state, systemCvar, node, leafTypeDict, names):
@@ -882,7 +882,7 @@ class MapASN1ToOutputs(RecursiveMapper):
     def MapSequence(self, paramName, dummy, node, leafTypeDict, names):
         lines = []
         for x in node._members:
-            lines.extend(self.Map(paramName+"_"+CleanName(x[0]), dummy, x[1], leafTypeDict, names))
+            lines.extend(self.Map(paramName + "_" + CleanName(x[0]), dummy, x[1], leafTypeDict, names))
         return lines
 
     def MapSet(self, paramName, dummy, node, leafTypeDict, names):
@@ -1013,11 +1013,11 @@ def OnFinal():
     for p in VHDL_Circuit.allCircuits[0]._sp._params:
         if isinstance(p, InParam) or isinstance(p, InOutParam):
             totalIn += RegistersAllocated(p._signal._asnNodename)
-    AddToStr('numberOfInputRegisters', str(totalIn/4))
+    AddToStr('numberOfInputRegisters', str(totalIn / 4))
 
     for v in sorted(g_octStr):
         AddToStr('octStr', '  type octStr_%d is array (0 to %d) of std_logic_vector(7 downto 0);\n' %
-                 (v, v-1))
+                 (v, v - 1))
 
     for c in VHDL_Circuit.allCircuits:
         circuitLines = []
@@ -1028,7 +1028,7 @@ def OnFinal():
 
         connectionsToSystemCLines = []
 
-        counter = [int(c._offset+4)/4]
+        counter = [int(c._offset + 4) / 4]
         for p in c._sp._params:
             node = VHDL_Circuit.names[p._signal._asnNodename]
             direction = "in " if isinstance(p, InParam) else "out "
@@ -1048,7 +1048,7 @@ def OnFinal():
                     readinputdataMapper.Map(
                         counter, c._spCleanName + '_' + p._id, node, VHDL_Circuit.leafTypeDict, VHDL_Circuit.names))
             else:
-                outputs.extend([c._spCleanName+'_'+x for x in outputsMapper.Map(p._id, 1, node, VHDL_Circuit.leafTypeDict, VHDL_Circuit.names)])
+                outputs.extend([c._spCleanName + '_' + x for x in outputsMapper.Map(p._id, 1, node, VHDL_Circuit.leafTypeDict, VHDL_Circuit.names)])
 
         writeoutputdataLines = []
 
@@ -1065,7 +1065,7 @@ def OnFinal():
 
         AddToStr('circuits', '        component %s is\n' % c._spCleanName)
         AddToStr('circuits', '        port (\n')
-        AddToStr('circuits', '\n'.join(['            '+x for x in circuitLines]) + '\n')
+        AddToStr('circuits', '\n'.join(['            ' + x for x in circuitLines]) + '\n')
         AddToStr('circuits', '            start_%s  : in  std_logic;\n' % c._spCleanName)
         AddToStr('circuits', '            finish_%s : out std_logic;\n' % c._spCleanName)
         AddToStr('circuits', '            rst_%s    : in std_logic;\n' % c._spCleanName)
@@ -1075,7 +1075,7 @@ def OnFinal():
 
         AddToStr('entities', '        entity %s is\n' % c._spCleanName)
         AddToStr('entities', '        port (\n')
-        AddToStr('entities', '\n'.join(['            '+x for x in circuitLines]) + '\n')
+        AddToStr('entities', '\n'.join(['            ' + x for x in circuitLines]) + '\n')
         AddToStr('entities', '            start_%s  : in  std_logic;\n' % c._spCleanName)
         AddToStr('entities', '            finish_%s : out std_logic;\n' % c._spCleanName)
         AddToStr('entities', '            rst_%s    : in std_logic;\n' % c._spCleanName)
@@ -1083,7 +1083,7 @@ def OnFinal():
         AddToStr('entities', '        );\n')
         AddToStr('entities', '        end %s;\n\n' % c._spCleanName)
 
-        AddToStr('ioregisters', '\n'.join(['        '+x for x in ioregisterLines]) + '\n\n')
+        AddToStr('ioregisters', '\n'.join(['        ' + x for x in ioregisterLines]) + '\n\n')
 
         AddToStr('startStopSignals', '''        signal %(pi)s_start : std_logic;
         signal %(pi)s_finish : std_logic;
@@ -1091,12 +1091,12 @@ def OnFinal():
 
         AddToStr('reset', "                        %(pi)s_start <= '0';\n" % {'pi': c._spCleanName})
 
-        AddToStr('readinputdata', '\n'.join([' '*24 + x for x in readinputdataLines])+'\n')
-        AddToStr('writeoutputdata', '\n'.join([' '*24 + x for x in writeoutputdataLines])+'\n')
+        AddToStr('readinputdata', '\n'.join([' ' * 24 + x for x in readinputdataLines]) + '\n')
+        AddToStr('writeoutputdata', '\n'.join([' ' * 24 + x for x in writeoutputdataLines]) + '\n')
 
         AddToStr('connectionsToSystemC', '\n        Interface_%s : %s\n' % (c._spCleanName, c._spCleanName))
         AddToStr('connectionsToSystemC', '            port map (\n')
-        AddToStr('connectionsToSystemC', ',\n'.join(['                '+x for x in connectionsToSystemCLines]) + ',\n')
+        AddToStr('connectionsToSystemC', ',\n'.join(['                ' + x for x in connectionsToSystemCLines]) + ',\n')
         AddToStr('connectionsToSystemC', '                start_%s => %s_start,\n' % (c._spCleanName, c._spCleanName))
         AddToStr('connectionsToSystemC', '                finish_%s => %s_finish,\n' % (c._spCleanName, c._spCleanName))
         AddToStr('connectionsToSystemC', '                rst_%s => rst,\n' % c._spCleanName)

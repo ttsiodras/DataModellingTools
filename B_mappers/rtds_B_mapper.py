@@ -104,7 +104,7 @@ class FromRTDSToASN1SCC(RecursiveMapper):
             childNo += 1
             lines.append("%sif (%s.present == %d) {\n" % (self.maybeElse(childNo), srcSDLVariable, childNo))
             lines.extend(
-                ["    "+x
+                ["    " + x
                  for x in self.Map(
                      "%s.__value.%s" % (srcSDLVariable, self.CleanName(child[0])),
                      destVar + (".u.%s" % self.CleanName(child[0])),
@@ -122,7 +122,7 @@ class FromRTDSToASN1SCC(RecursiveMapper):
         lines.append("    int i%s;\n" % uniqueId)
         lines.append("    for(i%s=0; i%s<%s.length; i%s++) {\n" % (uniqueId, uniqueId, srcSDLVariable, uniqueId))
         lines.extend(
-            ["        "+x
+            ["        " + x
              for x in self.Map(
                  "%s.elements[i%s]" % (srcSDLVariable, uniqueId),
                  "%s.arr[i%s]" % (destVar, uniqueId),
@@ -207,7 +207,7 @@ class FromRTDSToOSS(RecursiveMapper):
             childNo += 1
             lines.append("%sif (%s.present == %d) {\n" % (self.maybeElse(childNo), srcSDLVariable, childNo))
             lines.extend(
-                ["    "+x
+                ["    " + x
                  for x in self.Map(
                      "%s.u.u%d.%s" % (srcSDLVariable, childNo, self.CleanName(child[0])),
                      destVar + (".u.%s" % self.CleanName(child[0])),
@@ -225,7 +225,7 @@ class FromRTDSToOSS(RecursiveMapper):
         lines.append("    int i%s;\n" % uniqueId)
         lines.append("    for(i%s=0; i%s<%s.length; i%s++) {\n" % (uniqueId, uniqueId, srcSDLVariable, uniqueId))
         lines.extend(
-            ["        "+x
+            ["        " + x
              for x in self.Map(
                  "%s.cont[i%s]" % (srcSDLVariable, uniqueId),
                  "%s.value[i%s]" % (destVar, uniqueId),
@@ -306,7 +306,7 @@ class FromASN1SCCtoRTDS(RecursiveMapper):
             lines.append("%sif (%s.kind == %s) {\n" %
                          (self.maybeElse(childNo), srcVar, self.CleanName(child[2])))
             lines.extend(
-                ['    '+x
+                ['    ' + x
                  for x in self.Map(
                      srcVar + ".u." + self.CleanName(child[0]),
                      "%s.__value.%s" % (dstSDLVariable, self.CleanName(child[0])),
@@ -326,7 +326,7 @@ class FromASN1SCCtoRTDS(RecursiveMapper):
         lines.append("    %s.length = %s;\n" % (dstSDLVariable, limit))
         lines.append("    for(i%s=0; i%s<%s; i%s++) {\n" % (uniqueId, uniqueId, limit, uniqueId))
         lines.extend(
-            ["        "+x
+            ["        " + x
              for x in self.Map(
                  srcVar + ".arr[i%s]" % uniqueId,
                  "%s.elements[i%s]" % (dstSDLVariable, uniqueId),
@@ -422,7 +422,7 @@ class FromOSStoRTDS(RecursiveMapper):
             lines.append("%sif (%s.choice == OSS_%s_chosen) {\n" %
                          (self.maybeElse(childNo), srcVar, self.CleanName(child[0])))
             lines.extend(
-                ['    '+x
+                ['    ' + x
                  for x in self.Map(
                      srcVar + ".u." + self.CleanName(child[0]),
                      "%s.u.u%d.%s" % (dstSDLVariable, childNo, self.CleanName(child[0])),
@@ -441,7 +441,7 @@ class FromOSStoRTDS(RecursiveMapper):
         lines.append("    %s.length = %s.count;\n" % (dstSDLVariable, srcVar))
         lines.append("    for(i%s=0; i%s<%s.count; i%s++) {\n" % (uniqueId, uniqueId, srcVar, uniqueId))
         lines.extend(
-            ["        "+x
+            ["        " + x
              for x in self.Map(
                  srcVar + ".value[i%s]" % uniqueId,
                  "%s.cont[i%s]" % (dstSDLVariable, uniqueId),
@@ -506,7 +506,7 @@ class RTDS_GlueGenerator(ASynchronousToolGlueGenerator):
                 leafTypeDict,
                 names)
 
-        lines = ["    "+x.rstrip() for x in lines]
+        lines = ["    " + x.rstrip() for x in lines]
         fileOutSource.write("\n".join(lines))
         fileOutSource.write("\n}\n\n")
 
@@ -539,7 +539,7 @@ class RTDS_GlueGenerator(ASynchronousToolGlueGenerator):
                 leafTypeDict,
                 names)
 
-        lines = ["    "+x.rstrip() for x in lines]
+        lines = ["    " + x.rstrip() for x in lines]
         fileOutSource.write("\n".join(lines))
         fileOutSource.write("\n}\n\n")
 

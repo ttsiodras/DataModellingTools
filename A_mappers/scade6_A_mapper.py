@@ -302,14 +302,14 @@ def OnEnumerated(nodeTypename, node, unused_leafTypeDict):
             # g_outputFile.write("\t    %s[%s]" % (CleanNameAsScadeWants(member[0]), member[1]))
             controlString += 'Value$name=%(enumerant)s`values,pragmas,ed:Value$oid=%(oid)s,kcg:Pragma`pragmas,TEXTenum_val %(value)s,' % {
                 "enumerant": CleanNameAsScadeWants(member[0]),
-                "oid": GetOID(nodeTypename+"_"+member[0]),
+                "oid": GetOID(nodeTypename + "_" + member[0]),
                 "value": member[1]
             }
         else:  # pragma: no cover
             controlString += 'Value$name=%(enumerant)s`values,pragmas,ed:Value$oid=%(oid)s,' % \
                 {  # pragma: no cover
                     "enumerant": CleanNameAsScadeWants(member[0]),  # pragma: no cover
-                    "oid": GetOID(nodeTypename+"_"+member[0])  # pragma: no cover
+                    "oid": GetOID(nodeTypename + "_" + member[0])  # pragma: no cover
                 }  # pragma: no cover
     controlString += 'pragmas`Type,ed:Type$oid=!ed/%(oid)s' % {"oid": oid}
     RenderElements(controlString)

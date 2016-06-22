@@ -363,8 +363,8 @@ class {cleanTypename}_SQL(Base):
 
 
 def CreateEnumerated(nodeTypename, node, unused_leafTypeDict):
-    checkConstraint = ' OR '.join('data='+x[1] for x in node._members)
-    constants = '\n    '.join(CleanName(x[0])+' = '+x[1]
+    checkConstraint = ' OR '.join('data=' + x[1] for x in node._members)
+    constants = '\n    '.join(CleanName(x[0]) + ' = ' + x[1]
                               for x in node._members)
     # defValue = CleanName(nodeTypename) + "_SQL." + CleanName(node._members[0][0])
     g_sqlalchemyOutput.write('''

@@ -220,15 +220,15 @@ def OneTimeOnly(unused_modelingLanguage, asnFile, subProgram, subProgramImplemen
 #define SYMBOL_TELECMDS_STYLE wxCAPTION|wxRESIZE_BORDER|wxSYSTEM_MENU|wxCLOSE_BOX|wxDIALOG_MODAL|wxTAB_TRAVERSAL
 ''')
     global g_IDs
-    g_HeaderFile.write("#define ID_MENU_RI "+str(g_IDs)+"\n")
+    g_HeaderFile.write("#define ID_MENU_RI " + str(g_IDs) + "\n")
     g_IDs += 1
-    g_HeaderFile.write("#define ID_MENU_SAVE "+str(g_IDs)+"\n")
+    g_HeaderFile.write("#define ID_MENU_SAVE " + str(g_IDs) + "\n")
     g_IDs += 1
-    g_HeaderFile.write("#define ID_MENU_LOAD "+str(g_IDs)+"\n")
+    g_HeaderFile.write("#define ID_MENU_LOAD " + str(g_IDs) + "\n")
     g_IDs += 1
-    g_HeaderFile.write("#define ID_MENU_ABOUT "+str(g_IDs)+"\n")
+    g_HeaderFile.write("#define ID_MENU_ABOUT " + str(g_IDs) + "\n")
     g_IDs += 1
-    g_HeaderFile.write("#define ID_MENU_QUIT "+str(g_IDs)+"\n")
+    g_HeaderFile.write("#define ID_MENU_QUIT " + str(g_IDs) + "\n")
     g_IDs += 1
     g_HeaderFile.write("\n")
     g_HeaderFile.write('''
@@ -257,13 +257,13 @@ public:
 };
 ''')
     global g_MyEvents
-    g_MyEvents = open(outputDir+"MyEvents.inc", "w")
+    g_MyEvents = open(outputDir + "MyEvents.inc", "w")
     global g_MyCreation
-    g_MyCreation = open(outputDir+"MyCreation.inc", "w")
+    g_MyCreation = open(outputDir + "MyCreation.inc", "w")
     global g_MyClickPrototypes
-    g_MyClickPrototypes = open(outputDir+"MyClickPrototypes.inc", "w")
+    g_MyClickPrototypes = open(outputDir + "MyClickPrototypes.inc", "w")
     global g_MyControls
-    g_MyControls = open(outputDir+"MyControls.inc", "w")
+    g_MyControls = open(outputDir + "MyControls.inc", "w")
     global g_MyLoad
     g_MyLoad = open(g_outputDir + 'MyLoad.inc', 'w')
     global g_MySave
@@ -283,7 +283,7 @@ public:
     WriteSourceFileStart()
     g_SourceFile.write("\n")
     if maybeFVname == "":
-        panic("GUI APLCs must have an FV_Name attribute! (%s)\n" % subProgram._id+"."+subProgramImplementation)  # pragma: no cover
+        panic("GUI APLCs must have an FV_Name attribute! (%s)\n" % subProgram._id + "." + subProgramImplementation)  # pragma: no cover
     g_SourceFile.write("#include \"%s_gui_header.h\"\n\n" % maybeFVname)
     g_SourceFile.write("#include \"queue_manager.h\"\n\n")
     g_SourceFile.write("void TeleCmds::OnMenu_Click( wxCommandEvent& event )\n{\n")
@@ -346,7 +346,7 @@ def OnStartup(modelingLanguage, asnFile, subProgram, subProgramImplementation, o
         OneTimeOnly(modelingLanguage, asnFile, subProgram, subProgramImplementation, outputDir, maybeFVname, useOSS)
     global g_IDs
     CleanSP = CleanName(subProgram._id)
-    g_HeaderFile.write("#define ID_SCROLWND_"+CleanSP+" "+str(g_IDs)+"\n")
+    g_HeaderFile.write("#define ID_SCROLWND_" + CleanSP + " " + str(g_IDs) + "\n")
     g_IDs += 1
     g_MyEvents.write("    EVT_MENU( ID_MENU_RI, TeleCmds::OnMenu_Click )\n")
     g_MyEvents.write("    EVT_MENU( ID_MENU_LOAD, TeleCmds::OnMenu_Load )\n")
@@ -382,9 +382,9 @@ def OnStartup(modelingLanguage, asnFile, subProgram, subProgramImplementation, o
 #    g_MyCreation.write("itemBoxSizerButtons_%s->Add(itemButton_quit_%s, 0, wxALIGN_RIGHT|wxALL, 5);\n\n" % (CleanSP, CleanSP))
 
     # have we ever seen before the combination of FVname and Language?
-    if maybeFVname+modelingLanguage.lower() not in g_perFV:
+    if maybeFVname + modelingLanguage.lower() not in g_perFV:
         # No, check for things that must be instantiated once per FV+Lang
-        g_perFV[maybeFVname+modelingLanguage.lower()] = maybeFVname
+        g_perFV[maybeFVname + modelingLanguage.lower()] = maybeFVname
 
         # The first time you see an FV with an sp_impl that is also a GUI_PI, create a thread to poll /FVName_PI_queue
         if modelingLanguage.lower() == "gui_pi":
@@ -465,7 +465,7 @@ def OnStartup(modelingLanguage, asnFile, subProgram, subProgramImplementation, o
             g_MyTelemetryActions.write("                asn1Scc%s var_%s;\n" % (CleanASNType, CleanParam))
             g_MyTelemetryActions.write("                memcpy(&var_%s, pData, sizeof(var_%s));\n" % (CleanParam, CleanParam))
             g_MyTelemetryActions.write("                pData += sizeof(var_%s);\n" % CleanParam)
-            CopyDataFromASN1ToDlg(g_MyTelemetryActions, "_pFrame->", "var_"+CleanParam, "%s_%s" %
+            CopyDataFromASN1ToDlg(g_MyTelemetryActions, "_pFrame->", "var_" + CleanParam, "%s_%s" %
                                   (CleanSP, CleanParam), node, leafTypeDict, names)
             g_MyTelemetryActions.write('                PrintASN1%s("TMDATA: %s::%s", &var_%s);\n' %
                                        (CleanASNType, CleanSP, CleanParam, CleanParam))
@@ -482,7 +482,7 @@ def WriteCodeForGUIControls(prefix, parentControl, node, subProgram, subProgramI
     CleanParam = CleanName(param._id)
     ScrollWnd = "_itemScrolledWindow_%s" % CleanSP
     if prefix == "":
-        prefix = CleanSP+"::"+CleanParam
+        prefix = CleanSP + "::" + CleanParam
     varPrefix = prefix.replace("::", "_")
     txtPrefix = re.sub(r'^.*::', '', prefix)
     # Depending on the type of the node, create the appropriate controls
@@ -546,7 +546,7 @@ def WriteCodeForGUIControls(prefix, parentControl, node, subProgram, subProgramI
                                    (varPrefix, child[0]))
             g_HeaderFile.write("#define ID_CHOICE_%s %s\n" % (varPrefix, g_IDs))
             g_IDs += 1
-            g_MyEvents.write("    EVT_CHOICE( ID_CHOICE_"+varPrefix+", TeleCmds::UpdateChoice_"+varPrefix+" )\n")
+            g_MyEvents.write("    EVT_CHOICE( ID_CHOICE_" + varPrefix + ", TeleCmds::UpdateChoice_" + varPrefix + " )\n")
             g_MyControls.write("wxChoice* _itemChoice_%s;\n" % varPrefix)
             g_MyCreation.write("_itemChoice_%s = new wxChoice(%s, ID_CHOICE_%s, wxDefaultPosition, wxDefaultSize, _itemChoiceStrings_%s, 0);\n" %
                                (varPrefix, ScrollWnd, varPrefix, varPrefix))
@@ -569,11 +569,11 @@ def WriteCodeForGUIControls(prefix, parentControl, node, subProgram, subProgramI
             count = 0
             for child in node._members:
                 g_SourceFile.write("    if (%d == _itemChoice_%s->GetCurrentSelection()) {\n" % (count, varPrefix))
-                g_SourceFile.write("        _itemStaticBoxSizer_%s->Show((size_t)%d);\n" % (varPrefix, count+1))
+                g_SourceFile.write("        _itemStaticBoxSizer_%s->Show((size_t)%d);\n" % (varPrefix, count + 1))
                 oCount = 0
                 for child in node._members:
                     if oCount != count:
-                        g_SourceFile.write("        _itemStaticBoxSizer_%s->Show((size_t)%d);\n" % (varPrefix, oCount+1))
+                        g_SourceFile.write("        _itemStaticBoxSizer_%s->Show((size_t)%d);\n" % (varPrefix, oCount + 1))
                     oCount += 1
                 g_SourceFile.write("    }\n")
                 count += 1
@@ -632,18 +632,18 @@ def CopyDataFromDlgToASN1(f, srcVar, destVar, node, leafTypeDict, names):
     elif isinstance(node, AsnOctetString):
         f.write("{\n")
         control = "_itemTextCtrl_" + srcVar + "->GetValue()"
-        f.write("    for(size_t i=0; i<"+control+".size(); i++)\n")
-        f.write("        "+destVar+".arr[i] = "+control+".at(i);\n")
+        f.write("    for(size_t i=0; i<" + control + ".size(); i++)\n")
+        f.write("        " + destVar + ".arr[i] = " + control + ".at(i);\n")
         if isSequenceVariable(node):
-            f.write("    "+destVar+".nCount =  _itemTextCtrl_" + srcVar + "->GetValue().size();\n")
+            f.write("    " + destVar + ".nCount =  _itemTextCtrl_" + srcVar + "->GetValue().size();\n")
         f.write("}\n")
     elif isinstance(node, AsnBool):
         f.write(destVar + " = (asn1SccUint) (_itemCheckBox_" + srcVar + "->Get3StateValue() == wxCHK_CHECKED);\n")
     elif isinstance(node, AsnEnumerated):
         enumNo = 0
         for enumOption in node._members:
-            f.write(("%sif (_itemChoice_" % maybeElseZero(enumNo))+srcVar+"->GetCurrentSelection() == "+str(enumNo)+") {\n")
-            f.write("    "+destVar+" = ENUM_asn1Scc" + CleanName(enumOption[0]) + ";\n")
+            f.write(("%sif (_itemChoice_" % maybeElseZero(enumNo)) + srcVar + "->GetCurrentSelection() == " + str(enumNo) + ") {\n")
+            f.write("    " + destVar + " = ENUM_asn1Scc" + CleanName(enumOption[0]) + ";\n")
             f.write("}\n")
             enumNo += 1
     elif isinstance(node, AsnSequence) or isinstance(node, AsnSet):
@@ -662,7 +662,7 @@ def CopyDataFromDlgToASN1(f, srcVar, destVar, node, leafTypeDict, names):
             if isinstance(childType, AsnMetaMember):
                 childType = names[childType._containedType]
             CopyDataFromDlgToASN1(f, srcVar + "_" + CleanChild, destVar + ".u." + CleanChild, childType, leafTypeDict, names)
-            f.write("    "+destVar+".kind = CHOICE_" + child[2] + ";\n")
+            f.write("    " + destVar + ".kind = CHOICE_" + child[2] + ";\n")
             f.write("}\n")
             childNo += 1
     elif isinstance(node, AsnSequenceOf) or isinstance(node, AsnSetOf):
@@ -681,7 +681,7 @@ def CopyDataFromDlgToASN1(f, srcVar, destVar, node, leafTypeDict, names):
         #     f.write(destVar + ".nCount = %s;\n" % str(node._range[-1]))
         for i in range(0, node._range[-1]):
             if isSequenceVariable(node):
-                f.write("if ("+destVar+".nCount>"+str(i)+") {\n")
+                f.write("if (" + destVar + ".nCount>" + str(i) + ") {\n")
             CopyDataFromDlgToASN1(f, srcVar + "_Elem_" + ("%02d" % i), destVar + ".arr[" + str(i) + "]", containedNode, leafTypeDict, names)
             if isSequenceVariable(node):
                 f.write("}\n")
@@ -691,7 +691,7 @@ def CopyDataFromASN1ToDlg(fDesc, prefix, srcVar, destVar, node, leafTypeDict, na
     if isinstance(node, AsnInt):
         fDesc.write("{\n")
         fDesc.write("    ostringstream s;\n")
-        fDesc.write("    s << "+srcVar+";\n")
+        fDesc.write("    s << " + srcVar + ";\n")
         if not bClear:
             fDesc.write("    %s_itemTextCtrl_%s->SetValue(wxString(wxConvLocal.cMB2WC(s.str().c_str())));\n" % (prefix, destVar))
         else:
@@ -700,35 +700,35 @@ def CopyDataFromASN1ToDlg(fDesc, prefix, srcVar, destVar, node, leafTypeDict, na
     elif isinstance(node, AsnReal):
         fDesc.write("{\n")
         fDesc.write("    ostringstream s;\n")
-        fDesc.write("    s << fixed << setprecision(8) <<"+srcVar+";\n")
+        fDesc.write("    s << fixed << setprecision(8) <<" + srcVar + ";\n")
         if not bClear:
             fDesc.write("    %s_itemTextCtrl_%s->SetValue(wxString(wxConvLocal.cMB2WC(s.str().c_str())));\n" % (prefix, destVar))
         else:
             fDesc.write("    %s_itemTextCtrl_%s->SetValue(wxString(wxConvLocal.cMB2WC(\"\")));\n" % (prefix, destVar))
         fDesc.write("}\n")
     elif isinstance(node, AsnOctetString):
-        control = prefix+"_itemTextCtrl_" + destVar
+        control = prefix + "_itemTextCtrl_" + destVar
         limit = sourceSequenceLimit(node, srcVar)
         if not bClear:
-            fDesc.write(control+"->SetValue(wxString(wxConvLocal.cMB2WC(string((const char *)"+srcVar+".arr, "+limit+").c_str())));\n")
+            fDesc.write(control + "->SetValue(wxString(wxConvLocal.cMB2WC(string((const char *)" + srcVar + ".arr, " + limit + ").c_str())));\n")
         else:
-            fDesc.write(control+"->SetValue(wxString(wxConvLocal.cMB2WC(\"\")));\n")
+            fDesc.write(control + "->SetValue(wxString(wxConvLocal.cMB2WC(\"\")));\n")
     elif isinstance(node, AsnBool):
-        control = prefix+"_itemCheckBox_" + destVar
+        control = prefix + "_itemCheckBox_" + destVar
         if not bClear:
-            fDesc.write(control + "->Set3StateValue("+srcVar+"?wxCHK_CHECKED:wxCHK_UNCHECKED);\n")
+            fDesc.write(control + "->Set3StateValue(" + srcVar + "?wxCHK_CHECKED:wxCHK_UNCHECKED);\n")
         else:
             fDesc.write(control + "->Set3StateValue(wxCHK_UNCHECKED);\n")
     elif isinstance(node, AsnEnumerated):
         enumNo = 0
         if not bClear:
             for enumOption in node._members:
-                fDesc.write(("%sif (" % maybeElseZero(enumNo))+srcVar+" == ENUM_asn1Scc" + CleanName(enumOption[0]) + ") {\n")
-                fDesc.write("    "+prefix+"_itemChoice_"+destVar+"->SetSelection(%d);\n" % enumNo)
+                fDesc.write(("%sif (" % maybeElseZero(enumNo)) + srcVar + " == ENUM_asn1Scc" + CleanName(enumOption[0]) + ") {\n")
+                fDesc.write("    " + prefix + "_itemChoice_" + destVar + "->SetSelection(%d);\n" % enumNo)
                 fDesc.write("}\n")
                 enumNo += 1
         else:
-            fDesc.write("    "+prefix+"_itemChoice_"+destVar+"->SetSelection(0);\n")
+            fDesc.write("    " + prefix + "_itemChoice_" + destVar + "->SetSelection(0);\n")
     elif isinstance(node, AsnSequence) or isinstance(node, AsnSet):
         for child in node._members:
             CleanChild = CleanName(child[0])
@@ -743,7 +743,7 @@ def CopyDataFromASN1ToDlg(fDesc, prefix, srcVar, destVar, node, leafTypeDict, na
             childType = child[1]
             fDesc.write("%sif (%s.kind == CHOICE_%s) {\n" %
                         (maybeElseZero(childNo), srcVar, child[2]))
-            fDesc.write("    "+prefix+"_itemChoice_" + destVar + "->SetSelection(%d);\n" % childNo)
+            fDesc.write("    " + prefix + "_itemChoice_" + destVar + "->SetSelection(%d);\n" % childNo)
             fDesc.write("    wxCommandEvent dum;\n")
             fDesc.write("    %sUpdateChoice_" % prefix + destVar + "(dum);\n")
             if isinstance(childType, AsnMetaMember):
@@ -758,7 +758,7 @@ def CopyDataFromASN1ToDlg(fDesc, prefix, srcVar, destVar, node, leafTypeDict, na
         # The decoding code has been executed, so the .nCount member is ready...
         for i in range(0, node._range[-1]):
             if isSequenceVariable(node):
-                fDesc.write("if ("+str(i)+"<"+srcVar+".nCount) {\n")
+                fDesc.write("if (" + str(i) + "<" + srcVar + ".nCount) {\n")
                 CopyDataFromASN1ToDlg(fDesc, prefix, srcVar + ".arr[" + str(i) + "]", destVar + "_Elem_" + ("%02d" % i), containedNode, leafTypeDict, names, bClear)
                 fDesc.write("} else {\n")
                 CopyDataFromASN1ToDlg(fDesc, prefix, srcVar + ".arr[" + str(i) + "]", destVar + "_Elem_" + ("%02d" % i), containedNode, leafTypeDict, names, True)
@@ -768,15 +768,15 @@ def CopyDataFromASN1ToDlg(fDesc, prefix, srcVar, destVar, node, leafTypeDict, na
         if isSequenceVariable(node):
             fDesc.write("{\n")
             fDesc.write("    ostringstream s;\n")
-            fDesc.write("    s << "+srcVar+".nCount;\n")
-            fDesc.write("    "+prefix+"_itemTextCtrl_%s->SetValue(wxString(wxConvLocal.cMB2WC(s.str().c_str())));\n" % destVar)
+            fDesc.write("    s << " + srcVar + ".nCount;\n")
+            fDesc.write("    " + prefix + "_itemTextCtrl_%s->SetValue(wxString(wxConvLocal.cMB2WC(s.str().c_str())));\n" % destVar)
             fDesc.write("}\n")
 
 
 def WriteCodeForSave(nodeTypename, node, subProgram, unused_subProgramImplementation, param, leafTypeDict, names):
     CleanSP = CleanName(subProgram._id)
     CleanParam = CleanName(param._id)
-    CopyDataFromDlgToASN1(g_MySave, "%s_%s" % (CleanSP, CleanParam), "var_"+CleanParam, node, leafTypeDict, names)
+    CopyDataFromDlgToASN1(g_MySave, "%s_%s" % (CleanSP, CleanParam), "var_" + CleanParam, node, leafTypeDict, names)
     g_MySave.write("{\n    int ErrCode;\n")
     g_MySave.write("    if (0 == asn1Scc%s_IsConstraintValid(&var_%s, &ErrCode)) {\n" % (CleanName(nodeTypename), CleanParam))
     g_MySave.write("        string msg(\"ASN.1 Constraints are violated with this message!\\n\");\n")
@@ -828,7 +828,7 @@ def WriteCodeForLoad(nodeTypename, node, subProgram, unused_subProgramImplementa
     g_MyLoad.write("                if (asn1Scc%s_Decode(&var_%s, &strm, &errorCode)) {\n" %
                    (CleanName(nodeTypename), CleanParam))
     g_MyLoad.write("                    /* Decoding succeeded */\n")
-    CopyDataFromASN1ToDlg(g_MyLoad, "", "var_"+CleanParam, "%s_%s" % (CleanSP, CleanParam), node, leafTypeDict, names)
+    CopyDataFromASN1ToDlg(g_MyLoad, "", "var_" + CleanParam, "%s_%s" % (CleanSP, CleanParam), node, leafTypeDict, names)
     g_MyLoad.write("                } else {\n")
     g_MyLoad.write("                    wxMessageBox(_T(\"This file did not contain a %s...\"), _T(\"Error in loading\"), wxICON_ERROR);\n" % nodeTypename)
     g_MyLoad.write("                }\n")
@@ -843,7 +843,7 @@ def WriteCodeForGnuPlot(prefix, node, subProgram, param, names):
     CleanSP = CleanName(subProgram._id)
     CleanParam = CleanName(param._id)
     if prefix in ("TCDATA: ", "TMDATA: "):
-        prefix += CleanSP+"::"+CleanParam
+        prefix += CleanSP + "::" + CleanParam
     if isinstance(node, AsnInt) or isinstance(node, AsnReal) or isinstance(node, AsnOctetString):
         g_GnuplotFile.write(prefix + '\n')
     elif isinstance(node, AsnBool):
@@ -875,7 +875,7 @@ def WriteCodeForGnuPlot(prefix, node, subProgram, param, names):
 def WriteCodeForAction(nodeTypename, node, subProgram, unused_subProgramImplementation, param, leafTypeDict, names):
     CleanSP = CleanName(subProgram._id)
     CleanParam = CleanName(param._id)
-    CopyDataFromDlgToASN1(g_MyAction, "%s_%s" % (CleanSP, CleanParam), "var_"+CleanParam, node, leafTypeDict, names)
+    CopyDataFromDlgToASN1(g_MyAction, "%s_%s" % (CleanSP, CleanParam), "var_" + CleanParam, node, leafTypeDict, names)
     g_MyAction.write("{\n    int ErrCode;\n")
     g_MyAction.write("    if (0 == asn1Scc%s_IsConstraintValid(&var_%s, &ErrCode)) {\n" % (CleanName(nodeTypename), CleanParam))
     g_MyAction.write("        string msg(\"ASN.1 Constraints are violated with this message!\\n\");\n")
@@ -931,11 +931,11 @@ def Common(nodeTypename, node, subProgram, subProgramImplementation, param, leaf
             g_bBraceOpen = False
         g_SPs.append(subProgram._id)
         if g_langPerSP[subProgram].lower() == "gui_ri":
-            g_MyAction.write("if ((int)_itemNotebook3->GetSelection() == %d) {\n" % (len(g_SPs)-1))
+            g_MyAction.write("if ((int)_itemNotebook3->GetSelection() == %d) {\n" % (len(g_SPs) - 1))
             g_MyAction.write("    string msgError;\n")
-            g_MySave.write("if ((int)_itemNotebook3->GetSelection() == %d) {\n" % (len(g_SPs)-1))
+            g_MySave.write("if ((int)_itemNotebook3->GetSelection() == %d) {\n" % (len(g_SPs) - 1))
             g_MySave.write("    string msgError;\n")
-            g_MyLoad.write("if ((int)_itemNotebook3->GetSelection() == %d) {\n" % (len(g_SPs)-1))
+            g_MyLoad.write("if ((int)_itemNotebook3->GetSelection() == %d) {\n" % (len(g_SPs) - 1))
             g_MyLoad.write("    string msgError;\n")
             g_bBraceOpen = True
 
