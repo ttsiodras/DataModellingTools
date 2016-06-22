@@ -1,6 +1,17 @@
 TASTE Data Modelling Technologies
 =================================
 
+Installation
+------------
+
+    $ pip install --user -r requirements.txt
+    $ make flake8  # optional, check for pep8 compliance
+    $ make pylint  # optional, static analysis with pylint
+    $ pip install --user .
+
+Contents
+--------
+
 - **commonPy** (*library*)
 
     Contains the basic API for parsing ASN.1 (via invocation of 
@@ -32,17 +43,3 @@ TASTE Data Modelling Technologies
     by the modeling tool used to functionally model the subsystem (e.g. SCADE,
     ObjectGeode, Matlab/Simulink, C, Ada, etc).
 
-
-CHANGELOG
-
-1.2.3
-     ctypes backend: emit all ENUMERATED values in DV.py
-
-1.2.0
-     Not using SWIG anymore for the Python mappers
-
-1.1.2
-     pyside_b_mapper: added combo box for the asn1 value editor
-
-1.1.1
-     support empty SEQUENCEs (MyType ::= SEQUENCE {}) - except for Simulink
