@@ -153,10 +153,14 @@ def RenderElements(controlString: str):
         if finalElementName.startswith("TEXT"):
             newElement = g_doc.createTextNode(finalElementName[4:])
         else:
-            newElement = g_doc.createElement(finalElementName)
+            # This is a bug in pylint - scheduled to be fixed in next release, by:
+            # https://github.com/PyCQA/pylint/commit/6d31776454b5e308e4b869a1893b39083dca3146
+            newElement = g_doc.createElement(finalElementName)  # pylint: disable=redefined-variable-type
         if attributes != []:
             for atr in attributes:
-                newElement.setAttribute(atr.split('=')[0], atr.split('=')[1])
+                # This is a bug in pylint - scheduled to be fixed in next release, by:
+                # https://github.com/PyCQA/pylint/commit/6d31776454b5e308e4b869a1893b39083dca3146
+                newElement.setAttribute(atr.split('=')[0], atr.split('=')[1])  # pylint: disable=no-member
         if under is not None:
             parent = createdElements[under]
         parent.appendChild(newElement)

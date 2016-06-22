@@ -65,7 +65,7 @@ def OnEnumerated(unused_nodeTypename, unused_node, unused_leafTypeDict):
     pass  # pragma: no cover
 
 
-def OnSequenceOf(unused_nodeTypename, unused_node, _unused_leafTypeDict):
+def OnSequenceOf(unused_nodeTypename, unused_node, unused_leafTypeDict):
     pass  # pragma: no cover
 
 

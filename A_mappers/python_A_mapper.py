@@ -131,7 +131,7 @@ def OnStartup(unused_modelingLanguage: str, asnFile: str, outputDir: str, badTyp
     g_outputGetSetC.write('    free(pBitStrm->buf);\n')
     g_outputGetSetC.write('    free(pBitStrm);\n')
     g_outputGetSetC.write('}\n\n')
-    Makefile = open(outputDir + "Makefile.python", 'w')
+    makefile = open(outputDir + "Makefile.python", 'w')
 
     # Note that this Makefile will use a custom ASN1SCC invocation
     # where "-equal" is passed - the _Equal functions will be generated
@@ -139,7 +139,7 @@ def OnStartup(unused_modelingLanguage: str, asnFile: str, outputDir: str, badTyp
 
     # mono_exe = "mono " if sys.argv[0].endswith('.py') and sys.platform.startswith('linux') else ""
     mono_exe = ""
-    Makefile.write(
+    makefile.write(
         '''\
 ASN1SCC:=asn1.exe
 ASN2DATAMODEL:=asn2dataModel
@@ -173,7 +173,7 @@ clean:
 %(tab)srm -f $(BDIR)/DV.py $(BDIR)/*.pyc $(BDIR)/$(BASEGRAMMAR)_getset.? $(BDIR)/$(BASEGRAMMAR)_getset.so
 %(tab)srm -f $(BDIR)/$(GRAMMAR)_asn.py
 ''' % {'tab': '\t', 'base': base, 'origGrammarBase': origGrammarBase, 'mono': mono_exe})
-    Makefile.close()
+    makefile.close()
     CreateDeclarationsForAllTypes(commonPy.asnParser.g_names, commonPy.asnParser.g_leafTypeDict, badTypes)
     g_outputGetSetH.write('\n/* Helper functions for NATIVE encodings */\n\n')
     g_outputGetSetC.write('\n/* Helper functions for NATIVE encodings */\n\n')
@@ -300,8 +300,8 @@ class Params(object):
 
     def GetDecl(self):
         params = CleanNameAsPythonWants(self._nodeTypeName) + "* root"
-        for v, t in zip(self._vars, self._types):
-            params += ", "+t+" "+v
+        for vvv, ttt in zip(self._vars, self._types):
+            params += ", " + ttt + " " + vvv
         return params
 
 
