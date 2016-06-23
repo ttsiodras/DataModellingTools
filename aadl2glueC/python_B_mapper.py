@@ -64,7 +64,7 @@ def OnStartup(modelingLanguage, asnFile, subProgram, unused_subProgramImplementa
         g_headerPython.append("import threading, time, sys, os, ctypes\n")
         #g_headerPython.append("from PythonAccess import *")
         g_headerPython.append("import DV")
-        g_headerPython.append('PythonAccess = ctypes.cdll.LoadLibrary("PythonAccess.so")')
+        g_headerPython.append('PythonAccess = ctypes.cdll.LoadLibrary("./PythonAccess.so")')
         g_headerPython.append('OpenMsgQueueForReading = PythonAccess.OpenMsgQueueForReading')
         g_headerPython.append('OpenMsgQueueForReading.restype = ctypes.c_int')
         g_headerPython.append('CloseMsgQueue =  PythonAccess.CloseMsgQueue')
