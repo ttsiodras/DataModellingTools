@@ -35,6 +35,9 @@ TASTE Data Modelling Technologies
 
 CHANGELOG
 
+1.2.5
+     python_B_mapper: load PythonAccess.so from current folder
+
 1.2.3
      ctypes backend: emit all ENUMERATED values in DV.py
 
