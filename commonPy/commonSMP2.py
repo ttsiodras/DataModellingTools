@@ -171,7 +171,7 @@ def MapSMP2Type(attrs, enumOptions, itemTypes, fields):
         return AsnReal(**dataDict)
 
     def HandleTypesArray():
-        if itemTypes == []:
+        if not itemTypes:
             panic("Missing mandatory ItemType element", location)  # pragma: no cover
         itemTypeAttrs = Attributes(itemTypes[0])
         arrSize = getMaybe(int, attrs.Size)
@@ -199,7 +199,7 @@ def MapSMP2Type(attrs, enumOptions, itemTypes, fields):
                     'asnFilename': itemTypes[0].base,
                     'lineno': itemTypes[0].sourceline
                 }
-                if span != []:
+                if span:
                     childDict['range'] = span
                 childNode = cast(**childDict)
                 dataDict['containedType'] = childNode
@@ -234,7 +234,7 @@ def MapSMP2Type(attrs, enumOptions, itemTypes, fields):
                             'lineno': field.sourceline
                         }
                         span = [low, high] if low is not None and high is not None else []
-                        if span != []:
+                        if span:
                             containedDict['range'] = [low, high]
                         basicNode = cast(**containedDict)
                         members.append((fieldName, basicNode))
@@ -371,7 +371,7 @@ def ConvertCatalogueToASN_AST(inputSmp2Files):
                         'lineno': a.sourceline
                     }
                     span = [low, high] if (low is not None and high is not None) else []
-                    if span != []:
+                    if span:
                         containedDict['range'] = [low, high]
                     # Especially for these hardcoded types, don't prefix with namespace.Name
                     asnTypesDict[nodeTypename] = cast(**containedDict)

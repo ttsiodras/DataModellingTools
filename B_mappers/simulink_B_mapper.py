@@ -69,7 +69,7 @@ class FromSimulinkToASN1SCC(RecursiveMapper):
 
     def MapOctetString(self, srcSimulink, destVar, node, _, __):
         lines = []
-        if node._range == []:
+        if not node._range:
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
         for i in range(0, node._range[-1]):
             lines.append("%s.arr[%d] = %s.element_data[%d];\n" % (destVar, i, srcSimulink, i))
@@ -117,7 +117,7 @@ class FromSimulinkToASN1SCC(RecursiveMapper):
         return lines
 
     def MapSequenceOf(self, srcSimulink, destVar, node, leafTypeDict, names):
-        if node._range == []:
+        if not node._range:
             panicWithCallStack("need a SIZE constraint or else we can't generate C code (%s)!\n" % node.Location())  # pragma: no cover
         isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
         lines = []
@@ -150,7 +150,7 @@ class FromASN1SCCtoSimulink(RecursiveMapper):
         return ["%s = %s;\n" % (dstSimulink, srcVar)]
 
     def MapOctetString(self, srcVar, dstSimulink, node, _, __):
-        if node._range == []:
+        if not node._range:
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
 
         lines = []
@@ -201,7 +201,7 @@ class FromASN1SCCtoSimulink(RecursiveMapper):
         return lines
 
     def MapSequenceOf(self, srcVar, dstSimulink, node, leafTypeDict, names):
-        if node._range == []:
+        if not node._range:
             panicWithCallStack("need a SIZE constraint or else we can't generate C code (%s)!\n" % node.Location())  # pragma: no cover
         isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
         lines = []
@@ -232,7 +232,7 @@ class FromSimulinkToOSS(RecursiveMapper):
 
     def MapOctetString(self, srcSimulink, destVar, node, _, __):
         lines = []
-        if node._range == []:
+        if not node._range:
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
         for i in range(0, node._range[-1]):
             lines.append("%s.value[%d] = %s.element_data[%d];\n" % (destVar, i, srcSimulink, i))
@@ -279,7 +279,7 @@ class FromSimulinkToOSS(RecursiveMapper):
         return lines
 
     def MapSequenceOf(self, srcSimulink, destVar, node, leafTypeDict, names):
-        if node._range == []:
+        if not node._range:
             panicWithCallStack("(%s) needs a SIZE constraint or else we can't generate C code!\n" % node.Location())  # pragma: no cover
         isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
         lines = []
@@ -311,7 +311,7 @@ class FromOSStoSimulink(RecursiveMapper):
         return ["%s = %s;\n" % (dstSimulink, srcVar)]
 
     def MapOctetString(self, srcVar, dstSimulink, node, _, __):
-        if node._range == []:
+        if not node._range:
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
         lines = []
         for i in range(0, node._range[-1]):
@@ -360,7 +360,7 @@ class FromOSStoSimulink(RecursiveMapper):
         return lines
 
     def MapSequenceOf(self, srcVar, dstSimulink, node, leafTypeDict, names):
-        if node._range == []:
+        if not node._range:
             panicWithCallStack("(%s) needs a SIZE constraint or else we can't generate C code!\n" % node.Location())  # pragma: no cover
         isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
         lines = []

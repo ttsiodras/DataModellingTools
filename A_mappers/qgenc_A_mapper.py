@@ -189,7 +189,7 @@ def CreateDeclarationForType(nodeTypename, names, leafTypeDict):
     elif isinstance(node, AsnReal):
         CreateAlias(nodeTypename, "double", "range is %s" % str(node._range))
     elif isinstance(node, AsnString):
-        if node._range == []:
+        if not node._range:
             panic("QGenC_A_mapper: string (in %s) must have a SIZE constraint!\n" % node.Location())  # pragma: no cover
         name = CleanNameAsSimulinkWants(nodeTypename)
         DeclareSimpleCollection(node, name, "uint8")

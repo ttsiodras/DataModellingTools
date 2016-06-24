@@ -268,7 +268,7 @@ def OnFinal():
     g_PythonFile.write('\n'.join(g_bodyPython))
     g_PythonFile.write('\n\n')
     g_PythonFile.write('def ProcessTM(self):\n')
-    if g_TMprocessors == []:
+    if not g_TMprocessors:
         g_PythonFile.write('    pass\n')
     else:
         g_PythonFile.write('\n'.join(g_TMprocessors))

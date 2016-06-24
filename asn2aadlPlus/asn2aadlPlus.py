@@ -51,7 +51,7 @@ g_upperFloat = 1e350
 def verifyNodeRange(node):
     assert isinstance(node, AsnBasicNode)
     if isinstance(node, AsnInt):
-        if node._range == []:
+        if not node._range:
             panic("INTEGER (in %s) must have a range constraint inside ASN.1,\n"\
                     "or else we might lose accuracy during runtime!" % node.Location())
         #else:
@@ -63,7 +63,7 @@ def verifyNodeRange(node):
         #       panic("INTEGER (in %s) must have a high limit <= 2147483647\n" % node.Location())
 
     if isinstance(node, AsnReal):
-        if node._range == []:
+        if not node._range:
             panic(
                 "REAL (in %s) must have a range constraint inside ASN.1,\n"\
                 "or else we might lose accuracy during runtime!" % node.Location())

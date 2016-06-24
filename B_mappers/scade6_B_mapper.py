@@ -64,7 +64,7 @@ class FromSCADEtoASN1SCC(RecursiveMapper):
     def MapOctetString(self, srcScadeMacro, destVar, node, _, __):
         lines = []
         lines.append("{\n")
-        if node._range == []:
+        if not node._range:
             panicWithCallStack(
                 "OCTET STRING (in %s) must have a SIZE constraint "  # pragma: no cover
                 "inside ASN.1,\nor else SCADE can't generate C code!" % node.Location())  # pragma: no cover
@@ -113,7 +113,7 @@ class FromSCADEtoASN1SCC(RecursiveMapper):
         return lines
 
     def MapSequenceOf(self, srcScadeMacro, destVar, node, leafTypeDict, names):
-        if node._range == []:
+        if not node._range:
             panicWithCallStack(
                 "A SIZE constraint is required, or else SCADE can't generate C code (%s)!\n" %   # pragma: no cover
                 node.Location())  # pragma: no cover
@@ -147,7 +147,7 @@ class FromASN1SCCtoSCADE(RecursiveMapper):
         return ["%s = (%s)?1:0;\n" % (dstScadeMacro, srcVar)]
 
     def MapOctetString(self, srcVar, dstScadeMacro, node, _, __):
-        if node._range == []:
+        if not node._range:
             panicWithCallStack(
                 "OCTET STRING (in %s) must have a SIZE constraint "  # pragma: no cover
                 "inside ASN.1,\nor else SCADE can't generate C code!" % node.Location())  # pragma: no cover
@@ -200,7 +200,7 @@ class FromASN1SCCtoSCADE(RecursiveMapper):
         return lines
 
     def MapSequenceOf(self, srcVar, dstScadeMacro, node, leafTypeDict, names):
-        if node._range == []:
+        if not node._range:
             panicWithCallStack(
                 "A SIZE constraint is required or else SCADE can't generate C code (%s)!\n" %   # pragma: no cover
                 node.Location())  # pragma: no cover
@@ -242,7 +242,7 @@ class FromSCADEtoOSS(RecursiveMapper):
     def MapOctetString(self, srcScadeMacro, destVar, node, _, __):
         lines = []
         lines.append("{\n")
-        if node._range == []:
+        if not node._range:
             panicWithCallStack(
                 "OCTET STRING (in %s) must have a SIZE constraint "  # pragma: no cover
                 "inside ASN.1,\nor else SCADE can't generate C code!" % node.Location())  # pragma: no cover
@@ -290,7 +290,7 @@ class FromSCADEtoOSS(RecursiveMapper):
         return lines
 
     def MapSequenceOf(self, srcScadeMacro, destVar, node, leafTypeDict, names):
-        if node._range == []:
+        if not node._range:
             panicWithCallStack(
                 "A SIZE constraint is required, or else SCADE can't generate C code (%s)!\n" %   # pragma: no cover
                 node.Location())  # pragma: no cover
@@ -323,7 +323,7 @@ class FromOSStoSCADE(RecursiveMapper):
         return ["%s = (%s)?1:0;\n" % (dstScadeMacro, srcVar)]
 
     def MapOctetString(self, srcVar, dstScadeMacro, node, _, __):
-        if node._range == []:
+        if not node._range:
             panicWithCallStack(
                 "OCTET STRING (in %s) must have a SIZE constraint "  # pragma: no cover
                 "inside ASN.1,\nor else SCADE can't generate C code!" % node.Location())  # pragma: no cover
@@ -373,7 +373,7 @@ class FromOSStoSCADE(RecursiveMapper):
         return lines
 
     def MapSequenceOf(self, srcVar, dstScadeMacro, node, leafTypeDict, names):
-        if node._range == []:
+        if not node._range:
             panicWithCallStack(
                 "A SIZE constraint is required or else SCADE can't generate C code (%s)!\n" %   # pragma: no cover
                 node.Location())  # pragma: no cover

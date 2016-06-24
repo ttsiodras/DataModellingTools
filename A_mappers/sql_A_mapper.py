@@ -263,7 +263,7 @@ def CreateSequenceOf(nodeTypename, node, unused_leafTypeDict):
     reftype = CleanName(reftype)
     g_sqlOutput.write('    {reftype}_id int NOT NULL,\n'.format(
         reftype=reftype))
-    if node._range != []:
+    if node._range:
         constraint = 'CHECK(idx>=1 AND idx<=%s)' % (node._range[-1])
     g_sqlOutput.write("    " + constraint + ",\n")
     g_sqlOutput.write(

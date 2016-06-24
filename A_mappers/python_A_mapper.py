@@ -347,7 +347,7 @@ def CreateGettersAndSetters(path, params, accessPathInC, node, names, leafTypeDi
     elif isinstance(node, AsnReal):
         CommonBaseImpl("REAL", "double", path, params, accessPathInC)
     elif isinstance(node, AsnString):
-        if node._range == []:
+        if not node._range:
             panic("Python_A_mapper: string (in %s) must have a SIZE constraint!\n" % node.Location())  # pragma: no cover
         if isSequenceVariable(node):
             CommonBaseImpl("OCTETSTRING", "long", path, params, accessPathInC + ".nCount", "Length")

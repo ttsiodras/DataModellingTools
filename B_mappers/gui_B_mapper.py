@@ -567,11 +567,11 @@ def WriteCodeForGUIControls(prefix, parentControl, node, subProgram, subProgramI
             g_MyClickPrototypes.write("void UpdateChoice_%s(wxCommandEvent& event);\n" % varPrefix)
             g_SourceFile.write("void TeleCmds::UpdateChoice_%s(wxCommandEvent& event)\n{\n" % varPrefix)
             count = 0
-            for child in node._members:
+            for unused_child in node._members:
                 g_SourceFile.write("    if (%d == _itemChoice_%s->GetCurrentSelection()) {\n" % (count, varPrefix))
                 g_SourceFile.write("        _itemStaticBoxSizer_%s->Show((size_t)%d);\n" % (varPrefix, count + 1))
                 oCount = 0
-                for child in node._members:
+                for unused_child2 in node._members:
                     if oCount != count:
                         g_SourceFile.write("        _itemStaticBoxSizer_%s->Show((size_t)%d);\n" % (varPrefix, oCount + 1))
                     oCount += 1

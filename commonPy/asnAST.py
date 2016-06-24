@@ -179,7 +179,7 @@ Members:
 
     def __repr__(self):
         result = self._leafType
-        if self._range != []:
+        if self._range:
             result += " within [%s,%s]" % (self._range[0], self._range[1])
         if self._iDefaultValue is not None:
             result += " with default value of %s" % self._iDefaultValue  # pragma: no cover
@@ -237,7 +237,7 @@ Members:
         if self._dbDefaultValue is not None:
             result += ", default value of "  # pragma: no cover
             result += self._dbDefaultValue  # pragma: no cover
-        if self._range != []:
+        if self._range:
             result += ", default range"
             result += " within [%s,%s]" % (self._range[0], self._range[1])
         return result
@@ -275,7 +275,7 @@ Members:
 
     def __repr__(self):
         result = self._leafType
-        if self._range != []:
+        if self._range:
             result += ", length within "
             result += str(self._range)
         return result
@@ -637,7 +637,7 @@ Members:
 
     def __repr__(self):
         result = self._leafType
-        if self._range != []:
+        if self._range:
             result += ", valid sizes in "
             result += str(self._range)
         assert self._containedType is not None
@@ -670,7 +670,7 @@ class AsnSetOf(AsnComplexNode):
 
     def __repr__(self):
         result = self._leafType
-        if self._range != []:
+        if self._range:
             result += ", valid sizes in "
             result += str(self._range)
         assert self._containedType is not None
