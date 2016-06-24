@@ -500,3 +500,5 @@ def CreateDeclarationsForAllTypes(names, leafTypeDict, badTypes: SetOfBadTypenam
     for nodeTypename in names:
         if not names[nodeTypename]._isArtificial and nodeTypename not in badTypes:
             CreateDeclarationForType(nodeTypename, names, leafTypeDict)
+
+# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4

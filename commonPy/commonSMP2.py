@@ -429,3 +429,5 @@ def ConvertCatalogueToASN_AST(inputSmp2Files):
     for nodeTypename in list(asnTypesDict.keys()):
         FixupOutOfOrderIdReferences(nodeTypename, asnTypesDict, idToTypeDict)
     return asnTypesDict, idToTypeDict
+
+# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4

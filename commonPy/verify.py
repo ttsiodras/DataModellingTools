@@ -102,3 +102,5 @@ calling VerifyNodeRange for each Node.'''
         VerifyNodeRange(node)
     else:
         panic("VerifyRanges: Unexpected %s\n" % str(node))
+
+# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4

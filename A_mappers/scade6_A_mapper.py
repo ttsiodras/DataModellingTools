@@ -350,3 +350,5 @@ def OnChoice(nodeTypename, node, leafTypeDict):
 
 def OnShutdown(unused_badTypes):
     g_outputFile.write(g_doc.toprettyxml(indent="    ", encoding="UTF-8"))
+
+# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4

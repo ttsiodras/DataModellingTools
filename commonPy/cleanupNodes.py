@@ -105,3 +105,5 @@ def DiscoverBadTypes() -> SetOfBadTypenames:
         if not foundOne:
             break
     return badTypes
+
+# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4

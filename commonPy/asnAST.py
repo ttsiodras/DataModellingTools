@@ -762,3 +762,5 @@ def sourceSequenceLimit(node, srcCVariable):
 
 def targetSequenceLimit(node, dstCVariable):
     return str(node._range[-1]) if not isSequenceVariable(node) else "%s.nCount" % dstCVariable
+
+# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4

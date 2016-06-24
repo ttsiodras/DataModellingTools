@@ -149,3 +149,5 @@ def mysystem(cmd):
         return os.system('"' + cmd + '"')
     else:
         return os.system(cmd)
+
+# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4

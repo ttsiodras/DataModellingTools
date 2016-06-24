@@ -115,3 +115,5 @@ class RecursiveMapper:
         else:
             panicWithCallStack("unsupported %s (%s)" % (str(node.__class__), node.Location()))
         return lines
+
+# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
