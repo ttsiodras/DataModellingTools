@@ -187,7 +187,7 @@ def MapSMP2Type(attrs, enumOptions, itemTypes, fields):
             containedHref = itemTypeAttrs.href
             if not containedHref:
                 panic("Missing reference to 'href' (file:%s, line:%d)" %
-                      itemTypeAttrs.base, itemTypeAttrs.sourceline)  # pragma: no cover
+                      (itemTypeAttrs.base, itemTypeAttrs.sourceline))  # pragma: no cover
             idxHash = containedHref.find('#')
             if -1 != idxHash:
                 containedHref = containedHref[idxHash + 1:]
@@ -363,7 +363,7 @@ def ConvertCatalogueToASN_AST(inputSmp2Files):
                     nodeTypename = a.title
                     if nodeTypename is None:
                         panic("'xlink:href' points to ready-made SMP2 type, but 'xlink:title' is missing! (file:%s, line:%d)" %
-                              a.base, a.sourceline)  # pragma: no cover
+                              (a.base, a.sourceline))  # pragma: no cover
                     nodeTypename = Clean(nodeTypename.split()[-1]).capitalize()  # Primitive Int32 -> Int32
                     cast, low, high = v
                     containedDict = {
