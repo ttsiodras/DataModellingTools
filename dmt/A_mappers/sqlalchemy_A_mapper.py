@@ -24,12 +24,12 @@ Semantix's code generator A.'''
 import os
 import re
 
-from commonPy.asnAST import (
+from ..commonPy.asnAST import (
     AsnMetaMember, AsnChoice, AsnSet, AsnSequence, AsnSequenceOf,
     AsnSetOf, isSequenceVariable)
-from commonPy.asnParser import g_names, g_leafTypeDict, CleanNameForAST
-from commonPy.utility import panic, warn
-from commonPy.cleanupNodes import SetOfBadTypenames
+from ..commonPy.asnParser import g_names, g_leafTypeDict, CleanNameForAST
+from ..commonPy.utility import panic, warn
+from ..commonPy.cleanupNodes import SetOfBadTypenames
 
 g_sqlalchemyOutput = None
 g_innerTypes = {}  # type: Dict[str, int]

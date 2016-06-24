@@ -25,10 +25,10 @@ import os
 import re
 import random
 
-from commonPy.asnAST import AsnMetaMember, AsnChoice, AsnSet, AsnSequence, AsnSequenceOf, AsnSetOf
-from commonPy.asnParser import g_names, g_leafTypeDict, CleanNameForAST
-from commonPy.utility import panic, warn
-from commonPy.cleanupNodes import SetOfBadTypenames
+from ..commonPy.asnAST import AsnMetaMember, AsnChoice, AsnSet, AsnSequence, AsnSequenceOf, AsnSetOf
+from ..commonPy.asnParser import g_names, g_leafTypeDict, CleanNameForAST
+from ..commonPy.utility import panic, warn
+from ..commonPy.cleanupNodes import SetOfBadTypenames
 
 g_catalogueXML = None
 g_innerTypes = {}

@@ -39,14 +39,10 @@ import sys
 import copy
 from importlib import import_module
 
-import commonPy.configMT
-import commonPy.asnParser
-import commonPy.aadlAST
-from commonPy.utility import inform, panic
-import commonPy.cleanupNodes
+from .commonPy import configMT, asnParser, aadlAST, cleanupNodes, verify
+from .commonPy.utility import inform, panic
 
-import commonPy.verify as verify
-import A_mappers  # NOQA pylint:disable=unused-import
+from . import A_mappers  # NOQA pylint:disable=unused-import
 
 
 def usage(argsToTools):
@@ -60,9 +56,6 @@ def usage(argsToTools):
 
 
 def main():
-    sys.path.append(os.path.abspath(os.path.dirname(sys.argv[0])))
-    sys.path.append('commonPy')
-
     argsToTools = {
         'toOG': 'OG',
         'toSCADE5': 'SCADE5',
@@ -79,10 +72,7 @@ def main():
         'toSQL': 'sql',
         'toSqlalchemy': 'sqlalchemy'
     }
-    for i in os.listdir(
-            os.path.join(
-                os.path.abspath(os.path.dirname(sys.argv[0])),
-                "A_mappers")):
+    for i in os.listdir(os.path.dirname(os.path.abspath(A_mappers.__file__))):
         if '_A_mapper' in i and i.endswith('.py'):
             target = i.split('_')[0]
             if target.lower() not in [x.lower() for x in argsToTools.values()]:
@@ -95,15 +85,15 @@ def main():
     if sys.argv.count("-o") != 0:
         idx = sys.argv.index("-o")
         try:
-            commonPy.configMT.outputDir = os.path.normpath(sys.argv[idx + 1]) + os.sep
+            configMT.outputDir = os.path.normpath(sys.argv[idx + 1]) + os.sep
         except:   # pragma: no cover
             usage(argsToTools)  # pragma: no cover
         del sys.argv[idx]
         del sys.argv[idx]
-        if not os.path.isdir(commonPy.configMT.outputDir):
-            panic("'%s' is not a directory!\n" % commonPy.configMT.outputDir)  # pragma: no cover
+        if not os.path.isdir(configMT.outputDir):
+            panic("'%s' is not a directory!\n" % configMT.outputDir)  # pragma: no cover
     if "-verbose" in sys.argv:
-        commonPy.configMT.verbose = True
+        configMT.verbose = True
         sys.argv.remove("-verbose")
     for i in argsToTools:
         if "-" + i in sys.argv:
@@ -124,29 +114,29 @@ def main():
     uniqueASNfiles = {}
     for grammar in sys.argv[1:]:
         uniqueASNfiles[grammar] = 1
-    commonPy.asnParser.ParseAsnFileList(list(uniqueASNfiles.keys()))
+    asnParser.ParseAsnFileList(list(uniqueASNfiles.keys()))
 
     for asnFile in uniqueASNfiles:
         tmpNames = {}
-        for name in commonPy.asnParser.g_typesOfFile[asnFile]:
-            tmpNames[name] = commonPy.asnParser.g_names[name]
+        for name in asnParser.g_typesOfFile[asnFile]:
+            tmpNames[name] = asnParser.g_names[name]
 
         uniqueASNfiles[asnFile] = [
             copy.copy(tmpNames),                            # map Typename to type definition class from asnAST
-            copy.copy(commonPy.asnParser.g_astOfFile[asnFile]),    # list of nameless type definitions
-            copy.copy(commonPy.asnParser.g_leafTypeDict)]   # map from Typename to leafType
+            copy.copy(asnParser.g_astOfFile[asnFile]),    # list of nameless type definitions
+            copy.copy(asnParser.g_leafTypeDict)]   # map from Typename to leafType
 
         inform("Checking that all base nodes have mandatory ranges set in %s..." % asnFile)
         for node in list(tmpNames.values()):
-            verify.VerifyRanges(node, commonPy.asnParser.g_names)
+            verify.VerifyRanges(node, asnParser.g_names)
 
-    if commonPy.configMT.debugParser:
+    if configMT.debugParser:
         sys.exit(0)  # pragma: no cover
 
     loadedBackends = {}
 
     # If some AST nodes must be skipped (for any reason), go learn about them
-    badTypes = commonPy.cleanupNodes.DiscoverBadTypes()
+    badTypes = cleanupNodes.DiscoverBadTypes()
 
     # For each ASN.1 grammar file referenced in the system level description
     for arg, modelingLanguage in argsToTools.items():
@@ -155,10 +145,10 @@ def main():
         backendFilename = "." + modelingLanguage.lower() + "_A_mapper.py"
         inform("Parsing %s...", backendFilename)
         try:
-            backend = import_module(backendFilename[:-3], 'A_mappers')  # pragma: no cover
+            backend = import_module(backendFilename[:-3], 'dmt.A_mappers')  # pragma: no cover
             if backendFilename[:-3] not in loadedBackends:
                 loadedBackends[backendFilename[:-3]] = 1
-                if commonPy.configMT.verbose:
+                if configMT.verbose:
                     backend.Version()
         except ImportError as err:  # pragma: no cover
             panic("Failed to load backend (%s): %s" % (backendFilename, str(err)))  # pragma: no cover
@@ -167,7 +157,7 @@ def main():
         # instead of working per type:
         if modelingLanguage.lower() in ["c", "ada", "smp2", "qgenc", "qgenada"]:
             if 'OnStartup' in dir(backend):
-                backend.OnStartup(modelingLanguage, list(uniqueASNfiles.keys()), commonPy.configMT.outputDir, badTypes)
+                backend.OnStartup(modelingLanguage, list(uniqueASNfiles.keys()), configMT.outputDir, badTypes)
             if 'OnShutdown' in dir(backend):
                 backend.OnShutdown(badTypes)
             continue
@@ -175,7 +165,7 @@ def main():
         # Work on each ASN.1 file's types
         for asnFile in uniqueASNfiles:
             if 'OnStartup' in dir(backend):
-                backend.OnStartup(modelingLanguage, asnFile, commonPy.configMT.outputDir, badTypes)
+                backend.OnStartup(modelingLanguage, asnFile, configMT.outputDir, badTypes)
 
             leafTypeDict = uniqueASNfiles[asnFile][2]
 

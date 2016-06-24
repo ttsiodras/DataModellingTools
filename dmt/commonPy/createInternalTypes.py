@@ -21,14 +21,14 @@
 import re
 from typing import Any, Dict, List  # NOQA pylint: disable=unused-import
 
-import commonPy.asnParser
+from ..commonPy import asnParser
 
-from commonPy.asnAST import (
+from ..commonPy.asnAST import (
     AsnString, AsnBasicNode, AsnSetOf, AsnSequenceOf, AsnSet,
     AsnSequence, AsnChoice, AsnMetaMember, AsnEnumerated,
     AsnNode
 )
-from commonPy.utility import panic
+from ..commonPy.utility import panic
 
 
 # Separate cache per ASN.1 AST dictionary (i.e. per 'names' parameter of ScanChildren)
@@ -80,8 +80,8 @@ def ScanChildren(
         return  # pragma: no cover
 
     # for typedefs, just add the original type as a dependency
-    if id(names) == id(commonPy.asnParser.g_names) and nodeTypename in commonPy.asnParser.g_metatypes:
-        results.append(commonPy.asnParser.g_metatypes[nodeTypename])
+    if id(names) == id(asnParser.g_names) and nodeTypename in asnParser.g_metatypes:
+        results.append(asnParser.g_metatypes[nodeTypename])
         return
 
     if isinstance(node, AsnString):

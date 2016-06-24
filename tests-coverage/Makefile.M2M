@@ -1,36 +1,36 @@
 include common.mk
 
-VPATH=..:../A_mappers:../commonPy
+VPATH=..:../dmt/A_mappers:../commonPy
 
 PYSRC_A := createInternalTypes.py ada_A_mapper.py c_A_mapper.py og_A_mapper.py simulink_A_mapper.py python_A_mapper.py scade6_A_mapper.py smp2_A_mapper.py sqlalchemy_A_mapper.py rtds_A_mapper.py qgenada_A_mapper.py qgenc_A_mapper.py
-PYSRC_A_COVER := $(PYSRC_A:%.py=___A_mappers_%.py,cover)
+PYSRC_A_COVER := $(PYSRC_A:%.py=___dmt_A_mappers_%.py,cover)
 
 .PHONY:	check
 
 all:	$(PYSRC_A_COVER) check
 
-___A_mappers_%.py,cover:	../A_mappers/%.py DataTypesSimulink.asn
+___dmt_A_mappers_%.py,cover:	../A_mappers/%.py DataTypesSimulink.asn
 	@echo Update required: $@ depends on $?
 	mkdir -p output
 	rm -rf output/*
-	LANG=C LC_ALL=C ${COVERAGE} run -a ../asn2dataModel.py 2>/dev/null || echo -n
-	LANG=C LC_ALL=C ${COVERAGE} run -a ../asn2dataModel.py -o output 2>/dev/null || echo -n
-	LANG=C LC_ALL=C ${COVERAGE} run -a ../asn2dataModel.py -o output -toRTDS DataTypesSimulink.asn >/dev/null
-	LANG=C LC_ALL=C ${COVERAGE} run -a ../asn2dataModel.py -o output -toQGenAda DataTypesSimulink.asn >/dev/null
-	LANG=C LC_ALL=C ${COVERAGE} run -a ../asn2dataModel.py -o output -toQGenC DataTypesSimulink.asn >/dev/null
-	LANG=C LC_ALL=C ${COVERAGE} run -a ../asn2dataModel.py -o output -verbose -toSIMULINK DataTypesSimulink.asn >/dev/null
-	LANG=C LC_ALL=C ${COVERAGE} run -a ../asn2dataModel.py -o output -toOG DataTypesSimulink.asn
-	LANG=C LC_ALL=C ${COVERAGE} run -a ../asn2dataModel.py -o output -toAda DataTypesSimulink.asn
-	LANG=C LC_ALL=C ${COVERAGE} run -a ../asn2dataModel.py -o output -toC DataTypesSimulink.asn >/dev/null
-	LANG=C LC_ALL=C ${COVERAGE} run -a ../asn2dataModel.py -o output -toSMP2 DataTypesSimulink.asn >/dev/null
-	LANG=C LC_ALL=C ${COVERAGE} run -a ../asn2dataModel.py -o output -toPython DataTypesSimulink.asn >/dev/null
-	LANG=C LC_ALL=C ${COVERAGE} run -a ../asn2dataModel.py -o output -toSCADE6 DataTypesSimulink.asn >/dev/null
-	LANG=C LC_ALL=C ${COVERAGE} run -a ../asn2dataModel.py -o output -toSQL DataTypesSimulink.asn >/dev/null
-	LANG=C LC_ALL=C ${COVERAGE} run -a ../asn2dataModel.py -o output -toSqlalchemy DataTypesSimulink.asn >/dev/null
-	LANG=C LC_ALL=C ${COVERAGE} annotate -d . ../asn2dataModel.py ../A_mappers/*.py ../commonPy/*.py
+	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel 2>/dev/null || echo -n
+	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output 2>/dev/null || echo -n
+	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -toRTDS DataTypesSimulink.asn >/dev/null
+	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -toQGenAda DataTypesSimulink.asn >/dev/null
+	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -toQGenC DataTypesSimulink.asn >/dev/null
+	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -verbose -toSIMULINK DataTypesSimulink.asn >/dev/null
+	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -toOG DataTypesSimulink.asn
+	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -toAda DataTypesSimulink.asn
+	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -toC DataTypesSimulink.asn >/dev/null
+	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -toSMP2 DataTypesSimulink.asn >/dev/null
+	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -toPython DataTypesSimulink.asn >/dev/null
+	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -toSCADE6 DataTypesSimulink.asn >/dev/null
+	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -toSQL DataTypesSimulink.asn >/dev/null
+	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -toSqlalchemy DataTypesSimulink.asn >/dev/null
+	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage annotate -d . ../dmt/asn2dataModel.py ../dmt/A_mappers/*.py ../dmt/commonPy/*.py
 
 check:
-	@for i in ___asn2dataModel.py,cover $(PYSRC_A_COVER) ; do echo Checking $$i ... ; ./checkCoverage.pl $$i || { ( echo $$i ; ./review.pl $$i ) | less -RS ; exit 1 ; } ; done
+	@for i in ___dmt_asn2dataModel.py,cover $(PYSRC_A_COVER) ; do echo Checking $$i ... ; ./checkCoverage.pl $$i || { ( echo $$i ; ./review.pl $$i ) | less -RS ; exit 1 ; } ; done
 
 clean:
 	${COVERAGE} erase

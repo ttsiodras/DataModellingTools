@@ -23,6 +23,8 @@
 
 # import re
 
+from ..commonPy import asnParser
+
 g_outputDir = ""
 g_asnFile = ""
 
@@ -88,7 +90,6 @@ def OnShutdown(unused_badTypes):
     # text = re.sub(r'--.*', '', text)
     outputFile = open(g_outputDir + "DataView.pr", 'w')
     outputFile.write('Datamodel DEFINITIONS ::= BEGIN\n\n')
-    import commonPy.asnParser
-    commonPy.asnParser.PrintGrammarFromAST(outputFile)
+    asnParser.PrintGrammarFromAST(outputFile)
     outputFile.write('END\n')
     outputFile.close()

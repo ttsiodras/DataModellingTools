@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 '''
 Setup file for Linux distribution of the Data Modelling Toolchain (DMT).
@@ -9,17 +9,22 @@ Usage:  python setup.py sdist   --> to create a tarball
 
 from setuptools import setup, find_packages
 
-import commonPy
-import asn2aadlPlus
-import asn2dataModel
-import aadl2glueC
+from dmt import (
+    commonPy, asn2dataModel, A_mappers, B_mappers,
+    aadl2glueC, msgPrinter, msgPrinterASN1)
 
 setup(
     name='dmt',
     version=commonPy.__version__,
     packages=find_packages(),
+    data_files=[
+        ('dmt-utils', [
+            'dmt/utils/learn_CHOICE_enums.py',
+            'dmt/utils/parse_aadl.py',
+            'dmt/utils/asn2aadlPlus.py']),
+    ],
     author='Thanassis Tsiodras',
-    author_email='ttsiodras@semantix.gr',
+    author_email='Thanassis.Tsiodras@esa.int',
     description='TASTE Data Modelling Technologies based on ASN.1',
     long_description=open('README.md').read(),
     install_requires=[],
@@ -29,15 +34,16 @@ setup(
         'Programming Language :: Python',
         'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPL)',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 2.7'
+        'Programming Language :: Python :: 3.5'
     ],
     entry_points={
         'console_scripts': [
-            'asn2aadlPlus = asn2aadlPlus:main',
-            'asn2dataModel = asn2dataModel:main',
-            'aadl2glueC = aadl2glueC:main',
-            'msgPrinter = asn2dataModel.msgPrinter:main',
-            'msgPrinterASN1 = asn2dataModel.msgPrinterASN1:main',
+            # 'asn2aadlPlus = asn2aadlPlus:main',
+            'asn2dataModel = dmt.asn2dataModel:main',
+            'aadl2glueC = dmt.aadl2glueC:main',
+            'msgPrinter = dmt.msgPrinter:main',
+            'msgPrinterASN1 = dmt.msgPrinterASN1:main',
+            'dmt = dmt.commonPy:print_version'
         ]
     }
 )

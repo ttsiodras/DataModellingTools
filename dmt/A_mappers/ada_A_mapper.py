@@ -26,15 +26,16 @@ import os
 import sys
 import distutils.spawn as spawn
 
-from commonPy.utility import panic
+from ..commonPy.utility import panic
 
 
 def Version():
-    print("Code generator: " + "$Id: c_A_mapper.py 2382 2012-06-22 08:35:33Z ttsiodras $")  # pragma: no cover
+    print("Code generator: " + "$Id: ada_A_mapper.py 2382 2012-06-22 08:35:33Z ttsiodras $")  # pragma: no cover
 
 
 # Especially for the C mapper, since we need to pass the complete ASN.1 files list to ASN1SCC,
 # the second param is not asnFile, it is asnFiles
+
 
 def OnStartup(unused_modelingLanguage, asnFiles, outputDir, unused_badTypes):
     # print "Use ASN1SCC to generate the structures for '%s'" % asnFile
@@ -43,14 +44,9 @@ def OnStartup(unused_modelingLanguage, asnFiles, outputDir, unused_badTypes):
         panic("ASN1SCC seems to be missing from your system (asn1.exe not found in PATH).\n")  # pragma: no cover
     os.system(
         ("mono " if sys.argv[0].endswith('.py') and sys.platform.startswith('linux') else "") +
-        "\"{}\" -wordSize 8 -typePrefix asn1Scc -c -uPER -o \"".format(asn1SccPath) +
+        "\"{}\" -wordSize 8 -typePrefix asn1Scc -Ada -uPER -o \"".format(asn1SccPath) +
         outputDir + "\" \"" + "\" \"".join(asnFiles) + "\"")
-    cmd = 'rm -f '
-    for i in ['real.c', 'asn1crt.c', 'acn.c', 'ber.c', 'xer.c']:
-        cmd += ' "' + outputDir + '"/' + i
-    os.system(cmd)
-    for tmp in asnFiles:
-        os.system("rm -f \"" + outputDir + os.sep + os.path.basename(os.path.splitext(tmp)[0]) + ".c\"")
+    os.system("rm -f \"" + outputDir + "\"/*.adb")
 
 
 def OnBasic(unused_nodeTypename, unused_node, unused_leafTypeDict):

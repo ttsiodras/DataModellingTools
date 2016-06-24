@@ -23,9 +23,11 @@
 #
 import re
 
-import commonPy
-from commonPy.utility import panic, inform
-from commonPy.asnAST import AsnBool, AsnInt, AsnReal, AsnString, AsnEnumerated, AsnSequence, AsnSet, AsnChoice, AsnMetaMember, AsnSequenceOf, AsnSetOf
+from ..commonPy.utility import panic, inform
+from ..commonPy import asnParser
+from ..commonPy.asnAST import (
+    AsnBool, AsnInt, AsnReal, AsnString, AsnEnumerated, AsnSequence,
+    AsnSet, AsnChoice, AsnMetaMember, AsnSequenceOf, AsnSetOf)
 from .createInternalTypes import ScanChildren
 
 # The file written to
@@ -65,7 +67,7 @@ def OnStartup(unused_modelingLanguage, unused_asnFile, outputDir, unused_badType
     g_definedTypes = {}
     global g_octetStrings
     g_octetStrings = 0
-    CreateDeclarationsForAllTypes(commonPy.asnParser.g_names, commonPy.asnParser.g_leafTypeDict)
+    CreateDeclarationsForAllTypes(asnParser.g_names, asnParser.g_leafTypeDict)
 
 
 def OnBasic(unused_nodeTypename, unused_node, unused_leafTypeDict):

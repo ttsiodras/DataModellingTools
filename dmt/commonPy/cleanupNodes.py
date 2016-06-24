@@ -43,8 +43,8 @@ Rules to gather the list of types that must be skipped
 
 from typing import Set, Union
 
-import commonPy.asnParser
-from commonPy.asnAST import (
+from . import asnParser
+from .asnAST import (
     AsnAsciiString, AsnChoice, AsnSet, AsnSequenceOf, AsnSequence,
     AsnMetaMember, AsnSetOf, AsnNode
 )
@@ -61,7 +61,7 @@ def DiscoverBadTypes() -> SetOfBadTypenames:
     badTypes = set()  # type: SetOfBadTypenames
     cache = {}  # type: Dict[AsnNode, bool]
 
-    names = commonPy.asnParser.g_names
+    names = asnParser.g_names
 
     def CheckNodeForIA5(node_or_str: Union[AsnNode, str]) -> bool:
         if isinstance(node_or_str, str):

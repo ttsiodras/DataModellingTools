@@ -33,16 +33,17 @@ import copy
 
 from typing import Tuple, List
 
-import commonPy.configMT
-from commonPy.asnAST import sourceSequenceLimit, AsnNode  # NOQA pylint: disable=unused-import
-from commonPy.asnParser import (  # NOQA pylint: disable=unused-import
+from ..commonPy import configMT
+from ..commonPy.asnAST import sourceSequenceLimit, AsnNode  # NOQA pylint: disable=unused-import
+from ..commonPy import asnParser
+from ..commonPy.asnParser import (  # NOQA pylint: disable=unused-import
     AST_Lookup, AST_Leaftypes,
     Typename, Filename, ParseAsnFileList)
-from commonPy.utility import inform, panic
-import commonPy.cleanupNodes
-from commonPy.recursiveMapper import RecursiveMapper
+from ..commonPy.utility import inform, panic
+from ..commonPy import cleanupNodes
+from ..commonPy.recursiveMapper import RecursiveMapper
 
-import commonPy.verify
+from ..commonPy import verify
 
 
 def usage():
@@ -174,16 +175,16 @@ def main():
     if sys.argv.count("-o") != 0:
         idx = sys.argv.index("-o")
         try:
-            commonPy.configMT.outputDir = os.path.normpath(sys.argv[idx + 1]) + os.sep
+            configMT.outputDir = os.path.normpath(sys.argv[idx + 1]) + os.sep
         except:  # pragma: no cover
             usage()  # pragma: no cover
         del sys.argv[idx]
         del sys.argv[idx]
-        if not os.path.isdir(commonPy.configMT.outputDir):
-            panic("'%s' is not a directory!\n" % commonPy.configMT.outputDir)  # pragma: no cover
+        if not os.path.isdir(configMT.outputDir):
+            panic("'%s' is not a directory!\n" % configMT.outputDir)  # pragma: no cover
 
     if "-verbose" in sys.argv:
-        commonPy.configMT.verbose = True
+        configMT.verbose = True
         sys.argv.remove("-verbose")
 
     if len(sys.argv) < 2:
@@ -200,30 +201,30 @@ def main():
 
     for asnFile in uniqueASNfiles:
         tmpNames = {}  # Dict[Typename, AsnNode]
-        for name in commonPy.asnParser.g_typesOfFile[asnFile]:
-            tmpNames[name] = commonPy.asnParser.g_names[name]
+        for name in asnParser.g_typesOfFile[asnFile]:
+            tmpNames[name] = asnParser.g_names[name]
 
         uniqueASNfiles[asnFile] = (
             copy.copy(tmpNames),                            # map Typename to type definition class from asnAST
-            copy.copy(commonPy.asnParser.g_astOfFile[asnFile]),    # list of nameless type definitions
-            copy.copy(commonPy.asnParser.g_leafTypeDict)    # map from Typename to leafType
+            copy.copy(asnParser.g_astOfFile[asnFile]),    # list of nameless type definitions
+            copy.copy(asnParser.g_leafTypeDict)    # map from Typename to leafType
         )
 
         inform("Checking that all base nodes have mandatory ranges set in %s..." % asnFile)
         for node in list(tmpNames.values()):
-            commonPy.verify.VerifyRanges(node, commonPy.asnParser.g_names)
+            verify.VerifyRanges(node, asnParser.g_names)
 
     # If some AST nodes must be skipped (for any reason), go learn about them
-    badTypes = commonPy.cleanupNodes.DiscoverBadTypes()
+    badTypes = cleanupNodes.DiscoverBadTypes()
 
-    C_HeaderFile = open(commonPy.configMT.outputDir + os.sep + "PrintTypesAsASN1.h", "w")
+    C_HeaderFile = open(configMT.outputDir + os.sep + "PrintTypesAsASN1.h", "w")
     C_HeaderFile.write('#ifndef __PRINTTYPESASASN1_H__\n')
     C_HeaderFile.write('#define __PRINTTYPESASASN1_H__\n\n')
     C_HeaderFile.write('#ifdef __cplusplus\n')
     C_HeaderFile.write('extern "C" {\n')
     C_HeaderFile.write('#endif\n\n')
 
-    C_SourceFile = open(commonPy.configMT.outputDir + os.sep + "PrintTypesAsASN1.c", "w")
+    C_SourceFile = open(configMT.outputDir + os.sep + "PrintTypesAsASN1.c", "w")
     C_SourceFile.write('#include <stdio.h>\n\n')
     C_SourceFile.write('#include "PrintTypesAsASN1.h"\n\n')
     C_SourceFile.write('#ifdef __linux__\n')
@@ -262,8 +263,8 @@ def main():
             C_SourceFile.write('#endif\n')
             C_SourceFile.write('    //printf("%%s %s ::= ", paramName);\n' % nodeTypename)
             C_SourceFile.write('    printf("%s ", paramName);\n')
-            # C_SourceFile.write('\n'.join(printer.Map('(*pData)', '', node, leafTypeDict, commonPy.asnParser.g_names)))
-            lines = ["    " + x for x in printer.Map('(*pData)', '', node, leafTypeDict, commonPy.asnParser.g_names)]
+            # C_SourceFile.write('\n'.join(printer.Map('(*pData)', '', node, leafTypeDict, asnParser.g_names)))
+            lines = ["    " + x for x in printer.Map('(*pData)', '', node, leafTypeDict, asnParser.g_names)]
             C_SourceFile.write("\n".join(lines))
             C_SourceFile.write('\n#ifdef __linux__\n')
             C_SourceFile.write('    pthread_mutex_unlock(&g_printing_mutex);\n')

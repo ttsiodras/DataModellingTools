@@ -1,9 +1,6 @@
 #
 # (C) Semantix Information Technologies.
 #
-# Copyright 2014-2015 IB Krates <info@krates.ee>
-#       QGenc code generator integration
-#
 # Semantix Information Technologies is licensing the code of the
 # Data Modelling Tools (DMT) in the following dual-license mode:
 #
@@ -21,18 +18,13 @@
 # Note that in both cases, there are no charges (royalties) for the
 # generated code.
 #
-'''This contains the implementation of model level mapping
-of ASN.1 constructs to C. It is used as a backend of Semantix's
-code generator A.'''
-
-import os
-import sys
 import re
-import distutils.spawn as spawn
 
-import commonPy
-from commonPy.utility import panic, inform
-from commonPy.asnAST import AsnBool, AsnInt, AsnReal, AsnString, AsnEnumerated, AsnSequence, AsnSet, AsnChoice, AsnMetaMember, AsnSequenceOf, AsnSetOf
+from ..commonPy.utility import panic, inform
+from ..commonPy import asnParser
+from ..commonPy.asnAST import (
+    AsnBool, AsnInt, AsnReal, AsnString, AsnEnumerated, AsnSequence,
+    AsnSet, AsnChoice, AsnMetaMember, AsnSequenceOf, AsnSetOf)
 from .createInternalTypes import ScanChildren
 
 # The file written to
@@ -47,27 +39,14 @@ g_bHasStartupRunOnce = False
 
 
 def Version():
-    print("Code generator: " + "$Id: qgenada_A_mapper.py $")  # pragma: no cover
+    print("Code generator: " + "$Id: simulink_A_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")  # pragma: no cover
 
 
 def CleanNameAsSimulinkWants(name):
     return re.sub(r'[^a-zA-Z0-9_]', '_', name)
 
 
-# Especially for the C mapper, since we need to pass the complete ASN.1 files list to ASN1SCC,
-# the second param is not asnFile, it is asnFiles
-
-def OnStartup(unused_modelingLanguage, asnFiles, outputDir, unused_badTypes):
-    # print "Use ASN1SCC to generate the structures for '%s'" % asnFile
-    asn1SccPath = spawn.find_executable('asn1.exe')
-    if not asn1SccPath:
-        panic("ASN1SCC seems to be missing from your system (asn1.exe not found in PATH).\n")  # pragma: no cover
-    os.system(
-        ("mono " if sys.argv[0].endswith('.py') and sys.platform.startswith('linux') else "") +
-        "\"{}\" -wordSize 8 -typePrefix asn1Scc -c -uPER -o \"".format(asn1SccPath) +
-        outputDir + "\" \"" + "\" \"".join(asnFiles) + "\"")
-    os.system("rm -f \"" + outputDir + "\"/*.adb")
-
+def OnStartup(unused_modelingLanguage, unused_asnFile, outputDir, unused_badTypes):
     global g_bHasStartupRunOnce
     if g_bHasStartupRunOnce:
         # Don't rerun, it has already done all the work
@@ -78,23 +57,22 @@ def OnStartup(unused_modelingLanguage, asnFiles, outputDir, unused_badTypes):
     # outputFilename = modelingLanguage + "_" + os.path.basename(asnFile).replace(".","_") + ".m"
     # Changed at Maxime's request, 27/1/2011
     outputFilename = "Simulink_DataView_asn.m"
-    inform("QGenAda_A_mapper: Creating file '%s'...", outputFilename)
+    inform("Simulink_A_mapper: Creating file '%s'...", outputFilename)
     global g_outputFile
-    outputDir += "../"
     g_outputFile = open(outputDir + outputFilename, 'w')
     global g_definedTypes
     g_definedTypes = {}
     global g_octetStrings
     g_octetStrings = 0
-    CreateDeclarationsForAllTypes(commonPy.asnParser.g_names, commonPy.asnParser.g_leafTypeDict)
+    CreateDeclarationsForAllTypes(asnParser.g_names, asnParser.g_leafTypeDict)
 
 
 def OnBasic(unused_nodeTypename, unused_node, unused_leafTypeDict):
-    pass  # pragma: nocover
+    pass
 
 
 def OnSequence(unused_nodeTypename, unused_node, unused_leafTypeDict):
-    pass  # pragma: nocover
+    pass
 
 
 def OnSet(unused_nodeTypename, unused_node, unused_leafTypeDict):
@@ -102,11 +80,11 @@ def OnSet(unused_nodeTypename, unused_node, unused_leafTypeDict):
 
 
 def OnEnumerated(unused_nodeTypename, unused_node, unused_leafTypeDict):
-    pass  # pragma: nocover
+    pass
 
 
 def OnSequenceOf(unused_nodeTypename, unused_node, unused_leafTypeDict):
-    pass  # pragma: nocover
+    pass
 
 
 def OnSetOf(unused_nodeTypename, unused_node, unused_leafTypeDict):
@@ -114,7 +92,7 @@ def OnSetOf(unused_nodeTypename, unused_node, unused_leafTypeDict):
 
 
 def OnChoice(unused_nodeTypename, unused_node, unused_leafTypeDict):
-    pass  # pragma: nocover
+    pass
 
 
 def OnShutdown(unused_badTypes):
@@ -211,7 +189,7 @@ def CreateDeclarationForType(nodeTypename, names, leafTypeDict):
         CreateAlias(nodeTypename, "double", "range is %s" % str(node._range))
     elif isinstance(node, AsnString):
         if not node._range:
-            panic("QGenAda_A_mapper: string (in %s) must have a SIZE constraint!\n" % node.Location())  # pragma: no cover
+            panic("Simulink_A_mapper: string (in %s) must have a SIZE constraint!\n" % node.Location())  # pragma: no cover
         name = CleanNameAsSimulinkWants(nodeTypename)
         DeclareSimpleCollection(node, name, "uint8")
     elif isinstance(node, AsnEnumerated):
@@ -222,10 +200,12 @@ def CreateDeclarationForType(nodeTypename, names, leafTypeDict):
             if member[1] is not None:
                 g_outputFile.write("%s_value_%s = %s;\n" % (CleanNameAsSimulinkWants(nodeTypename), CleanNameAsSimulinkWants(member[0]), member[1]))
             else:  # pragma: no cover
-                panic("QGenAda_A_mapper: must have values for enumerants (%s)" % node.Location())  # pragma: no cover
+                panic("Simulink_A_mapper: must have values for enumerants (%s)" % node.Location())  # pragma: no cover
         CreateAlias(nodeTypename, "int32", "values of ENUMERATED %s" % nodeTypename)
         g_outputFile.write("\n")
     elif isinstance(node, AsnSequence) or isinstance(node, AsnSet) or isinstance(node, AsnChoice):
+        if len(node._members) == 0:
+            panic("Simulink_A_mapper: Simulink can't support empty Seq/Set/Choice! (%s)" % node.Location())  # pragma: no cover
         elemNo = 0
         if isinstance(node, AsnChoice):
             elemNo += 1
@@ -274,7 +254,7 @@ def CreateDeclarationForType(nodeTypename, names, leafTypeDict):
                 # mappedType = CleanNameAsSimulinkWants(child[1]._containedType + "_t") XYZ
                 mappedType = CleanNameAsSimulinkWants(child[1]._containedType)
             else:  # pragma: no cover
-                panic("QGenAda_A_mapper: Unexpected category of child (%s)" % str(child[1]))  # pragma: no cover
+                panic("Simulink_A_mapper: Unexpected category of child (%s)" % str(child[1]))  # pragma: no cover
             g_outputFile.write(name + ".DataType='%s';\n" % mappedType)
             # Used to be -1 for strings and metaMembers, but requirements have changed (again :-)
             g_outputFile.write(name + ".dimensions=1;\n\n")
@@ -313,7 +293,7 @@ def CreateDeclarationForType(nodeTypename, names, leafTypeDict):
 
             DeclareCollection(node, name, CleanNameAsSimulinkWants(contained))
         else:  # pragma: no cover
-            panic("QGenAda_A_mapper: Unexpected category of contained type (%s,%s)" % (node.Location(), str(contained)))  # pragma: no cover
+            panic("Simulink_A_mapper: Unexpected category of contained type (%s,%s)" % (node.Location(), str(contained)))  # pragma: no cover
 
     else:  # pragma: no cover
         panic("Unexpected ASN.1 type... Send this grammar to Semantix")  # pragma: no cover

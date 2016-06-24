@@ -20,15 +20,14 @@
 #
 import re
 import os
-import commonPy
-import commonPy.asnParser
-from commonPy.utility import panic, inform
-from commonPy.asnAST import (
+from ..commonPy import asnParser
+from ..commonPy.utility import panic, inform
+from ..commonPy.asnAST import (
     AsnBool, AsnInt, AsnReal, AsnString, isSequenceVariable, AsnEnumerated,
     AsnSequence, AsnSet, AsnChoice, AsnMetaMember, AsnSequenceOf, AsnSetOf,
     AsnBasicNode)
-from commonPy.asnParser import AST_Lookup, AST_Leaftypes
-from commonPy.cleanupNodes import SetOfBadTypenames
+from ..commonPy.asnParser import AST_Lookup, AST_Leaftypes
+from ..commonPy.cleanupNodes import SetOfBadTypenames
 
 # The Python file written to
 g_outputFile = None
@@ -174,7 +173,7 @@ clean:
 %(tab)srm -f $(BDIR)/$(GRAMMAR)_asn.py
 ''' % {'tab': '\t', 'base': base, 'origGrammarBase': origGrammarBase, 'mono': mono_exe})
     makefile.close()
-    CreateDeclarationsForAllTypes(commonPy.asnParser.g_names, commonPy.asnParser.g_leafTypeDict, badTypes)
+    CreateDeclarationsForAllTypes(asnParser.g_names, asnParser.g_leafTypeDict, badTypes)
     g_outputGetSetH.write('\n/* Helper functions for NATIVE encodings */\n\n')
     g_outputGetSetC.write('\n/* Helper functions for NATIVE encodings */\n\n')
 
@@ -203,7 +202,7 @@ clean:
         g_outputGetSetC.write("void DestroyInstanceOf_%s(byte *pData) {\n" % typ)
         g_outputGetSetC.write('    free(pData);\n')
         g_outputGetSetC.write('}\n\n')
-    for nodeTypename, node in commonPy.asnParser.g_names.items():
+    for nodeTypename, node in asnParser.g_names.items():
         if node._isArtificial:
             continue
         WorkOnType(nodeTypename)

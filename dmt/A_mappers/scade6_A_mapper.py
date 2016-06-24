@@ -30,12 +30,12 @@ import random
 from xml.dom.minidom import Document, Node  # type: ignore  # NOQA  pylint: disable=unused-import
 from typing import Set  # NOQA pylint: disable=unused-import
 
-from commonPy.utility import inform, panic
-from commonPy.asnAST import (
+from ..commonPy.utility import inform, panic
+from ..commonPy.asnAST import (
     AsnBasicNode, AsnString, AsnEnumerated, AsnMetaMember, AsnSet,
     AsnSetOf, AsnSequence, AsnSequenceOf, AsnChoice
 )
-import commonPy.asnParser
+from ..commonPy import asnParser
 
 g_lookup = {
     "INTEGER": "int",
@@ -79,8 +79,8 @@ def RandomHex(digits: int) -> str:
 
 
 def FixupNestedStringsAndEnumerated():
-    names = commonPy.asnParser.g_names
-    leafTypeDict = commonPy.asnParser.g_leafTypeDict
+    names = asnParser.g_names
+    leafTypeDict = asnParser.g_leafTypeDict
     for nodeTypename in list(names.keys()):
         node = names[nodeTypename]
         if isinstance(node, (AsnSequence, AsnChoice, AsnSet)):
@@ -180,8 +180,8 @@ def GetOID(nodeTypename):
 
 
 def CheckPrerequisites(nodeTypename):
-    names = commonPy.asnParser.g_names
-    leafTypeDict = commonPy.asnParser.g_leafTypeDict
+    names = asnParser.g_names
+    leafTypeDict = asnParser.g_leafTypeDict
     if nodeTypename not in g_declaredTypes:
         node = names[nodeTypename]
         leafType = leafTypeDict[nodeTypename]
@@ -211,10 +211,10 @@ def CheckPrerequisites(nodeTypename):
 
 
 def HandleTypedef(nodeTypename: str) -> bool:
-    if nodeTypename not in commonPy.asnParser.g_metatypes:
+    if nodeTypename not in asnParser.g_metatypes:
         return False
     controlString = 'Type$name=%s,definition,NamedType,type,TypeRef$name=%s' % \
-        (CleanNameAsScadeWants(nodeTypename), CleanNameAsScadeWants(commonPy.asnParser.g_metatypes[nodeTypename]))
+        (CleanNameAsScadeWants(nodeTypename), CleanNameAsScadeWants(asnParser.g_metatypes[nodeTypename]))
     RenderElements(controlString)
     return True
 

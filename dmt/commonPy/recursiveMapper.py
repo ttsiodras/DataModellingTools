@@ -21,8 +21,8 @@
 import re
 from typing import Union, List, Dict
 
-from commonPy.utility import panicWithCallStack
-from commonPy.asnAST import (
+from .utility import panicWithCallStack
+from .asnAST import (
     AsnBasicNode, AsnSequence, AsnSet, AsnChoice, AsnSequenceOf,
     AsnSetOf, AsnEnumerated, AsnMetaMember, AsnNode
 )
