@@ -1,13 +1,5 @@
-#!/usr/bin/env python
-'''
-This is one of the code generators that Semantix developed for
-the European research project ASSERT. It is now enhanced in the
-context of Data Modelling and Data Modelling Tuning projects.
-
-It reads the ASN.1 specification of the exchanged messages, and
-generates printer-functions for their content.
-'''
-
+#!/usr/bin/env python3
+#
 # (C) Semantix Information Technologies.
 #
 # Semantix Information Technologies is licensing the code of the
@@ -27,23 +19,33 @@ generates printer-functions for their content.
 # Note that in both cases, there are no charges (royalties) for the
 # generated code.
 #
+'''
+This is one of the code generators that Semantix developed for
+the European research project ASSERT. It is now enhanced in the
+context of Data Modelling and Data Modelling Tuning projects.
+
+It reads the ASN.1 specification of the exchanged messages, and
+generates "printer" functions for their content.
+'''
+
+
 import os
 import sys
 import copy
 
 from typing import Tuple, List
 
-from ..commonPy import configMT
-from ..commonPy.asnAST import sourceSequenceLimit, AsnNode  # NOQA pylint: disable=unused-import
-from ..commonPy import asnParser
-from ..commonPy.asnParser import (  # NOQA pylint: disable=unused-import
+from .commonPy import configMT
+from .commonPy.asnAST import sourceSequenceLimit, AsnNode  # NOQA pylint: disable=unused-import
+from .commonPy import asnParser
+from .commonPy.asnParser import (  # NOQA pylint: disable=unused-import
     AST_Lookup, AST_Leaftypes,
     Typename, Filename, ParseAsnFileList)
-from ..commonPy.utility import inform, panic
-from ..commonPy import cleanupNodes
-from ..commonPy.recursiveMapper import RecursiveMapper
+from .commonPy.utility import inform, panic
+from .commonPy import cleanupNodes
+from .commonPy.recursiveMapper import RecursiveMapper
 
-from ..commonPy import verify
+from .commonPy import verify
 
 
 def usage():
@@ -62,52 +64,39 @@ class Printer(RecursiveMapper):
         self.uniqueID += 1 if self.uniqueID != 385 else 2
         return self.uniqueID
 
-    def MapInteger(self, srcCVariable, unused, _, __, ___):
+    def MapInteger(self, srcCVariable, prefix, _, __, ___):
         lines = []
         lines.append('#if WORD_SIZE==8')
-        lines.append('printf("%%lld", %s);' % srcCVariable)
+        lines.append('printf("%%s%s %%lld\\n", paramName, %s);' % (prefix, srcCVariable))
         lines.append('#else')
-        lines.append('printf("%%d", %s);' % srcCVariable)
+        lines.append('printf("%%s%s %%d\\n", paramName, %s);' % (prefix, srcCVariable))
         lines.append('#endif')
         return lines
 
-    def MapReal(self, srcCVariable, unused, _, __, ___):
-        return ['printf("%%f", %s);' % srcCVariable]
+    def MapReal(self, srcCVariable, prefix, _, __, ___):
+        return ['printf("%%s%s %%f\\n", paramName, %s);' % (prefix, srcCVariable)]
 
-    def MapBoolean(self, srcCVariable, unused, _, __, ___):
-        return ['printf("%%s", (int)%s?"TRUE":"FALSE");' % srcCVariable]
+    def MapBoolean(self, srcCVariable, prefix, _, __, ___):
+        return ['printf("%%s%s %%d\\n", paramName, (int)%s);' % (prefix, srcCVariable)]
 
-    def MapOctetString(self, srcCVariable, unused, node, __, ___):
+    def MapOctetString(self, srcCVariable, prefix, node, __, ___):
         lines = []
         lines.append("{")
         lines.append("    int i;")
         limit = sourceSequenceLimit(node, srcCVariable)
-        lines.append('    printf("\'");')
+        lines.append('    printf("%%s%s ", paramName);' % prefix)
         lines.append("    for(i=0; i<%s; i++)" % limit)
-        lines.append('        printf("%%02x", %s.arr[i]);' % srcCVariable)
-        lines.append('    printf("\'H");')
+        lines.append('        printf("%%c", %s.arr[i]);' % srcCVariable)
+        lines.append('    printf("\\n");')
         lines.append("}\n")
         return lines
 
-    def MapEnumerated(self, srcCVariable, unused, node, __, ___):
-        lines = []
-        lines.append("switch(%s) {" % srcCVariable)
-        for d in node._members:
-            lines.append("case %s:" % d[1])
-            lines.append("    printf(\"%s\");" % d[0])
-            lines.append("    break;")
-        lines.append("default:")
-        lines.append("    printf(\"Invalid value in ENUMERATED (%s)\");" % srcCVariable)
-        lines.append("}")
-        return lines
+    def MapEnumerated(self, srcCVariable, prefix, _, __, ___):
+        return ['printf("%%s%s %%d\\n", paramName, (int)%s);' % (prefix, srcCVariable)]
 
     def MapSequence(self, srcCVariable, prefix, node, leafTypeDict, names):
-        lines = []
-        lines.append("printf(\"{\");")
-        for idx, child in enumerate(node._members):
-            if idx > 0:
-                lines.append("printf(\", \");")
-            lines.append("printf(\"%s \");" % child[0])  # Sequences need the field name printed
+        lines = []  # type: List[str]
+        for child in node._members:
             lines.extend(
                 self.Map(
                     "%s.%s" % (srcCVariable, self.CleanName(child[0])),
@@ -115,7 +104,6 @@ class Printer(RecursiveMapper):
                     child[1],
                     leafTypeDict,
                     names))
-        lines.append("printf(\"}\");")
         return lines
 
     def MapSet(self, srcCVariable, prefix, node, leafTypeDict, names):
@@ -129,15 +117,13 @@ class Printer(RecursiveMapper):
             lines.append(
                 "%sif (%s.kind == %s) {" %
                 (self.maybeElse(childNo), srcCVariable, self.CleanName(child[2])))
-            lines.append("    printf(\"%s:\");" % child[0])  # Choices need the field name printed
-            lines.extend(
-                ['    ' + x
-                 for x in self.Map(
-                     "%s.u.%s" % (srcCVariable, self.CleanName(child[0])),
-                     prefix + "::" + self.CleanName(child[0]),
-                     child[1],
-                     leafTypeDict,
-                     names)])
+            lines.extend(['    ' + x
+                          for x in self.Map(
+                              "%s.u.%s" % (srcCVariable, self.CleanName(child[0])),
+                              prefix + "::" + self.CleanName(child[0]),
+                              child[1],
+                              leafTypeDict,
+                              names)])
             lines.append("}")
         return lines
 
@@ -146,21 +132,16 @@ class Printer(RecursiveMapper):
         lines.append("{")
         uniqueId = self.UniqueID()
         lines.append("    int i%s;" % uniqueId)
-        lines.append("    printf(\"{\");")
         limit = sourceSequenceLimit(node, srcCVariable)
         lines.append("    for(i%s=0; i%s<%s; i%s++) {" % (uniqueId, uniqueId, limit, uniqueId))
-        lines.append("        if (i%s) " % uniqueId)
-        lines.append("            printf(\",\");")
-        lines.extend(
-            ["        " + x
-             for x in self.Map(
-                 "%s.arr[i%s]" % (srcCVariable, uniqueId),
-                 prefix + "::Elem",
-                 node._containedType,
-                 leafTypeDict,
-                 names)])
+        lines.extend(["        " + x
+                      for x in self.Map(
+                          "%s.arr[i%s]" % (srcCVariable, uniqueId),
+                          prefix + "::Elem",
+                          node._containedType,
+                          leafTypeDict,
+                          names)])
         lines.append("    }")
-        lines.append("    printf(\"}\");")
         lines.append("}")
         return lines
 
@@ -169,9 +150,6 @@ class Printer(RecursiveMapper):
 
 
 def main():
-    sys.path.append(os.path.abspath(os.path.dirname(sys.argv[0])))
-    sys.path.append('commonPy')
-
     if sys.argv.count("-o") != 0:
         idx = sys.argv.index("-o")
         try:
@@ -217,16 +195,16 @@ def main():
     # If some AST nodes must be skipped (for any reason), go learn about them
     badTypes = cleanupNodes.DiscoverBadTypes()
 
-    C_HeaderFile = open(configMT.outputDir + os.sep + "PrintTypesAsASN1.h", "w")
-    C_HeaderFile.write('#ifndef __PRINTTYPESASASN1_H__\n')
-    C_HeaderFile.write('#define __PRINTTYPESASASN1_H__\n\n')
+    C_HeaderFile = open(configMT.outputDir + os.sep + "PrintTypes.h", "w")
+    C_HeaderFile.write('#ifndef __PRINTTYPES_H__\n')
+    C_HeaderFile.write('#define __PRINTTYPES_H__\n\n')
     C_HeaderFile.write('#ifdef __cplusplus\n')
     C_HeaderFile.write('extern "C" {\n')
     C_HeaderFile.write('#endif\n\n')
 
-    C_SourceFile = open(configMT.outputDir + os.sep + "PrintTypesAsASN1.c", "w")
+    C_SourceFile = open(configMT.outputDir + os.sep + "PrintTypes.c", "w")
     C_SourceFile.write('#include <stdio.h>\n\n')
-    C_SourceFile.write('#include "PrintTypesAsASN1.h"\n\n')
+    C_SourceFile.write('#include "PrintTypes.h"\n\n')
     C_SourceFile.write('#ifdef __linux__\n')
     C_SourceFile.write('#include <pthread.h>\n\n')
     C_SourceFile.write('static pthread_mutex_t g_printing_mutex = PTHREAD_MUTEX_INITIALIZER;\n\n')
@@ -256,15 +234,18 @@ def main():
             # First, make sure we know what leaf type this node is
             assert nodeTypename in leafTypeDict
 
-            C_HeaderFile.write('void PrintASN1%s(const char *paramName, const asn1Scc%s *pData);\n' % (cleanNodeTypename, cleanNodeTypename))
-            C_SourceFile.write('void PrintASN1%s(const char *paramName, const asn1Scc%s *pData)\n{\n' % (cleanNodeTypename, cleanNodeTypename))
+            C_HeaderFile.write('void Print%s(const char *paramName, const asn1Scc%s *pData);\n' % (cleanNodeTypename, cleanNodeTypename))
+            C_SourceFile.write('void Print%s(const char *paramName, const asn1Scc%s *pData)\n{\n' % (cleanNodeTypename, cleanNodeTypename))
             C_SourceFile.write('#ifdef __linux__\n')
             C_SourceFile.write('    pthread_mutex_lock(&g_printing_mutex);\n')
             C_SourceFile.write('#endif\n')
-            C_SourceFile.write('    //printf("%%s %s ::= ", paramName);\n' % nodeTypename)
-            C_SourceFile.write('    printf("%s ", paramName);\n')
-            # C_SourceFile.write('\n'.join(printer.Map('(*pData)', '', node, leafTypeDict, asnParser.g_names)))
-            lines = ["    " + x for x in printer.Map('(*pData)', '', node, leafTypeDict, asnParser.g_names)]
+            lines = ["    " + x
+                     for x in printer.Map(
+                         '(*pData)',
+                         '',
+                         node,
+                         leafTypeDict,
+                         asnParser.g_names)]
             C_SourceFile.write("\n".join(lines))
             C_SourceFile.write('\n#ifdef __linux__\n')
             C_SourceFile.write('    pthread_mutex_unlock(&g_printing_mutex);\n')
@@ -279,7 +260,7 @@ def main():
 if __name__ == "__main__":
     if "-pdb" in sys.argv:
         sys.argv.remove("-pdb")  # pragma: no cover
-        import pdb  # pragma: no cover pylint: disable=wrong-import-position,wrong-import-order
+        import pdb  # pragma: nocover  pylint: disable=wrong-import-position,wrong-import-order
         pdb.run('main()')  # pragma: no cover
     else:
         main()

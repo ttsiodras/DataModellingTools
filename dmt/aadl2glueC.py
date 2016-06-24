@@ -116,7 +116,7 @@ of each SUBPROGRAM param.'''
     f.close()
     os.unlink(astFile)
     parserUtility = os.path.join(os.path.abspath(os.path.dirname(__file__)), "parse_aadl.py")
-    cmd = parserUtility + " -o " + astFile + ' ' + ' '.join(sys.argv[1:])
+    cmd = "python2 " + parserUtility + " -o " + astFile + ' ' + ' '.join(sys.argv[1:])
     if os.system(cmd) != 0:
         if os.path.exists(astFile):
             os.unlink(astFile)
