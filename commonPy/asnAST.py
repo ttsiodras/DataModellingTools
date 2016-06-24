@@ -428,9 +428,9 @@ def CommonIdenticalCheck(me, other, mynames, othernames):
             node = cont
         return node
 
-    for listOfNodes, d in [(myMembers, mynames), (otherMembers, othernames)]:
+    for listOfNodes, dd in [(myMembers, mynames), (otherMembers, othernames)]:
         for i in range(len(listOfNodes)):  # pylint: disable=consider-using-enumerate
-            listOfNodes[i] = resolve(listOfNodes[i], d)
+            listOfNodes[i] = resolve(listOfNodes[i], dd)
     return all(x.IdenticalPerSMP2(y, mynames, othernames) for x, y in zip(myMembers, otherMembers))
 
 

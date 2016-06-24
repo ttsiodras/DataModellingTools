@@ -28,20 +28,18 @@ from commonPy.asnAST import (
 )
 
 
+# noinspection PyMethodMayBeStatic
 class RecursiveMapper:
 
-    # noinspection PyMethodMayBeStatic
     def maybeElse(self, childNo: int) -> str:  # pylint: disable=no-self-use
         if childNo == 1:
             return ""
         else:
             return "else "
 
-    # noinspection PyMethodMayBeStatic
     def CleanName(self, fieldName: str) -> str:  # pylint: disable=no-self-use
         return re.sub(r'[^a-zA-Z0-9_]', '_', fieldName)
 
-    # noinspection PyMethodMayBeStatic
     def Version(self):  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a RecursiveMapper...")
 

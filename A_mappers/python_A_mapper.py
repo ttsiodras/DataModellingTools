@@ -178,8 +178,8 @@ clean:
     g_outputGetSetH.write('\n/* Helper functions for NATIVE encodings */\n\n')
     g_outputGetSetC.write('\n/* Helper functions for NATIVE encodings */\n\n')
 
-    def WorkOnType(nodeTypename: str):
-        typ = CleanNameAsPythonWants(nodeTypename)
+    def WorkOnType(nodeTypeName: str):
+        typ = CleanNameAsPythonWants(nodeTypeName)
         g_outputGetSetH.write('void SetDataFor_%s(void *dest, void *src);\n' % typ)
         g_outputGetSetH.write("byte* MovePtrBySizeOf_%s(byte *pData);\n" % typ)
         g_outputGetSetH.write("byte* CreateInstanceOf_%s(void);\n" % typ)
