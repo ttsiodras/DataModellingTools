@@ -20,7 +20,7 @@ ___dmt_B_mappers_%.py,cover:	../dmt/B_mappers/%.py mini_cv.aadl DataView.aadl Da
 	$(MAKE) -f Makefile.M2C clean
 	mkdir -p output
 	rm -rf output/*
-	# coverage run -a ../aadl2glueC.py -o output -verbose mini_cv_vhdl.aadl DataViewVHDL.aadl >/dev/null
+	# PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.aadl2glueC -o output -verbose mini_cv_vhdl.aadl DataViewVHDL.aadl >/dev/null
 	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.aadl2glueC -o output -verbose mini_cv.aadl DataView.aadl >/dev/null
 	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.aadl2glueC -o output -verbose -useOSS mini_cv.aadl DataView.aadl >/dev/null
 	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage annotate -d . ../dmt/aadl2glueC.py ../dmt/B_mappers/*.py ../dmt/commonPy/*.py

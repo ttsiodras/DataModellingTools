@@ -41,12 +41,12 @@ import re
 import os
 import math
 
-from commonPy.utility import panic, panicWithCallStack
-from commonPy.asnAST import AsnBasicNode, AsnSequence, AsnSet, AsnChoice, AsnSequenceOf, AsnSetOf, AsnEnumerated, AsnMetaMember, isSequenceVariable, sourceSequenceLimit
-from commonPy.aadlAST import InParam, OutParam, InOutParam, AadlPort, AadlParameter
-import commonPy.asnParser
+from ..commonPy.utility import panic, panicWithCallStack
+from ..commonPy.asnAST import AsnBasicNode, AsnSequence, AsnSet, AsnChoice, AsnSequenceOf, AsnSetOf, AsnEnumerated, AsnMetaMember, isSequenceVariable, sourceSequenceLimit
+from ..commonPy.aadlAST import InParam, OutParam, InOutParam, AadlPort, AadlParameter
+from ..commonPy import asnParser
 
-from .recursiveMapper import RecursiveMapper
+from ..commonPy.recursiveMapper import RecursiveMapper
 from .synchronousTool import SynchronousToolGlueGenerator
 
 isAsynchronous = False
@@ -66,13 +66,13 @@ def CleanName(name):
 
 def RegistersAllocated(node):
     # The ESA FPGA needs alignment to 4 byte offsets
-    names = commonPy.asnParser.g_names
+    names = asnParser.g_names
     while isinstance(node, str):
         node = names[node]
     retValue = None
     if isinstance(node, AsnBasicNode):
         retValue = 0
-        realLeafType = commonPy.asnParser.g_leafTypeDict[node._leafType]
+        realLeafType = asnParser.g_leafTypeDict[node._leafType]
         if realLeafType == "INTEGER":
             retValue = 8
         elif realLeafType == "REAL":

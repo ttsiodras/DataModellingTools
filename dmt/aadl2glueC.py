@@ -86,15 +86,15 @@ from importlib import import_module
 
 from . import commonPy
 
-# To unpickle the Py2/ANTLR2-generated pickle file...
-#    http://stackoverflow.com/questions/2121874/python-pickling-after-changing-a-modules-directory
-from . import commonPy2
-sys.modules['commonPy2'] = commonPy2
-
 from .commonPy.utility import panic, inform
 from .commonPy import verify
 
 from . import B_mappers  # NOQA pylint: disable=unused-import
+
+# To unpickle the Py2/ANTLR2-generated pickle file...
+#    http://stackoverflow.com/questions/2121874/python-pickling-after-changing-a-modules-directory
+from . import commonPy2
+sys.modules['commonPy2'] = commonPy2
 
 g_mappedName = {
     'SEQUENCE': 'OnSequence',

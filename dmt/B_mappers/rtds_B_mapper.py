@@ -28,10 +28,10 @@ It is used to model asynchronous processes (SDL)...
 
 '''
 
-from commonPy.utility import panic
-from commonPy.asnAST import isSequenceVariable, sourceSequenceLimit, AsnBasicNode, AsnEnumerated
+from ..commonPy.utility import panic
+from ..commonPy.asnAST import isSequenceVariable, sourceSequenceLimit, AsnBasicNode, AsnEnumerated
 
-from .recursiveMapper import RecursiveMapper
+from ..commonPy.recursiveMapper import RecursiveMapper
 from .asynchronousTool import ASynchronousToolGlueGenerator
 
 from . import c_B_mapper

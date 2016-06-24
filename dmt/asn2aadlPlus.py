@@ -17,16 +17,16 @@ import platform
 from subprocess import Popen, PIPE
 import distutils.spawn as spawn
 
-import commonPy.configMT
-import commonPy.asnParser
+from .commonPy import configMT
+from .commonPy import asnParser
 
-from commonPy.asnAST import (
+from .commonPy.asnAST import (
     AsnBasicNode, AsnBool, AsnReal, AsnInt,
     AsnEnumerated, AsnString, AsnChoice, AsnSequence,
     AsnSequenceOf, AsnSet, AsnSetOf)
 
 
-from commonPy.utility import inform, panic, mysystem
+from .commonPy.utility import inform, panic, mysystem
 
 g_keepFiles = False
 g_privateHeapSize = -1
@@ -105,15 +105,15 @@ def calculateForNativeAndASN1SCC(absASN1SCCpath, autosrc, names, inputFiles):
     uniqueASNfiles = {}
     for asnFile in inputASN1files:
         tmpNames = {}
-        for name in commonPy.asnParser.g_typesOfFile[asnFile]:
-            tmpNames[name] = commonPy.asnParser.g_names[name]
+        for name in asnParser.g_typesOfFile[asnFile]:
+            tmpNames[name] = asnParser.g_names[name]
 
         uniqueASNfiles[asnFile] = [
             copy.copy(tmpNames),                            # map Typename to type definition class from asnAST
-            copy.copy(commonPy.asnParser.g_astOfFile[asnFile]),    # list of nameless type definitions
-            copy.copy(commonPy.asnParser.g_leafTypeDict)]   # map from Typename to leafType
+            copy.copy(asnParser.g_astOfFile[asnFile]),    # list of nameless type definitions
+            copy.copy(asnParser.g_leafTypeDict)]   # map from Typename to leafType
 
-    commonPy.configMT.outputDir = autosrc + os.sep
+    configMT.outputDir = autosrc + os.sep
     # dumpable.CreateDumpableCtypes(uniqueASNfiles)
 
     for asnTypename in list(names.keys()):
@@ -245,7 +245,7 @@ def main():
             print("ASN2AADL v%s" % versionNumber)
             sys.exit(0)
         elif opt in ("-d", "--debug"):
-            commonPy.configMT.debugParser = True
+            configMT.debugParser = True
         elif opt in ("-a", "--aadlv2"):
             # Updated, June 2011: AADLv1 no longer supported.
             bAADLv2 = True
@@ -278,7 +278,7 @@ def main():
     inputFiles = args[:-1]
 
     # Parse the ASN.1 files (skip the ACN ones)
-    commonPy.asnParser.ParseAsnFileList([x for x in inputFiles if not x.lower().endswith('.acn')])
+    asnParser.ParseAsnFileList([x for x in inputFiles if not x.lower().endswith('.acn')])
     autosrc = tempfile.mkdtemp(".asn1c")
     inform("Created temporary directory (%s) for auto-generated files...", autosrc)
     absPathOfAADLfile = os.path.abspath(aadlFile)
@@ -292,7 +292,7 @@ def main():
     # CHOICEs, however, changed the picture...  what to put in?
     # Time to use the maximum of Native (SIZ2) and UPER (SIZE) and ACN (SIZ3)...
 
-    messageSizes = calculateForNativeAndASN1SCC(absASN1SCCpath, autosrc, commonPy.asnParser.g_names, inputFiles)
+    messageSizes = calculateForNativeAndASN1SCC(absASN1SCCpath, autosrc, asnParser.g_names, inputFiles)
     for nodeTypename in list(messageSizes.keys()):
         messageSizes[nodeTypename] = [messageSizes[nodeTypename], (8 * (int((messageSizes[nodeTypename] - 1) / 8)) + 8)]
 
@@ -343,18 +343,18 @@ properties
     Data_Model::Data_Representation => Character;
 end Stream_Element_Buffer;
 ''')
-    for asnTypename in list(commonPy.asnParser.g_names.keys()):
-        node = commonPy.asnParser.g_names[asnTypename]
+    for asnTypename in list(asnParser.g_names.keys()):
+        node = asnParser.g_names[asnTypename]
         if node._isArtificial:
             continue
         cleanName = cleanNameAsAADLWants(asnTypename)
         o.write('DATA ' + cleanName + '\n')
         o.write('PROPERTIES\n')
         o.write('    -- name of the ASN.1 source file:\n')
-        # o.write('    Source_Text => ("%s");\n' % os.path.basename(commonPy.asnParser.g_names[asnTypename]._asnFilename))
-        o.write('    Source_Text => ("%s");\n' % commonPy.asnParser.g_names[asnTypename]._asnFilename)
+        # o.write('    Source_Text => ("%s");\n' % os.path.basename(asnParser.g_names[asnTypename]._asnFilename))
+        o.write('    Source_Text => ("%s");\n' % asnParser.g_names[asnTypename]._asnFilename)
         prefix = bAADLv2 and "TASTE::" or ""
-        possibleACN = ASNtoACN(commonPy.asnParser.g_names[asnTypename]._asnFilename)
+        possibleACN = ASNtoACN(asnParser.g_names[asnTypename]._asnFilename)
         if bAADLv2 and os.path.exists(possibleACN):
             prefix2 = bAADLv2 and "TASTE::" or "assert_properties::"
             base = os.path.splitext(os.path.basename(possibleACN))[0]
@@ -426,8 +426,8 @@ end Stream_Element_Buffer;
             o.write('END ' + cleanName + '_Buffer.impl;\n\n')
 
     listOfAsn1Files = {}
-    for asnTypename in list(commonPy.asnParser.g_names.keys()):
-        listOfAsn1Files[commonPy.asnParser.g_names[asnTypename]._asnFilename] = 1
+    for asnTypename in list(asnParser.g_names.keys()):
+        listOfAsn1Files[asnParser.g_names[asnTypename]._asnFilename] = 1
 
     if bAADLv2:
         for asnFilename in list(listOfAsn1Files.keys()):
