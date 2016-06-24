@@ -39,7 +39,7 @@ import sys
 import copy
 from importlib import import_module
 
-from .commonPy import configMT, asnParser, aadlAST, cleanupNodes, verify
+from .commonPy import configMT, asnParser, cleanupNodes, verify
 from .commonPy.utility import inform, panic
 
 from . import A_mappers  # NOQA pylint:disable=unused-import

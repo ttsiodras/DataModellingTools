@@ -1,5 +1,5 @@
-PY_SRC:=$(wildcard asn2dataModel.py aadl2glueC.py smp2asn.py *mappers/[a-zA-Z]*py commonPy/[a-zA-Z]*py)
-PY_SRC:=$(filter-out B_mappers/antlr.main.py A_mappers/Stubs.py, ${PY_SRC})
+PY_SRC:=$(wildcard dmt/asn2dataModel.py dmt/aadl2glueC.py dmt/smp2asn.py dmt/*mappers/[a-zA-Z]*py dmt/commonPy/[a-zA-Z]*py)
+PY_SRC:=$(filter-out dmt/B_mappers/antlr.main.py dmt/A_mappers/Stubs.py, ${PY_SRC})
 
 all:	flake8 pylint mypy
 

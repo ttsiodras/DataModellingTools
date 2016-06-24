@@ -27,7 +27,7 @@ from typing import Dict, Union  # NOQA
 
 from .utility import panic
 
-from . import asnAST, configMT
+from . import asnAST
 from .asnAST import AsnNode
 
 
