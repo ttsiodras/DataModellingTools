@@ -61,16 +61,24 @@ def OnStartup(modelingLanguage, asnFile, subProgram, unused_subProgramImplementa
     global g_PythonFile
     if g_PythonFile is None:
         g_PythonFile = open(outputDir + "python/PythonController.py", "w")
-        g_headerPython.append("import threading, time, sys, os\n")
-        g_headerPython.append("from PythonAccess import *")
+        g_headerPython.append("import threading, time, sys, os, ctypes\n")
+        # g_headerPython.append("from PythonAccess import *")
         g_headerPython.append("import DV")
+        g_headerPython.append('PythonAccess = ctypes.cdll.LoadLibrary("./PythonAccess.so")')
+        g_headerPython.append('OpenMsgQueueForReading = PythonAccess.OpenMsgQueueForReading')
+        g_headerPython.append('OpenMsgQueueForReading.restype = ctypes.c_int')
+        g_headerPython.append('CloseMsgQueue =  PythonAccess.CloseMsgQueue')
+        g_headerPython.append('GetMsgQueueBufferSize = PythonAccess.GetMsgQueueBufferSize')
+        g_headerPython.append('GetMsgQueueBufferSize.restype = ctypes.c_int')
+        g_headerPython.append('RetrieveMessageFromQueue = PythonAccess.RetrieveMessageFromQueue')
+        g_headerPython.append('RetrieveMessageFromQueue.restype = ctypes.c_int')
 
     # By offering OpenMsgQueueForReading, CloseMsgQueue, GetMsgQueueBufferSize and RetrieveMessageFromQueue,
     # the python scripts can receive TMs on their own (used in the msc2py code).
     # For TCs, that is not necessary, since SendTC... functions have already been generated (see below)
     global g_HeaderFile
     if g_HeaderFile is None:
-        g_HeaderFile = open(outputDir + "python/gui_swig.h", "w")
+        g_HeaderFile = open(outputDir + "python/gui_api.h", "w")
         g_HeaderFile.write('#ifndef __HEADER_' + cleanFVname + "_H__\n")
         g_HeaderFile.write('#define __HEADER_' + cleanFVname + "_H__\n\n")
         g_HeaderFile.write('typedef unsigned char byte;\n\n')
@@ -81,7 +89,7 @@ def OnStartup(modelingLanguage, asnFile, subProgram, unused_subProgramImplementa
 
     global g_SourceFile
     if g_SourceFile is None:
-        g_SourceFile = open(outputDir + "python/gui_swig.c", "w")
+        g_SourceFile = open(outputDir + "python/gui_api.c", "w")
         g_SourceFile.write('#include <string.h>\n')
         g_SourceFile.write('#include <mqueue.h>\n\n')
         g_SourceFile.write('#include "%s.h"\n' % os.path.basename(os.path.splitext(asnFile)[0]))
@@ -108,7 +116,7 @@ def OnStartup(modelingLanguage, asnFile, subProgram, unused_subProgramImplementa
         g_SourceFile.write("    return(message_received_type);\n")
         g_SourceFile.write("}\n\n")
 
-    global g_SWIGFile
+    global g_SWIGFile   # WE CAN REMOVE EVERYTHING RELATED TO g_SWIGFile
     if g_SWIGFile is None:
         g_SWIGFile = open(outputDir + "python/PythonAccess.i", "w")
         g_SWIGFile.write('''%%module PythonAccess
@@ -118,6 +126,8 @@ def OnStartup(modelingLanguage, asnFile, subProgram, unused_subProgramImplementa
 #include "%(FVname)s_enums_def.h"
 %%}
 
+%%include "carrays.i"
+%%array_functions(byte,byte_SWIG_PTR)
 #include "gui_swig.h"
 #include "%(FVname)s_enums_def.h"
 
@@ -143,7 +153,7 @@ def OnStartup(modelingLanguage, asnFile, subProgram, unused_subProgramImplementa
             g_bodyPython.append('            print "Communication channel over %%d_%s_PI_Python_queue not established yet...\\n" %% os.geteuid()' % maybeFVname)
             g_bodyPython.append('            time.sleep(1)')
             g_bodyPython.append('        bufferSize = GetMsgQueueBufferSize(self._msgQueue)')
-            g_bodyPython.append('        self._pMem = DV.new_byte_SWIG_PTR(bufferSize)')
+            g_bodyPython.append('        self._pMem = ctypes.create_string_buffer(bufferSize).raw')
             g_bodyPython.append('        while not self._bDie:')
             g_bodyPython.append('            self.messageReceivedType = RetrieveMessageFromQueue(self._msgQueue, bufferSize, self._pMem)')
             g_bodyPython.append('            if self.messageReceivedType == -1:')
@@ -159,6 +169,7 @@ def OnStartup(modelingLanguage, asnFile, subProgram, unused_subProgramImplementa
             g_footerPython.append('        poll_' + cleanFVname + '._bDie = True')
             g_footerPython.append('        poll_' + cleanFVname + '.join()')
     if modelingLanguage.lower() == "gui_pi":
+        g_SourceFile.write('T_' + cleanFVname + '_PI_list ii_' + CleanSP + ' = i_' + CleanSP + ';\n')
         g_TMprocessors.append('    if self.messageReceivedType == i_' + CleanSP + ':')
         g_TMprocessors.append('        print "\\n"+chr(27)+"[32m" + "Received Telemetry: ' + CleanSP + '" + chr(27) + "[0m\\n"')
         g_TMprocessors.append('        backup = self._pMem')
@@ -170,11 +181,14 @@ def OnStartup(modelingLanguage, asnFile, subProgram, unused_subProgramImplementa
             g_TMprocessors.append('        print "Parameter %s:"' % CleanParam)
             g_TMprocessors.append('        var_%s.PrintAll()' % CleanParam)
             g_TMprocessors.append('        print')
-            g_TMprocessors.append("        self._pMem = DV.MovePtrBySizeOf_%s(self._pMem)" % CleanName(param._signal._asnNodename))
+            g_TMprocessors.append("        # self._pMem = DV.MovePtrBySizeOf_%s(self._pMem)" % CleanName(param._signal._asnNodename))
         g_TMprocessors.append("        # Revert the pointer to start of the data")
         g_TMprocessors.append('        self._pMem = backup')
 
+    g_headerPython.append('i_' + CleanSP + ' = ctypes.c_int.in_dll(PythonAccess, "ii_' + CleanSP + '").value')
     if modelingLanguage.lower() == "gui_ri":
+        g_SourceFile.write('T_' + cleanFVname + '_RI_list ii_' + CleanSP + ' = i_' + CleanSP + ';\n')
+        g_headerPython.append('SendTC_' + CleanSP + ' = PythonAccess.SendTC_' + CleanSP)
         decl = '\ndef Invoke_%s(' % CleanSP
         parms = []
         for param in subProgram._params:
