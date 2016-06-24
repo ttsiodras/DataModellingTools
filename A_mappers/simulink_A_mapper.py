@@ -127,7 +127,7 @@ def DeclareCollection(node, name, internal):
         g_outputFile.write("%s_member_%02d.DataType='%s';\n" % (name, i, internal))
         g_outputFile.write("%s_member_%02d.dimensions=1;\n\n" % (name, i))
     g_outputFile.write('%s_member_length=Simulink.BusElement;\n' % name)
-    g_outputFile.write("%s_member_length.name='length';\n" % (name))
+    g_outputFile.write("%s_member_length.name='length';\n" % name)
     g_outputFile.write("%s_member_length.DataType='int32';\n" % name)
     g_outputFile.write("%s_member_length.dimensions=1;\n\n" % name)
     g_outputFile.write('%s=Simulink.Bus;\n' % name)

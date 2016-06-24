@@ -391,7 +391,7 @@ Members:
                 utility.panic(
                     "member '%s' appears more than once in ENUMERATED %s" % (  # pragma: no cover
                         elem[0],
-                        ((self._lineno is not None) and ("defined in line %s" % self._lineno) or (""))))  # pragma: no cover
+                        ("defined in line %s" % self._lineno) if self._lineno is not None else ""))  # pragma: no cover
             else:
                 existing[elem[0]] = 1
 
@@ -473,7 +473,7 @@ Members:
                 utility.panic(
                     "member '%s' appears more than once in %s" % (  # pragma: no cover
                         elem[0],
-                        ((self._lineno is not None) and ("defined in line %s" % self._lineno) or (""))))  # pragma: no cover
+                        ("defined in line %s" % self._lineno) if self._lineno is not None else ""))  # pragma: no cover
             else:
                 existing[elem[0]] = 1
 
@@ -514,7 +514,7 @@ class AsnSet(AsnComplexNode):
                 utility.panic(
                     "member '%s' appears more than once in %s" % (  # pragma: no cover
                         elem[0],
-                        ((self._lineno is not None) and ("defined in line %s" % self._lineno) or (""))))  # pragma: no cover
+                        ("defined in line %s" % self._lineno) if self._lineno is not None else ""))  # pragma: no cover
             else:
                 existing[elem[0]] = 1
 
@@ -564,7 +564,7 @@ Members:
                 utility.panic(
                     "member '%s' appears more than once in CHOICE %s" % (  # pragma: no cover
                         elem[0],
-                        ((self._lineno is not None) and ("defined in line %s" % self._lineno) or (""))))  # pragma: no cover
+                        ("defined in line %s" % self._lineno) if self._lineno is not None else ""))  # pragma: no cover
             else:
                 existing[elem[0]] = 1
 

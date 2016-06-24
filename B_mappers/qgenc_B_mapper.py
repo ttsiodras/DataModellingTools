@@ -414,18 +414,18 @@ class QGenCGlueGenerator(SynchronousToolGlueGenerator):
 
     def SourceVar(self, unused_nodeTypename, unused_encoding, unused_node, unused_subProgram, unused_subProgramImplementation, param, unused_leafTypeDict, unused_names):
         if isinstance(param._sourceElement, AadlPort):
-            srcQGenC = "cOutput.%s" % (param._id)  # pragma: no cover
+            srcQGenC = "cOutput.%s" % param._id  # pragma: no cover
         elif isinstance(param._sourceElement, AadlParameter):
-            srcQGenC = "cOutput.%s" % (param._id)
+            srcQGenC = "cOutput.%s" % param._id
         else:  # pragma: no cover
             panicWithCallStack("%s not supported (yet?)\n" % str(param._sourceElement))  # pragma: no cover
         return srcQGenC
 
     def TargetVar(self, unused_nodeTypename, unused_encoding, unused_node, unused_subProgram, unused_subProgramImplementation, param, unused_leafTypeDict, unused_names):
         if isinstance(param._sourceElement, AadlPort):
-            dstQGenC = "cInput.%s" % (param._id)  # pragma: no cover
+            dstQGenC = "cInput.%s" % param._id  # pragma: no cover
         elif isinstance(param._sourceElement, AadlParameter):
-            dstQGenC = "cInput.%s" % (param._id)
+            dstQGenC = "cInput.%s" % param._id
         else:  # pragma: no cover
             panicWithCallStack("%s not supported (yet?)\n" % str(param._sourceElement))  # pragma: no cover
         return dstQGenC

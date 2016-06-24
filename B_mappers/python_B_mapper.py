@@ -194,14 +194,14 @@ def OnStartup(modelingLanguage, asnFile, subProgram, unused_subProgramImplementa
             nodeTypename = param._signal._asnNodename
             CleanParam = CleanName(param._id)
             g_SourceFile.write('    %s %s;\n' % (CleanName(nodeTypename), CleanParam))
-        g_SourceFile.write('} %s_TCDATA;\n\n' % (CleanSP))
+        g_SourceFile.write('} %s_TCDATA;\n\n' % CleanSP)
 
         parms = []
         for param in subProgram._params:
             nodeTypename = param._signal._asnNodename
             CleanParam = CleanName(param._id)
             # parms.append("%s *p_%s" % (CleanName(nodeTypename), CleanParam))
-            parms.append("void *p_%s" % (CleanParam))
+            parms.append("void *p_%s" % CleanParam)
         g_HeaderFile.write('int SendTC_%s(%s);\n' % (CleanSP, ",".join(parms)))
         g_SourceFile.write('int SendTC_%s(%s)\n' % (CleanSP, ",".join(parms)))
         g_SourceFile.write('{\n')

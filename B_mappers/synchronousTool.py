@@ -271,7 +271,7 @@ class SynchronousToolGlueGenerator:
                     "    if (ossEncode(g_world, OSS_%s_PDU, &var_%s, &strm) != 0) {\n" %
                     (self.CleanNameAsToolWants(nodeTypename), self.CleanNameAsToolWants(nodeTypename)))
                 self.C_SourceFile.write(
-                    '        fprintf(stderr, "Could not encode %s (at %%s, %%d), errorMessage was %%s\\n", __FILE__, __LINE__, ossGetErrMsg(g_world));\n' % (nodeTypename))
+                    '        fprintf(stderr, "Could not encode %s (at %%s, %%d), errorMessage was %%s\\n", __FILE__, __LINE__, ossGetErrMsg(g_world));\n' % nodeTypename)
                 self.C_SourceFile.write("        return -1;\n")
                 self.C_SourceFile.write("    } else {\n")
                 self.C_SourceFile.write("        assert(strm.length <= iMaxBufferSize);\n")
@@ -287,7 +287,7 @@ class SynchronousToolGlueGenerator:
                      "ACN_" if encoding.lower() == "acn" else "",
                      self.CleanNameAsToolWants(nodeTypename)))
                 self.C_SourceFile.write(
-                    '        fprintf(stderr, "Could not encode %s (at %%s, %%d), errorCode was %%d\\n", __FILE__, __LINE__, errorCode);\n' % (nodeTypename))
+                    '        fprintf(stderr, "Could not encode %s (at %%s, %%d), errorCode was %%d\\n", __FILE__, __LINE__, errorCode);\n' % nodeTypename)
                 self.C_SourceFile.write("        return -1;\n")
                 self.C_SourceFile.write("    } else {\n")
                 self.C_SourceFile.write("        return BitStream_GetLength(&strm);\n")
@@ -407,7 +407,7 @@ class SynchronousToolGlueGenerator:
                 self.C_SourceFile.write("        return 0;\n")
                 self.C_SourceFile.write("    } else {\n")
                 self.C_SourceFile.write(
-                    '        fprintf(stderr, "Could not decode %s (at %%s, %%d), error message was %%s\\n", __FILE__, __LINE__, ossGetErrMsg(g_world));\n' % (nodeTypename))
+                    '        fprintf(stderr, "Could not decode %s (at %%s, %%d), error message was %%s\\n", __FILE__, __LINE__, ossGetErrMsg(g_world));\n' % nodeTypename)
                 self.C_SourceFile.write("        return -1;\n")
                 self.C_SourceFile.write("    }\n")
                 self.C_SourceFile.write("}\n\n")
@@ -415,7 +415,7 @@ class SynchronousToolGlueGenerator:
                 self.C_SourceFile.write("        return 0;\n")
                 self.C_SourceFile.write("    } else {\n")
                 self.C_SourceFile.write(
-                    '        fprintf(stderr, "Could not decode %s (at %%s, %%d), error code was %%d\\n", __FILE__, __LINE__, errorCode);\n' % (nodeTypename))
+                    '        fprintf(stderr, "Could not decode %s (at %%s, %%d), error code was %%d\\n", __FILE__, __LINE__, errorCode);\n' % nodeTypename)
                 self.C_SourceFile.write("        return -1;\n")
                 self.C_SourceFile.write("    }\n")
                 self.C_SourceFile.write("}\n\n")

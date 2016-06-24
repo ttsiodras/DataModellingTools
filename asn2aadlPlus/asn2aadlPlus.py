@@ -376,7 +376,7 @@ end Stream_Element_Buffer;
         o.write('    Type_Source_Name => "%s";\n' % asnTypename)
         o.write('    -- what kind of type is this?\n')
         prefix = bAADLv2 and "TASTE" or "assert_properties"
-        o.write('    %s::ASN1_Basic_Type =>' % (prefix))
+        o.write('    %s::ASN1_Basic_Type =>' % prefix)
         if isinstance(node, AsnBool):
             o.write('aBOOLEAN;\n')
         elif isinstance(node, AsnInt):

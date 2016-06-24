@@ -355,7 +355,7 @@ def OnStartup(modelingLanguage, asnFile, subProgram, subProgramImplementation, o
     g_MyEvents.write("    EVT_MENU( ID_MENU_QUIT, TeleCmds::OnMenu_Quit )\n")
 
     # Instructions to create the dialog
-    g_MyControls.write("wxScrolledWindow* _itemScrolledWindow_%s;\n" % (CleanSP))
+    g_MyControls.write("wxScrolledWindow* _itemScrolledWindow_%s;\n" % CleanSP)
     g_MyCreation.write("_itemScrolledWindow_%s = new wxScrolledWindow( _itemNotebook3, ID_SCROLWND_%s, wxDefaultPosition, wxSize(100, 100), wxSUNKEN_BORDER|wxHSCROLL|wxVSCROLL|wxALWAYS_SHOW_SB );\n" % (CleanSP, CleanSP))
     g_MyCreation.write("_itemScrolledWindow_%s->SetScrollbars(1, 1, 0, 0);\n" % CleanSP)
     g_MyCreation.write("wxBoxSizer* itemBoxSizer_%s = new wxBoxSizer(wxVERTICAL);\n" % CleanSP)
@@ -793,7 +793,7 @@ def WriteCodeForSave(nodeTypename, node, subProgram, unused_subProgramImplementa
                    CleanName(nodeTypename))
     g_MySave.write("            if (asn1Scc%s_Encode(&var_%s, &strm, &errorCode, TRUE) == FALSE) {\n" %
                    (CleanName(nodeTypename), CleanParam))
-    g_MySave.write('                wxMessageBox(_T("Encoding of %s failed"), _T("Error encoding"), wxICON_ERROR);\n' % (nodeTypename))
+    g_MySave.write('                wxMessageBox(_T("Encoding of %s failed"), _T("Error encoding"), wxICON_ERROR);\n' % nodeTypename)
     g_MySave.write("\t\treturn;\n")
     g_MySave.write("            } else {\n")
     g_MySave.write("                FILE *fp = fopen(flSave.GetPath().ToAscii().release(), \"wb\");\n")
@@ -890,7 +890,7 @@ def WriteCodeForAction(nodeTypename, node, subProgram, unused_subProgramImplemen
                      CleanName(nodeTypename))
     g_MyAction.write("        if (asn1Scc%s_Encode(&var_%s, &strm, &errorCode, TRUE) == FALSE) {\n" %
                      (CleanName(nodeTypename), CleanParam))
-    g_MyAction.write('            wxMessageBox(_T("Encoding of %s failed... Contact Semantix"), _T("Error encoding"), wxICON_ERROR);\n' % (nodeTypename))
+    g_MyAction.write('            wxMessageBox(_T("Encoding of %s failed... Contact Semantix"), _T("Error encoding"), wxICON_ERROR);\n' % nodeTypename)
     g_MyAction.write("\t\treturn;\n")
     g_MyAction.write("        } else {\n")
     WriteCodeForGnuPlot("TCDATA: ", node, subProgram, param, names)
