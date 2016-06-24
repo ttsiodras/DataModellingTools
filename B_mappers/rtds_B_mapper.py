@@ -45,6 +45,7 @@ def Version():
     print("Code generator: " + "$Id: rtds_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")
 
 
+# noinspection PyListCreation
 class FromRTDSToASN1SCC(RecursiveMapper):
     def __init__(self):
         self.uniqueID = 0
@@ -140,6 +141,7 @@ class FromRTDSToASN1SCC(RecursiveMapper):
         panic("The PragmaDev mapper does not support SETOF. Please use SEQUENCEOF instead (%s)" % node.Location())  # pragma: nocover
 
 
+# noinspection PyListCreation
 class FromRTDSToOSS(RecursiveMapper):
     def __init__(self):
         self.uniqueID = 0
@@ -242,6 +244,7 @@ class FromRTDSToOSS(RecursiveMapper):
         panic("The PragmaDev mapper does not support SETOF. Please use SEQUENCEOF instead (%s)" % node.Location())  # pragma: nocover
 
 
+# noinspection PyListCreation
 class FromASN1SCCtoRTDS(RecursiveMapper):
     def __init__(self):
         self.uniqueID = 0
@@ -342,6 +345,7 @@ class FromASN1SCCtoRTDS(RecursiveMapper):
         panic("The PragmaDev mapper does not support SETOF. Please use SEQUENCEOF instead (%s)" % node.Location())  # pragma: nocover
 
 
+# noinspection PyListCreation
 class FromOSStoRTDS(RecursiveMapper):
     def __init__(self):
         self.uniqueID = 0

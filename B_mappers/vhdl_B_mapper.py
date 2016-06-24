@@ -154,6 +154,7 @@ class VHDL_Circuit:
 #     return isinstance(contained, AsnInt) or isinstance(contained, AsnReal) or isinstance(contained, AsnBool) or isinstance(contained, AsnEnumerated)
 
 
+# noinspection PyListCreation
 class FromVHDLToASN1SCC(RecursiveMapper):
     def MapInteger(self, srcVHDL, destVar, _, __, ___):
         register = srcVHDL[0] + srcVHDL[1]
@@ -286,6 +287,7 @@ class FromVHDLToASN1SCC(RecursiveMapper):
         return self.MapSequenceOf(srcVHDL, destVar, node, leafTypeDict, names)  # pragma: nocover
 
 
+# noinspection PyListCreation
 class FromASN1SCCtoVHDL(RecursiveMapper):
     def MapInteger(self, srcVar, dstVHDL, _, __, ___):
         register = dstVHDL[0] + dstVHDL[1]
@@ -490,6 +492,7 @@ static int g_bInitialized = 0;
                                 hex(int(VHDL_Circuit.lookupSP[sp._id]._offset)))
 
 
+# noinspection PyListCreation
 class MapASN1ToVHDLCircuit(RecursiveMapper):
     def MapInteger(self, direction, dstVHDL, node, _, __):
         if not node._range:
@@ -548,6 +551,7 @@ class MapASN1ToVHDLCircuit(RecursiveMapper):
         return self.MapSequenceOf(direction, dstVHDL, node, leafTypeDict, names)  # pragma: nocover
 
 
+# noinspection PyListCreation
 class MapASN1ToVHDLregisters(RecursiveMapper):
     def MapInteger(self, _, dstVHDL, node, __, ___):
         if not node._range:
@@ -606,6 +610,7 @@ class MapASN1ToVHDLregisters(RecursiveMapper):
         return self.MapSequenceOf(_, dstVHDL, node, leafTypeDict, names)  # pragma: nocover
 
 
+# noinspection PyListCreation
 class MapASN1ToVHDLreadinputdata(RecursiveMapper):
     def MapInteger(self, reginfo, dstVHDL, node, _, __):
         if not node._range:
@@ -676,6 +681,7 @@ class MapASN1ToVHDLreadinputdata(RecursiveMapper):
         return self.MapSequenceOf(reginfo, dstVHDL, node, leafTypeDict, names)  # pragma: nocover
 
 
+# noinspection PyListCreation
 class MapASN1ToVHDLwriteoutputdata(RecursiveMapper):
     def MapInteger(self, reginfo, dstVHDL, node, _, __):
         if not node._range:
@@ -746,6 +752,7 @@ class MapASN1ToVHDLwriteoutputdata(RecursiveMapper):
         return self.MapSequenceOf(reginfo, dstVHDL, node, leafTypeDict, names)  # pragma: nocover
 
 
+# noinspection PyListCreation
 class MapASN1ToSystemCconnections(RecursiveMapper):
     def MapInteger(self, srcRegister, dstCircuitPort, _, __, ___):
         return [dstCircuitPort + ' => ' + srcRegister]

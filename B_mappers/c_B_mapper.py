@@ -50,6 +50,7 @@ def Version():
     print("Code generator: " + "$Id: c_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")
 
 
+# noinspection PyListCreation
 class FromCtoOSS(RecursiveMapper):
     def __init__(self):
         self.uniqueID = 0
@@ -139,6 +140,7 @@ class FromCtoOSS(RecursiveMapper):
         return self.MapSequenceOf(srcCVariable, destVar, node, leafTypeDict, names)  # pragma: nocover
 
 
+# noinspection PyListCreation
 class FromOSStoC(RecursiveMapper):
     def __init__(self):
         self.uniqueID = 0

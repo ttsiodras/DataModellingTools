@@ -51,6 +51,7 @@ def Version():
           "$Id: scade6_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")
 
 
+# noinspection PyListCreation
 class FromSCADEtoASN1SCC(RecursiveMapper):
     def MapInteger(self, srcScadeMacro, destVar, _, __, ___):
         return ["%s = (asn1SccSint) %s;\n" % (destVar, srcScadeMacro)]
@@ -229,6 +230,7 @@ class FromASN1SCCtoSCADE(RecursiveMapper):
         return self.MapSequenceOf(srcVar, dstScadeMacro, node, leafTypeDict, names)  # pragma: nocover
 
 
+# noinspection PyListCreation
 class FromSCADEtoOSS(RecursiveMapper):
     def MapInteger(self, srcScadeMacro, destVar, _, __, ___):
         return ["%s = %s;\n" % (destVar, srcScadeMacro)]
@@ -309,6 +311,7 @@ class FromSCADEtoOSS(RecursiveMapper):
         return self.MapSequenceOf(srcScadeMacro, destVar, node, leafTypeDict, names)  # pragma: nocover
 
 
+# noinspection PyListCreation
 class FromOSStoSCADE(RecursiveMapper):
     def __init__(self):
         self._seqIndex = 1

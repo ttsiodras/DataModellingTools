@@ -102,6 +102,7 @@ def Version():
     print("Code generator: " + "$Id: og_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")
 
 
+# noinspection PyListCreation
 class FromObjectGeodeToASN1SCC(RecursiveMapper):
     def __init__(self):
         self.uniqueID = 0
@@ -206,6 +207,7 @@ class FromObjectGeodeToASN1SCC(RecursiveMapper):
         return self.MapSequenceOf(srcSDLVariable, destVar, node, leafTypeDict, names)  # pragma: nocover
 
 
+# noinspection PyListCreation
 class FromObjectGeodeToOSS(RecursiveMapper):
     def __init__(self):
         self.uniqueID = 0
@@ -308,6 +310,7 @@ class FromObjectGeodeToOSS(RecursiveMapper):
         return self.MapSequenceOf(srcSDLVariable, destVar, node, leafTypeDict, names)  # pragma: nocover
 
 
+# noinspection PyListCreation
 class FromASN1SCCtoObjectGeode(RecursiveMapper):
     def __init__(self):
         self.uniqueID = 0
@@ -425,6 +428,7 @@ class FromASN1SCCtoObjectGeode(RecursiveMapper):
         return self.MapSequenceOf(srcVar, dstSDLVariable, node, leafTypeDict, names)  # pragma: nocover
 
 
+# noinspection PyListCreation
 class FromOSStoObjectGeode(RecursiveMapper):
     def __init__(self):
         self.uniqueID = 0

@@ -41,6 +41,7 @@ def Version():
     print("Code generator: " + "$Id: smp2_A_mapper.py 1932 2010-06-15 13:41:15Z ttsiodras $")  # pragma: no cover
 
 
+# noinspection PyDefaultArgument
 def getUID(strIdentifier, idStore={}):  # pylint: disable=dangerous-default-value
     def h(digits):
         ret = ""
