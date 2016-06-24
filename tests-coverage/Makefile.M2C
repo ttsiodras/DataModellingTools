@@ -1,29 +1,29 @@
 include common.mk
 
-VPATH=.:../B_mappers:../commonPy
+VPATH=..:../dmt/B_mappers:../dmt/commonPy
 
 PYSRC_B := asynchronousTool.py ada_B_mapper.py c_B_mapper.py og_B_mapper.py simulink_B_mapper.py scade6_B_mapper.py # pyside_B_mapper.py vhdl_B_mapper.py
-PYSRC_B_COVER := $(PYSRC_B:%.py=___B_mappers_%.py,cover)
+PYSRC_B_COVER := $(PYSRC_B:%.py=___dmt_B_mappers_%.py,cover)
 
 .PHONY:	check
 
 all:	$(PYSRC_B_COVER) check
 
 DataView.aadl:	DataTypesSimulink.asn
-	../asn2aadlPlus/asn2aadlPlus.py $< $@
+	PYTHONPATH=.. python3 -m dmt.asn2aadlPlus $< $@
 
 DataViewVHDL.aadl:	DataTypesSimulinkVHDL.asn
-	../asn2aadlPlus/asn2aadlPlus.py $< $@
+	PYTHONPATH=.. python3 -m dmt.asn2aadlPlus $< $@
  
-___B_mappers_%.py,cover:	../B_mappers/%.py mini_cv.aadl DataView.aadl DataViewVHDL.aadl
+___dmt_B_mappers_%.py,cover:	../dmt/B_mappers/%.py mini_cv.aadl DataView.aadl DataViewVHDL.aadl
 	@echo Update required: $@ depends on $?
 	$(MAKE) -f Makefile.M2C clean
 	mkdir -p output
 	rm -rf output/*
 	# coverage run -a ../aadl2glueC.py -o output -verbose mini_cv_vhdl.aadl DataViewVHDL.aadl >/dev/null
-	LANG=C LC_ALL=C ${COVERAGE} run -a ../aadl2glueC.py -o output -verbose mini_cv.aadl DataView.aadl >/dev/null
-	LANG=C LC_ALL=C ${COVERAGE} run -a ../aadl2glueC.py -o output -verbose -useOSS mini_cv.aadl DataView.aadl >/dev/null
-	LANG=C LC_ALL=C ${COVERAGE} annotate -d . ../aadl2glueC.py ../B_mappers/*.py ../commonPy/*.py
+	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.aadl2glueC -o output -verbose mini_cv.aadl DataView.aadl >/dev/null
+	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.aadl2glueC -o output -verbose -useOSS mini_cv.aadl DataView.aadl >/dev/null
+	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage annotate -d . ../dmt/aadl2glueC.py ../dmt/B_mappers/*.py ../dmt/commonPy/*.py
 
 check:
 	@for i in $(PYSRC_B_COVER) ; do echo Checking $$i ... ; ./checkCoverage.pl $$i || { ( echo $$i ; ./review.pl $$i ) | less -RS ; echo $$i had issues... ; exit 1 ; } ; done

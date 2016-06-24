@@ -17,12 +17,6 @@ setup(
     name='dmt',
     version=commonPy.__version__,
     packages=find_packages(),
-    data_files=[
-        ('dmt-utils', [
-            'dmt/utils/learn_CHOICE_enums.py',
-            'dmt/utils/parse_aadl.py',
-            'dmt/utils/asn2aadlPlus.py']),
-    ],
     author='Thanassis Tsiodras',
     author_email='Thanassis.Tsiodras@esa.int',
     description='TASTE Data Modelling Technologies based on ASN.1',
@@ -38,11 +32,12 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            # 'asn2aadlPlus = asn2aadlPlus:main',
+            'asn2aadlPlus = asn2aadlPlus:main',
             'asn2dataModel = dmt.asn2dataModel:main',
             'aadl2glueC = dmt.aadl2glueC:main',
             'msgPrinter = dmt.msgPrinter:main',
             'msgPrinterASN1 = dmt.msgPrinterASN1:main',
+            'smp2asn = dmt.smp2asn:main',
             'dmt = dmt.commonPy:print_version'
         ]
     }

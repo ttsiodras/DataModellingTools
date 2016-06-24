@@ -21,14 +21,14 @@
 import re
 from typing import Any, Dict, List  # NOQA pylint: disable=unused-import
 
-from ..commonPy import asnParser
+from . import asnParser
 
-from ..commonPy.asnAST import (
+from .asnAST import (
     AsnString, AsnBasicNode, AsnSetOf, AsnSequenceOf, AsnSet,
     AsnSequence, AsnChoice, AsnMetaMember, AsnEnumerated,
     AsnNode
 )
-from ..commonPy.utility import panic
+from .utility import panic
 
 
 # Separate cache per ASN.1 AST dictionary (i.e. per 'names' parameter of ScanChildren)

@@ -24,8 +24,8 @@ Base class for all synchronous tools
 import re
 import os
 
-from commonPy.utility import panic, inform, panicWithCallStack
-from commonPy.aadlAST import InParam, OutParam, InOutParam
+from ..commonPy.utility import panic, inform, panicWithCallStack
+from ..commonPy.aadlAST import InParam, OutParam, InOutParam
 
 
 class SynchronousToolGlueGenerator:

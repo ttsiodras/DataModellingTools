@@ -4,12 +4,12 @@
 import re
 import os
 
-from commonPy.asnAST import \
-    AsnInt, AsnBool, AsnReal, AsnEnumerated, \
-    AsnOctetString, AsnChoice, AsnSequence, AsnSet, \
-    AsnSequenceOf, AsnSetOf, AsnMetaMember
+from ..commonPy.asnAST import (
+    AsnInt, AsnBool, AsnReal, AsnEnumerated,
+    AsnOctetString, AsnChoice, AsnSequence, AsnSet,
+    AsnSequenceOf, AsnSetOf, AsnMetaMember)
 
-from commonPy.utility import panic
+from ..commonPy.utility import panic
 
 g_PyDataModel = None
 g_iter = 1

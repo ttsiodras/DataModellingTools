@@ -33,7 +33,7 @@ import distutils.spawn as spawn
 from ..commonPy import asnParser
 from ..commonPy.utility import panic, inform
 from ..commonPy.asnAST import AsnBool, AsnInt, AsnReal, AsnString, AsnEnumerated, AsnSequence, AsnSet, AsnChoice, AsnMetaMember, AsnSequenceOf, AsnSetOf
-from .createInternalTypes import ScanChildren
+from ..commonPy.createInternalTypes import ScanChildren
 
 # The file written to
 g_outputFile = None

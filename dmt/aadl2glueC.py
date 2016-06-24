@@ -84,16 +84,17 @@ import copy
 import distutils.spawn as spawn
 from importlib import import_module
 
-import commonPy.configMT
+from . import commonPy
 
-import commonPy.asnParser
-import commonPy.aadlAST
-import commonPy.cleanupNodes
+# To unpickle the Py2/ANTLR2-generated pickle file...
+#    http://stackoverflow.com/questions/2121874/python-pickling-after-changing-a-modules-directory
+from . import commonPy2
+sys.modules['commonPy2'] = commonPy2
 
-from commonPy.utility import panic, inform
+from .commonPy.utility import panic, inform
+from .commonPy import verify
 
-import commonPy.verify as verify
-import B_mappers  # NOQA pylint: disable=unused-import
+from . import B_mappers  # NOQA pylint: disable=unused-import
 
 g_mappedName = {
     'SEQUENCE': 'OnSequence',
@@ -144,7 +145,7 @@ of each SUBPROGRAM param.'''
             patchMe(cn)
     try:
         import pickle
-        astInfo = pickle.load(open(astFile, 'rb'))
+        astInfo = pickle.load(open(astFile, 'rb'), fix_imports=False)
         for k in ['g_processImplementations', 'g_apLevelContainers',
                   'g_signals', 'g_systems', 'g_subProgramImplementations',
                   'g_threadImplementations']:
@@ -176,7 +177,6 @@ types). This used to cover Dumpable C/Ada Types and OG headers.'''
 
 
 def main():
-    sys.path.append(os.path.abspath(os.path.dirname(sys.argv[0])))
     if sys.argv.count("-o") != 0:
         idx = sys.argv.index("-o")
         try:
@@ -301,7 +301,7 @@ def main():
         backendFilename = "." + modelingLanguage.lower() + "_B_mapper.py"
         inform("Parsing %s...", backendFilename)
         try:
-            backend = import_module(backendFilename[:-3], 'B_mappers')  # pragma: no cover
+            backend = import_module(backendFilename[:-3], 'dmt.B_mappers')  # pragma: no cover
             if backendFilename[:-3] not in loadedBackends:
                 loadedBackends[backendFilename[:-3]] = 1
                 if commonPy.configMT.verbose:
@@ -401,10 +401,10 @@ def main():
 
     def mappers(lang):
         if lang.lower() in ["gui_pi", "gui_ri"]:
-            return [import_module(".python_B_mapper", "B_mappers"),
-                    import_module(".pyside_B_mapper", "B_mappers")]  # pragma: no cover
+            return [import_module(".python_B_mapper", "dmt.B_mappers"),
+                    import_module(".pyside_B_mapper", "dmt.B_mappers")]  # pragma: no cover
         elif lang.lower() == "vhdl":  # pragma: no cover
-            return [import_module(".vhdl_B_mapper", "B_mappers")]  # pragma: no cover
+            return [import_module(".vhdl_B_mapper", "dmt.B_mappers")]  # pragma: no cover
 
     for si in [x for x in SystemsAndImplementations if x[2] is not None and x[2].lower() in ["gui_ri", "gui_pi", "vhdl"]]:
         # We do, start the work
@@ -454,4 +454,9 @@ def main():
             b.OnFinal()  # pragma: no cover
 
 if __name__ == "__main__":
-    main()
+    if "-pdb" in sys.argv:
+        sys.argv.remove("-pdb")  # pragma: no cover
+        import pdb  # pragma: no cover pylint: disable=wrong-import-position,wrong-import-order
+        pdb.run('main()')  # pragma: no cover
+    else:
+        main()

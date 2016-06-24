@@ -4,9 +4,9 @@ import sys
 from typing import Any, Dict  # NOQA pylint: disable=unused-import
 
 from lxml import etree
-from commonPy.asnAST import AsnBool, AsnInt, AsnReal, \
-    AsnEnumerated, AsnOctetString, AsnSequenceOf, AsnSet, \
-    AsnSetOf, AsnSequence, AsnChoice, AsnMetaMember
+from .asnAST import (
+    AsnBool, AsnInt, AsnReal, AsnEnumerated, AsnOctetString, AsnSequenceOf,
+    AsnSet, AsnSetOf, AsnSequence, AsnChoice, AsnMetaMember)
 
 # Level of verbosity
 g_verboseLevel = 0

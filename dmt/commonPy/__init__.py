@@ -7,6 +7,7 @@
 from . import configMT
 from . import asnParser
 from . import asnAST
+from . import aadlAST
 from . import utility
 from . import createInternalTypes
 from . import verify

@@ -89,9 +89,9 @@ hpredef.h :
  Contains the prototypes (extern declarations) of the vm callbacks.
 '''
 
-from commonPy.asnAST import isSequenceVariable, sourceSequenceLimit, AsnInt, AsnBool, AsnReal, AsnEnumerated
+from ..commonPy.asnAST import isSequenceVariable, sourceSequenceLimit, AsnInt, AsnBool, AsnReal, AsnEnumerated
 
-from .recursiveMapper import RecursiveMapper
+from ..commonPy.recursiveMapper import RecursiveMapper
 from .asynchronousTool import ASynchronousToolGlueGenerator
 
 isAsynchronous = True

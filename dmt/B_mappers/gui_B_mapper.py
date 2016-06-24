@@ -21,10 +21,12 @@
 import re
 import os
 
-from commonPy.asnAST import AsnBasicNode, AsnEnumerated, AsnSequence, AsnSet, AsnChoice, AsnSequenceOf, AsnSetOf, AsnMetaMember, \
-    AsnInt, AsnReal, AsnOctetString, AsnBool, isSequenceVariable, sourceSequenceLimit
-from commonPy.utility import panic, panicWithCallStack
-import commonPy.asnParser
+from ..commonPy.asnAST import (
+    AsnBasicNode, AsnEnumerated, AsnSequence, AsnSet, AsnChoice,
+    AsnSequenceOf, AsnSetOf, AsnMetaMember, AsnInt, AsnReal, AsnOctetString,
+    AsnBool, isSequenceVariable, sourceSequenceLimit)
+from ..commonPy.utility import panic, panicWithCallStack
+from ..commonPy import asnParser
 
 g_HeaderFile = None
 g_SourceFile = None
@@ -171,7 +173,7 @@ enumFieldNames = {}
 
 
 def VerifySingleFieldEnums(node):
-    names = commonPy.asnParser.g_names
+    names = asnParser.g_names
     while isinstance(node, str):
         node = names[node]
     if isinstance(node, AsnBasicNode):
@@ -194,8 +196,8 @@ def VerifySingleFieldEnums(node):
 
 
 def OneTimeOnly(unused_modelingLanguage, asnFile, subProgram, subProgramImplementation, outputDir, maybeFVname, unused_useOSS):
-    for typename in commonPy.asnParser.g_names:
-        node = commonPy.asnParser.g_names[typename]
+    for typename in asnParser.g_names:
+        node = asnParser.g_names[typename]
         VerifySingleFieldEnums(node)
 
     global g_outputDir
@@ -455,8 +457,8 @@ def OnStartup(modelingLanguage, asnFile, subProgram, subProgramImplementation, o
         g_MyTelemetryActions.write('                long long arrivalTime = getTimeInMilliseconds();\n')
         g_MyTelemetryActions.write("                wxMutexGuiEnter();\n")
         g_MyTelemetryActions.write("                char *pData = (char *)message_data_received;\n")
-        names = commonPy.asnParser.g_names
-        leafTypeDict = commonPy.asnParser.g_leafTypeDict
+        names = asnParser.g_names
+        leafTypeDict = asnParser.g_leafTypeDict
         for param in subProgram._params:
             node = names[param._signal._asnNodename]
             CleanParam = CleanName(param._id)

@@ -36,10 +36,10 @@ To that end, this backend creates "glue" functions for input and
 output parameters, which have C callable interfaces.
 '''
 
-from commonPy.utility import panic
-from commonPy.asnAST import sourceSequenceLimit, isSequenceVariable, targetSequenceLimit
+from ..commonPy.utility import panic
+from ..commonPy.asnAST import sourceSequenceLimit, isSequenceVariable, targetSequenceLimit
 
-from commonPy.recursiveMapper import RecursiveMapper
+from ..commonPy.recursiveMapper import RecursiveMapper
 from .asynchronousTool import ASynchronousToolGlueGenerator
 
 isAsynchronous = True

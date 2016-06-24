@@ -35,11 +35,11 @@ parameters, which have C callable interfaces. The necessary
 stubs (to allow calling from the VM side) are also generated.
 '''
 
-from commonPy.utility import panic, panicWithCallStack
-from commonPy.asnAST import isSequenceVariable, sourceSequenceLimit
-from commonPy.aadlAST import AadlPort, AadlParameter
+from ..commonPy.utility import panic, panicWithCallStack
+from ..commonPy.asnAST import isSequenceVariable, sourceSequenceLimit
+from ..commonPy.aadlAST import AadlPort, AadlParameter
 
-from .recursiveMapper import RecursiveMapper
+from ..commonPy.recursiveMapper import RecursiveMapper
 from .synchronousTool import SynchronousToolGlueGenerator
 
 isAsynchronous = False

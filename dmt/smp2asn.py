@@ -32,12 +32,12 @@ import os
 import sys
 import getopt
 
-import commonPy.asnParser
-from commonPy.createInternalTypes import ScanChildren
-from commonPy.asnAST import AsnMetaType
-from commonPy.commonSMP2 import \
-    info, panic, green, white, red, setVerbosity, \
-    DashUnderscoreAgnosticDict, ConvertCatalogueToASN_AST
+from .commonPy import asnParser
+from .commonPy.createInternalTypes import ScanChildren
+from .commonPy.asnAST import AsnMetaType
+from .commonPy.commonSMP2 import (
+    info, panic, green, white, red, setVerbosity,
+    DashUnderscoreAgnosticDict, ConvertCatalogueToASN_AST)
 
 
 def usage(coloredMsg=""):
@@ -57,11 +57,11 @@ def usage(coloredMsg=""):
 
 def MergeASN1_AST(smp2AsnAST):
     '''Merges the ASN.1 AST generated from SMP2 files (smp2AsnAST param)
-    into the ASN.1 AST stored in commonPy.asnParser.g_names. Uses smart
+    into the ASN.1 AST stored in asnParser.g_names. Uses smart
     merging, i.e. diff-like semantics.'''
     typesToAddVerbatim = []
     identicals = {}
-    d = commonPy.asnParser.g_names
+    d = asnParser.g_names
     for k, v in smp2AsnAST.items():
         if k in d:
             # Type name exists in both trees - is it the same?
@@ -76,7 +76,7 @@ def MergeASN1_AST(smp2AsnAST):
             for k2, v2 in d.items():
                 if v2._isArtificial:
                     # Avoid mapping to artificially generated inner types
-                    # (see last part of VerifyAndFixAST in commonPy.asnParser)
+                    # (see last part of VerifyAndFixAST in asnParser)
                     continue
                 if v2.IdenticalPerSMP2(v, d, smp2AsnAST):
                     info(1, green, k, white, "is identical to", red, k2, white)
@@ -85,7 +85,7 @@ def MergeASN1_AST(smp2AsnAST):
             else:
                 info(1, green, k, white, "must be copied (no equivalent type found)...")
                 typesToAddVerbatim.append(k)
-    # Merge missing types in commonPy.asnParser.g_names
+    # Merge missing types in asnParser.g_names
     for nodeTypename in typesToAddVerbatim:
         results = []
         node = smp2AsnAST[nodeTypename]
@@ -97,22 +97,22 @@ def MergeASN1_AST(smp2AsnAST):
             node = smp2AsnAST[r]
             d[r] = node
             if isinstance(node, AsnMetaType):
-                commonPy.asnParser.g_metatypes[r] = r._containedType  # pragma: no cover
+                asnParser.g_metatypes[r] = r._containedType  # pragma: no cover
                 d[r] = smp2AsnAST[r._containedType]  # pragma: no cover
-            commonPy.asnParser.g_typesOfFile.setdefault(node._asnFilename, []).append(r)
+            asnParser.g_typesOfFile.setdefault(node._asnFilename, []).append(r)
     return identicals
 
 
 def SaveASN_AST(bPruneUnnamedInnerTASTEtypes, outputAsn1Grammar, identicals):
     d = DashUnderscoreAgnosticDict()
-    for k, v in commonPy.asnParser.g_names.items():
+    for k, v in asnParser.g_names.items():
         d[k] = v
     with open(outputAsn1Grammar, 'w') as f:
         f.write('DATAVIEW DEFINITIONS AUTOMATIC TAGS ::= BEGIN\n\n')
         for k, v in d.items():
             if v._isArtificial:
                 # Don't emit artificially generated inner types
-                # (see last part of VerifyAndFixAST in commonPy.asnParser)
+                # (see last part of VerifyAndFixAST in asnParser)
                 continue
             if bPruneUnnamedInnerTASTEtypes and 'TaStE' in k:
                 # Don't emit artificially generated SMP2 types
@@ -169,7 +169,7 @@ def main(args):
 
     smp2AsnAST, unused_idToTypeDict = ConvertCatalogueToASN_AST(inputSmp2Files)
     if inputAsn1Grammar:
-        commonPy.asnParser.ParseAsnFileList([inputAsn1Grammar])
+        asnParser.ParseAsnFileList([inputAsn1Grammar])
     identicals = MergeASN1_AST(smp2AsnAST)
     SaveASN_AST(bPrune, outputAsn1Grammar, identicals)
     return 0

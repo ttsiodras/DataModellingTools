@@ -1,8 +1,8 @@
 include common.mk
 
-VPATH=..:../dmt/A_mappers:../commonPy
+VPATH=..:../dmt/A_mappers:../dmt/commonPy
 
-PYSRC_A := createInternalTypes.py ada_A_mapper.py c_A_mapper.py og_A_mapper.py simulink_A_mapper.py python_A_mapper.py scade6_A_mapper.py smp2_A_mapper.py sqlalchemy_A_mapper.py rtds_A_mapper.py qgenada_A_mapper.py qgenc_A_mapper.py
+PYSRC_A := ada_A_mapper.py c_A_mapper.py og_A_mapper.py simulink_A_mapper.py python_A_mapper.py scade6_A_mapper.py smp2_A_mapper.py sqlalchemy_A_mapper.py rtds_A_mapper.py qgenada_A_mapper.py qgenc_A_mapper.py
 PYSRC_A_COVER := $(PYSRC_A:%.py=___dmt_A_mappers_%.py,cover)
 
 .PHONY:	check
@@ -30,7 +30,7 @@ ___dmt_A_mappers_%.py,cover:	../A_mappers/%.py DataTypesSimulink.asn
 	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage annotate -d . ../dmt/asn2dataModel.py ../dmt/A_mappers/*.py ../dmt/commonPy/*.py
 
 check:
-	@for i in ___dmt_asn2dataModel.py,cover $(PYSRC_A_COVER) ; do echo Checking $$i ... ; ./checkCoverage.pl $$i || { ( echo $$i ; ./review.pl $$i ) | less -RS ; exit 1 ; } ; done
+	@for i in ___dmt_commonPy_createInternalTypes.py,cover  ___dmt_asn2dataModel.py,cover $(PYSRC_A_COVER) ; do echo Checking $$i ... ; ./checkCoverage.pl $$i || { ( echo $$i ; ./review.pl $$i ) | less -RS ; exit 1 ; } ; done
 
 clean:
 	${COVERAGE} erase

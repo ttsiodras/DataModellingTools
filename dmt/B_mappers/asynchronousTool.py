@@ -25,7 +25,7 @@ Base class for all asynchronous tools
 import re
 import os
 
-from commonPy.utility import inform, panicWithCallStack
+from ..commonPy.utility import inform, panicWithCallStack
 
 
 class ASynchronousToolGlueGenerator:
