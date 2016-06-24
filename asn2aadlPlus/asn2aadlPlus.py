@@ -1,4 +1,11 @@
 #!/usr/bin/env python
+"""
+ASN.1 Importer
+
+This is one of the tools that Semantix develops for the European
+research project ASSERT. It parses an ASN.1 grammar and generates
+references (in AADL) to all the existing types.
+"""
 import os
 import re
 import sys
@@ -13,10 +20,10 @@ import distutils.spawn as spawn
 import commonPy.configMT
 import commonPy.asnParser
 
-from commonPy.asnAST import \
-    AsnBasicNode, AsnBool, AsnReal, AsnInt, \
-    AsnEnumerated, AsnString, AsnChoice, AsnSequence, \
-    AsnSequenceOf, AsnSet, AsnSetOf
+from commonPy.asnAST import (
+    AsnBasicNode, AsnBool, AsnReal, AsnInt,
+    AsnEnumerated, AsnString, AsnChoice, AsnSequence,
+    AsnSequenceOf, AsnSet, AsnSetOf)
 
 
 from commonPy.utility import inform, panic, mysystem
@@ -26,14 +33,6 @@ g_privateHeapSize = -1
 g_platformCompilers = ['gcc']
 # Ada package names per type
 g_AdaPackageNameOfType = {}
-
-__doc__ = '''\
-ASN.1 Importer
-
-This is one of the tools that Semantix develops for the European
-research project ASSERT. It parses an ASN.1 grammar and generates
-references (in AADL) to all the existing types.
-'''
 
 
 def cleanNameAsAADLWants(name):
@@ -52,20 +51,20 @@ def verifyNodeRange(node):
     assert isinstance(node, AsnBasicNode)
     if isinstance(node, AsnInt):
         if not node._range:
-            panic("INTEGER (in %s) must have a range constraint inside ASN.1,\n"\
-                    "or else we might lose accuracy during runtime!" % node.Location())
-        #else:
-        #    # asn1c uses C long for ASN.1 INTEGER. Assuming that our platform is 32 bit,
-        #    # this allows values from -2147483648 to 2147483647
-        #    if node._range[0] < -2147483648L:
-        #       panic("INTEGER (in %s) must have a low limit >= -2147483648\n" % node.Location())
-        #    if node._range[1] > 2147483647L:
-        #       panic("INTEGER (in %s) must have a high limit <= 2147483647\n" % node.Location())
+            panic("INTEGER (in %s) must have a range constraint inside ASN.1,\n"
+                  "or else we might lose accuracy during runtime!" % node.Location())
+        # else:
+        #     # asn1c uses C long for ASN.1 INTEGER. Assuming that our platform is 32 bit,
+        #     # this allows values from -2147483648 to 2147483647
+        #     if node._range[0] < -2147483648L:
+        #        panic("INTEGER (in %s) must have a low limit >= -2147483648\n" % node.Location())
+        #     if node._range[1] > 2147483647L:
+        #        panic("INTEGER (in %s) must have a high limit <= 2147483647\n" % node.Location())
 
     if isinstance(node, AsnReal):
         if not node._range:
             panic(
-                "REAL (in %s) must have a range constraint inside ASN.1,\n"\
+                "REAL (in %s) must have a range constraint inside ASN.1,\n"
                 "or else we might lose accuracy during runtime!" % node.Location())
         else:
             # asn1c uses C double for ASN.1 REAL.
@@ -98,7 +97,7 @@ def calculateForNativeAndASN1SCC(absASN1SCCpath, autosrc, names, inputFiles):
 
     msgEncoderFile = open(autosrc + os.sep + base + ".stats.c", 'w')
 
-    #msgEncoderFile.write('#include "DumpableTypes.h"\n')
+    # msgEncoderFile.write('#include "DumpableTypes.h"\n')
 
     for a in inputASN1files:
         msgEncoderFile.write('#include "%s.h"\n' % os.path.splitext(os.path.basename(a))[0])
@@ -115,9 +114,9 @@ def calculateForNativeAndASN1SCC(absASN1SCCpath, autosrc, names, inputFiles):
             copy.copy(commonPy.asnParser.g_leafTypeDict)]   # map from Typename to leafType
 
     commonPy.configMT.outputDir = autosrc + os.sep
-    #dumpable.CreateDumpableCtypes(uniqueASNfiles)
+    # dumpable.CreateDumpableCtypes(uniqueASNfiles)
 
-    for asnTypename in names.keys():
+    for asnTypename in list(names.keys()):
         node = names[asnTypename]
         if node._isArtificial:
             continue
@@ -127,25 +126,26 @@ def calculateForNativeAndASN1SCC(absASN1SCCpath, autosrc, names, inputFiles):
         if acn != "":
             msgEncoderFile.write('char bytesAcnEncoding_%s[%s_REQUIRED_BYTES_FOR_ACN_ENCODING];\n' % (cleaned, cleaned))
     msgEncoderFile.close()
-    
+
     # Code generation - asn1c part
-    
+
     # Create a dictionary to lookup the asn-types from their corresponding c-type
     namesDict = {}
-    for asnTypename in names.keys():
+    for asnTypename in list(names.keys()):
         node = names[asnTypename]
         if node._isArtificial:
             continue
         namesDict[cleanNameAsAsn1cWants(asnTypename)] = asnTypename
 
     # Get a list of all available compilers
+    global g_platformCompilers
     try:
         pipe = Popen("find-supported-compilers", stdout=PIPE).stdout
         g_platformCompilers = pipe.read().splitlines()
     except OSError as err:
-        print 'Not running in a TASTE environment: {}\nUsing GCC only for computing sizeofs'.format(str(err))
+        print('Not running in a TASTE environment: {}\nUsing GCC only for computing sizeofs'.format(str(err)))
         g_platformCompilers = ['gcc']
-    # Get the maximum size of each asn1type from all platform compilers     
+    # Get the maximum size of each asn1type from all platform compilers
     messageSizes = {}
     for cc in g_platformCompilers:
         # Compile the generated C-file with each compiler
@@ -157,9 +157,9 @@ def calculateForNativeAndASN1SCC(absASN1SCCpath, autosrc, names, inputFiles):
 
         for cfile in os.listdir("."):
             if cfile.endswith(".c"):
-                if 0 != mysystem('%s -c -std=c99 -I. "%s" 2>"%s.stats.err"' % (path_to_compiler, cfile, base)):
+                if mysystem('%s -c -std=c99 -I. "%s" 2>"%s.stats.err"' % (path_to_compiler, cfile, base)) != 0:
                     panic("Compilation of generated sources failed - is %s installed?\n"
-                            "(report inside '%s')\n" % (cc, os.path.join(autosrc, base + ".stats.err")))
+                          "(report inside '%s')\n" % (cc, os.path.join(autosrc, base + ".stats.err")))
 
         os.chdir(pwd)
 
@@ -171,16 +171,16 @@ def calculateForNativeAndASN1SCC(absASN1SCCpath, autosrc, names, inputFiles):
                 # Ignore lines that are not well-formatted
                 continue
 
-            #Remove prefix
+            # Remove prefix
             asnType = msg.split('_', 1)[1]
             # get asn-type from cleaned type
             asnType = namesDict[asnType]
-            assert asnType in names.keys()
+            assert asnType in list(names.keys())
             # Find maximum
             messageSizes.setdefault(asnType, 0)
             messageSizes[asnType] = max(int(size, 16), messageSizes[asnType])
 
-    return (messageSizes)
+    return messageSizes
 
 
 def ASNtoACN(asnFilename):
@@ -190,15 +190,15 @@ def ASNtoACN(asnFilename):
         ".ASN": ".ACN",
         ".ASN1": ".ACN",
     }
-    for k, v in replaces.items():
+    for k, v in list(replaces.items()):
         if asnFilename.endswith(k):
             return asnFilename.replace(k, v)
     return asnFilename + ".acn"
 
 
 def usage():
-    panic(
-'''Usage: asn2aadlPlus.py <options> <files> outputDataSpec.aadl
+    panic("""\
+Usage: asn2aadlPlus.py <options> <files> outputDataSpec.aadl
 
 Where <files> is a list of ASN.1 and ACN files, and options can be:
 
@@ -207,8 +207,7 @@ Where <files> is a list of ASN.1 and ACN files, and options can be:
     -v, --version   Show version number
     -d, --debug	    Enable debug output
     -p, --platform  Comma seperated list of platform compilers (default: gcc)
-    -h, --help	    This help message
-''')
+    -h, --help	    This help message""")
 
 
 def main():
@@ -217,7 +216,6 @@ def main():
 
     global g_keepFiles
     global g_privateHeapSize
-    global g_platformCompilers
 
     # Backwards compatibility - the '-acn' option is no longer necessary
     # (we auto-detect ACN files via their extension)
@@ -244,7 +242,7 @@ def main():
         if opt in ("-h", "--help"):
             usage()
         elif opt in ("-v", "--version"):
-            print "ASN2AADL v%s" % versionNumber
+            print("ASN2AADL v%s" % versionNumber)
             sys.exit(0)
         elif opt in ("-d", "--debug"):
             commonPy.configMT.debugParser = True
@@ -256,7 +254,7 @@ def main():
         elif opt in ("-t", "--test"):
             g_privateHeapSize = int(arg)
 
-    if not 'PATH' in os.environ or os.environ['PATH'] == '':
+    if 'PATH' not in os.environ or os.environ['PATH'] == '':
         p = os.defpath
     else:
         p = os.environ['PATH']
@@ -268,8 +266,8 @@ def main():
         if os.access(f, os.X_OK):
             break
     else:
-        panic("No '%s' found in your PATH... Aborting..." % \
-            platform.version() == "Windows" and "gcc.exe" or "gcc")
+        panic("No '%s' found in your PATH... Aborting..." %
+              "gcc.exe" if platform.version() == "Windows" else "gcc")
 
     # Check that the ASN.1/ACN files that are passed-in, do in fact exist.
     for x in args[:-1]:
@@ -295,8 +293,8 @@ def main():
     # Time to use the maximum of Native (SIZ2) and UPER (SIZE) and ACN (SIZ3)...
 
     messageSizes = calculateForNativeAndASN1SCC(absASN1SCCpath, autosrc, commonPy.asnParser.g_names, inputFiles)
-    for nodeTypename in messageSizes.keys():
-        messageSizes[nodeTypename] = [messageSizes[nodeTypename], (8*(int((messageSizes[nodeTypename]-1)/8))+8)]
+    for nodeTypename in list(messageSizes.keys()):
+        messageSizes[nodeTypename] = [messageSizes[nodeTypename], (8 * (int((messageSizes[nodeTypename] - 1) / 8)) + 8)]
 
     base = os.path.basename(aadlFile)
     base = re.sub(r'\..*$', '', base)
@@ -345,7 +343,7 @@ properties
     Data_Model::Data_Representation => Character;
 end Stream_Element_Buffer;
 ''')
-    for asnTypename in commonPy.asnParser.g_names.keys():
+    for asnTypename in list(commonPy.asnParser.g_names.keys()):
         node = commonPy.asnParser.g_names[asnTypename]
         if node._isArtificial:
             continue
@@ -353,7 +351,7 @@ end Stream_Element_Buffer;
         o.write('DATA ' + cleanName + '\n')
         o.write('PROPERTIES\n')
         o.write('    -- name of the ASN.1 source file:\n')
-        #o.write('    Source_Text => ("%s");\n' % os.path.basename(commonPy.asnParser.g_names[asnTypename]._asnFilename))
+        # o.write('    Source_Text => ("%s");\n' % os.path.basename(commonPy.asnParser.g_names[asnTypename]._asnFilename))
         o.write('    Source_Text => ("%s");\n' % commonPy.asnParser.g_names[asnTypename]._asnFilename)
         prefix = bAADLv2 and "TASTE::" or ""
         possibleACN = ASNtoACN(commonPy.asnParser.g_names[asnTypename]._asnFilename)
@@ -365,7 +363,7 @@ end Stream_Element_Buffer;
         o.write('    %sAda_Package_Name => "%s";\n' % (prefix, g_AdaPackageNameOfType[asnTypename]))
         if bAADLv2:
             o.write('    Deployment::ASN1_Module_Name => "%s";\n' % g_AdaPackageNameOfType[asnTypename].replace('_', '-'))
-        if None == os.getenv('UPD'):
+        if os.getenv('UPD') is None:
             o.write('    Source_Language => ASN1;\n')
         o.write('    -- Size of a buffer to cover all forms of message representation:\n')
         le_size = 0 if asnTypename not in messageSizes else messageSizes[asnTypename][0]
@@ -400,7 +398,7 @@ end Stream_Element_Buffer;
         else:
             panic("Unsupported ASN.1 type: %s" % node._leafType)
         o.write('END ' + cleanName + ';\n\n')
-        if None == os.getenv('UPD'):
+        if os.getenv('UPD') is None:
             o.write('DATA ' + cleanName + '_Buffer_Max\n')
             o.write('END ' + cleanName + '_Buffer_Max;\n\n')
 
@@ -428,11 +426,11 @@ end Stream_Element_Buffer;
             o.write('END ' + cleanName + '_Buffer.impl;\n\n')
 
     listOfAsn1Files = {}
-    for asnTypename in commonPy.asnParser.g_names.keys():
+    for asnTypename in list(commonPy.asnParser.g_names.keys()):
         listOfAsn1Files[commonPy.asnParser.g_names[asnTypename]._asnFilename] = 1
 
     if bAADLv2:
-        for asnFilename in listOfAsn1Files.keys():
+        for asnFilename in list(listOfAsn1Files.keys()):
             base = os.path.splitext(os.path.basename(asnFilename))[0]
             possibleACN = ASNtoACN(asnFilename)
             if os.path.exists(possibleACN):
@@ -450,14 +448,14 @@ end Stream_Element_Buffer;
     if not g_keepFiles:
         shutil.rmtree(autosrc)
     else:
-        print "Generated message buffers in '%s'" % autosrc
-    #os.chdir(pwd)
+        print("Generated message buffers in '%s'" % autosrc)
+    # os.chdir(pwd)
 
 if __name__ == "__main__":
     if "-pdb" in sys.argv:
-        sys.argv.remove("-pdb")
-        import pdb
-        pdb.run('main()')
+        sys.argv.remove("-pdb")  # pragma: no cover
+        import pdb  # pragma: no cover pylint: disable=wrong-import-position,wrong-import-order
+        pdb.run('main()')  # pragma: no cover
     else:
         main()
 
