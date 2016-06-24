@@ -48,6 +48,7 @@ class ASynchronousToolGlueGenerator:
     ########################################################
     # Parts to possibly override for each synchronous tool
 
+    # noinspection PyMethodMayBeStatic
     def CleanNameAsToolWants(self, name):  # pylint: disable=no-self-use
         return re.sub(r'[^a-zA-Z0-9_]', '_', name)
 

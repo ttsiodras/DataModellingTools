@@ -51,7 +51,7 @@ g_upperFloat = 1e350
 def verifyNodeRange(node):
     assert isinstance(node, AsnBasicNode)
     if isinstance(node, AsnInt):
-        if node._range == []:
+        if not node._range:
             panic("INTEGER (in %s) must have a range constraint inside ASN.1,\n"\
                     "or else we might lose accuracy during runtime!" % node.Location())
         #else:
@@ -63,7 +63,7 @@ def verifyNodeRange(node):
         #       panic("INTEGER (in %s) must have a high limit <= 2147483647\n" % node.Location())
 
     if isinstance(node, AsnReal):
-        if node._range == []:
+        if not node._range:
             panic(
                 "REAL (in %s) must have a range constraint inside ASN.1,\n"\
                 "or else we might lose accuracy during runtime!" % node.Location())
@@ -376,7 +376,7 @@ end Stream_Element_Buffer;
         o.write('    Type_Source_Name => "%s";\n' % asnTypename)
         o.write('    -- what kind of type is this?\n')
         prefix = bAADLv2 and "TASTE" or "assert_properties"
-        o.write('    %s::ASN1_Basic_Type =>' % (prefix))
+        o.write('    %s::ASN1_Basic_Type =>' % prefix)
         if isinstance(node, AsnBool):
             o.write('aBOOLEAN;\n')
         elif isinstance(node, AsnInt):

@@ -52,6 +52,7 @@ def usage():
     msg += '\t-verbose\t\tDisplay more debug output\n'
 
 
+# noinspection PyListCreation
 class Printer(RecursiveMapper):
     def __init__(self):
         self.uniqueID = 0

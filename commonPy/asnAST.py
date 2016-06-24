@@ -179,7 +179,7 @@ Members:
 
     def __repr__(self):
         result = self._leafType
-        if self._range != []:
+        if self._range:
             result += " within [%s,%s]" % (self._range[0], self._range[1])
         if self._iDefaultValue is not None:
             result += " with default value of %s" % self._iDefaultValue  # pragma: no cover
@@ -237,7 +237,7 @@ Members:
         if self._dbDefaultValue is not None:
             result += ", default value of "  # pragma: no cover
             result += self._dbDefaultValue  # pragma: no cover
-        if self._range != []:
+        if self._range:
             result += ", default range"
             result += " within [%s,%s]" % (self._range[0], self._range[1])
         return result
@@ -275,7 +275,7 @@ Members:
 
     def __repr__(self):
         result = self._leafType
-        if self._range != []:
+        if self._range:
             result += ", length within "
             result += str(self._range)
         return result
@@ -391,7 +391,7 @@ Members:
                 utility.panic(
                     "member '%s' appears more than once in ENUMERATED %s" % (  # pragma: no cover
                         elem[0],
-                        ((self._lineno is not None) and ("defined in line %s" % self._lineno) or (""))))  # pragma: no cover
+                        ("defined in line %s" % self._lineno) if self._lineno is not None else ""))  # pragma: no cover
             else:
                 existing[elem[0]] = 1
 
@@ -428,9 +428,9 @@ def CommonIdenticalCheck(me, other, mynames, othernames):
             node = cont
         return node
 
-    for listOfNodes, d in [(myMembers, mynames), (otherMembers, othernames)]:
+    for listOfNodes, dd in [(myMembers, mynames), (otherMembers, othernames)]:
         for i in range(len(listOfNodes)):  # pylint: disable=consider-using-enumerate
-            listOfNodes[i] = resolve(listOfNodes[i], d)
+            listOfNodes[i] = resolve(listOfNodes[i], dd)
     return all(x.IdenticalPerSMP2(y, mynames, othernames) for x, y in zip(myMembers, otherMembers))
 
 
@@ -473,7 +473,7 @@ Members:
                 utility.panic(
                     "member '%s' appears more than once in %s" % (  # pragma: no cover
                         elem[0],
-                        ((self._lineno is not None) and ("defined in line %s" % self._lineno) or (""))))  # pragma: no cover
+                        ("defined in line %s" % self._lineno) if self._lineno is not None else ""))  # pragma: no cover
             else:
                 existing[elem[0]] = 1
 
@@ -514,7 +514,7 @@ class AsnSet(AsnComplexNode):
                 utility.panic(
                     "member '%s' appears more than once in %s" % (  # pragma: no cover
                         elem[0],
-                        ((self._lineno is not None) and ("defined in line %s" % self._lineno) or (""))))  # pragma: no cover
+                        ("defined in line %s" % self._lineno) if self._lineno is not None else ""))  # pragma: no cover
             else:
                 existing[elem[0]] = 1
 
@@ -564,7 +564,7 @@ Members:
                 utility.panic(
                     "member '%s' appears more than once in CHOICE %s" % (  # pragma: no cover
                         elem[0],
-                        ((self._lineno is not None) and ("defined in line %s" % self._lineno) or (""))))  # pragma: no cover
+                        ("defined in line %s" % self._lineno) if self._lineno is not None else ""))  # pragma: no cover
             else:
                 existing[elem[0]] = 1
 
@@ -637,7 +637,7 @@ Members:
 
     def __repr__(self):
         result = self._leafType
-        if self._range != []:
+        if self._range:
             result += ", valid sizes in "
             result += str(self._range)
         assert self._containedType is not None
@@ -670,7 +670,7 @@ class AsnSetOf(AsnComplexNode):
 
     def __repr__(self):
         result = self._leafType
-        if self._range != []:
+        if self._range:
             result += ", valid sizes in "
             result += str(self._range)
         assert self._containedType is not None
@@ -762,3 +762,5 @@ def sourceSequenceLimit(node, srcCVariable):
 
 def targetSequenceLimit(node, dstCVariable):
     return str(node._range[-1]) if not isSequenceVariable(node) else "%s.nCount" % dstCVariable
+
+# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4

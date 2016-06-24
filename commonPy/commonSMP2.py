@@ -1,7 +1,7 @@
 import re
 import sys
 
-from typing import Any  # NOQA pylint: disable=unused-import
+from typing import Any, Dict  # NOQA pylint: disable=unused-import
 
 from lxml import etree
 from commonPy.asnAST import AsnBool, AsnInt, AsnReal, \
@@ -63,11 +63,11 @@ def setVerbosity(level):
 
 
 def info(level, *args):
-    '''Checks the 'level' argument against g_verboseLevel and then prints
+    """Checks the 'level' argument against g_verboseLevel and then prints
     the rest of the args, one by one, separated by a space. It also
     has logic to deal with usage of one of the colors as arguments
     (in which case it avoids printing spurious spaces).
-    '''
+    """
     if not args:
         panic("You called info without args")  # pragma: no cover
     if level <= g_verboseLevel:
@@ -84,13 +84,13 @@ def info(level, *args):
 
 
 def panic(x, coloredBanner=""):
-    '''Notifies the user that something fatal happened and aborts. '''
+    """Notifies the user that something fatal happened and aborts. """
     info(0, yellow + coloredBanner + white + '\n' + x)
     sys.exit(1)
 
 
 class DashUnderscoreAgnosticDict(dict):
-    '''A dictionary that automatically replaces '_' to '-' in its keys. '''
+    """A dictionary that automatically replaces '_' to '-' in its keys. """
     def __setitem__(self, key, value):
         super(DashUnderscoreAgnosticDict, self).__setitem__(key.replace('_', '-'), value)
 
@@ -102,7 +102,7 @@ class DashUnderscoreAgnosticDict(dict):
 
 
 class Attributes:
-    '''Helper class, to ease access to XML attributes.
+    """Helper class, to ease access to XML attributes.
     It allows us to write code like this...
 
             a = Attributes(lxmlEtreeNode)
@@ -113,12 +113,12 @@ class Attributes:
 
             whatever = lxmlEtreeNode.get('href', None)
             print a.get('title', None)
-    '''
+    """
     base = None  # type: str
     sourceline = None  # type: int
 
     def __init__(self, t):
-        '''Argument t is an lxml Etree node.'''
+        """Argument t is an lxml Etree node."""
         self._attrs = {}  # type: Dict[str, Any]
         for k, v in list(t.items()):
             endBraceIdx = k.find('}')
@@ -131,16 +131,16 @@ class Attributes:
 
 
 def Clean(fieldName):
-    '''When mapping field names and type names from SMP2 to ASN.1,
-    we need to change '_' to '-'. '''
+    """When mapping field names and type names from SMP2 to ASN.1,
+    we need to change '_' to '-'. """
     return re.sub(r'[^a-zA-Z0-9-]', '-', fieldName)
 
 
 def MapSMP2Type(attrs, enumOptions, itemTypes, fields):
-    '''
+    """
     Core mapping function. Works on the XML attributes of the lxml Etree node,
     and returns a node from commonPy.asnAST.
-    '''
+    """
     location = 'from %s, in line %s' % (attrs.base, attrs.sourceline)
     info(2, "Mapping SMP2 type", location)
 
@@ -152,26 +152,26 @@ def MapSMP2Type(attrs, enumOptions, itemTypes, fields):
     dataDict = {"asnFilename": attrs.base, "lineno": attrs.sourceline}
 
     def HandleTypesInteger():
-        low = getMaybe(int, attrs.Minimum)
-        high = getMaybe(int, attrs.Maximum)
-        if low == 0 and high == 1:
+        lowRange = getMaybe(int, attrs.Minimum)
+        highRange = getMaybe(int, attrs.Maximum)
+        if lowRange == 0 and highRange == 1:
             # Pseudo-boolean from TASTE mapping, as per SpaceBel instructions
             return AsnBool(**dataDict)
         else:
             # Normal integer
-            span = [low, high] if low is not None and high is not None else []
-            dataDict["range"] = span
+            spanRange = [lowRange, highRange] if lowRange is not None and highRange is not None else []
+            dataDict["range"] = spanRange
             return AsnInt(**dataDict)
 
     def HandleTypesFloat():
-        low = getMaybe(float, attrs.Minimum)
-        high = getMaybe(float, attrs.Maximum)
-        span = [low, high] if low is not None and high is not None else []
-        dataDict["range"] = span
+        lowRange = getMaybe(float, attrs.Minimum)
+        highRange = getMaybe(float, attrs.Maximum)
+        spanRange = [lowRange, highRange] if lowRange is not None and highRange is not None else []
+        dataDict["range"] = spanRange
         return AsnReal(**dataDict)
 
     def HandleTypesArray():
-        if itemTypes == []:
+        if not itemTypes:
             panic("Missing mandatory ItemType element", location)  # pragma: no cover
         itemTypeAttrs = Attributes(itemTypes[0])
         arrSize = getMaybe(int, attrs.Size)
@@ -187,20 +187,20 @@ def MapSMP2Type(attrs, enumOptions, itemTypes, fields):
             containedHref = itemTypeAttrs.href
             if not containedHref:
                 panic("Missing reference to 'href' (file:%s, line:%d)" %
-                      itemTypeAttrs.base, itemTypeAttrs.sourceline)  # pragma: no cover
+                      (itemTypeAttrs.base, itemTypeAttrs.sourceline))  # pragma: no cover
             idxHash = containedHref.find('#')
             if -1 != idxHash:
                 containedHref = containedHref[idxHash + 1:]
             if itemTypeAttrs.href in simpleTypesTable:
                 # Create the AsnBasicNode this child maps to.
-                cast, low, high = simpleTypesTable[itemTypeAttrs.href]
-                span = [low, high] if low is not None and high is not None else []
+                cast, lowRange, highRange = simpleTypesTable[itemTypeAttrs.href]
+                spanRange = [lowRange, highRange] if lowRange is not None and highRange is not None else []
                 childDict = {
                     'asnFilename': itemTypes[0].base,
                     'lineno': itemTypes[0].sourceline
                 }
-                if span != []:
-                    childDict['range'] = span
+                if spanRange:
+                    childDict['range'] = spanRange
                 childNode = cast(**childDict)
                 dataDict['containedType'] = childNode
             else:
@@ -220,22 +220,22 @@ def MapSMP2Type(attrs, enumOptions, itemTypes, fields):
                     try:
                         refTypeAttrs = Attributes(field.xpath("Type")[0])
                     except:  # pragma: no cover
-                        location = 'from %s, in line %s' % \
-                            (field.base, field.sourceline)  # pragma: no cover
-                        panic("Missing Type child element", location)  # pragma: no cover
+                        loc = 'from %s, in line %s' % \
+                              (field.base, field.sourceline)  # pragma: no cover
+                        panic("Missing Type child element", loc)  # pragma: no cover
                     refTypeHref = refTypeAttrs.href
                     idxHash = refTypeHref.find('#')
                     if -1 != idxHash:
                         refTypeHref = refTypeHref[idxHash + 1:]
                     if refTypeAttrs.href in simpleTypesTable:
-                        cast, low, high = simpleTypesTable[refTypeAttrs.href]
+                        cast, lowRange, highRange = simpleTypesTable[refTypeAttrs.href]
                         containedDict = {
                             'asnFilename': field.base,
                             'lineno': field.sourceline
                         }
-                        span = [low, high] if low is not None and high is not None else []
-                        if span != []:
-                            containedDict['range'] = [low, high]
+                        spanRange = [lowRange, highRange] if lowRange is not None and highRange is not None else []
+                        if spanRange:
+                            containedDict['range'] = [lowRange, highRange]
                         basicNode = cast(**containedDict)
                         members.append((fieldName, basicNode))
                     else:
@@ -252,7 +252,7 @@ def MapSMP2Type(attrs, enumOptions, itemTypes, fields):
                       '"xlink:title" also exists.',
                       'In %s, line %d:' % (field.base, field.sourceline))  # pragma: no cover
         if not members:
-            panic("Empty SEQUENCE is not supported", location)  # pragma: no cover
+            panic("Empty SEQUENCE is not supported", loc)  # pragma: no cover
         if members[0][0] == 'choiceIdx':
             dataDict['members'] = members[1:]
             return AsnChoice(**dataDict)
@@ -280,9 +280,9 @@ def MapSMP2Type(attrs, enumOptions, itemTypes, fields):
 
 
 def FixupOutOfOrderIdReferences(nodeTypename, asnTypesDict, idToTypeDict):
-    '''Based on the uniqueness of the 'Id' elements used in
+    """Based on the uniqueness of the 'Id' elements used in
     'xlink:href' remote references, we resolve the lookups of
-    remote types that we stored in AsnMetaMembers during MapSMP2Type().'''
+    remote types that we stored in AsnMetaMembers during MapSMP2Type()."""
     node = asnTypesDict[nodeTypename]
     if isinstance(node, AsnChoice) or isinstance(node, AsnSequence) or isinstance(node, AsnSet):
         for idx, child in enumerate(node._members):
@@ -308,8 +308,8 @@ def FixupOutOfOrderIdReferences(nodeTypename, asnTypesDict, idToTypeDict):
 
 
 def ConvertCatalogueToASN_AST(inputSmp2Files):
-    '''Converts a list of input SMP2 Catalogues into an ASN.1 AST,
-    which it returns to the caller.'''
+    """Converts a list of input SMP2 Catalogues into an ASN.1 AST,
+    which it returns to the caller."""
     asnTypesDict = DashUnderscoreAgnosticDict()
     idToTypeDict = {}
     allSMP2Types = {}  # type: Dict[str, str]
@@ -363,7 +363,7 @@ def ConvertCatalogueToASN_AST(inputSmp2Files):
                     nodeTypename = a.title
                     if nodeTypename is None:
                         panic("'xlink:href' points to ready-made SMP2 type, but 'xlink:title' is missing! (file:%s, line:%d)" %
-                              a.base, a.sourceline)  # pragma: no cover
+                              (a.base, a.sourceline))  # pragma: no cover
                     nodeTypename = Clean(nodeTypename.split()[-1]).capitalize()  # Primitive Int32 -> Int32
                     cast, low, high = v
                     containedDict = {
@@ -371,7 +371,7 @@ def ConvertCatalogueToASN_AST(inputSmp2Files):
                         'lineno': a.sourceline
                     }
                     span = [low, high] if (low is not None and high is not None) else []
-                    if span != []:
+                    if span:
                         containedDict['range'] = [low, high]
                     # Especially for these hardcoded types, don't prefix with namespace.Name
                     asnTypesDict[nodeTypename] = cast(**containedDict)
@@ -429,3 +429,5 @@ def ConvertCatalogueToASN_AST(inputSmp2Files):
     for nodeTypename in list(asnTypesDict.keys()):
         FixupOutOfOrderIdReferences(nodeTypename, asnTypesDict, idToTypeDict)
     return asnTypesDict, idToTypeDict
+
+# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4

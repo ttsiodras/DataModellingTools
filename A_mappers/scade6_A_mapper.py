@@ -156,7 +156,7 @@ def RenderElements(controlString: str):
             # This is a bug in pylint - scheduled to be fixed in next release, by:
             # https://github.com/PyCQA/pylint/commit/6d31776454b5e308e4b869a1893b39083dca3146
             newElement = g_doc.createElement(finalElementName)  # pylint: disable=redefined-variable-type
-        if attributes != []:
+        if attributes:
             for atr in attributes:
                 # This is a bug in pylint - scheduled to be fixed in next release, by:
                 # https://github.com/PyCQA/pylint/commit/6d31776454b5e308e4b869a1893b39083dca3146
@@ -237,7 +237,7 @@ def OnBasic(nodeTypename, node, unused_leafTypeDict):
     if isinstance(node, AsnString):
         # An OCTET STRING must always include a range definition,
         # otherwise SCADE will not be able to create C code!
-        if node._range == []:
+        if not node._range:
             panic(("Scade612_A_mapper: string (in %s) must have a SIZE constraint inside ASN.1,\n" +  # pragma: no cover
                    "or else SCADE can't generate C code!") % node.Location())  # pragma: no cover
         controlString += 'Table,type,NamedType,type,TypeRef$name=char,size`Table,ConstValue$value=%d,' % node._range[-1]
@@ -321,7 +321,7 @@ def OnSequenceOf(nodeTypename, node, unused_leafTypeDict):
     g_declaredTypes.add(nodeTypename)
     if HandleTypedef(nodeTypename):
         return
-    if node._range == []:
+    if not node._range:
         panic("Scade612_A_mapper: must have a SIZE constraint or else SCADE can't generate C code (in %s)!\n" %  # pragma: no cover
               node.Location())  # pragma: no cover
     oid = GetOID(nodeTypename)
@@ -350,3 +350,5 @@ def OnChoice(nodeTypename, node, leafTypeDict):
 
 def OnShutdown(unused_badTypes):
     g_outputFile.write(g_doc.toprettyxml(indent="    ", encoding="UTF-8"))
+
+# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4

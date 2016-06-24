@@ -72,7 +72,7 @@ class FromQGenCToASN1SCC(RecursiveMapper):
 
     def MapOctetString(self, srcQGenC, destVar, node, _, __):
         lines = []
-        if node._range == []:
+        if not node._range:
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
         for i in range(0, node._range[-1]):
             lines.append("%s.arr[%d] = %s.element_data[%d];\n" % (destVar, i, srcQGenC, i))
@@ -120,7 +120,7 @@ class FromQGenCToASN1SCC(RecursiveMapper):
         return lines
 
     def MapSequenceOf(self, srcQGenC, destVar, node, leafTypeDict, names):
-        if node._range == []:
+        if not node._range:
             panicWithCallStack("need a SIZE constraint or else we can't generate C code (%s)!\n" % node.Location())  # pragma: no cover
         isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
         lines = []
@@ -153,7 +153,7 @@ class FromASN1SCCtoQGenC(RecursiveMapper):
         return ["%s = %s;\n" % (dstQGenC, srcVar)]
 
     def MapOctetString(self, srcVar, dstQGenC, node, _, __):
-        if node._range == []:
+        if not node._range:
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
 
         lines = []
@@ -204,7 +204,7 @@ class FromASN1SCCtoQGenC(RecursiveMapper):
         return lines
 
     def MapSequenceOf(self, srcVar, dstQGenC, node, leafTypeDict, names):
-        if node._range == []:
+        if not node._range:
             panicWithCallStack("need a SIZE constraint or else we can't generate C code (%s)!\n" % node.Location())  # pragma: no cover
         isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
         lines = []
@@ -235,7 +235,7 @@ class FromQGenCToOSS(RecursiveMapper):
 
     def MapOctetString(self, srcQGenC, destVar, node, _, __):
         lines = []
-        if node._range == []:
+        if not node._range:
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
         for i in range(0, node._range[-1]):
             lines.append("%s.value[%d] = %s.element_data[%d];\n" % (destVar, i, srcQGenC, i))
@@ -282,7 +282,7 @@ class FromQGenCToOSS(RecursiveMapper):
         return lines
 
     def MapSequenceOf(self, srcQGenC, destVar, node, leafTypeDict, names):
-        if node._range == []:
+        if not node._range:
             panicWithCallStack("(%s) needs a SIZE constraint or else we can't generate C code!\n" % node.Location())  # pragma: no cover
         isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
         lines = []
@@ -314,7 +314,7 @@ class FromOSStoQGenC(RecursiveMapper):
         return ["%s = %s;\n" % (dstQGenC, srcVar)]
 
     def MapOctetString(self, srcVar, dstQGenC, node, _, __):
-        if node._range == []:
+        if not node._range:
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
         lines = []
         for i in range(0, node._range[-1]):
@@ -363,7 +363,7 @@ class FromOSStoQGenC(RecursiveMapper):
         return lines
 
     def MapSequenceOf(self, srcVar, dstQGenC, node, leafTypeDict, names):
-        if node._range == []:
+        if not node._range:
             panicWithCallStack("(%s) needs a SIZE constraint or else we can't generate C code!\n" % node.Location())  # pragma: no cover
         isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
         lines = []
@@ -414,18 +414,18 @@ class QGenCGlueGenerator(SynchronousToolGlueGenerator):
 
     def SourceVar(self, unused_nodeTypename, unused_encoding, unused_node, unused_subProgram, unused_subProgramImplementation, param, unused_leafTypeDict, unused_names):
         if isinstance(param._sourceElement, AadlPort):
-            srcQGenC = "cOutput.%s" % (param._id)  # pragma: no cover
+            srcQGenC = "cOutput.%s" % param._id  # pragma: no cover
         elif isinstance(param._sourceElement, AadlParameter):
-            srcQGenC = "cOutput.%s" % (param._id)
+            srcQGenC = "cOutput.%s" % param._id
         else:  # pragma: no cover
             panicWithCallStack("%s not supported (yet?)\n" % str(param._sourceElement))  # pragma: no cover
         return srcQGenC
 
     def TargetVar(self, unused_nodeTypename, unused_encoding, unused_node, unused_subProgram, unused_subProgramImplementation, param, unused_leafTypeDict, unused_names):
         if isinstance(param._sourceElement, AadlPort):
-            dstQGenC = "cInput.%s" % (param._id)  # pragma: no cover
+            dstQGenC = "cInput.%s" % param._id  # pragma: no cover
         elif isinstance(param._sourceElement, AadlParameter):
-            dstQGenC = "cInput.%s" % (param._id)
+            dstQGenC = "cInput.%s" % param._id
         else:  # pragma: no cover
             panicWithCallStack("%s not supported (yet?)\n" % str(param._sourceElement))  # pragma: no cover
         return dstQGenC

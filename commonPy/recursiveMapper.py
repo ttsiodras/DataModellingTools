@@ -28,6 +28,7 @@ from commonPy.asnAST import (
 )
 
 
+# noinspection PyMethodMayBeStatic
 class RecursiveMapper:
 
     def maybeElse(self, childNo: int) -> str:  # pylint: disable=no-self-use
@@ -112,3 +113,5 @@ class RecursiveMapper:
         else:
             panicWithCallStack("unsupported %s (%s)" % (str(node.__class__), node.Location()))
         return lines
+
+# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4

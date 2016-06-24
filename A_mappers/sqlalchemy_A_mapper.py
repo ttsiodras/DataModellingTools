@@ -410,7 +410,7 @@ def CreateSequenceOf(nodeTypename, node, unused_leafTypeDict):
     reftype = node._containedType
     reftype = CleanName(reftype)
     constraint = ""
-    if node._range != []:
+    if node._range:
         constraint = \
             ", CheckConstraint('idx>=0 AND idx<%s')" % (node._range[-1])
 

@@ -131,7 +131,7 @@ def DeclareCollection(node, name, internal):
         g_outputFile.write("%s_member_%02d.DataType='%s';\n" % (name, i, internal))
         g_outputFile.write("%s_member_%02d.dimensions=1;\n\n" % (name, i))
     g_outputFile.write('%s_member_length=Simulink.BusElement;\n' % name)
-    g_outputFile.write("%s_member_length.name='length';\n" % (name))
+    g_outputFile.write("%s_member_length.name='length';\n" % name)
     g_outputFile.write("%s_member_length.DataType='int32';\n" % name)
     g_outputFile.write("%s_member_length.dimensions=1;\n\n" % name)
     g_outputFile.write('%s=Simulink.Bus;\n' % name)
@@ -189,7 +189,7 @@ def CreateDeclarationForType(nodeTypename, names, leafTypeDict):
     elif isinstance(node, AsnReal):
         CreateAlias(nodeTypename, "double", "range is %s" % str(node._range))
     elif isinstance(node, AsnString):
-        if node._range == []:
+        if not node._range:
             panic("QGenC_A_mapper: string (in %s) must have a SIZE constraint!\n" % node.Location())  # pragma: no cover
         name = CleanNameAsSimulinkWants(nodeTypename)
         DeclareSimpleCollection(node, name, "uint8")

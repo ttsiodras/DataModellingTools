@@ -178,8 +178,8 @@ clean:
     g_outputGetSetH.write('\n/* Helper functions for NATIVE encodings */\n\n')
     g_outputGetSetC.write('\n/* Helper functions for NATIVE encodings */\n\n')
 
-    def WorkOnType(nodeTypename: str):
-        typ = CleanNameAsPythonWants(nodeTypename)
+    def WorkOnType(nodeTypeName: str):
+        typ = CleanNameAsPythonWants(nodeTypeName)
         g_outputGetSetH.write('void SetDataFor_%s(void *dest, void *src);\n' % typ)
         g_outputGetSetH.write("byte* MovePtrBySizeOf_%s(byte *pData);\n" % typ)
         g_outputGetSetH.write("byte* CreateInstanceOf_%s(void);\n" % typ)
@@ -347,7 +347,7 @@ def CreateGettersAndSetters(path, params, accessPathInC, node, names, leafTypeDi
     elif isinstance(node, AsnReal):
         CommonBaseImpl("REAL", "double", path, params, accessPathInC)
     elif isinstance(node, AsnString):
-        if node._range == []:
+        if not node._range:
             panic("Python_A_mapper: string (in %s) must have a SIZE constraint!\n" % node.Location())  # pragma: no cover
         if isSequenceVariable(node):
             CommonBaseImpl("OCTETSTRING", "long", path, params, accessPathInC + ".nCount", "Length")
@@ -500,3 +500,5 @@ def CreateDeclarationsForAllTypes(names, leafTypeDict, badTypes: SetOfBadTypenam
     for nodeTypename in names:
         if not names[nodeTypename]._isArtificial and nodeTypename not in badTypes:
             CreateDeclarationForType(nodeTypename, names, leafTypeDict)
+
+# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4

@@ -761,9 +761,9 @@ class Module(Pretty):
     _exportedVariables = None  # type: List[str]
 
     # (tuples of ModuleName, imported types, imported vars)
-    _importedModules = None    # type: List[ Tuple[ str, List[str], List[str] ] ]
+    _importedModules = None    # type: List[Tuple[str, List[str], List[str]]]
     # (tuples of Typename, AsnNode)
-    _typeAssignments = None    # type: List[ Tuple[ str, AsnNode] ]
+    _typeAssignments = None    # type: List[Tuple[str, AsnNode]]
 
 
 def VisitAsn1Module(xmlAsn1File, xmlModule, modules):
@@ -985,3 +985,5 @@ if __name__ == "__main__":
     elif "-testASN1" in sys.argv:
         sys.argv.remove("-testASN1")
         test_asn1()
+
+# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4

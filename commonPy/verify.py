@@ -44,12 +44,12 @@ def VerifyNodeRange(node):
 If they are not, a runtime error is generated, with a report
 on the exact location of the offending type in the ASN.1 grammar.'''
     if isinstance(node, commonPy.asnAST.AsnInt):
-        if node._range == []:
+        if not node._range:
             panic("INTEGER (in %s) must have a range constraint inside ASN.1,\n"
                   "or else we might lose accuracy during runtime!" % node.Location())
 
     elif isinstance(node, commonPy.asnAST.AsnReal):
-        if node._range == []:
+        if not node._range:
             panic("REAL (in %s) must have a range constraint inside ASN.1,\n"
                   "or else we might lose accuracy during runtime!" % node.Location())
         else:
@@ -63,11 +63,11 @@ on the exact location of the offending type in the ASN.1 grammar.'''
                       node.Location())
 
     elif isinstance(node, commonPy.asnAST.AsnString):
-        if node._range == []:
+        if not node._range:
             panic("string (in %s) must have SIZE range set!\n" % node.Location())
 
     elif isinstance(node, commonPy.asnAST.AsnSequenceOf) or isinstance(node, commonPy.asnAST.AsnSetOf):
-        if node._range == []:
+        if not node._range:
             panic("SequenceOf (in %s) must have SIZE range set!\n" % node.Location())
 
     elif isinstance(node, commonPy.asnAST.AsnEnumerated):
@@ -102,3 +102,5 @@ calling VerifyNodeRange for each Node.'''
         VerifyNodeRange(node)
     else:
         panic("VerifyRanges: Unexpected %s\n" % str(node))
+
+# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4

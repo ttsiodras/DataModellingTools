@@ -61,8 +61,9 @@ def DiscoverBadTypes() -> SetOfBadTypenames:
     badTypes = set()  # type: SetOfBadTypenames
     cache = {}  # type: Dict[AsnNode, bool]
 
+    names = commonPy.asnParser.g_names
+
     def CheckNodeForIA5(node_or_str: Union[AsnNode, str]) -> bool:
-        names = commonPy.asnParser.g_names
         if isinstance(node_or_str, str):
             node = names[node_or_str]  # type: AsnNode
         else:
@@ -94,14 +95,15 @@ def DiscoverBadTypes() -> SetOfBadTypenames:
         return cache[node]
 
     # Hack for IA5Strings (IA5s are used in TASTE's runtime configuration spec)
-    names = commonPy.asnParser.g_names
     while True:
         foundOne = False
         for nodeTypename in names.keys():
-            node = names[nodeTypename]
-            if nodeTypename not in badTypes and CheckNodeForIA5(node):
+            nodeAST = names[nodeTypename]
+            if nodeTypename not in badTypes and CheckNodeForIA5(nodeAST):
                 badTypes.add(nodeTypename)
                 foundOne = True
         if not foundOne:
             break
     return badTypes
+
+# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4

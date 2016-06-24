@@ -181,7 +181,7 @@ def main():
 
             inform("Executing mappings for types inside %s...", asnFile)
             names = uniqueASNfiles[asnFile][0]
-            for nodeTypename in names:
+            for nodeTypename in sorted(names):
                 # Check if this type must be skipped
                 if nodeTypename in badTypes:
                     continue

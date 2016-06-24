@@ -45,6 +45,7 @@ def Version():
     print("Code generator: " + "$Id: rtds_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")
 
 
+# noinspection PyListCreation
 class FromRTDSToASN1SCC(RecursiveMapper):
     def __init__(self):
         self.uniqueID = 0
@@ -140,6 +141,7 @@ class FromRTDSToASN1SCC(RecursiveMapper):
         panic("The PragmaDev mapper does not support SETOF. Please use SEQUENCEOF instead (%s)" % node.Location())  # pragma: nocover
 
 
+# noinspection PyListCreation
 class FromRTDSToOSS(RecursiveMapper):
     def __init__(self):
         self.uniqueID = 0
@@ -242,6 +244,7 @@ class FromRTDSToOSS(RecursiveMapper):
         panic("The PragmaDev mapper does not support SETOF. Please use SEQUENCEOF instead (%s)" % node.Location())  # pragma: nocover
 
 
+# noinspection PyListCreation
 class FromASN1SCCtoRTDS(RecursiveMapper):
     def __init__(self):
         self.uniqueID = 0
@@ -342,6 +345,7 @@ class FromASN1SCCtoRTDS(RecursiveMapper):
         panic("The PragmaDev mapper does not support SETOF. Please use SEQUENCEOF instead (%s)" % node.Location())  # pragma: nocover
 
 
+# noinspection PyListCreation
 class FromOSStoRTDS(RecursiveMapper):
     def __init__(self):
         self.uniqueID = 0
@@ -370,15 +374,15 @@ class FromOSStoRTDS(RecursiveMapper):
         lines.append("    int i;\n")
         lines.append("    for(i=0; i<%s.length; i++) {\n" % srcVar)
         lines.append("        unsigned char value = %s.value[i];\n" % srcVar)
-        lines.append("        %s.cont[i].cont[0] = value & 128;\n" % (dstSDLVariable))
-        lines.append("        %s.cont[i].cont[1] = value & 64;\n" % (dstSDLVariable))
-        lines.append("        %s.cont[i].cont[2] = value & 32;\n" % (dstSDLVariable))
-        lines.append("        %s.cont[i].cont[3] = value & 16;\n" % (dstSDLVariable))
-        lines.append("        %s.cont[i].cont[4] = value & 8;\n" % (dstSDLVariable))
-        lines.append("        %s.cont[i].cont[5] = value & 4;\n" % (dstSDLVariable))
-        lines.append("        %s.cont[i].cont[6] = value & 2;\n" % (dstSDLVariable))
-        lines.append("        %s.cont[i].cont[7] = value & 1;\n" % (dstSDLVariable))
-        lines.append("        %s.cont[i].length = 8;\n" % (dstSDLVariable))
+        lines.append("        %s.cont[i].cont[0] = value & 128;\n" % dstSDLVariable)
+        lines.append("        %s.cont[i].cont[1] = value & 64;\n" % dstSDLVariable)
+        lines.append("        %s.cont[i].cont[2] = value & 32;\n" % dstSDLVariable)
+        lines.append("        %s.cont[i].cont[3] = value & 16;\n" % dstSDLVariable)
+        lines.append("        %s.cont[i].cont[4] = value & 8;\n" % dstSDLVariable)
+        lines.append("        %s.cont[i].cont[5] = value & 4;\n" % dstSDLVariable)
+        lines.append("        %s.cont[i].cont[6] = value & 2;\n" % dstSDLVariable)
+        lines.append("        %s.cont[i].cont[7] = value & 1;\n" % dstSDLVariable)
+        lines.append("        %s.cont[i].length = 8;\n" % dstSDLVariable)
         lines.append("    }\n")
         lines.append("    while(i<%d) {\n" % node._range[-1])
         lines.append("        %s.cont[i].cont[0]=0;\n" % dstSDLVariable)

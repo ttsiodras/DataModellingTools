@@ -102,6 +102,7 @@ def Version():
     print(("Code generator: " + "$Id: og_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $"))
 
 
+# noinspection PyListCreation
 class FromObjectGeodeToASN1SCC(RecursiveMapper):
     def __init__(self):
         self.uniqueID = 0
@@ -206,6 +207,7 @@ class FromObjectGeodeToASN1SCC(RecursiveMapper):
         return self.MapSequenceOf(srcSDLVariable, destVar, node, leafTypeDict, names)  # pragma: nocover
 
 
+# noinspection PyListCreation
 class FromObjectGeodeToOSS(RecursiveMapper):
     def __init__(self):
         self.uniqueID = 0
@@ -308,6 +310,7 @@ class FromObjectGeodeToOSS(RecursiveMapper):
         return self.MapSequenceOf(srcSDLVariable, destVar, node, leafTypeDict, names)  # pragma: nocover
 
 
+# noinspection PyListCreation
 class FromASN1SCCtoObjectGeode(RecursiveMapper):
     def __init__(self):
         self.uniqueID = 0
@@ -337,15 +340,15 @@ class FromASN1SCCtoObjectGeode(RecursiveMapper):
         lines.append("    int i;\n")
         lines.append("    for(i=0; i<%s; i++) {\n" % limit)
         lines.append("        unsigned char value = %s.arr[i];\n" % srcVar)
-        lines.append("        %s.cont[i].cont[0] = (value & 128) >> 7;\n" % (dstSDLVariable))
-        lines.append("        %s.cont[i].cont[1] = (value & 64) >> 6;\n" % (dstSDLVariable))
-        lines.append("        %s.cont[i].cont[2] = (value & 32) >> 5;\n" % (dstSDLVariable))
-        lines.append("        %s.cont[i].cont[3] = (value & 16) >> 4;\n" % (dstSDLVariable))
-        lines.append("        %s.cont[i].cont[4] = (value & 8) >> 3;\n" % (dstSDLVariable))
-        lines.append("        %s.cont[i].cont[5] = (value & 4) >> 2;\n" % (dstSDLVariable))
-        lines.append("        %s.cont[i].cont[6] = (value & 2) >> 1;\n" % (dstSDLVariable))
-        lines.append("        %s.cont[i].cont[7] = value & 1;\n" % (dstSDLVariable))
-        lines.append("        %s.cont[i].length = 8;\n" % (dstSDLVariable))
+        lines.append("        %s.cont[i].cont[0] = (value & 128) >> 7;\n" % dstSDLVariable)
+        lines.append("        %s.cont[i].cont[1] = (value & 64) >> 6;\n" % dstSDLVariable)
+        lines.append("        %s.cont[i].cont[2] = (value & 32) >> 5;\n" % dstSDLVariable)
+        lines.append("        %s.cont[i].cont[3] = (value & 16) >> 4;\n" % dstSDLVariable)
+        lines.append("        %s.cont[i].cont[4] = (value & 8) >> 3;\n" % dstSDLVariable)
+        lines.append("        %s.cont[i].cont[5] = (value & 4) >> 2;\n" % dstSDLVariable)
+        lines.append("        %s.cont[i].cont[6] = (value & 2) >> 1;\n" % dstSDLVariable)
+        lines.append("        %s.cont[i].cont[7] = value & 1;\n" % dstSDLVariable)
+        lines.append("        %s.cont[i].length = 8;\n" % dstSDLVariable)
         lines.append("    }\n")
         lines.append("    while(i<%d) {\n" % node._range[-1])
         lines.append("        %s.cont[i].cont[0]=0;\n" % dstSDLVariable)
@@ -425,6 +428,7 @@ class FromASN1SCCtoObjectGeode(RecursiveMapper):
         return self.MapSequenceOf(srcVar, dstSDLVariable, node, leafTypeDict, names)  # pragma: nocover
 
 
+# noinspection PyListCreation
 class FromOSStoObjectGeode(RecursiveMapper):
     def __init__(self):
         self.uniqueID = 0
@@ -453,15 +457,15 @@ class FromOSStoObjectGeode(RecursiveMapper):
         lines.append("    int i;\n")
         lines.append("    for(i=0; i<%s.length; i++) {\n" % srcVar)
         lines.append("        unsigned char value = %s.value[i];\n" % srcVar)
-        lines.append("        %s.cont[i].cont[0] = value & 128;\n" % (dstSDLVariable))
-        lines.append("        %s.cont[i].cont[1] = value & 64;\n" % (dstSDLVariable))
-        lines.append("        %s.cont[i].cont[2] = value & 32;\n" % (dstSDLVariable))
-        lines.append("        %s.cont[i].cont[3] = value & 16;\n" % (dstSDLVariable))
-        lines.append("        %s.cont[i].cont[4] = value & 8;\n" % (dstSDLVariable))
-        lines.append("        %s.cont[i].cont[5] = value & 4;\n" % (dstSDLVariable))
-        lines.append("        %s.cont[i].cont[6] = value & 2;\n" % (dstSDLVariable))
-        lines.append("        %s.cont[i].cont[7] = value & 1;\n" % (dstSDLVariable))
-        lines.append("        %s.cont[i].length = 8;\n" % (dstSDLVariable))
+        lines.append("        %s.cont[i].cont[0] = value & 128;\n" % dstSDLVariable)
+        lines.append("        %s.cont[i].cont[1] = value & 64;\n" % dstSDLVariable)
+        lines.append("        %s.cont[i].cont[2] = value & 32;\n" % dstSDLVariable)
+        lines.append("        %s.cont[i].cont[3] = value & 16;\n" % dstSDLVariable)
+        lines.append("        %s.cont[i].cont[4] = value & 8;\n" % dstSDLVariable)
+        lines.append("        %s.cont[i].cont[5] = value & 4;\n" % dstSDLVariable)
+        lines.append("        %s.cont[i].cont[6] = value & 2;\n" % dstSDLVariable)
+        lines.append("        %s.cont[i].cont[7] = value & 1;\n" % dstSDLVariable)
+        lines.append("        %s.cont[i].length = 8;\n" % dstSDLVariable)
         lines.append("    }\n")
         lines.append("    while(i<%d) {\n" % node._range[-1])
         lines.append("        %s.cont[i].cont[0]=0;\n" % dstSDLVariable)
@@ -646,7 +650,7 @@ class OG_GlueGenerator(ASynchronousToolGlueGenerator):
                 (self.CleanNameAsToolWants(nodeTypename), self.CleanNameAsToolWants(nodeTypename)))
             fileOutHeader.write(
                 '\tfprintf(stderr, "Could not encode %s (at %%s, %%d), error message was %%s\\n", __FILE__, __LINE__, ossGetErrMsg(g_world));\\\n' %
-                (nodeTypename))
+                nodeTypename)
             fileOutHeader.write("        varName##_len = -1;\\\n")
             fileOutHeader.write("    } else {\\\n")
             fileOutHeader.write("        memcpy(&varName[0], strm.value, strm.length);\\\n")
@@ -662,7 +666,7 @@ class OG_GlueGenerator(ASynchronousToolGlueGenerator):
                  self.CleanNameAsToolWants(nodeTypename)))
             fileOutHeader.write(
                 '\tfprintf(stderr, "Could not encode %s (at %%s, %%d), error code was %%d\\n", __FILE__, __LINE__, errorCode);\\\n' %
-                (nodeTypename))
+                nodeTypename)
             fileOutHeader.write("        varName##_len = -1;\\\n")
             fileOutHeader.write("    } else {\\\n")
             fileOutHeader.write("        varName##_len = BitStream_GetLength(&strm);\\\n")
