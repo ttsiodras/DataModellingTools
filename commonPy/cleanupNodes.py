@@ -62,6 +62,7 @@ def DiscoverBadTypes() -> SetOfBadTypenames:
     cache = {}  # type: Dict[AsnNode, bool]
 
     names = commonPy.asnParser.g_names
+
     def CheckNodeForIA5(node_or_str: Union[AsnNode, str]) -> bool:
         if isinstance(node_or_str, str):
             node = names[node_or_str]  # type: AsnNode
