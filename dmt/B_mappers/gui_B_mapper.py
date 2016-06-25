@@ -48,7 +48,7 @@ g_IDs = 20000
 g_asn_name = ""
 g_outputDir = ""
 g_maybeFVname = ""
-g_perFV = {}
+g_perFV = set()
 g_langPerSP = {}
 
 
@@ -386,7 +386,7 @@ def OnStartup(modelingLanguage, asnFile, subProgram, subProgramImplementation, o
     # have we ever seen before the combination of FVname and Language?
     if maybeFVname + modelingLanguage.lower() not in g_perFV:
         # No, check for things that must be instantiated once per FV+Lang
-        g_perFV[maybeFVname + modelingLanguage.lower()] = maybeFVname
+        g_perFV.add(maybeFVname + modelingLanguage.lower())
 
         # The first time you see an FV with an sp_impl that is also a GUI_PI, create a thread to poll /FVName_PI_queue
         if modelingLanguage.lower() == "gui_pi":

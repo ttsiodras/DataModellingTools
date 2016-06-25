@@ -36,7 +36,7 @@ class MagicSmp2SimpleTypesDict(dict):
     # ---------------------------------------------------------------------------
     def has_key(self, name):
         name = re.sub(r'/\d{4}/\d{2}/', '/', name)
-        return name in super(MagicSmp2SimpleTypesDict, self)  # pylint: disable=unsupported-membership-test
+        return name in super(MagicSmp2SimpleTypesDict, self)  # type: ignore  pylint: disable=unsupported-membership-test
 
 
 simpleTypesTable = MagicSmp2SimpleTypesDict({

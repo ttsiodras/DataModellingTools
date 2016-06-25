@@ -25,7 +25,10 @@ Base class for all asynchronous tools
 import re
 import os
 
+from typing import IO, Any  # NOQA pylint: disable=unused-import
+
 from ..commonPy.utility import inform, panicWithCallStack
+from ..commonPy.asnParser import Typename, AsnNode, AST_Lookup, AST_Leaftypes  # NOQA pylint: disable=unused-import
 
 
 class ASynchronousToolGlueGenerator:
@@ -57,12 +60,12 @@ class ASynchronousToolGlueGenerator:
 
     def __init__(self):
         # The files written to
-        self.C_HeaderFile = None
-        self.C_SourceFile = None
+        self.C_HeaderFile = None  # type: IO[Any]
+        self.C_SourceFile = None  # type: IO[Any]
         self.asn_name = ""
         self.supportedEncodings = ['native', 'uper', 'acn']
-        self.useOSS = None
-        self.typesToWorkOn = {}
+        self.useOSS = None  # type: bool
+        self.typesToWorkOn = {}  # type: Dict[str, Tuple[Typename, AST_Lookup, AST_Leaftypes]]
 
     def OnStartup(self, modelingLanguage, asnFile, outputDir, maybeFVname, useOSS):
         self.useOSS = useOSS

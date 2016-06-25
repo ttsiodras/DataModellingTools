@@ -24,6 +24,8 @@ Base class for all synchronous tools
 import re
 import os
 
+from typing import IO, Any  # NOQA pylint: disable=unused-import
+
 from ..commonPy.utility import panic, inform, panicWithCallStack
 from ..commonPy.aadlAST import InParam, OutParam, InOutParam
 
@@ -79,14 +81,14 @@ class SynchronousToolGlueGenerator:
 
     def __init__(self):
         # The files written to
-        self.C_HeaderFile = None
-        self.C_SourceFile = None
-        self.ADA_HeaderFile = None
-        self.ADA_SourceFile = None
+        self.C_HeaderFile = None  # type: IO[Any]
+        self.C_SourceFile = None  # type: IO[Any]
+        self.ADA_HeaderFile = None  # type: IO[Any]
+        self.ADA_SourceFile = None  # type: IO[Any]
         self.asn_name = ""
         self.supportedEncodings = ['native', 'uper', 'acn']
-        self.dir = None
-        self.useOSS = None
+        self.dir = None  # type: str
+        self.useOSS = None  # type: bool
 
     def OnStartup(self, modelingLanguage, asnFile, subProgram, subProgramImplementation, outputDir, maybeFVname, useOSS):
         if modelingLanguage == "QGenAda":

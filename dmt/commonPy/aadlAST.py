@@ -36,15 +36,14 @@
 #                       support
 #
 # Charge for Runtimes   None                    None
-#
-g_signals = {}
-g_apLevelContainers = {}
 
-g_subProgramImplementations = []
-g_processImplementations = []
-g_threadImplementations = []
+from typing import Tuple, Dict  # NOQA pylint: disable=unused-import
 
-g_systems = {}
+g_apLevelContainers = {}  # type: Dict[str, ApLevelContainer]
+
+g_subProgramImplementations = []  # type: List[Tuple[str,str,str,str]]
+g_processImplementations = []  # type: List[Tuple[str,str,str,str]]
+g_threadImplementations = []  # type: List[Tuple[str,str,str,str]]
 
 # AST classes
 
@@ -144,31 +143,6 @@ class OutgoingUniPort(UniPort):
         UniPort.__init__(self, signal)
 
 
-class ApLevelContainer:
-    def __init__(self, iid):
-        self._id = iid
-        self._calls = []
-        self._params = []
-        self._connections = []
-        self._language = None
-
-    def AddCalledAPLC(self, idAPLC):
-        self._calls.append(idAPLC)
-
-    def AddConnection(self, srcUniquePortId, destUniquePortId):
-        if srcUniquePortId._componentId is None:
-            srcUniquePortId._componentId = self._id
-        if destUniquePortId._componentId is None:
-            destUniquePortId._componentId = self._id
-        self._connections.append(Connection(srcUniquePortId, destUniquePortId))
-
-    def AddParam(self, param):
-        self._params.append(param)
-
-    def SetLanguage(self, language):
-        self._language = language
-
-
 class Param:
     def __init__(self, aplcID, iid, signal, sourceElement):
         self._id = iid
@@ -192,6 +166,27 @@ class OutParam(Param):
 class InOutParam(Param):
     def __init__(self, aplcID, iid, signal, sourceElement):
         Param.__init__(self, aplcID, iid, signal, sourceElement)
+
+
+class ApLevelContainer:
+    def __init__(self, iid):
+        self._id = iid
+        self._params = []  # type: List[Param]
+        self._connections = []  # type: List[Connection]
+        self._language = None  # type: str
+
+    def AddConnection(self, srcUniquePortId, destUniquePortId):
+        if srcUniquePortId._componentId is None:
+            srcUniquePortId._componentId = self._id
+        if destUniquePortId._componentId is None:
+            destUniquePortId._componentId = self._id
+        self._connections.append(Connection(srcUniquePortId, destUniquePortId))
+
+    def AddParam(self, param: Param):
+        self._params.append(param)
+
+    def SetLanguage(self, language: str):
+        self._language = language
 
 
 class UniquePortIdentifier:

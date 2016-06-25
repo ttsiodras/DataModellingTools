@@ -21,10 +21,11 @@
 import re
 import os
 
+from typing import Set, Dict  # NOQA pylint: disable=unused-import
+
 g_HeaderFile = None
 g_SourceFile = None
 g_PythonFile = None
-g_SWIGFile = None
 
 # Python statement list
 g_headerPython = []
@@ -35,8 +36,8 @@ g_footerPython = []
 g_asn_name = ""
 g_outputDir = ""
 g_maybeFVname = ""
-g_perFV = {}
-g_langPerSP = {}
+g_perFV = set()  # type: Set[str]
+g_langPerSP = {}  # type: Dict[str, str]
 
 
 def CleanName(name):
@@ -116,26 +117,10 @@ def OnStartup(modelingLanguage, asnFile, subProgram, unused_subProgramImplementa
         g_SourceFile.write("    return(message_received_type);\n")
         g_SourceFile.write("}\n\n")
 
-    global g_SWIGFile   # WE CAN REMOVE EVERYTHING RELATED TO g_SWIGFile
-    if g_SWIGFile is None:
-        g_SWIGFile = open(outputDir + "python/PythonAccess.i", "w")
-        g_SWIGFile.write('''%%module PythonAccess
-
-%%{
-#include "gui_swig.h"
-#include "%(FVname)s_enums_def.h"
-%%}
-
-%%include "carrays.i"
-%%array_functions(byte,byte_SWIG_PTR)
-#include "gui_swig.h"
-#include "%(FVname)s_enums_def.h"
-
-''' % {"FVname": maybeFVname})
     # have we ever seen before the combination of FVname and Language?
     if maybeFVname + modelingLanguage.lower() not in g_perFV:
         # No, check for things that must be instantiated once per FV+Lang
-        g_perFV[maybeFVname + modelingLanguage.lower()] = maybeFVname
+        g_perFV.add(maybeFVname + modelingLanguage.lower())
 
         # The first time you see an FV with an sp_impl that is also a GUI_PI, create a thread to poll /FVName_PI_queue
         if modelingLanguage.lower() == "gui_pi":
