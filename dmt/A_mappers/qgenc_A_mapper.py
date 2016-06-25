@@ -23,6 +23,8 @@
 #
 import re
 
+from typing import Set  # NOQA pylint: disable=unused-import
+
 from ..commonPy.utility import panic, inform
 from ..commonPy import asnParser
 from ..commonPy.asnAST import (
@@ -34,7 +36,7 @@ from ..commonPy.createInternalTypes import ScanChildren
 g_outputFile = None
 
 # A map of the ASN.1 types defined so far
-g_definedTypes = {}
+g_definedTypes = set()  # type: Set[asnParser.Typename]
 
 g_octetStrings = 0
 
@@ -63,8 +65,7 @@ def OnStartup(unused_modelingLanguage, unused_asnFile, outputDir, unused_badType
     inform("QGenC_A_mapper: Creating file '%s'...", outputFilename)
     global g_outputFile
     g_outputFile = open(outputDir + outputFilename, 'w')
-    global g_definedTypes
-    g_definedTypes = {}
+    g_definedTypes.clear()
     global g_octetStrings
     g_octetStrings = 0
     CreateDeclarationsForAllTypes(asnParser.g_names, asnParser.g_leafTypeDict)
@@ -175,8 +176,8 @@ def DeclareSimpleCollection(node, name, internal):
 def CreateDeclarationForType(nodeTypename, names, leafTypeDict):
     if nodeTypename in g_definedTypes:
         return
-    g_definedTypes[nodeTypename] = 1
-    results = []
+    g_definedTypes.add(nodeTypename)
+    results = []  # type: List[str]
     ScanChildren(nodeTypename, names[nodeTypename], names, results, isRoot=True, createInnerNodesInNames=True)
     inform("Prerequisites of %s", nodeTypename)
     for prereqNodeTypename in results:

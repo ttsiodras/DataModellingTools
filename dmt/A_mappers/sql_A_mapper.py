@@ -24,14 +24,16 @@ code generator A.'''
 import os
 import re
 
+from typing import Set, IO, Any  # NOQA pylint: disable=unused-import
+
 from ..commonPy.asnAST import (
     AsnMetaMember, AsnChoice, AsnSet, AsnSequence, AsnSequenceOf, AsnSetOf)
 from ..commonPy.asnParser import g_names, g_leafTypeDict, CleanNameForAST
 from ..commonPy.utility import panic, warn
 from ..commonPy.cleanupNodes import SetOfBadTypenames
 
-g_sqlOutput = None
-g_innerTypes = {}
+g_sqlOutput = None  # type: IO[Any]
+g_innerTypes = set()  # type: Set[str]
 g_uniqueStringOfASN1files = ""
 g_outputDir = "."
 g_asnFiles = None
@@ -75,7 +77,7 @@ def Version():
     print("$Id: sql_A_mapper.py 1932 2010-06-15 13:41:15Z ttsiodras $")  # pragma: no cover
 
 
-g_dependencyGraph = {}
+g_dependencyGraph = {}  # type: Dict[str, Dict[str, int]]
 
 
 def FixupAstForSQL():
@@ -88,7 +90,7 @@ def FixupAstForSQL():
     def neededToAddPseudoType():
         nonlocal internalNo
         addedNewPseudoType = False
-        listOfTypenames = sorted(list(g_names.keys()) + list(g_innerTypes.keys()))
+        listOfTypenames = sorted(list(g_names.keys()) + list(g_innerTypes))
         for nodeTypename in listOfTypenames:
             node = g_names[nodeTypename]
             if isinstance(node, (AsnChoice, AsnSequence, AsnSet)):
@@ -107,7 +109,7 @@ def FixupAstForSQL():
                             asnFilename=child[1]._asnFilename,
                             containedType=internalName)
                         addedNewPseudoType = True
-                        g_innerTypes[internalName] = 1
+                        g_innerTypes.add(internalName)
                         g_dependencyGraph.setdefault(nodeTypename, {})
                         g_dependencyGraph[nodeTypename][internalName] = 1
                     else:
@@ -126,7 +128,7 @@ def FixupAstForSQL():
                         node._containedType._leafType
                     node._containedType = internalName
                     addedNewPseudoType = True
-                    g_innerTypes[internalName] = 1
+                    g_innerTypes.add(internalName)
                     g_dependencyGraph.setdefault(nodeTypename, {})
                     g_dependencyGraph[nodeTypename][internalName] = 1
                 else:
@@ -292,13 +294,13 @@ def OnShutdown(badTypes: SetOfBadTypenames):
         g_outputDir + os.sep + g_uniqueStringOfASN1files + ".sql", 'w')
     d = g_asnFiles if isinstance(g_asnFiles, str) else '","'.join(g_asnFiles)
     g_sqlOutput.write('--  SQL statements for types used in "%s"\n' % d)
-    typenameList = []
-    for nodeTypename in sorted(list(g_innerTypes.keys()) + list(g_names.keys())):
+    typenameList = []  # type: List[str]
+    for nodeTypename in sorted(list(g_innerTypes) + list(g_names.keys())):
         if nodeTypename in badTypes:
             continue
         if nodeTypename not in typenameList:
             typenameList.append(nodeTypename)
-    typesDoneSoFar = {}
+    typesDoneSoFar = set()  # type: Set[str]
 
     workRemains = True
     while workRemains:
@@ -313,7 +315,7 @@ def OnShutdown(badTypes: SetOfBadTypenames):
             # only emit each type once
             if nodeTypename in typesDoneSoFar:
                 continue
-            typesDoneSoFar[nodeTypename] = 1
+            typesDoneSoFar.add(nodeTypename)
 
             # if we process even one type, deps may be removed,
             # so scan again next time

@@ -87,7 +87,7 @@ def MergeASN1_AST(smp2AsnAST):
                 typesToAddVerbatim.append(k)
     # Merge missing types in asnParser.g_names
     for nodeTypename in typesToAddVerbatim:
-        results = []
+        results = []  # type: List[str]
         node = smp2AsnAST[nodeTypename]
         # Take care to add dependencies first
         ScanChildren(nodeTypename, node, smp2AsnAST, results, isRoot=True, createInnerNodesInNames=False)

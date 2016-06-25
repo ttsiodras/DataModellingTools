@@ -25,13 +25,15 @@ import os
 import re
 import random
 
+from typing import Set, IO, Any  # NOQA pylint: disable=unused-import
+
 from ..commonPy.asnAST import AsnMetaMember, AsnChoice, AsnSet, AsnSequence, AsnSequenceOf, AsnSetOf
 from ..commonPy.asnParser import g_names, g_leafTypeDict, CleanNameForAST
 from ..commonPy.utility import panic, warn
 from ..commonPy.cleanupNodes import SetOfBadTypenames
 
-g_catalogueXML = None
-g_innerTypes = {}
+g_catalogueXML = None  # type: IO[Any]
+g_innerTypes = set()  # type: Set[str]
 g_uniqueStringOfASN1files = ""
 g_outputDir = "."
 g_asnFiles = None
@@ -53,7 +55,7 @@ def getUID(strIdentifier, idStore={}):  # pylint: disable=dangerous-default-valu
     return idStore[strIdentifier]
 
 
-g_dependencyGraph = {}
+g_dependencyGraph = {}  # type: Dict[str, Dict[str, int]]
 
 
 def FixupAstForSMP2():
@@ -66,7 +68,7 @@ def FixupAstForSMP2():
     def neededToAddPseudoType():
         nonlocal internalNo
         addedNewPseudoType = False
-        listOfTypenames = sorted(list(g_names.keys()) + list(g_innerTypes.keys()))
+        listOfTypenames = sorted(list(g_names.keys()) + list(g_innerTypes))
         for nodeTypename in listOfTypenames:
             node = g_names[nodeTypename]
             if isinstance(node, (AsnChoice, AsnSequence, AsnSet)):
@@ -81,7 +83,7 @@ def FixupAstForSMP2():
                         g_leafTypeDict[internalName] = child[1]._leafType
                         child[1] = AsnMetaMember(asnFilename=child[1]._asnFilename, containedType=internalName)
                         addedNewPseudoType = True
-                        g_innerTypes[internalName] = 1
+                        g_innerTypes.add(internalName)
                         g_dependencyGraph.setdefault(nodeTypename, {})
                         g_dependencyGraph[nodeTypename][internalName] = 1
                     else:
@@ -98,7 +100,7 @@ def FixupAstForSMP2():
                     g_leafTypeDict[internalName] = node._containedType._leafType
                     node._containedType = internalName
                     addedNewPseudoType = True
-                    g_innerTypes[internalName] = 1
+                    g_innerTypes.add(internalName)
                     g_dependencyGraph.setdefault(nodeTypename, {})
                     g_dependencyGraph[nodeTypename][internalName] = 1
                 else:
@@ -315,13 +317,13 @@ def OnShutdown(badTypes: SetOfBadTypenames):
     g_catalogueXML.write('  <Namespace Id="ID_%s" Name="DataTypes">\n' % getUID("DataTypes"))
     g_catalogueXML.write('    <Description>Types used in "%s"</Description>\n' %
                          (g_asnFiles if isinstance(g_asnFiles, str) else '","'.join(g_asnFiles)))
-    typenameList = []
-    for nodeTypename in sorted(list(g_innerTypes.keys()) + list(g_names.keys())):
+    typenameList = []  # type: List[str]
+    for nodeTypename in sorted(list(g_innerTypes) + list(g_names.keys())):
         if nodeTypename in badTypes:
             continue
         if nodeTypename not in typenameList:
             typenameList.append(nodeTypename)
-    typesDoneSoFar = {}
+    typesDoneSoFar = set()  # type: Set[str]
 
     workRemains = True
     while workRemains:
@@ -335,7 +337,7 @@ def OnShutdown(badTypes: SetOfBadTypenames):
             # only emit each type once
             if nodeTypename in typesDoneSoFar:
                 continue
-            typesDoneSoFar[nodeTypename] = 1
+            typesDoneSoFar.add(nodeTypename)
 
             # if we process even one type, deps may be removed, so scan again next time
             workRemains = True

@@ -24,6 +24,8 @@ Semantix's code generator A.'''
 import os
 import re
 
+from typing import IO, Any  # NOQA pylint: disable=unused-import
+
 from ..commonPy.asnAST import (
     AsnMetaMember, AsnChoice, AsnSet, AsnSequence, AsnSequenceOf,
     AsnSetOf, isSequenceVariable)
@@ -31,7 +33,7 @@ from ..commonPy.asnParser import g_names, g_leafTypeDict, CleanNameForAST
 from ..commonPy.utility import panic, warn
 from ..commonPy.cleanupNodes import SetOfBadTypenames
 
-g_sqlalchemyOutput = None
+g_sqlalchemyOutput = None  # type: IO[Any]
 g_innerTypes = {}  # type: Dict[str, int]
 g_uniqueStringOfASN1files = ""
 g_outputDir = "."
@@ -526,7 +528,7 @@ def OnShutdown(badTypes: SetOfBadTypenames):
     g_sqlalchemyOutput = open(
         g_outputDir + os.sep + g_uniqueStringOfASN1files + "_model.py", 'w')
     d = g_asnFiles if isinstance(g_asnFiles, str) else '","'.join(g_asnFiles)
-    typenameList = []
+    typenameList = []  # type: List[str]
     for nodeTypename in sorted(list(g_innerTypes.keys()) + list(g_names.keys())):
         if nodeTypename in badTypes:
             continue
@@ -554,7 +556,7 @@ import DV
                CleanName(x)
                for x in typenameList
                if not g_names[x]._isArtificial)))
-    typesDoneSoFar = {}
+    typesDoneSoFar = set()  # type: Set[str]
 
     workRemains = True
     while workRemains:
@@ -569,7 +571,7 @@ import DV
             # only emit each type once
             if nodeTypename in typesDoneSoFar:
                 continue
-            typesDoneSoFar[nodeTypename] = 1
+            typesDoneSoFar.add(nodeTypename)
 
             # if we process even one type, deps may be removed,
             # so scan again next time
