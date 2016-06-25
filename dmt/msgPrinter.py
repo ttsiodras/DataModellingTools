@@ -50,9 +50,11 @@ from .commonPy import verify
 
 def usage():
     '''Print usage instructions.'''
-    msg = 'Usage: %s <options> input1.asn1 [input2.asn1]...\nWhere options are:\n'
+    msg = 'Usage: {} <options> input1.asn1 [input2.asn1]...\nWhere options are:\n'
     msg += '\t-o dirname\t\tDirectory to place generated files\nAnd one of:\n'
     msg += '\t-verbose\t\tDisplay more debug output\n'
+    print(msg.format(sys.argv[0]))
+    sys.exit(1)
 
 
 # noinspection PyListCreation
@@ -165,7 +167,7 @@ def main():
         configMT.verbose = True
         sys.argv.remove("-verbose")
 
-    if len(sys.argv) < 2:
+    if not sys.argv[1:]:
         usage()
 
     for f in sys.argv[1:]:
@@ -176,6 +178,8 @@ def main():
 
     Triples = Tuple[AST_Lookup, List[AsnNode], AST_Leaftypes]  # NOQA pylint: disable=unused-variable,invalid-sequence-index
     uniqueASNfiles = {}  # type: Dict[Filename, Triples]
+    for grammar in sys.argv[1:]:
+        uniqueASNfiles[grammar] = None
 
     for asnFile in uniqueASNfiles:
         tmpNames = {}  # Dict[Typename, AsnNode]
