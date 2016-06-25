@@ -5,4 +5,4 @@
    aadl2glueC : B mappers -generate code that convert from/to ASN1SCC  
 """
 
-__version__ = 1.0
+from ..commonPy import __version__

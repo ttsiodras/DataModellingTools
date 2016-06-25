@@ -129,10 +129,10 @@ def SaveASN_AST(bPruneUnnamedInnerTASTEtypes, outputAsn1Grammar, identicals):
         f.write('END\n')
 
 
-def main(args):
+def main():
     try:
         optlist, args = getopt.gnu_getopt(
-            args,
+            sys.argv[1:],
             "hvpi:a:o:", ['help', 'verbose', 'prune', 'smp2=', 'asn1=', 'outAsn1='])
     except:
         usage("Invalid parameters passed...")
@@ -180,9 +180,9 @@ if __name__ == '__main__':
         if dbg in sys.argv:
             sys.argv.remove(dbg)   # pragma: no cover
             import pdb             # pragma: no cover pylint: disable=wrong-import-position,wrong-import-order
-            pdb.run('main(sys.argv[1:])')      # pragma: no cover
+            pdb.run('main()')      # pragma: no cover
             break  # pragma: no cover
     else:
-        sys.exit(main(sys.argv[1:]))
+        sys.exit(main())
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4

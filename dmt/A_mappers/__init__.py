@@ -4,4 +4,5 @@
 """
    asn2dataModel converts ASN.1 modules to a variety of target languages
 """
-__version__ = 1.0
+
+from ..commonPy import __version__

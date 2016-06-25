@@ -10,7 +10,7 @@ Usage:  python setup.py sdist   --> to create a tarball
 from setuptools import setup, find_packages
 
 from dmt import (
-    commonPy, asn2dataModel, A_mappers, B_mappers,
+    commonPy, asn2dataModel, A_mappers, B_mappers, asn2aadlPlus,
     aadl2glueC, msgPrinter, msgPrinterASN1)
 
 setup(
@@ -32,7 +32,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'asn2aadlPlus = asn2aadlPlus:main',
+            'asn2aadlPlus = dmt.asn2aadlPlus:main',
             'asn2dataModel = dmt.asn2dataModel:main',
             'aadl2glueC = dmt.aadl2glueC:main',
             'msgPrinter = dmt.msgPrinter:main',
