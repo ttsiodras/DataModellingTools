@@ -89,7 +89,10 @@ hpredef.h :
  Contains the prototypes (extern declarations) of the vm callbacks.
 '''
 
+from typing import Set  # NOQA pylint: disable=unused-import
+
 from ..commonPy.asnAST import isSequenceVariable, sourceSequenceLimit, AsnInt, AsnBool, AsnReal, AsnEnumerated
+from ..commonPy.asnParser import Typename  # NOQA pylint: disable=unused-import
 
 from ..commonPy.recursiveMapper import RecursiveMapper
 from .asynchronousTool import ASynchronousToolGlueGenerator
@@ -125,7 +128,7 @@ class FromObjectGeodeToASN1SCC(RecursiveMapper):
         return ["%s = (%s==SDL_TRUE)?0xff:0;\n" % (destVar, srcSDLVariable)]
 
     def MapOctetString(self, srcSDLVariable, destVar, node, __, ___):
-        lines = []
+        lines = []  # type: List[str]
         lines.append("{\n")
         lines.append("    int i;\n")
         lines.append("    for(i=0; i<%s.length; i++) {\n" % srcSDLVariable)
@@ -151,7 +154,7 @@ class FromObjectGeodeToASN1SCC(RecursiveMapper):
         return ["%s = %s;\n" % (destVar, srcSDLVariable)]
 
     def MapSequence(self, srcSDLVariable, destVar, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         for child in node._members:
             lines.extend(
                 self.Map(
@@ -166,7 +169,7 @@ class FromObjectGeodeToASN1SCC(RecursiveMapper):
         return self.MapSequence(srcSDLVariable, destVar, node, leafTypeDict, names)  # pragma: nocover
 
     def MapChoice(self, srcSDLVariable, destVar, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         childNo = 0
         for child in node._members:
             childNo += 1
@@ -184,7 +187,7 @@ class FromObjectGeodeToASN1SCC(RecursiveMapper):
         return lines
 
     def MapSequenceOf(self, srcSDLVariable, destVar, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         lines.append("{\n")
         uniqueId = self.UniqueID()
         lines.append("    int i%s;\n" % uniqueId)
@@ -231,7 +234,7 @@ class FromObjectGeodeToOSS(RecursiveMapper):
         return ["%s = (%s==SDL_TRUE)?0xff:0;\n" % (destVar, srcSDLVariable)]
 
     def MapOctetString(self, srcSDLVariable, destVar, _, __, ___):
-        lines = []
+        lines = []  # type: List[str]
         lines.append("{\n")
         lines.append("    int i;\n")
         lines.append("    for(i=0; i<%s.length; i++) {\n" % srcSDLVariable)
@@ -256,7 +259,7 @@ class FromObjectGeodeToOSS(RecursiveMapper):
         return ["%s = %s;\n" % (destVar, srcSDLVariable)]
 
     def MapSequence(self, srcSDLVariable, destVar, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         for child in node._members:
             lines.extend(
                 self.Map(
@@ -271,7 +274,7 @@ class FromObjectGeodeToOSS(RecursiveMapper):
         return self.MapSequence(srcSDLVariable, destVar, node, leafTypeDict, names)  # pragma: nocover
 
     def MapChoice(self, srcSDLVariable, destVar, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         childNo = 0
         for child in node._members:
             childNo += 1
@@ -289,7 +292,7 @@ class FromObjectGeodeToOSS(RecursiveMapper):
         return lines
 
     def MapSequenceOf(self, srcSDLVariable, destVar, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         lines.append("{\n")
         uniqueId = self.UniqueID()
         lines.append("    int i%s;\n" % uniqueId)
@@ -337,7 +340,7 @@ class FromASN1SCCtoObjectGeode(RecursiveMapper):
     def MapOctetString(self, srcVar, dstSDLVariable, node, _, __):
         # for i in xrange(0, node._range[-1]):
         #     lines.append("%s[%d] = %s->buf[%d];\n" % (dstSDLVariable, i, srcVar, i))
-        lines = []
+        lines = []  # type: List[str]
         limit = sourceSequenceLimit(node, srcVar)
         lines.append("{\n")
         lines.append("    int i;\n")
@@ -373,7 +376,7 @@ class FromASN1SCCtoObjectGeode(RecursiveMapper):
         return ["%s = %s;\n" % (dstSDLVariable, srcVar)]
 
     def MapSequence(self, srcVar, dstSDLVariable, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         for child in node._members:
             lines.extend(
                 self.Map(
@@ -388,7 +391,7 @@ class FromASN1SCCtoObjectGeode(RecursiveMapper):
         return self.MapSequence(srcVar, dstSDLVariable, node, leafTypeDict, names)  # pragma: nocover
 
     def MapChoice(self, srcVar, dstSDLVariable, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         childNo = 0
         for child in node._members:
             childNo += 1
@@ -407,7 +410,7 @@ class FromASN1SCCtoObjectGeode(RecursiveMapper):
         return lines
 
     def MapSequenceOf(self, srcVar, dstSDLVariable, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         lines.append("{\n")
         uniqueId = self.UniqueID()
         lines.append("    int i%s;\n" % uniqueId)
@@ -454,7 +457,7 @@ class FromOSStoObjectGeode(RecursiveMapper):
         return ["%s = (%s)?SDL_TRUE:SDL_FALSE;\n" % (dstSDLVariable, srcVar)]
 
     def MapOctetString(self, srcVar, dstSDLVariable, node, _, __):
-        lines = []
+        lines = []  # type: List[str]
         # for i in xrange(0, node._range[-1]):
         #     lines.append("%s[%d] = %s->buf[%d];\n" % (dstSDLVariable, i, srcVar, i))
         lines.append("{\n")
@@ -491,7 +494,7 @@ class FromOSStoObjectGeode(RecursiveMapper):
         return ["%s = %s;\n" % (dstSDLVariable, srcVar)]
 
     def MapSequence(self, srcVar, dstSDLVariable, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         for child in node._members:
             lines.extend(
                 self.Map(
@@ -506,7 +509,7 @@ class FromOSStoObjectGeode(RecursiveMapper):
         return self.MapSequence(srcVar, dstSDLVariable, node, leafTypeDict, names)  # pragma: nocover
 
     def MapChoice(self, srcVar, dstSDLVariable, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         childNo = 0
         for child in node._members:
             childNo += 1
@@ -525,7 +528,7 @@ class FromOSStoObjectGeode(RecursiveMapper):
         return lines
 
     def MapSequenceOf(self, srcVar, dstSDLVariable, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         lines.append("{\n")
         uniqueId = self.UniqueID()
         lines.append("    int i%s;\n" % uniqueId)
@@ -555,7 +558,7 @@ class OG_GlueGenerator(ASynchronousToolGlueGenerator):
         self.FromObjectGeodeToOSS = FromObjectGeodeToOSS()
         self.FromASN1SCCtoObjectGeode = FromASN1SCCtoObjectGeode()
         self.FromOSStoObjectGeode = FromOSStoObjectGeode()
-        self.declarations = {}
+        self.declarations = set()  # type: Set[Typename]
 
     def Version(self):
         print("Code generator: " + "$Id: og_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")  # pragma: no cover
@@ -581,7 +584,7 @@ class OG_GlueGenerator(ASynchronousToolGlueGenerator):
 
         # This method also generates the DECLARE and DEFINE macros.
         if nodeTypename not in self.declarations:
-            self.declarations[nodeTypename] = 1
+            self.declarations.add(nodeTypename)
             fileOutHeader.write("#define DECLARE_%s(varName) \\\n" % self.CleanNameAsToolWants(nodeTypename))
             fileOutHeader.write("    extern char varName[ASSERT_MAX3(asn1Scc%s_REQUIRED_BYTES_FOR_ENCODING, asn1Scc%s_REQUIRED_BYTES_FOR_ACN_ENCODING, sizeof(asn1Scc%s))];\\\n" %
                                 (self.CleanNameAsToolWants(nodeTypename),

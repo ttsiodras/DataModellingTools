@@ -70,7 +70,7 @@ class FromCtoOSS(RecursiveMapper):
         return ["%s = (char)%s;\n" % (destVar, srcCVariable)]
 
     def MapOctetString(self, srcCVariable, destVar, node, __, ___):
-        lines = []
+        lines = []  # type: List[str]
         lines.append("{\n")
         lines.append("    int i;\n")
         limit = sourceSequenceLimit(node, srcCVariable)
@@ -84,7 +84,7 @@ class FromCtoOSS(RecursiveMapper):
         return ["%s = %s;\n" % (destVar, srcCVariable)]
 
     def MapSequence(self, srcCVariable, destVar, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         for child in node._members:
             lines.extend(
                 self.Map(
@@ -99,7 +99,7 @@ class FromCtoOSS(RecursiveMapper):
         return self.MapSequence(srcCVariable, destVar, node, leafTypeDict, names)  # pragma: nocover
 
     def MapChoice(self, srcCVariable, destVar, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         childNo = 0
         for child in node._members:
             childNo += 1
@@ -118,7 +118,7 @@ class FromCtoOSS(RecursiveMapper):
         return lines
 
     def MapSequenceOf(self, srcCVariable, destVar, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         lines.append("{\n")
         uniqueId = self.UniqueID()
         lines.append("    int i%s;\n" % uniqueId)
@@ -161,7 +161,7 @@ class FromOSStoC(RecursiveMapper):
         return ["%s = (%s)?1:0;\n" % (dstCVariable, srcVar)]
 
     def MapOctetString(self, srcVar, dstCVariable, node, _, __):
-        lines = []
+        lines = []  # type: List[str]
         lines.append("{\n")
         lines.append("    int i;\n")
         lines.append("    for(i=0; i<%s.length; i++)\n" % srcVar)
@@ -176,7 +176,7 @@ class FromOSStoC(RecursiveMapper):
         return ["%s = %s;\n" % (dstCVariable, srcVar)]
 
     def MapSequence(self, srcVar, dstCVariable, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         for child in node._members:
             lines.extend(
                 self.Map(
@@ -191,7 +191,7 @@ class FromOSStoC(RecursiveMapper):
         return self.MapSequence(srcVar, dstCVariable, node, leafTypeDict, names)  # pragma: nocover
 
     def MapChoice(self, srcVar, dstCVariable, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         childNo = 0
         for child in node._members:
             childNo += 1
@@ -210,7 +210,7 @@ class FromOSStoC(RecursiveMapper):
         return lines
 
     def MapSequenceOf(self, srcVar, dstCVariable, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         lines.append("{\n")
         uniqueId = self.UniqueID()
         lines.append("    int i%s;\n" % uniqueId)

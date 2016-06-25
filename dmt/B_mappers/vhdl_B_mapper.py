@@ -41,7 +41,7 @@ import re
 import os
 import math
 
-from typing import cast, List, Tuple  # NOQA pylint: disable=unused-import
+from typing import cast, List, Tuple, IO, Any  # NOQA pylint: disable=unused-import
 
 from ..commonPy.utility import panic, panicWithCallStack
 from ..commonPy.asnAST import AsnBasicNode, AsnSequence, AsnSet, AsnChoice, AsnSequenceOf, AsnSetOf, AsnEnumerated, AsnMetaMember, isSequenceVariable, sourceSequenceLimit, AsnNode, AsnString
@@ -822,8 +822,13 @@ class MapASN1ToSystemCconnections(RecursiveMapperGeneric[str, str]):
         return self.MapSequenceOf(srcRegister, dstCircuitPort, node, leafTypeDict, names)  # pragma: nocover
 
 
+class SystemCheaderState:
+    systemcHeader = None  # type: IO[Any]
+    directionPrefix = None  # type: str
+
+
 # pylint: disable=no-self-use
-class MapASN1ToSystemCheader(RecursiveMapperGeneric[str, str]):
+class MapASN1ToSystemCheader(RecursiveMapperGeneric[SystemCheaderState, str]):
     def MapInteger(self, state, systemCvar, _, __, ___):
         state.systemcHeader.write('    ' + state.directionPrefix + 'sc_uint<64> > ' + systemCvar + ';\n')
         return []
@@ -877,7 +882,7 @@ class MapASN1ToSystemCheader(RecursiveMapperGeneric[str, str]):
 
 
 # pylint: disable=no-self-use
-class MapASN1ToOutputs(RecursiveMapperGeneric[int, str]):
+class MapASN1ToOutputs(RecursiveMapperGeneric[str, int]):
     def MapInteger(self, paramName, _, dummy, __, ___):
         return [paramName]
 
@@ -1133,10 +1138,7 @@ def OnFinal():
             node = VHDL_Circuit.names[p._signal._asnNodename]
             prefix = 'sc_in<' if isinstance(p, InParam) else 'sc_out<'
 
-            class State:
-                systemcHeader = None
-                directionPrefix = None
-            state = State()
+            state = SystemCheaderState()
             state.systemcHeader = systemcHeader
             state.directionPrefix = prefix
             systemCheaderMapper.Map(
