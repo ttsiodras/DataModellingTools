@@ -9,7 +9,7 @@ flake8:
 
 pylint:
 	@echo Performing static analysis via pylint...
-	@pylint --disable=I --rcfile=pylint.cfg ${PY_SRC}
+	@pylint --disable=I --rcfile=pylint.cfg ${PY_SRC}  | sed -n '/^Report/q;p'
 
 mypy:
 	@echo Performing type analysis via mypy...
