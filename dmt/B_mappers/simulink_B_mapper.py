@@ -57,6 +57,7 @@ def IsElementMappedToPrimitive(node, names):
     return isinstance(contained, AsnInt) or isinstance(contained, AsnReal) or isinstance(contained, AsnBool) or isinstance(contained, AsnEnumerated)
 
 
+# pylint: disable=no-self-use
 class FromSimulinkToASN1SCC(RecursiveMapper):
     def MapInteger(self, srcSimulink, destVar, _, __, ___):
         return ["%s = (asn1SccSint) %s;\n" % (destVar, srcSimulink)]
@@ -68,7 +69,7 @@ class FromSimulinkToASN1SCC(RecursiveMapper):
         return ["%s = (asn1SccUint) %s;\n" % (destVar, srcSimulink)]
 
     def MapOctetString(self, srcSimulink, destVar, node, _, __):
-        lines = []
+        lines = []  # type: List[str]
         if not node._range:
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
         for i in range(0, node._range[-1]):
@@ -84,7 +85,7 @@ class FromSimulinkToASN1SCC(RecursiveMapper):
         return ["%s = %s;\n" % (destVar, srcSimulink)]
 
     def MapSequence(self, srcSimulink, destVar, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         for child in node._members:
             lines.extend(
                 self.Map(
@@ -99,7 +100,7 @@ class FromSimulinkToASN1SCC(RecursiveMapper):
         return self.MapSequence(srcSimulink, destVar, node, leafTypeDict, names)  # pragma: nocover
 
     def MapChoice(self, srcSimulink, destVar, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         childNo = 0
         for child in node._members:
             childNo += 1
@@ -120,7 +121,7 @@ class FromSimulinkToASN1SCC(RecursiveMapper):
         if not node._range:
             panicWithCallStack("need a SIZE constraint or else we can't generate C code (%s)!\n" % node.Location())  # pragma: no cover
         isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
-        lines = []
+        lines = []  # type: List[str]
         for i in range(0, node._range[-1]):
             lines.extend(
                 self.Map(isMappedToPrimitive and ("%s.element_data[%d]" % (srcSimulink, i)) or ("%s.element_%02d" % (srcSimulink, i)),
@@ -139,6 +140,7 @@ class FromSimulinkToASN1SCC(RecursiveMapper):
         return self.MapSequenceOf(srcSimulink, destVar, node, leafTypeDict, names)  # pragma: nocover
 
 
+# pylint: disable=no-self-use
 class FromASN1SCCtoSimulink(RecursiveMapper):
     def MapInteger(self, srcVar, dstSimulink, _, __, ___):
         return ["%s = %s;\n" % (dstSimulink, srcVar)]
@@ -153,7 +155,7 @@ class FromASN1SCCtoSimulink(RecursiveMapper):
         if not node._range:
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
 
-        lines = []
+        lines = []  # type: List[str]
         limit = sourceSequenceLimit(node, srcVar)
         for i in range(0, node._range[-1]):
             lines.append("if (%s>=%d) %s.element_data[%d] = %s.arr[%d]; else %s.element_data[%d] = 0;\n" %
@@ -168,7 +170,7 @@ class FromASN1SCCtoSimulink(RecursiveMapper):
         return ["%s = %s;\n" % (dstSimulink, srcVar)]
 
     def MapSequence(self, srcVar, dstSimulink, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         for child in node._members:
             lines.extend(
                 self.Map(
@@ -183,7 +185,7 @@ class FromASN1SCCtoSimulink(RecursiveMapper):
         return self.MapSequence(srcVar, dstSimulink, node, leafTypeDict, names)  # pragma: nocover
 
     def MapChoice(self, srcVar, dstSimulink, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         childNo = 0
         for child in node._members:
             childNo += 1
@@ -204,7 +206,7 @@ class FromASN1SCCtoSimulink(RecursiveMapper):
         if not node._range:
             panicWithCallStack("need a SIZE constraint or else we can't generate C code (%s)!\n" % node.Location())  # pragma: no cover
         isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
-        lines = []
+        lines = []  # type: List[str]
         for i in range(0, node._range[-1]):
             lines.extend(self.Map(
                 srcVar + ".arr[%d]" % i,
@@ -220,6 +222,7 @@ class FromASN1SCCtoSimulink(RecursiveMapper):
         return self.MapSequenceOf(srcVar, dstSimulink, node, leafTypeDict, names)  # pragma: nocover
 
 
+# pylint: disable=no-self-use
 class FromSimulinkToOSS(RecursiveMapper):
     def MapInteger(self, srcSimulink, destVar, _, __, ___):
         return ["%s = %s;\n" % (destVar, srcSimulink)]
@@ -231,7 +234,7 @@ class FromSimulinkToOSS(RecursiveMapper):
         return ["%s = (char) %s;\n" % (destVar, srcSimulink)]
 
     def MapOctetString(self, srcSimulink, destVar, node, _, __):
-        lines = []
+        lines = []  # type: List[str]
         if not node._range:
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
         for i in range(0, node._range[-1]):
@@ -246,7 +249,7 @@ class FromSimulinkToOSS(RecursiveMapper):
         return ["%s = %s;\n" % (destVar, srcSimulink)]
 
     def MapSequence(self, srcSimulink, destVar, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         for child in node._members:
             lines.extend(
                 self.Map(
@@ -261,7 +264,7 @@ class FromSimulinkToOSS(RecursiveMapper):
         return self.MapSequence(srcSimulink, destVar, node, leafTypeDict, names)  # pragma: nocover
 
     def MapChoice(self, srcSimulink, destVar, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         childNo = 0
         for child in node._members:
             childNo += 1
@@ -282,7 +285,7 @@ class FromSimulinkToOSS(RecursiveMapper):
         if not node._range:
             panicWithCallStack("(%s) needs a SIZE constraint or else we can't generate C code!\n" % node.Location())  # pragma: no cover
         isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
-        lines = []
+        lines = []  # type: List[str]
         for i in range(0, node._range[-1]):
             lines.extend(
                 self.Map(isMappedToPrimitive and ("%s.element_data[%d]" % (srcSimulink, i)) or ("%s.element_%02d" % (srcSimulink, i)),
@@ -300,6 +303,7 @@ class FromSimulinkToOSS(RecursiveMapper):
         return self.MapSequenceOf(srcSimulink, destVar, node, leafTypeDict, names)  # pragma: nocover
 
 
+# pylint: disable=no-self-use
 class FromOSStoSimulink(RecursiveMapper):
     def MapInteger(self, srcVar, dstSimulink, _, __, ___):
         return ["%s = %s;\n" % (dstSimulink, srcVar)]
@@ -313,7 +317,7 @@ class FromOSStoSimulink(RecursiveMapper):
     def MapOctetString(self, srcVar, dstSimulink, node, _, __):
         if not node._range:
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
-        lines = []
+        lines = []  # type: List[str]
         for i in range(0, node._range[-1]):
             lines.append("if (%s.length >= %d) %s.element_data[%d] = %s.value[%d]; else %s.element_data[%d] = 0;\n" %
                          (srcVar, i + 1, dstSimulink, i, srcVar, i, dstSimulink, i))
@@ -327,7 +331,7 @@ class FromOSStoSimulink(RecursiveMapper):
         return ["%s = %s;\n" % (dstSimulink, srcVar)]
 
     def MapSequence(self, srcVar, dstSimulink, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         for child in node._members:
             lines.extend(
                 self.Map(
@@ -342,7 +346,7 @@ class FromOSStoSimulink(RecursiveMapper):
         return self.MapSequence(srcVar, dstSimulink, node, leafTypeDict, names)  # pragma: nocover
 
     def MapChoice(self, srcVar, dstSimulink, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         childNo = 0
         for child in node._members:
             childNo += 1
@@ -363,7 +367,7 @@ class FromOSStoSimulink(RecursiveMapper):
         if not node._range:
             panicWithCallStack("(%s) needs a SIZE constraint or else we can't generate C code!\n" % node.Location())  # pragma: no cover
         isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
-        lines = []
+        lines = []  # type: List[str]
         for i in range(0, node._range[-1]):
             lines.extend(self.Map(
                 srcVar + ".value[%d]" % i,
@@ -380,7 +384,7 @@ class FromOSStoSimulink(RecursiveMapper):
 
 
 class SimulinkGlueGenerator(SynchronousToolGlueGenerator):
-    g_FVname = None
+    g_FVname = None  # type: str
 
     def Version(self):
         print("Code generator: " + "$Id: simulink_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")  # pragma: no cover

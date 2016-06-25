@@ -21,6 +21,8 @@
 import re
 import os
 
+from typing import Set, IO, Any  # NOQA pylint: disable=unused-import
+
 from ..commonPy.asnAST import (
     AsnBasicNode, AsnEnumerated, AsnSequence, AsnSet, AsnChoice,
     AsnSequenceOf, AsnSetOf, AsnMetaMember, AsnInt, AsnReal, AsnOctetString,
@@ -28,9 +30,9 @@ from ..commonPy.asnAST import (
 from ..commonPy.utility import panic, panicWithCallStack
 from ..commonPy import asnParser
 
-g_HeaderFile = None
-g_SourceFile = None
-g_GnuplotFile = None
+g_HeaderFile = None  # type: IO[Any]
+g_SourceFile = None  # type: IO[Any]
+g_GnuplotFile = None  # type: IO[Any]
 
 g_MyEvents = None
 g_MyCreation = None
@@ -48,7 +50,7 @@ g_IDs = 20000
 g_asn_name = ""
 g_outputDir = ""
 g_maybeFVname = ""
-g_perFV = set()
+g_perFV = set()  # type: Set[str]
 g_langPerSP = {}
 
 
@@ -169,7 +171,7 @@ void TeleCmds::CreateControls()
 
 ''')
 
-enumFieldNames = {}
+enumFieldNames = {}  # type: Dict[str, int]
 
 
 def VerifySingleFieldEnums(node):
@@ -917,7 +919,7 @@ def WriteCodeForAction(nodeTypename, node, subProgram, unused_subProgramImplemen
     g_MyAction.write("    }\n")
     g_MyAction.write("}\n")
 
-g_SPs = []
+g_SPs = []  # type: List[str]
 g_bBraceOpen = False
 
 

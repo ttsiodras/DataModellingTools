@@ -52,6 +52,7 @@ def Version():
 
 
 # noinspection PyListCreation
+# pylint: disable=no-self-use
 class FromSCADEtoASN1SCC(RecursiveMapper):
     def MapInteger(self, srcScadeMacro, destVar, _, __, ___):
         return ["%s = (asn1SccSint) %s;\n" % (destVar, srcScadeMacro)]
@@ -63,7 +64,7 @@ class FromSCADEtoASN1SCC(RecursiveMapper):
         return ["%s = (int)%s;\n" % (destVar, srcScadeMacro)]
 
     def MapOctetString(self, srcScadeMacro, destVar, node, _, __):
-        lines = []
+        lines = []  # type: List[str]
         lines.append("{\n")
         if not node._range:
             panicWithCallStack(
@@ -80,7 +81,7 @@ class FromSCADEtoASN1SCC(RecursiveMapper):
         return ["%s = %s;\n" % (destVar, srcScadeMacro)]
 
     def MapSequence(self, srcScadeMacro, destVar, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         for child in node._members:
             lines.extend(
                 self.Map(
@@ -95,7 +96,7 @@ class FromSCADEtoASN1SCC(RecursiveMapper):
         return self.MapSequence(srcScadeMacro, destVar, node, leafTypeDict, names)  # pragma: nocover  # pragma: nocover
 
     def MapChoice(self, srcScadeMacro, destVar, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         childNo = 0
         for child in node._members:
             childNo += 1
@@ -118,7 +119,7 @@ class FromSCADEtoASN1SCC(RecursiveMapper):
             panicWithCallStack(
                 "A SIZE constraint is required, or else SCADE can't generate C code (%s)!\n" %   # pragma: no cover
                 node.Location())  # pragma: no cover
-        lines = []
+        lines = []  # type: List[str]
         for i in range(0, node._range[-1]):
             lines.extend(
                 self.Map("%s[%d]" % (srcScadeMacro, i),
@@ -134,6 +135,7 @@ class FromSCADEtoASN1SCC(RecursiveMapper):
         return self.MapSequenceOf(srcScadeMacro, destVar, node, leafTypeDict, names)  # pragma: nocover
 
 
+# pylint: disable=no-self-use
 class FromASN1SCCtoSCADE(RecursiveMapper):
     def __init__(self):
         self._seqIndex = 1
@@ -152,7 +154,7 @@ class FromASN1SCCtoSCADE(RecursiveMapper):
             panicWithCallStack(
                 "OCTET STRING (in %s) must have a SIZE constraint "  # pragma: no cover
                 "inside ASN.1,\nor else SCADE can't generate C code!" % node.Location())  # pragma: no cover
-        lines = []
+        lines = []  # type: List[str]
         limit = sourceSequenceLimit(node, srcVar)
         # for i in xrange(0, node._range[-1]):
         #     lines.append("%s[%d] = %s->buf[%d];\n" % (dstScadeMacro, i, srcVar, i))
@@ -167,7 +169,7 @@ class FromASN1SCCtoSCADE(RecursiveMapper):
         return ["%s = %s;\n" % (dstScadeMacro, srcVar)]
 
     def MapSequence(self, srcVar, dstScadeMacro, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         for child in node._members:
             lines.extend(
                 self.Map(
@@ -182,7 +184,7 @@ class FromASN1SCCtoSCADE(RecursiveMapper):
         return self.MapSequence(srcVar, dstScadeMacro, node, leafTypeDict, names)  # pragma: nocover
 
     def MapChoice(self, srcVar, dstScadeMacro, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         childNo = 0
         for child in node._members:
             childNo += 1
@@ -205,7 +207,7 @@ class FromASN1SCCtoSCADE(RecursiveMapper):
             panicWithCallStack(
                 "A SIZE constraint is required or else SCADE can't generate C code (%s)!\n" %   # pragma: no cover
                 node.Location())  # pragma: no cover
-        lines = []
+        lines = []  # type: List[str]
         seqIndex = self._seqIndex
         self._seqIndex += 1
         lines.append("{\n")
@@ -231,6 +233,7 @@ class FromASN1SCCtoSCADE(RecursiveMapper):
 
 
 # noinspection PyListCreation
+# pylint: disable=no-self-use
 class FromSCADEtoOSS(RecursiveMapper):
     def MapInteger(self, srcScadeMacro, destVar, _, __, ___):
         return ["%s = %s;\n" % (destVar, srcScadeMacro)]
@@ -242,7 +245,7 @@ class FromSCADEtoOSS(RecursiveMapper):
         return ["%s = (char)%s;\n" % (destVar, srcScadeMacro)]
 
     def MapOctetString(self, srcScadeMacro, destVar, node, _, __):
-        lines = []
+        lines = []  # type: List[str]
         lines.append("{\n")
         if not node._range:
             panicWithCallStack(
@@ -258,7 +261,7 @@ class FromSCADEtoOSS(RecursiveMapper):
         return ["%s = %s;\n" % (destVar, srcScadeMacro)]
 
     def MapSequence(self, srcScadeMacro, destVar, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         for child in node._members:
             lines.extend(
                 self.Map(
@@ -273,7 +276,7 @@ class FromSCADEtoOSS(RecursiveMapper):
         return self.MapSequence(srcScadeMacro, destVar, node, leafTypeDict, names)  # pragma: nocover
 
     def MapChoice(self, srcScadeMacro, destVar, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         childNo = 0
         for child in node._members:
             childNo += 1
@@ -296,7 +299,7 @@ class FromSCADEtoOSS(RecursiveMapper):
             panicWithCallStack(
                 "A SIZE constraint is required, or else SCADE can't generate C code (%s)!\n" %   # pragma: no cover
                 node.Location())  # pragma: no cover
-        lines = []
+        lines = []  # type: List[str]
         for i in range(0, node._range[-1]):
             lines.extend(
                 self.Map("%s[%d]" % (srcScadeMacro, i),
@@ -312,6 +315,7 @@ class FromSCADEtoOSS(RecursiveMapper):
 
 
 # noinspection PyListCreation
+# pylint: disable=no-self-use
 class FromOSStoSCADE(RecursiveMapper):
     def __init__(self):
         self._seqIndex = 1
@@ -330,7 +334,7 @@ class FromOSStoSCADE(RecursiveMapper):
             panicWithCallStack(
                 "OCTET STRING (in %s) must have a SIZE constraint "  # pragma: no cover
                 "inside ASN.1,\nor else SCADE can't generate C code!" % node.Location())  # pragma: no cover
-        lines = []
+        lines = []  # type: List[str]
         lines.append("{\n")
         lines.append("    int i;\n")
         lines.append("    for(i=0; i<%s.length; i++) %s[i] = %s.value[i];\n" % (srcVar, dstScadeMacro, srcVar))
@@ -342,7 +346,7 @@ class FromOSStoSCADE(RecursiveMapper):
         return ["%s = %s;\n" % (dstScadeMacro, srcVar)]
 
     def MapSequence(self, srcVar, dstScadeMacro, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         for child in node._members:
             lines.extend(
                 self.Map(
@@ -357,7 +361,7 @@ class FromOSStoSCADE(RecursiveMapper):
         return self.MapSequence(srcVar, dstScadeMacro, node, leafTypeDict, names)  # pragma: nocover
 
     def MapChoice(self, srcVar, dstScadeMacro, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         childNo = 0
         for child in node._members:
             childNo += 1
@@ -380,7 +384,7 @@ class FromOSStoSCADE(RecursiveMapper):
             panicWithCallStack(
                 "A SIZE constraint is required or else SCADE can't generate C code (%s)!\n" %   # pragma: no cover
                 node.Location())  # pragma: no cover
-        lines = []
+        lines = []  # type: List[str]
         seqIndex = self._seqIndex
         self._seqIndex += 1
         lines.append("{\n")

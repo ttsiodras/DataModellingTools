@@ -60,6 +60,7 @@ def IsElementMappedToPrimitive(node, names):
     return isinstance(contained, AsnInt) or isinstance(contained, AsnReal) or isinstance(contained, AsnBool) or isinstance(contained, AsnEnumerated)
 
 
+# pylint: disable=no-self-use
 class FromQGenCToASN1SCC(RecursiveMapper):
     def MapInteger(self, srcQGenC, destVar, _, __, ___):
         return ["%s = (asn1SccSint) %s;\n" % (destVar, srcQGenC)]
@@ -71,7 +72,7 @@ class FromQGenCToASN1SCC(RecursiveMapper):
         return ["%s = (asn1SccUint) %s;\n" % (destVar, srcQGenC)]
 
     def MapOctetString(self, srcQGenC, destVar, node, _, __):
-        lines = []
+        lines = []  # type: List[str]
         if not node._range:
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
         for i in range(0, node._range[-1]):
@@ -87,7 +88,7 @@ class FromQGenCToASN1SCC(RecursiveMapper):
         return ["%s = %s;\n" % (destVar, srcQGenC)]
 
     def MapSequence(self, unused_srcQGenC, unused_destVar, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         for child in node._members:
             lines.extend(
                 self.Map(
@@ -102,7 +103,7 @@ class FromQGenCToASN1SCC(RecursiveMapper):
         return self.MapSequence(srcQGenC, destVar, node, leafTypeDict, names)  # pragma: nocover
 
     def MapChoice(self, srcQGenC, destVar, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         childNo = 0
         for child in node._members:
             childNo += 1
@@ -123,7 +124,7 @@ class FromQGenCToASN1SCC(RecursiveMapper):
         if not node._range:
             panicWithCallStack("need a SIZE constraint or else we can't generate C code (%s)!\n" % node.Location())  # pragma: no cover
         isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
-        lines = []
+        lines = []  # type: List[str]
         for i in range(0, node._range[-1]):
             lines.extend(
                 self.Map(isMappedToPrimitive and ("%s.element_data[%d]" % (srcQGenC, i)) or ("%s.element_%02d" % (srcQGenC, i)),
@@ -142,6 +143,7 @@ class FromQGenCToASN1SCC(RecursiveMapper):
         return self.MapSequenceOf(srcQGenC, destVar, node, leafTypeDict, names)  # pragma: nocover
 
 
+# pylint: disable=no-self-use
 class FromASN1SCCtoQGenC(RecursiveMapper):
     def MapInteger(self, srcVar, dstQGenC, _, __, ___):
         return ["%s = %s;\n" % (dstQGenC, srcVar)]
@@ -156,7 +158,7 @@ class FromASN1SCCtoQGenC(RecursiveMapper):
         if not node._range:
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
 
-        lines = []
+        lines = []  # type: List[str]
         limit = sourceSequenceLimit(node, srcVar)
         for i in range(0, node._range[-1]):
             lines.append("if (%s>=%d) %s.element_data[%d] = %s.arr[%d]; else %s.element_data[%d] = 0;\n" %
@@ -171,7 +173,7 @@ class FromASN1SCCtoQGenC(RecursiveMapper):
         return ["%s = %s;\n" % (dstQGenC, srcVar)]
 
     def MapSequence(self, srcVar, dstQGenC, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         for child in node._members:
             lines.extend(
                 self.Map(
@@ -186,7 +188,7 @@ class FromASN1SCCtoQGenC(RecursiveMapper):
         return self.MapSequence(srcVar, dstQGenC, node, leafTypeDict, names)  # pragma: nocover
 
     def MapChoice(self, srcVar, dstQGenC, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         childNo = 0
         for child in node._members:
             childNo += 1
@@ -207,7 +209,7 @@ class FromASN1SCCtoQGenC(RecursiveMapper):
         if not node._range:
             panicWithCallStack("need a SIZE constraint or else we can't generate C code (%s)!\n" % node.Location())  # pragma: no cover
         isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
-        lines = []
+        lines = []  # type: List[str]
         for i in range(0, node._range[-1]):
             lines.extend(self.Map(
                 srcVar + ".arr[%d]" % i,
@@ -223,6 +225,7 @@ class FromASN1SCCtoQGenC(RecursiveMapper):
         return self.MapSequenceOf(srcVar, dstQGenC, node, leafTypeDict, names)  # pragma: nocover
 
 
+# pylint: disable=no-self-use
 class FromQGenCToOSS(RecursiveMapper):
     def MapInteger(self, srcQGenC, destVar, _, __, ___):
         return ["%s = %s;\n" % (destVar, srcQGenC)]
@@ -234,7 +237,7 @@ class FromQGenCToOSS(RecursiveMapper):
         return ["%s = (char) %s;\n" % (destVar, srcQGenC)]
 
     def MapOctetString(self, srcQGenC, destVar, node, _, __):
-        lines = []
+        lines = []  # type: List[str]
         if not node._range:
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
         for i in range(0, node._range[-1]):
@@ -249,7 +252,7 @@ class FromQGenCToOSS(RecursiveMapper):
         return ["%s = %s;\n" % (destVar, srcQGenC)]
 
     def MapSequence(self, srcQGenC, destVar, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         for child in node._members:
             lines.extend(
                 self.Map(
@@ -264,7 +267,7 @@ class FromQGenCToOSS(RecursiveMapper):
         return self.MapSequence(srcQGenC, destVar, node, leafTypeDict, names)  # pragma: nocover
 
     def MapChoice(self, srcQGenC, destVar, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         childNo = 0
         for child in node._members:
             childNo += 1
@@ -285,7 +288,7 @@ class FromQGenCToOSS(RecursiveMapper):
         if not node._range:
             panicWithCallStack("(%s) needs a SIZE constraint or else we can't generate C code!\n" % node.Location())  # pragma: no cover
         isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
-        lines = []
+        lines = []  # type: List[str]
         for i in range(0, node._range[-1]):
             lines.extend(
                 self.Map(isMappedToPrimitive and ("%s.element_data[%d]" % (srcQGenC, i)) or ("%s.element_%02d" % (srcQGenC, i)),
@@ -303,6 +306,7 @@ class FromQGenCToOSS(RecursiveMapper):
         return self.MapSequenceOf(srcQGenC, destVar, node, leafTypeDict, names)  # pragma: nocover
 
 
+# pylint: disable=no-self-use
 class FromOSStoQGenC(RecursiveMapper):
     def MapInteger(self, srcVar, dstQGenC, _, __, ___):
         return ["%s = %s;\n" % (dstQGenC, srcVar)]
@@ -316,7 +320,7 @@ class FromOSStoQGenC(RecursiveMapper):
     def MapOctetString(self, srcVar, dstQGenC, node, _, __):
         if not node._range:
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
-        lines = []
+        lines = []  # type: List[str]
         for i in range(0, node._range[-1]):
             lines.append("if (%s.length >= %d) %s.element_data[%d] = %s.value[%d]; else %s.element_data[%d] = 0;\n" %
                          (srcVar, i + 1, dstQGenC, i, srcVar, i, dstQGenC, i))
@@ -330,7 +334,7 @@ class FromOSStoQGenC(RecursiveMapper):
         return ["%s = %s;\n" % (dstQGenC, srcVar)]
 
     def MapSequence(self, srcVar, dstQGenC, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         for child in node._members:
             lines.extend(
                 self.Map(
@@ -345,7 +349,7 @@ class FromOSStoQGenC(RecursiveMapper):
         return self.MapSequence(srcVar, dstQGenC, node, leafTypeDict, names)  # pragma: nocover
 
     def MapChoice(self, srcVar, dstQGenC, node, leafTypeDict, names):
-        lines = []
+        lines = []  # type: List[str]
         childNo = 0
         for child in node._members:
             childNo += 1
@@ -366,7 +370,7 @@ class FromOSStoQGenC(RecursiveMapper):
         if not node._range:
             panicWithCallStack("(%s) needs a SIZE constraint or else we can't generate C code!\n" % node.Location())  # pragma: no cover
         isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
-        lines = []
+        lines = []  # type: List[str]
         for i in range(0, node._range[-1]):
             lines.extend(self.Map(
                 srcVar + ".value[%d]" % i,
@@ -383,7 +387,7 @@ class FromOSStoQGenC(RecursiveMapper):
 
 
 class QGenCGlueGenerator(SynchronousToolGlueGenerator):
-    g_FVname = None
+    g_FVname = None  # type: str
 
     def Version(self):
         print("Code generator: " + "$Id: qgenc_B_mapper.py 2390 2014-11-27 12:39:17Z dtuulik $")  # pragma: no cover

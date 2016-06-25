@@ -19,7 +19,7 @@
 # generated code.
 #
 import re
-from typing import Union, List, Dict
+from typing import Union, List, Dict, TypeVar, Generic
 
 from .utility import panicWithCallStack
 from .asnAST import (
@@ -28,8 +28,12 @@ from .asnAST import (
 )
 
 
+TSrc = TypeVar('TSrc')
+TDest = TypeVar('TDest')
+
+
 # noinspection PyMethodMayBeStatic
-class RecursiveMapper:
+class RecursiveMapperGeneric(Generic[TSrc, TDest]):
 
     def maybeElse(self, childNo: int) -> str:  # pylint: disable=no-self-use
         if childNo == 1:
@@ -74,8 +78,8 @@ class RecursiveMapper:
         panicWithCallStack("Method undefined in a RecursiveMapper...")
 
     def Map(self,
-            srcVar: str,
-            destVar: str,
+            srcVar: TSrc,
+            destVar: TDest,
             node_or_str: Union[str, AsnNode],
             leafTypeDict: Dict[str, str],
             names: Dict[str, AsnNode]) -> List[str]:  # pylint: disable=invalid-sequence-index
@@ -113,5 +117,10 @@ class RecursiveMapper:
         else:
             panicWithCallStack("unsupported %s (%s)" % (str(node.__class__), node.Location()))
         return lines
+
+
+# pylint: disable=no-self-use
+RecursiveMapper = RecursiveMapperGeneric[str, str]
+
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4

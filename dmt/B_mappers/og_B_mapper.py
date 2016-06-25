@@ -103,6 +103,7 @@ def Version():
 
 
 # noinspection PyListCreation
+# pylint: disable=no-self-use
 class FromObjectGeodeToASN1SCC(RecursiveMapper):
     def __init__(self):
         self.uniqueID = 0
@@ -208,6 +209,7 @@ class FromObjectGeodeToASN1SCC(RecursiveMapper):
 
 
 # noinspection PyListCreation
+# pylint: disable=no-self-use
 class FromObjectGeodeToOSS(RecursiveMapper):
     def __init__(self):
         self.uniqueID = 0
@@ -311,6 +313,7 @@ class FromObjectGeodeToOSS(RecursiveMapper):
 
 
 # noinspection PyListCreation
+# pylint: disable=no-self-use
 class FromASN1SCCtoObjectGeode(RecursiveMapper):
     def __init__(self):
         self.uniqueID = 0
@@ -429,6 +432,7 @@ class FromASN1SCCtoObjectGeode(RecursiveMapper):
 
 
 # noinspection PyListCreation
+# pylint: disable=no-self-use
 class FromOSStoObjectGeode(RecursiveMapper):
     def __init__(self):
         self.uniqueID = 0

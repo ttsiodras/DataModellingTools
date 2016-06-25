@@ -51,6 +51,7 @@ def Version():
 
 
 # noinspection PyListCreation
+# pylint: disable=no-self-use
 class FromCtoOSS(RecursiveMapper):
     def __init__(self):
         self.uniqueID = 0
@@ -141,6 +142,7 @@ class FromCtoOSS(RecursiveMapper):
 
 
 # noinspection PyListCreation
+# pylint: disable=no-self-use
 class FromOSStoC(RecursiveMapper):
     def __init__(self):
         self.uniqueID = 0

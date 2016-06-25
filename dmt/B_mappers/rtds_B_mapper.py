@@ -46,6 +46,7 @@ def Version():
 
 
 # noinspection PyListCreation
+# pylint: disable=no-self-use
 class FromRTDSToASN1SCC(RecursiveMapper):
     def __init__(self):
         self.uniqueID = 0
@@ -142,6 +143,7 @@ class FromRTDSToASN1SCC(RecursiveMapper):
 
 
 # noinspection PyListCreation
+# pylint: disable=no-self-use
 class FromRTDSToOSS(RecursiveMapper):
     def __init__(self):
         self.uniqueID = 0
@@ -245,6 +247,7 @@ class FromRTDSToOSS(RecursiveMapper):
 
 
 # noinspection PyListCreation
+# pylint: disable=no-self-use
 class FromASN1SCCtoRTDS(RecursiveMapper):
     def __init__(self):
         self.uniqueID = 0
@@ -346,6 +349,7 @@ class FromASN1SCCtoRTDS(RecursiveMapper):
 
 
 # noinspection PyListCreation
+# pylint: disable=no-self-use
 class FromOSStoRTDS(RecursiveMapper):
     def __init__(self):
         self.uniqueID = 0
