@@ -567,7 +567,7 @@ def WriteCodeForGUIControls(prefixes, parentControl, node, subProgram,
         for enum_value in node._members:
             g_fromPysideToASN1.append(
                 g_iter * "    " + "if val" + pyStr +
-                '''["Enum"] == "%s":\n''' % CleanName(enum_value[0]))
+                '''["Enum"] == "%s":\n''' % enum_value[0])
             g_fromASN1ToPyside.append(
                 g_iter * "    " + "if " + asnStr + ".Get() == DV." +
                 CleanName(enum_value[0]) + ":\n")
@@ -577,7 +577,7 @@ def WriteCodeForGUIControls(prefixes, parentControl, node, subProgram,
                 g_iter * "    " + asnStr + ".Set(DV.%s)\n" % CleanName(enum_value[0]))
 
             g_fromASN1ToPyside.append(
-                g_iter * "    " + "val" + pyStr + "[\"Enum\"] = \"" + CleanName(enum_value[0]) + "\"\n")
+                g_iter * "    " + "val" + pyStr + "[\"Enum\"] = \"" + enum_value[0] + "\"\n")
             g_iter -= 1
 
     if isinstance(node, (AsnInt, AsnReal, AsnOctetString)):
