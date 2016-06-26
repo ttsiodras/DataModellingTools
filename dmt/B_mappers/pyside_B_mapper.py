@@ -610,7 +610,7 @@ def WriteCodeForGUIControls(prefixes, parentControl, node, subProgram,
             for enum_value in node._members:
                 if g_needsComa:
                     g_PyDataModel.write(',')
-                g_PyDataModel.write("'%s'" % CleanName(enum_value[0]))
+                g_PyDataModel.write("'%s'" % enum_value[0])
                 g_needsComa = True
             g_PyDataModel.write(']}')
 

@@ -72,6 +72,7 @@ def OnStartup(unused_modelingLanguage: str, asnFile: str, outputDir: str, badTyp
     inform("Python_A_mapper: Creating file '%s'...", outputFilename)
     global g_outputFile
     g_outputFile = open(outputDir + outputFilename, 'w')
+    g_outputFile.write("from functools import partial\n\n")
     g_outputFile.write("import DV\n\n")
     g_outputFile.write("from Stubs import (\n")
     g_outputFile.write(
@@ -393,21 +394,31 @@ def DumpTypeDumper(codeIndent, outputIndent, lines, variableName, node, names):
         lines.append(
             codeIndent +
             'lines.append("%s"+str(%s.Get()!=0).upper())' % (outputIndent, variableName))
+        if variableName.startswith("path[i]"):
+            lines.append(codeIndent + 'self.Reset(state)')
     elif isinstance(node, AsnInt):
         lines.append(
             codeIndent + 'lines.append("%s"+str(%s.Get()))' % (outputIndent, variableName))
+        if variableName.startswith("path[i]"):
+            lines.append(codeIndent + 'self.Reset(state)')
     elif isinstance(node, AsnReal):
         lines.append(
             codeIndent + 'lines.append("%s"+str(%s.Get()))' % (outputIndent, variableName))
+        if variableName.startswith("path[i]"):
+            lines.append(codeIndent + 'self.Reset(state)')
     elif isinstance(node, AsnString):
         lines.append(
             codeIndent +
             'lines.append("%s\\\""+str(%s.GetPyString()) + "\\\"")' % (outputIndent, variableName))
+        if variableName.startswth("path[i]"):
+            lines.append(codeIndent + 'self.Reset(state)')
     elif isinstance(node, AsnEnumerated):
         mapping = str({val: name for name, val in node._members})
         lines.append(
             codeIndent +
             'lines.append("%s"+%s[str(%s.Get())])' % (outputIndent, mapping, variableName))
+        if variableName.startswith("path[i]"):
+            lines.append(codeIndent + 'self.Reset(state)')
     elif isinstance(node, (AsnChoice, AsnSet, AsnSequence)):
         if not isinstance(node, AsnChoice):
             lines.append(codeIndent + 'lines.append("{")')
@@ -444,12 +455,22 @@ def DumpTypeDumper(codeIndent, outputIndent, lines, variableName, node, names):
         containedNode = node._containedType
         if isinstance(containedNode, str):
             containedNode = names[containedNode]
-        lines.append(codeIndent + 'def emitElem(i):')
-        lines.append(codeIndent + '    if i>0:')
+        lines.append(codeIndent + 'def emitElem(path, i):')
+        lines.append(codeIndent + '    state = self.GetState()')
+        lines.append(codeIndent + '    if i > 0:')
         lines.append(codeIndent + '        lines.append(",")')
-        DumpTypeDumper(codeIndent + "    ", outputIndent + " ", lines,
-                       variableName + '[i]', containedNode, names)
-        lines.append(codeIndent + "map(emitElem, xrange(%s.GetLength()))" % variableName)
+        DumpTypeDumper(codeIndent + "    ",
+                       outputIndent + " ",
+                       lines,
+                       'path[i]',
+                       containedNode,
+                       names)
+        lines.append(codeIndent + "length = %s.GetLength()" % variableName)
+        lines.append(codeIndent + "map(partial(emitElem, %s),"
+                                  " xrange(length))"
+                                  % variableName)
+        if variableName.startswith("path[i]"):
+            lines.append(codeIndent + 'self.Reset(state)')
         lines.append(codeIndent + 'lines.append("}")')
 
 
