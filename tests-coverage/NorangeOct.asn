@@ -1,0 +1,39 @@
+MY-MODULE DEFINITIONS ::= BEGIN
+
+-- Original definition by Alain
+--T-POS ::= BOOLEAN
+
+TypeEnumerated ::= ENUMERATED {
+    red(0),
+    green(1),
+    blue(2)
+}
+
+TypeNested ::= SEQUENCE {
+    intArray	SEQUENCE (SIZE (10)) OF INTEGER (0..3),
+    boolArray	SEQUENCE (SIZE (10)) OF T-BOOL,
+    enumValue	TypeEnumerated,
+    label	OCTET STRING (SIZE(10..40)),
+    bAlpha	T-BOOL,
+    bBeta	BOOLEAN,
+    sString	T-STRING,
+    arr		T-ARR
+}
+
+-- A more realistic definition
+T-POS ::= SEQUENCE {
+    longitude	REAL(-180.0..180.0),
+    latitude	REAL(-90.0..90.0),
+    height	REAL(30000.0..45000.0),
+    subTypeArray SEQUENCE (SIZE(10..15)) OF TypeNested,
+    label	OCTET STRING (SIZE(20..50))
+}
+
+T-ARR ::= SEQUENCE (SIZE (5..6)) OF INTEGER (0..4)
+
+T-BOOL ::= BOOLEAN
+T-INT ::= INTEGER (0..50)
+T-REAL ::= REAL (-3.14..3.14)
+T-STRING ::= OCTET STRING
+
+END

@@ -1,0 +1,218 @@
+SYSTEM ConcurrencyView
+END ConcurrencyView;
+
+SYSTEM IMPLEMENTATION ConcurrencyView.others
+SUBCOMPONENTS
+  The_Processor : PROCESSOR The_Processor;
+  ConcurrencyView_Async : PROCESS ConcurrencyView_Async.others;
+PROPERTIES
+  Actual_Processor_Binding => REFERENCE The_Processor APPLIES TO ConcurrencyView_Async;
+END ConcurrencyView.others;
+
+PROCESSOR The_Processor
+PROPERTIES
+ARAO::Execution_Platform => Native;
+END The_Processor;
+
+PROCESS ConcurrencyView_Async
+END ConcurrencyView_Async;
+
+PROCESS IMPLEMENTATION ConcurrencyView_Async.others
+SUBCOMPONENTS
+  BASIC_APLC_Cyclic_FV : THREAD BASIC_APLC_Cyclic_FV.others;  
+  BASIC_APLC_Basic_FV : THREAD BASIC_APLC_Basic_FV.others;  
+  CONTROL_APLC_Control_FV : THREAD CONTROL_APLC_Control_FV.others;
+  CONNECTIONS
+  EVENT PORT BASIC_APLC_Cyclic_FV.CyclicActivationImplementation -> BASIC_APLC_Basic_FV.CyclicActivationImplementation;
+  EVENT DATA PORT BASIC_APLC_Basic_FV.BasicTOControl -> CONTROL_APLC_Control_FV.BasicTOControl;
+  EVENT DATA PORT CONTROL_APLC_Control_FV.ControlUPTOBasic -> BASIC_APLC_Basic_FV.ControlUPTOBasic;
+  EVENT DATA PORT CONTROL_APLC_Control_FV.ControlDOWNTOBasic -> BASIC_APLC_Basic_FV.ControlDOWNTOBasic;
+END ConcurrencyView_Async.others;
+
+---------------------------------------------------
+-- VM-Level Container: BASIC_APLC_Cyclic_FV
+---------------------------------------------------
+
+THREAD BASIC_APLC_Cyclic_FV
+features
+  CyclicActivationImplementation : OUT EVENT PORT;
+END BASIC_APLC_Cyclic_FV;
+
+THREAD IMPLEMENTATION BASIC_APLC_Cyclic_FV.others
+CALLS {
+  wrapper : SUBPROGRAM BASIC_APLC_Cyclic_FV_SDL_Ada;
+};
+PROPERTIES
+  Initialize_Entrypoint => "SDL_Wrappers.SDL_Init_Cyclic_FV";
+  Dispatch_Protocol => Periodic;
+  Period => 1000 ms;
+  ARAO::Priority => 2;
+END BASIC_APLC_Cyclic_FV.others;
+
+SUBPROGRAM BASIC_APLC_Cyclic_FV_SDL_Ada
+PROPERTIES
+  Source_Language => Ada;
+  Source_Name => "SDL_Wrappers.CyclicActivation";
+  Source_Stack_Size => 100 KB;
+END BASIC_APLC_Cyclic_FV_SDL_Ada;
+
+---------------------------------------------------
+-- VM-Level Container: BASIC_APLC_Basic_FV
+---------------------------------------------------
+
+THREAD BASIC_APLC_Basic_FV
+FEATURES
+  CyclicActivationImplementation : IN EVENT PORT
+  { Compute_Entrypoint => "SDL_Wrappers.CyclicActivationImplementation"; };
+  ControlUPTOBasic : IN EVENT DATA PORT DataView::T_CONTROL_UP_OUT_Buffer.impl
+  { Compute_Entrypoint => "SDL_Wrappers.ControlUPTOBasic"; };  
+  ControlDOWNTOBasic : IN EVENT DATA PORT DataView::T_CONTROL_DOWN_OUT_Buffer.impl
+  { Compute_Entrypoint => "SDL_Wrappers.ControlDOWNTOBasic"; };    
+  BasicTOControl : OUT EVENT DATA PORT DataView::T_CONTROL_IN_Buffer.impl;
+END BASIC_APLC_Basic_FV;
+
+THREAD IMPLEMENTATION BASIC_APLC_Basic_FV.others
+PROPERTIES
+  Initialize_Entrypoint => "SDL_Wrappers.SDL_Init_Basic_FV";
+  Dispatch_Protocol => Sporadic;
+  Period => 1 ms;
+  ARAO::Priority => 2;
+  Source_Stack_Size => 100 KB;
+END BASIC_APLC_Basic_FV.others;
+
+---------------------------------------------------
+-- VM-Level Container: CONTROL_APLC_Control_FV
+---------------------------------------------------
+
+THREAD CONTROL_APLC_Control_FV
+FEATURES
+  BasicTOControl : IN EVENT DATA PORT DataView::T_CONTROL_IN_Buffer.impl
+  { Compute_Entrypoint => "SDL_Wrappers.BasicTOControl"; };  
+  ControlUPTOBasic : OUT EVENT DATA PORT DataView::T_CONTROL_UP_OUT_Buffer.impl;
+  ControlDOWNTOBasic : OUT EVENT DATA PORT DataView::T_CONTROL_DOWN_OUT_Buffer.impl;
+END CONTROL_APLC_Control_FV;
+
+THREAD IMPLEMENTATION CONTROL_APLC_Control_FV.others
+PROPERTIES
+  Initialize_Entrypoint => "SDL_Wrappers.SDL_Init_Control_FV";
+  Dispatch_Protocol => Sporadic;
+  Period => 1 ms;
+  ARAO::Priority => 3;
+  Source_Stack_Size => 100 KB;
+END CONTROL_APLC_Control_FV.others;
+
+---------------------------------------------------
+
+---------------------------------------------------
+
+SUBPROGRAM CyclicActivationImplementation
+END CyclicActivationImplementation;
+
+SUBPROGRAM IMPLEMENTATION CyclicActivationImplementation.SDL
+PROPERTIES
+Source_Language => SDL;
+assert_properties_extended::FV_Name => "Basic_FV";
+END CyclicActivationImplementation.SDL;
+
+SUBPROGRAM ControlUPTOBasic
+FEATURES
+ControlUPTOBasic :  IN PARAMETER DataView::T_CONTROL_UP_OUT;
+END ControlUPTOBasic;
+
+SUBPROGRAM IMPLEMENTATION ControlUPTOBasic.SDL
+PROPERTIES
+Source_Language => SDL;
+assert_properties_extended::FV_Name => "Basic_FV";
+END ControlUPTOBasic.SDL;
+
+SUBPROGRAM ControlDOWNTOBasic
+FEATURES
+ControlDOWNTOBasic :  IN PARAMETER DataView::T_CONTROL_DOWN_OUT;
+END ControlDOWNTOBasic;
+
+SUBPROGRAM IMPLEMENTATION ControlDOWNTOBasic.SDL
+PROPERTIES
+Source_Language => SDL;
+assert_properties_extended::FV_Name => "Basic_FV";
+END ControlDOWNTOBasic.SDL;
+
+SUBPROGRAM BasicTOControl
+FEATURES
+BASICTOCONTROL :  IN PARAMETER DataView::T_CONTROL_IN;
+END BasicTOControl;
+
+SUBPROGRAM IMPLEMENTATION BasicTOControl.SDL
+PROPERTIES
+Source_Language => SDL;
+assert_properties_extended::FV_Name => "Control_FV";
+END BasicTOControl.SDL;
+
+SUBPROGRAM APLC_Basic_OP
+FEATURES
+THRUSTERS_OPENING :  IN PARAMETER DataView::T_THRUSTERS_OPENING;
+PFS_IWM_ARMING_RELAY_STATUS_ON :  IN PARAMETER DataView::T_PFS_IWM_ARMING_RELAY_STATUS_ON;
+PFS_HLTC_RED_BUTTON_IS_ON :  IN PARAMETER DataView::T_PFS_HLTC_RED_BUTTON_IS_ON;
+MSU_ID :  IN PARAMETER DataView::T_MSU_ID;
+PFS_EWM_MSUY_MSUX_HS :  IN PARAMETER DataView::T_PFS_EWM_MSU_MSU_HS;
+FTCP_HEALTH_STATUS :  IN PARAMETER DataView::T_FTCP_HEALTH_STATUS;
+PFS_EWM_DTG12_MSU :  IN PARAMETER DataView::T_PFS_EWM_DTG12_MSU;
+HLTC :  IN PARAMETER DataView::T_HLTC;
+END_BOOST_IS_REACHED :  IN PARAMETER DataView::T_END_BOOST_IS_REACHED;
+SUN_IS_AIMED :  IN PARAMETER DataView::T_SUN_IS_AIMED;
+PFS_EWC_MSU_PDE_T :  OUT PARAMETER DataView::T_PFS_EWC_MSU_PDE_T;
+PDE_CMD_A :  OUT PARAMETER DataView::T_PDE_CMD_A;
+DPU_CMD :  OUT PARAMETER DataView::T_DPU_CMD;
+SET_PFS_EWC_MSU_DTG_MODE_COARSE :  OUT PARAMETER DataView::T_ON_OFF_CMD;
+HLTM :  OUT PARAMETER DataView::T_HLTM;
+PFS_EWM_MSUX_MSUY_HS :  OUT PARAMETER DataView::T_PFS_EWM_MSU_MSU_HS;
+CAM_MODE :  OUT PARAMETER DataView::T_CAM_MODE;
+CONTROLLER_TO_BE_ACTIVATED :  OUT PARAMETER DataView::T_CONTROLLER_TO_BE_ACTIVATED;
+NAVIGATION_OUTPUT :  OUT PARAMETER DataView::T_NAVIGATION_OUTPUT;
+END APLC_Basic_OP;
+
+SUBPROGRAM IMPLEMENTATION APLC_Basic_OP.SCADE6
+PROPERTIES
+Source_Language => SCADE6;
+assert_properties_extended::FV_Name => "Basic_op_FV";
+END APLC_Basic_OP.SCADE6;
+
+SUBPROGRAM IF_Upstream
+FEATURES
+CAM_MODE :  IN PARAMETER DataView::T_CAM_MODE;
+CONTROLLER_TO_BE_ACTIVATED :  IN PARAMETER DataView::T_CONTROLLER_TO_BE_ACTIVATED;
+NAVIGATION_OUTPUT :  IN PARAMETER DataView::T_NAVIGATION_OUTPUT;
+ESTIMATED_STATE :  IN PARAMETER DataView::T_CONTROLLER_STATE;
+THRUSTERS_OPENING :  OUT PARAMETER DataView::T_THRUSTERS_OPENING;
+END IF_Upstream;
+
+SUBPROGRAM IMPLEMENTATION IF_Upstream.SCADE6
+PROPERTIES
+Source_Language => SCADE6;
+assert_properties_extended::FV_Name => "IF_Upstream_FV";
+END IF_Upstream.SCADE6;
+
+SUBPROGRAM IF_Downstream
+FEATURES
+THRUSTERS_OPENING :  IN PARAMETER DataView::T_THRUSTERS_OPENING;
+CAM_MODE :  IN PARAMETER DataView::T_CAM_MODE;
+CONTROLLER_TO_BE_ACTIVATED :  IN PARAMETER DataView::T_CONTROLLER_TO_BE_ACTIVATED;
+NAVIGATION_OUTPUT :  IN PARAMETER DataView::T_NAVIGATION_OUTPUT;
+END_BOOST_IS_REACHED :  OUT PARAMETER DataView::T_END_BOOST_IS_REACHED;
+SUN_IS_AIMED :  OUT PARAMETER DataView::T_SUN_IS_AIMED;
+ESTIMATED_STATE :  OUT PARAMETER DataView::T_CONTROLLER_STATE;
+END IF_Downstream;
+
+SUBPROGRAM IMPLEMENTATION IF_Downstream.SCADE6
+PROPERTIES
+Source_Language => SCADE6;
+assert_properties_extended::FV_Name => "IF_Downstream_FV";
+END IF_Downstream.SCADE6;
+
+SUBPROGRAM CyclicActivation
+END CyclicActivation;
+
+SUBPROGRAM IMPLEMENTATION CyclicActivation.SDL
+PROPERTIES
+Source_Language => SDL;
+assert_properties_extended::FV_Name => "Cyclic_FV";
+END CyclicActivation.SDL;

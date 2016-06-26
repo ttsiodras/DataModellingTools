@@ -1,0 +1,587 @@
+SUBPROGRAM mytestsubsystemEmpty
+END mytestsubsystemEmpty;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemEmpty.Simulink
+PROPERTIES
+	FV_Name => "mytestsubsystemEmpty_fv_Simulink";
+	Source_Language => Simulink;
+END mytestsubsystemEmpty.Simulink;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemEmpty.OG
+PROPERTIES
+	FV_Name => "mytestsubsystemEmpty_fv_OG";
+	Source_Language => OG;
+END mytestsubsystemEmpty.OG;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemEmpty.SDL
+PROPERTIES
+	FV_Name => "mytestsubsystemEmpty_fv_SDL";
+	Source_Language => SDL;
+END mytestsubsystemEmpty.SDL;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemEmpty.C
+PROPERTIES
+	FV_Name => "mytestsubsystemEmpty_fv_C";
+	Source_Language => C;
+END mytestsubsystemEmpty.C;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemEmpty.Ada
+PROPERTIES
+	FV_Name => "mytestsubsystemEmpty_fv_Ada";
+	Source_Language => Ada;
+END mytestsubsystemEmpty.Ada;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemEmpty.Scade
+PROPERTIES
+	FV_Name => "mytestsubsystemEmpty_fv_Scade";
+	Source_Language => Scade6;
+END mytestsubsystemEmpty.Scade;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemEmpty.QGenAda
+PROPERTIES
+	FV_Name => "mytestsubsystemEmpty_fv_QGenAda";
+	Source_Language => QGenAda;
+END mytestsubsystemEmpty.QGenAda;
+
+-- GUIs can't tolerate empty param set
+
+SUBPROGRAM mytestsubsystem
+FEATURES
+	my_in_AType:IN PARAMETER DataView::AType {encoding=>UPER;};
+	my_in_TypeEnumerated:IN PARAMETER DataView::TypeEnumerated {encoding=>UPER;};
+	my_in_TypeNested:IN PARAMETER DataView::TypeNested {encoding=>UPER;};
+	my_in_T_POS:IN PARAMETER DataView::T_POS {encoding=>UPER;};
+	my_in_T_POS_SET:IN PARAMETER DataView::T_POS_SET {encoding=>UPER;};
+	my_in_T_ARR:IN PARAMETER DataView::T_ARR {encoding=>UPER;};
+	my_in_T_ARR2:IN PARAMETER DataView::T_ARR2 {encoding=>UPER;};
+	my_in_T_ARR3:IN PARAMETER DataView::T_ARR3 {encoding=>UPER;};
+	my_in_T_ARR4:IN PARAMETER DataView::T_ARR4 {encoding=>UPER;};
+	my_in_T_SET:IN PARAMETER DataView::T_SET {encoding=>UPER;};
+	my_in_T_SETOF:IN PARAMETER DataView::T_SETOF {encoding=>UPER;};
+	my_in_T_BOOL:IN PARAMETER DataView::T_BOOL {encoding=>UPER;};
+	my_in_T_INT:IN PARAMETER DataView::T_INT {encoding=>UPER;};
+	my_in_T_REAL:IN PARAMETER DataView::T_REAL {encoding=>UPER;};
+	my_in_T_STRING:IN PARAMETER DataView::T_STRING {encoding=>UPER;};
+	my_in_T_META:IN PARAMETER DataView::T_META {encoding=>UPER;};
+	my_out_AType:OUT PARAMETER DataView::AType {encoding=>UPER;};
+	my_out_TypeEnumerated:OUT PARAMETER DataView::TypeEnumerated {encoding=>UPER;};
+	my_out_TypeNested:OUT PARAMETER DataView::TypeNested {encoding=>UPER;};
+	my_out_T_POS:OUT PARAMETER DataView::T_POS {encoding=>UPER;};
+	my_out_T_POS_SET:OUT PARAMETER DataView::T_POS_SET {encoding=>UPER;};
+	my_out_T_ARR:OUT PARAMETER DataView::T_ARR {encoding=>UPER;};
+	my_out_T_ARR2:OUT PARAMETER DataView::T_ARR2 {encoding=>UPER;};
+	my_out_T_ARR3:OUT PARAMETER DataView::T_ARR3 {encoding=>UPER;};
+	my_out_T_ARR4:OUT PARAMETER DataView::T_ARR4 {encoding=>UPER;};
+	my_out_T_SET:OUT PARAMETER DataView::T_SET {encoding=>UPER;};
+	my_out_T_SETOF:OUT PARAMETER DataView::T_SETOF {encoding=>UPER;};
+	my_out_T_BOOL:OUT PARAMETER DataView::T_BOOL {encoding=>UPER;};
+	my_out_T_INT:OUT PARAMETER DataView::T_INT {encoding=>UPER;};
+	my_out_T_REAL:OUT PARAMETER DataView::T_REAL {encoding=>UPER;};
+	my_out_T_STRING:OUT PARAMETER DataView::T_STRING {encoding=>UPER;};
+	my_out_T_META:OUT PARAMETER DataView::T_META {encoding=>UPER;};
+
+	your_in_AType:IN PARAMETER DataView::AType {encoding=>Native;};
+	your_in_TypeEnumerated:IN PARAMETER DataView::TypeEnumerated {encoding=>Native;};
+	your_in_TypeNested:IN PARAMETER DataView::TypeNested {encoding=>Native;};
+	your_in_T_POS:IN PARAMETER DataView::T_POS {encoding=>Native;};
+	your_in_T_POS_SET:IN PARAMETER DataView::T_POS_SET {encoding=>Native;};
+	your_in_T_ARR:IN PARAMETER DataView::T_ARR {encoding=>Native;};
+	your_in_T_ARR2:IN PARAMETER DataView::T_ARR2 {encoding=>Native;};
+	your_in_T_ARR3:IN PARAMETER DataView::T_ARR3 {encoding=>Native;};
+	your_in_T_ARR4:IN PARAMETER DataView::T_ARR4 {encoding=>Native;};
+	your_in_T_SET:IN PARAMETER DataView::T_SET {encoding=>Native;};
+	your_in_T_SETOF:IN PARAMETER DataView::T_SETOF {encoding=>Native;};
+	your_in_T_BOOL:IN PARAMETER DataView::T_BOOL {encoding=>Native;};
+	your_in_T_INT:IN PARAMETER DataView::T_INT {encoding=>Native;};
+	your_in_T_REAL:IN PARAMETER DataView::T_REAL {encoding=>Native;};
+	your_in_T_STRING:IN PARAMETER DataView::T_STRING {encoding=>Native;};
+	your_in_T_META:IN PARAMETER DataView::T_META {encoding=>Native;};
+	your_out_AType:OUT PARAMETER DataView::AType {encoding=>Native;};
+	your_out_TypeEnumerated:OUT PARAMETER DataView::TypeEnumerated {encoding=>Native;};
+	your_out_TypeNested:OUT PARAMETER DataView::TypeNested {encoding=>Native;};
+	your_out_T_POS:OUT PARAMETER DataView::T_POS {encoding=>Native;};
+	your_out_T_POS_SET:OUT PARAMETER DataView::T_POS_SET {encoding=>Native;};
+	your_out_T_ARR:OUT PARAMETER DataView::T_ARR {encoding=>Native;};
+	your_out_T_ARR2:OUT PARAMETER DataView::T_ARR2 {encoding=>Native;};
+	your_out_T_ARR3:OUT PARAMETER DataView::T_ARR3 {encoding=>Native;};
+	your_out_T_ARR4:OUT PARAMETER DataView::T_ARR4 {encoding=>Native;};
+	your_out_T_SET:OUT PARAMETER DataView::T_SET {encoding=>Native;};
+	your_out_T_SETOF:OUT PARAMETER DataView::T_SETOF {encoding=>Native;};
+	your_out_T_BOOL:OUT PARAMETER DataView::T_BOOL {encoding=>Native;};
+	your_out_T_INT:OUT PARAMETER DataView::T_INT {encoding=>Native;};
+	your_out_T_REAL:OUT PARAMETER DataView::T_REAL {encoding=>Native;};
+	your_out_T_STRING:OUT PARAMETER DataView::T_STRING {encoding=>Native;};
+	your_out_T_META:OUT PARAMETER DataView::T_META {encoding=>Native;};
+END mytestsubsystem;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystem.Simulink
+PROPERTIES
+	FV_Name => "mytestsubsystem_fv_Simulink";
+	Source_Language => Simulink;
+END mytestsubsystem.Simulink;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystem.OG
+PROPERTIES
+	FV_Name => "mytestsubsystem_fv_OG";
+	Source_Language => OG;
+END mytestsubsystem.OG;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystem.SDL
+PROPERTIES
+	FV_Name => "mytestsubsystem_fv_SDL";
+	Source_Language => SDL;
+END mytestsubsystem.SDL;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystem.C
+PROPERTIES
+	FV_Name => "mytestsubsystem_fv_C";
+	Source_Language => C;
+END mytestsubsystem.C;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystem.Ada
+PROPERTIES
+	FV_Name => "mytestsubsystem_fv_Ada";
+	Source_Language => Ada;
+END mytestsubsystem.Ada;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystem.Scade
+PROPERTIES
+	FV_Name => "mytestsubsystem_fv_Scade";
+	Source_Language => Scade6;
+END mytestsubsystem.Scade;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystem.QGenAda
+PROPERTIES
+	FV_Name => "mytestsubsystemEmpty_fv_QGenAda";
+	Source_Language => QGenAda;
+END mytestsubsystem.QGenAda;
+
+-- SUBPROGRAM IMPLEMENTATION mytestsubsystem.GUIPI
+-- PROPERTIES
+-- 	FV_Name => "mytestsubsystem_fv_GUIPI";
+-- 	Source_Language => GUI_PI;
+-- END mytestsubsystem.GUIPI;
+-- 
+-- SUBPROGRAM IMPLEMENTATION mytestsubsystem.GUIRI
+-- PROPERTIES
+-- 	FV_Name => "mytestsubsystem_fv_GUIRI";
+-- 	Source_Language => GUI_RI;
+-- END mytestsubsystem.GUIRI;
+
+
+
+SUBPROGRAM mytestsubsystemAType_PI
+FEATURES
+        my_in_AType:IN PARAMETER DataView::AType {encoding=>UPER;};
+END mytestsubsystemAType_PI;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemAType_PI.GUIPI
+PROPERTIES
+        FV_Name => "mytestsubsystemAType_fv_GUIPI";
+        Source_Language => GUI_PI;
+END mytestsubsystemAType_PI.GUIPI;
+
+
+
+SUBPROGRAM mytestsubsystemAType_RI
+FEATURES
+        my_in_AType:IN PARAMETER DataView::AType {encoding=>UPER;};
+END mytestsubsystemAType_RI;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemAType_RI.GUIRI
+PROPERTIES
+        FV_Name => "mytestsubsystemAType_fv_GUIRI";
+        Source_Language => GUI_RI;
+END mytestsubsystemAType_RI.GUIRI;
+
+
+
+SUBPROGRAM mytestsubsystemTypeEnumerated_PI
+FEATURES
+        my_in_TypeEnumerated:IN PARAMETER DataView::TypeEnumerated {encoding=>UPER;};
+END mytestsubsystemTypeEnumerated_PI;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemTypeEnumerated_PI.GUIPI
+PROPERTIES
+        FV_Name => "mytestsubsystemTypeEnumerated_fv_GUIPI";
+        Source_Language => GUI_PI;
+END mytestsubsystemTypeEnumerated_PI.GUIPI;
+
+
+
+SUBPROGRAM mytestsubsystemTypeEnumerated_RI
+FEATURES
+        my_in_TypeEnumerated:IN PARAMETER DataView::TypeEnumerated {encoding=>UPER;};
+END mytestsubsystemTypeEnumerated_RI;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemTypeEnumerated_RI.GUIRI
+PROPERTIES
+        FV_Name => "mytestsubsystemTypeEnumerated_fv_GUIRI";
+        Source_Language => GUI_RI;
+END mytestsubsystemTypeEnumerated_RI.GUIRI;
+
+
+
+SUBPROGRAM mytestsubsystemTypeNested_PI
+FEATURES
+        my_in_TypeNested:IN PARAMETER DataView::TypeNested {encoding=>UPER;};
+END mytestsubsystemTypeNested_PI;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemTypeNested_PI.GUIPI
+PROPERTIES
+        FV_Name => "mytestsubsystemTypeNested_fv_GUIPI";
+        Source_Language => GUI_PI;
+END mytestsubsystemTypeNested_PI.GUIPI;
+
+
+
+SUBPROGRAM mytestsubsystemTypeNested_RI
+FEATURES
+        my_in_TypeNested:IN PARAMETER DataView::TypeNested {encoding=>UPER;};
+END mytestsubsystemTypeNested_RI;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemTypeNested_RI.GUIRI
+PROPERTIES
+        FV_Name => "mytestsubsystemTypeNested_fv_GUIRI";
+        Source_Language => GUI_RI;
+END mytestsubsystemTypeNested_RI.GUIRI;
+
+
+
+SUBPROGRAM mytestsubsystemT_POS_PI
+FEATURES
+        my_in_T_POS:IN PARAMETER DataView::T_POS {encoding=>UPER;};
+END mytestsubsystemT_POS_PI;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemT_POS_PI.GUIPI
+PROPERTIES
+        FV_Name => "mytestsubsystemT_POS_fv_GUIPI";
+        Source_Language => GUI_PI;
+END mytestsubsystemT_POS_PI.GUIPI;
+
+
+
+SUBPROGRAM mytestsubsystemT_POS_RI
+FEATURES
+        my_in_T_POS:IN PARAMETER DataView::T_POS {encoding=>UPER;};
+END mytestsubsystemT_POS_RI;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemT_POS_RI.GUIRI
+PROPERTIES
+        FV_Name => "mytestsubsystemT_POS_fv_GUIRI";
+        Source_Language => GUI_RI;
+END mytestsubsystemT_POS_RI.GUIRI;
+
+
+
+SUBPROGRAM mytestsubsystemT_POS_SET_PI
+FEATURES
+        my_in_T_POS_SET:IN PARAMETER DataView::T_POS_SET {encoding=>UPER;};
+END mytestsubsystemT_POS_SET_PI;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemT_POS_SET_PI.GUIPI
+PROPERTIES
+        FV_Name => "mytestsubsystemT_POS_SET_fv_GUIPI";
+        Source_Language => GUI_PI;
+END mytestsubsystemT_POS_SET_PI.GUIPI;
+
+
+
+SUBPROGRAM mytestsubsystemT_POS_SET_RI
+FEATURES
+        my_in_T_POS_SET:IN PARAMETER DataView::T_POS_SET {encoding=>UPER;};
+END mytestsubsystemT_POS_SET_RI;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemT_POS_SET_RI.GUIRI
+PROPERTIES
+        FV_Name => "mytestsubsystemT_POS_SET_fv_GUIRI";
+        Source_Language => GUI_RI;
+END mytestsubsystemT_POS_SET_RI.GUIRI;
+
+
+
+SUBPROGRAM mytestsubsystemT_ARR_PI
+FEATURES
+        my_in_T_ARR:IN PARAMETER DataView::T_ARR {encoding=>UPER;};
+END mytestsubsystemT_ARR_PI;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemT_ARR_PI.GUIPI
+PROPERTIES
+        FV_Name => "mytestsubsystemT_ARR_fv_GUIPI";
+        Source_Language => GUI_PI;
+END mytestsubsystemT_ARR_PI.GUIPI;
+
+
+
+SUBPROGRAM mytestsubsystemT_ARR_RI
+FEATURES
+        my_in_T_ARR:IN PARAMETER DataView::T_ARR {encoding=>UPER;};
+END mytestsubsystemT_ARR_RI;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemT_ARR_RI.GUIRI
+PROPERTIES
+        FV_Name => "mytestsubsystemT_ARR_fv_GUIRI";
+        Source_Language => GUI_RI;
+END mytestsubsystemT_ARR_RI.GUIRI;
+
+
+
+SUBPROGRAM mytestsubsystemT_ARR2_PI
+FEATURES
+        my_in_T_ARR2:IN PARAMETER DataView::T_ARR2 {encoding=>UPER;};
+END mytestsubsystemT_ARR2_PI;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemT_ARR2_PI.GUIPI
+PROPERTIES
+        FV_Name => "mytestsubsystemT_ARR2_fv_GUIPI";
+        Source_Language => GUI_PI;
+END mytestsubsystemT_ARR2_PI.GUIPI;
+
+
+
+SUBPROGRAM mytestsubsystemT_ARR2_RI
+FEATURES
+        my_in_T_ARR2:IN PARAMETER DataView::T_ARR2 {encoding=>UPER;};
+END mytestsubsystemT_ARR2_RI;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemT_ARR2_RI.GUIRI
+PROPERTIES
+        FV_Name => "mytestsubsystemT_ARR2_fv_GUIRI";
+        Source_Language => GUI_RI;
+END mytestsubsystemT_ARR2_RI.GUIRI;
+
+
+
+SUBPROGRAM mytestsubsystemT_ARR3_PI
+FEATURES
+        my_in_T_ARR3:IN PARAMETER DataView::T_ARR3 {encoding=>UPER;};
+END mytestsubsystemT_ARR3_PI;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemT_ARR3_PI.GUIPI
+PROPERTIES
+        FV_Name => "mytestsubsystemT_ARR3_fv_GUIPI";
+        Source_Language => GUI_PI;
+END mytestsubsystemT_ARR3_PI.GUIPI;
+
+
+
+SUBPROGRAM mytestsubsystemT_ARR3_RI
+FEATURES
+        my_in_T_ARR3:IN PARAMETER DataView::T_ARR3 {encoding=>UPER;};
+END mytestsubsystemT_ARR3_RI;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemT_ARR3_RI.GUIRI
+PROPERTIES
+        FV_Name => "mytestsubsystemT_ARR3_fv_GUIRI";
+        Source_Language => GUI_RI;
+END mytestsubsystemT_ARR3_RI.GUIRI;
+
+
+
+SUBPROGRAM mytestsubsystemT_ARR4_PI
+FEATURES
+        my_in_T_ARR4:IN PARAMETER DataView::T_ARR4 {encoding=>UPER;};
+END mytestsubsystemT_ARR4_PI;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemT_ARR4_PI.GUIPI
+PROPERTIES
+        FV_Name => "mytestsubsystemT_ARR4_fv_GUIPI";
+        Source_Language => GUI_PI;
+END mytestsubsystemT_ARR4_PI.GUIPI;
+
+
+
+SUBPROGRAM mytestsubsystemT_ARR4_RI
+FEATURES
+        my_in_T_ARR4:IN PARAMETER DataView::T_ARR4 {encoding=>UPER;};
+END mytestsubsystemT_ARR4_RI;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemT_ARR4_RI.GUIRI
+PROPERTIES
+        FV_Name => "mytestsubsystemT_ARR4_fv_GUIRI";
+        Source_Language => GUI_RI;
+END mytestsubsystemT_ARR4_RI.GUIRI;
+
+
+
+SUBPROGRAM mytestsubsystemT_SET_PI
+FEATURES
+        my_in_T_SET:IN PARAMETER DataView::T_SET {encoding=>UPER;};
+END mytestsubsystemT_SET_PI;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemT_SET_PI.GUIPI
+PROPERTIES
+        FV_Name => "mytestsubsystemT_SET_fv_GUIPI";
+        Source_Language => GUI_PI;
+END mytestsubsystemT_SET_PI.GUIPI;
+
+
+
+SUBPROGRAM mytestsubsystemT_SET_RI
+FEATURES
+        my_in_T_SET:IN PARAMETER DataView::T_SET {encoding=>UPER;};
+END mytestsubsystemT_SET_RI;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemT_SET_RI.GUIRI
+PROPERTIES
+        FV_Name => "mytestsubsystemT_SET_fv_GUIRI";
+        Source_Language => GUI_RI;
+END mytestsubsystemT_SET_RI.GUIRI;
+
+
+
+SUBPROGRAM mytestsubsystemT_SETOF_PI
+FEATURES
+        my_in_T_SETOF:IN PARAMETER DataView::T_SETOF {encoding=>UPER;};
+END mytestsubsystemT_SETOF_PI;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemT_SETOF_PI.GUIPI
+PROPERTIES
+        FV_Name => "mytestsubsystemT_SETOF_fv_GUIPI";
+        Source_Language => GUI_PI;
+END mytestsubsystemT_SETOF_PI.GUIPI;
+
+
+
+SUBPROGRAM mytestsubsystemT_SETOF_RI
+FEATURES
+        my_in_T_SETOF:IN PARAMETER DataView::T_SETOF {encoding=>UPER;};
+END mytestsubsystemT_SETOF_RI;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemT_SETOF_RI.GUIRI
+PROPERTIES
+        FV_Name => "mytestsubsystemT_SETOF_fv_GUIRI";
+        Source_Language => GUI_RI;
+END mytestsubsystemT_SETOF_RI.GUIRI;
+
+
+
+SUBPROGRAM mytestsubsystemT_BOOL_PI
+FEATURES
+        my_in_T_BOOL:IN PARAMETER DataView::T_BOOL {encoding=>UPER;};
+END mytestsubsystemT_BOOL_PI;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemT_BOOL_PI.GUIPI
+PROPERTIES
+        FV_Name => "mytestsubsystemT_BOOL_fv_GUIPI";
+        Source_Language => GUI_PI;
+END mytestsubsystemT_BOOL_PI.GUIPI;
+
+
+
+SUBPROGRAM mytestsubsystemT_BOOL_RI
+FEATURES
+        my_in_T_BOOL:IN PARAMETER DataView::T_BOOL {encoding=>UPER;};
+END mytestsubsystemT_BOOL_RI;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemT_BOOL_RI.GUIRI
+PROPERTIES
+        FV_Name => "mytestsubsystemT_BOOL_fv_GUIRI";
+        Source_Language => GUI_RI;
+END mytestsubsystemT_BOOL_RI.GUIRI;
+
+
+
+SUBPROGRAM mytestsubsystemT_INT_PI
+FEATURES
+        my_in_T_INT:IN PARAMETER DataView::T_INT {encoding=>UPER;};
+END mytestsubsystemT_INT_PI;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemT_INT_PI.GUIPI
+PROPERTIES
+        FV_Name => "mytestsubsystemT_INT_fv_GUIPI";
+        Source_Language => GUI_PI;
+END mytestsubsystemT_INT_PI.GUIPI;
+
+
+
+SUBPROGRAM mytestsubsystemT_INT_RI
+FEATURES
+        my_in_T_INT:IN PARAMETER DataView::T_INT {encoding=>UPER;};
+END mytestsubsystemT_INT_RI;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemT_INT_RI.GUIRI
+PROPERTIES
+        FV_Name => "mytestsubsystemT_INT_fv_GUIRI";
+        Source_Language => GUI_RI;
+END mytestsubsystemT_INT_RI.GUIRI;
+
+
+
+SUBPROGRAM mytestsubsystemT_REAL_PI
+FEATURES
+        my_in_T_REAL:IN PARAMETER DataView::T_REAL {encoding=>UPER;};
+END mytestsubsystemT_REAL_PI;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemT_REAL_PI.GUIPI
+PROPERTIES
+        FV_Name => "mytestsubsystemT_REAL_fv_GUIPI";
+        Source_Language => GUI_PI;
+END mytestsubsystemT_REAL_PI.GUIPI;
+
+
+
+SUBPROGRAM mytestsubsystemT_REAL_RI
+FEATURES
+        my_in_T_REAL:IN PARAMETER DataView::T_REAL {encoding=>UPER;};
+END mytestsubsystemT_REAL_RI;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemT_REAL_RI.GUIRI
+PROPERTIES
+        FV_Name => "mytestsubsystemT_REAL_fv_GUIRI";
+        Source_Language => GUI_RI;
+END mytestsubsystemT_REAL_RI.GUIRI;
+
+
+
+SUBPROGRAM mytestsubsystemT_STRING_PI
+FEATURES
+        my_in_T_STRING:IN PARAMETER DataView::T_STRING {encoding=>UPER;};
+END mytestsubsystemT_STRING_PI;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemT_STRING_PI.GUIPI
+PROPERTIES
+        FV_Name => "mytestsubsystemT_STRING_fv_GUIPI";
+        Source_Language => GUI_PI;
+END mytestsubsystemT_STRING_PI.GUIPI;
+
+
+
+SUBPROGRAM mytestsubsystemT_STRING_RI
+FEATURES
+        my_in_T_STRING:IN PARAMETER DataView::T_STRING {encoding=>UPER;};
+END mytestsubsystemT_STRING_RI;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemT_STRING_RI.GUIRI
+PROPERTIES
+        FV_Name => "mytestsubsystemT_STRING_fv_GUIRI";
+        Source_Language => GUI_RI;
+END mytestsubsystemT_STRING_RI.GUIRI;
+
+
+
+SUBPROGRAM mytestsubsystemT_META_PI
+FEATURES
+        my_in_T_META:IN PARAMETER DataView::T_META {encoding=>UPER;};
+END mytestsubsystemT_META_PI;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemT_META_PI.GUIPI
+PROPERTIES
+        FV_Name => "mytestsubsystemT_META_fv_GUIPI";
+        Source_Language => GUI_PI;
+END mytestsubsystemT_META_PI.GUIPI;
+
+
+
+SUBPROGRAM mytestsubsystemT_META_RI
+FEATURES
+        my_in_T_META:IN PARAMETER DataView::T_META {encoding=>UPER;};
+END mytestsubsystemT_META_RI;
+
+SUBPROGRAM IMPLEMENTATION mytestsubsystemT_META_RI.GUIRI
+PROPERTIES
+        FV_Name => "mytestsubsystemT_META_fv_GUIRI";
+        Source_Language => GUI_RI;
+END mytestsubsystemT_META_RI.GUIRI;
+
+

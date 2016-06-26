@@ -1,0 +1,34 @@
+include common.mk
+
+VPATH=..:../dmt/B_mappers:../dmt/commonPy
+
+PYSRC_B := asynchronousTool.py ada_B_mapper.py c_B_mapper.py og_B_mapper.py simulink_B_mapper.py scade6_B_mapper.py # pyside_B_mapper.py vhdl_B_mapper.py
+PYSRC_B_COVER := $(PYSRC_B:%.py=___dmt_B_mappers_%.py,cover)
+
+.PHONY:	check
+
+all:	$(PYSRC_B_COVER) check
+
+DataView.aadl:	DataTypesSimulink.asn
+	PYTHONPATH=.. python3 -m dmt.asn2aadlPlus $< $@
+
+DataViewVHDL.aadl:	DataTypesSimulinkVHDL.asn
+	PYTHONPATH=.. python3 -m dmt.asn2aadlPlus $< $@
+ 
+___dmt_B_mappers_%.py,cover:	../dmt/B_mappers/%.py mini_cv.aadl DataView.aadl DataViewVHDL.aadl
+	@echo Update required: $@ depends on $?
+	$(MAKE) -f Makefile.M2C clean
+	mkdir -p output
+	rm -rf output/*
+	# PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.aadl2glueC -o output -verbose mini_cv_vhdl.aadl DataViewVHDL.aadl >/dev/null
+	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.aadl2glueC -o output -verbose mini_cv.aadl DataView.aadl >/dev/null
+	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.aadl2glueC -o output -verbose -useOSS mini_cv.aadl DataView.aadl >/dev/null
+	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage annotate -d . ../dmt/aadl2glueC.py ../dmt/B_mappers/*.py ../dmt/commonPy/*.py
+
+check:
+	@for i in $(PYSRC_B_COVER) ; do echo Checking $$i ... ; ./checkCoverage.pl $$i || { ( echo $$i ; ./review.pl $$i ) | less -RS ; echo $$i had issues... ; exit 1 ; } ; done
+
+clean:
+	${COVERAGE} erase
+	rm -f ./___*,cover
+	rm -rf output/

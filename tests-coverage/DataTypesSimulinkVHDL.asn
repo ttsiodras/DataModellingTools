@@ -1,0 +1,85 @@
+MY-MODULE DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+
+-- Original definition by Alain
+--T-POS ::= BOOLEAN
+
+MyInt ::= INTEGER (0 .. 20)
+
+My2ndInt ::= MyInt ( 1 .. 18)
+
+AType ::= SEQUENCE {
+    blArray	SEQUENCE (SIZE(10)) OF BOOLEAN
+}
+
+TypeEnumerated ::= ENUMERATED {
+    red(0),
+    green(1),
+    blue(2)
+}
+
+TypeNested ::= SEQUENCE {
+    intVal	INTEGER(0..10),
+    int2Val	INTEGER(-10..10),
+    int3Val	MyInt (10..12),
+    intArray	SEQUENCE (SIZE (10)) OF INTEGER (0..3),
+    octStrArray	SEQUENCE (SIZE (10)) OF OCTET STRING (SIZE(10..10)),
+    octStrAray2	SEQUENCE (SIZE (10)) OF OCTET STRING (SIZE(11)),
+    boolArray	SEQUENCE (SIZE (10)) OF T-BOOL,
+    enumArray	SEQUENCE (SIZE (10)) OF TypeEnumerated,
+    enumValue	TypeEnumerated,
+    enumValue2	ENUMERATED {
+	truism(0),
+	falsism(1)
+    },
+    label	OCTET STRING (SIZE(40)),
+    bAlpha	T-BOOL,
+    bBeta	BOOLEAN,
+    arr		T-ARR
+}
+
+T-POS ::= CHOICE {
+    longitude	INTEGER(-180..180),
+    latitude	INTEGER(-90..90),
+    height	INTEGER(30000..45000),
+    subTypeArray SEQUENCE (SIZE(15)) OF TypeNested,
+    label	OCTET STRING (SIZE(50)),
+    intArray	T-ARR,
+    myIntSet	T-SET,
+    myIntSetOf	T-SETOF,
+    anInt	My2ndInt
+}
+
+T-POS-SET ::= SET {
+    longitude	INTEGER(-180..180),
+    latitude	INTEGER(-90..90),
+    height	INTEGER(30000..45000),
+    subTypeArray SEQUENCE (SIZE(15)) OF TypeNested,
+    label	OCTET STRING (SIZE(50)),
+    intArray	T-ARR,
+    myIntSet	T-SET,
+    myIntSetOf	T-SETOF
+
+}
+
+T-ARR ::= SEQUENCE (SIZE (6)) OF INTEGER (0..32764)
+
+T-ARR3 ::= SEQUENCE (SIZE (6)) OF SEQUENCE (SIZE(7)) OF INTEGER (0 .. 20)
+
+T-ARR4 ::= SEQUENCE (SIZE (6)) OF SEQUENCE (SIZE(7)) OF INTEGER (0 .. 23)
+
+T-SET ::= SET {
+    data1   INTEGER(0..131071),
+    data3   INTEGER(-1024..1024),
+    data4   INTEGER(-1310720..131071)
+}
+
+T-SETOF ::= SET (SIZE (6)) OF INTEGER (0..4)
+
+T-BOOL ::= BOOLEAN
+T-INT ::= INTEGER (0..50)
+T-STRING ::= OCTET STRING (SIZE(15))
+T-FIXEDSTRING ::= OCTET STRING (SIZE(15))
+
+T-META ::= T-POS
+
+END

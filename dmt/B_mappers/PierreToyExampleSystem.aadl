@@ -1,0 +1,66 @@
+PACKAGE Functional_view
+PUBLIC
+
+SUBPROGRAM Dispatcher
+FEATURES
+    TC : IN PARAMETER DataTypes::T_TC;
+END Dispatcher;
+
+SUBPROGRAM IMPLEMENTATION Dispatcher.AADL
+CALLS {
+    TC_Parser : SUBPROGRAM TC_Parser.AADL;
+    Tc_1 : SUBPROGRAM TC.POS;
+    Tc_2 : SUBPROGRAM TC.PRO;
+};
+CONNECTIONS
+    PARAMETER TC -> TC_Parser.TC;
+    PARAMETER TC_Parser.Param -> Tc_1.POS;
+    PARAMETER TC_Parser.Param -> Tc_2.POS;
+PROPERTIES
+    Source_Language => "Lustre";
+END Dispatcher.AADL;
+
+SUBPROGRAM TC_Parser
+FEATURES
+    TC : IN PARAMETER DataTypes::T_TC;
+    Id : OUT PARAMETER DataTypes::T_POS;
+    Param : OUT PARAMETER DataTypes::T_POS;
+PROPERTIES
+    Source_Language => "Lustre";
+END TC_Parser;
+
+SUBPROGRAM IMPLEMENTATION TC_Parser.AADL
+END TC_Parser.AADL;
+
+SUBPROGRAM TC
+FEATURES
+    POS : IN PARAMETER DataTypes::T_POS;
+END TC;
+
+SUBPROGRAM IMPLEMENTATION TC.POS
+CALLS {
+    Write : SUBPROGRAM Write.AADL;
+};
+CONNECTIONS
+    PARAMETER POS -> Write.POS;
+END TC.POS;
+
+SUBPROGRAM IMPLEMENTATION TC.PRO
+CALLS {
+    Boost_Order : SUBPROGRAM Boost_Order.AADL;
+};
+CONNECTIONS
+    PARAMETER POS -> Boost_Order.POS;
+END TC.PRO;
+
+SUBPROGRAM Write
+FEATURES
+    POS : IN PARAMETER DataTypes::T_POS;
+END Write;
+
+SUBPROGRAM Boost_Order
+FEATURES
+    POS : IN PARAMETER DataTypes::T_POS;
+END Boost_Order;
+
+END Functional_view;
