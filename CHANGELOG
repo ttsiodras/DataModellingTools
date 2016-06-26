@@ -1,5 +1,14 @@
 # Change Log
 
+## 2.0.0
+
+- Moved to Python3
+- Added type annotations, checked via mypy
+- Added git commit hooks to check via flake8 AND pylint
+- Configuration files used to customize the checks for the project's
+  naming conventions.
+- Many bugs identified and fixed.
+
 ## 1.2.3
 - ctypes backend: emit all ENUMERATED values in DV.py
 
