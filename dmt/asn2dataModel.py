@@ -39,8 +39,12 @@ import sys
 import copy
 from importlib import import_module
 
+from typing import Tuple, Any  # NOQA pylint: disable=unused-import
+
 from .commonPy import configMT, asnParser, cleanupNodes, verify
 from .commonPy.utility import inform, panic
+from .commonPy.asnParser import Filename, Typename, AST_Lookup, AST_TypesOfFile, AST_Leaftypes  # NOQA pylint: disable=unused-import
+from .commonPy.asnAST import AsnNode  # NOQA pylint: disable=unused-import
 
 from . import A_mappers  # NOQA pylint:disable=unused-import
 
@@ -111,20 +115,18 @@ def main():
         if not os.path.isfile(f):
             panic("'%s' is not a file!\n" % f)  # pragma: no cover
 
-    uniqueASNfiles = {}
-    for grammar in sys.argv[1:]:
-        uniqueASNfiles[grammar] = 1
-    asnParser.ParseAsnFileList(list(uniqueASNfiles.keys()))
+    uniqueASNfiles = {}  # type: Dict[Filename, Tuple[AST_Lookup, List[AsnNode], AST_Leaftypes]]
+    asnParser.ParseAsnFileList(list(set(sys.argv[1:])))
 
     for asnFile in uniqueASNfiles:
-        tmpNames = {}
+        tmpNames = {}  # type: AST_Lookup
         for name in asnParser.g_typesOfFile[asnFile]:
             tmpNames[name] = asnParser.g_names[name]
 
-        uniqueASNfiles[asnFile] = [
+        uniqueASNfiles[asnFile] = (
             copy.copy(tmpNames),                            # map Typename to type definition class from asnAST
             copy.copy(asnParser.g_astOfFile[asnFile]),    # list of nameless type definitions
-            copy.copy(asnParser.g_leafTypeDict)]   # map from Typename to leafType
+            copy.copy(asnParser.g_leafTypeDict))   # map from Typename to leafType
 
         inform("Checking that all base nodes have mandatory ranges set in %s..." % asnFile)
         for node in list(tmpNames.values()):
@@ -133,7 +135,7 @@ def main():
     if configMT.debugParser:
         sys.exit(0)  # pragma: no cover
 
-    loadedBackends = {}
+    loadedBackends = {}  # type: Dict[Filename, Any]
 
     # If some AST nodes must be skipped (for any reason), go learn about them
     badTypes = cleanupNodes.DiscoverBadTypes()

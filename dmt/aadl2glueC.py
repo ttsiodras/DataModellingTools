@@ -84,10 +84,15 @@ import copy
 import distutils.spawn as spawn
 from importlib import import_module
 
+from typing import Tuple, Any  # NOQA pylint: disable=unused-import
+
 from . import commonPy
 
 from .commonPy.utility import panic, inform
 from .commonPy import verify
+from .commonPy.asnParser import Filename, Typename, AST_Lookup, AST_TypesOfFile, AST_Leaftypes  # NOQA pylint: disable=unused-import
+from .commonPy.asnAST import AsnNode  # NOQA pylint: disable=unused-import
+from .commonPy.aadlAST import ApLevelContainer  # NOQA pylint: disable=unused-import
 
 from . import B_mappers  # NOQA pylint: disable=unused-import
 
@@ -207,58 +212,41 @@ def main():
 
     ParseAADLfilesAndResolveSignals()
 
-    uniqueDataFiles = {}
+    uniqueDataFiles = {}  # type: Dict[Filename, Dict[str, List[ApLevelContainer]]]
     for sp in list(commonPy.aadlAST.g_apLevelContainers.values()):
         for param in sp._params:
             uniqueDataFiles.setdefault(param._signal._asnFilename, {})
             uniqueDataFiles[param._signal._asnFilename].setdefault(sp._language, [])
             uniqueDataFiles[param._signal._asnFilename][sp._language].append(sp)
 
-    uniqueASNfiles = {}
+    uniqueASNfiles = {}  # type: Dict[Filename, Tuple[AST_Lookup, List[AsnNode], AST_Leaftypes]]
     if len(list(uniqueDataFiles.keys())) != 0:
         commonPy.asnParser.ParseAsnFileList(list(uniqueDataFiles.keys()))
 
     for asnFile in uniqueDataFiles:
-        tmpNames = {}
+        tmpNames = {}  # type: AST_Lookup
         for name in commonPy.asnParser.g_typesOfFile[asnFile]:
             tmpNames[name] = commonPy.asnParser.g_names[name]
 
-        uniqueASNfiles[asnFile] = [
+        uniqueASNfiles[asnFile] = (
             copy.copy(tmpNames),                            # map Typename to type definition class from asnAST
             copy.copy(commonPy.asnParser.g_astOfFile[asnFile]),    # list of nameless type definitions
-            copy.copy(commonPy.asnParser.g_leafTypeDict)]   # map from Typename to leafType
+            copy.copy(commonPy.asnParser.g_leafTypeDict))   # map from Typename to leafType
 
         inform("Checking that all base nodes have mandatory ranges set in %s..." % asnFile)
         for node in list(tmpNames.values()):
             verify.VerifyRanges(node, commonPy.asnParser.g_names)
 
-#    # For each ASN.1 grammar file referenced in the system level description
-#    for asnFile in uniqueDataFiles.iterkeys():
-#       names = uniqueASNfiles[asnFile][0]
-#       leafTypeDict = uniqueASNfiles[asnFile][2]
-#
-#       modelingLanguages = uniqueDataFiles[asnFile]
-#
-#       # For each modeling language used by subprograms whose messages reference the grammar
-#       for modelingLanguage, subProgramArray in modelingLanguages.iteritems():
-#           if modelingLanguage == None:
-#               continue
-#
-#           for sp in subProgramArray:
-
-    loadedBackends = {}
+    loadedBackends = set()  # type: Set[str]
 
     SystemsAndImplementations = commonPy.aadlAST.g_subProgramImplementations[:]
     SystemsAndImplementations.extend(commonPy.aadlAST.g_threadImplementations[:])
     SystemsAndImplementations.extend(commonPy.aadlAST.g_processImplementations[:])
 
-    # obsolete, was used for OSS library init
-    # CreateInitializationFiles(useOSS, SystemsAndImplementations, uniqueDataFiles.iterkeys())
-
     # Update ASN.1 nodes to carry size info (only for Signal params)
     for si in SystemsAndImplementations:
-        sp, sp_impl, modelingLanguage = si[0], si[1], si[2]
-        sp = commonPy.aadlAST.g_apLevelContainers[sp]
+        spName, sp_impl, modelingLanguage = si[0], si[1], si[2]
+        sp = commonPy.aadlAST.g_apLevelContainers[spName]
         for param in sp._params:
             asnFile = param._signal._asnFilename
             names = uniqueASNfiles[asnFile][0]
@@ -269,7 +257,7 @@ def main():
                 node = names[nodeTypename]
                 if node._leafType == "AsciiString":
                     panic("You cannot use IA5String as a parameter - use OCTET STRING instead\n(%s)" % node.Location())  # pragma: no cover
-                node._asnSize = param._signal._asnSize
+                # (typo?) node._asnSize = param._signal._asnSize
 
     # If some AST nodes must be skipped (for any reason), go learn about them
     badTypes = commonPy.cleanupNodes.DiscoverBadTypes()
@@ -277,11 +265,11 @@ def main():
     if {"ada", "qgenada"} & {y[2].lower() for y in SystemsAndImplementations}:
         SpecialCodes(SystemsAndImplementations, uniqueDataFiles, uniqueASNfiles, useOSS)
 
-    asynchronousBackends = []
+    asynchronousBackends = []  # type: List[Any]  # No idea how to say list of module
 
     for si in SystemsAndImplementations:
-        sp, sp_impl, modelingLanguage, maybeFVname = si[0], si[1], si[2], si[3]
-        sp = commonPy.aadlAST.g_apLevelContainers[sp]
+        spName, sp_impl, modelingLanguage, maybeFVname = si[0], si[1], si[2], si[3]
+        sp = commonPy.aadlAST.g_apLevelContainers[spName]
         inform("Creating glue for parameters of %s.%s...", sp._id, sp_impl)
         if modelingLanguage is None:
             continue  # pragma: no cover
@@ -303,7 +291,7 @@ def main():
         try:
             backend = import_module(backendFilename[:-3], 'dmt.B_mappers')  # pragma: no cover
             if backendFilename[:-3] not in loadedBackends:
-                loadedBackends[backendFilename[:-3]] = 1
+                loadedBackends.add(backendFilename[:-3])
                 if commonPy.configMT.verbose:
                     backend.Version()
         except ImportError as err:  # pragma: no cover
@@ -408,8 +396,8 @@ def main():
 
     for si in [x for x in SystemsAndImplementations if x[2] is not None and x[2].lower() in ["gui_ri", "gui_pi", "vhdl"]]:
         # We do, start the work
-        sp, sp_impl, lang, maybeFVname = si[0], si[1], si[2], si[3]
-        sp = commonPy.aadlAST.g_apLevelContainers[sp]
+        spName, sp_impl, lang, maybeFVname = si[0], si[1], si[2], si[3]
+        sp = commonPy.aadlAST.g_apLevelContainers[spName]
         if len(sp._params) == 0:
             if lang.lower() == "gui_ri":  # pragma: no cover
                 if "gui_polling" not in sp._id:  # pragma: no cover
