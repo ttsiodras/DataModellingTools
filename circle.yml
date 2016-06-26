@@ -1,11 +1,11 @@
 machine:
-  python:
-    version: python-3.5.1
+  pre:
+    - pyenv global 3.5.1
 
 dependencies:
   pre:
     - sudo apt-get update
-    - sudo apt-get install libxslt-dev libxml2-dev python3-pip
+    - sudo apt-get install libxslt-dev libxml2-dev
     - pip3 install --user -r requirements.txt
 
 test:
