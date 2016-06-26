@@ -115,10 +115,11 @@ def main():
         if not os.path.isfile(f):
             panic("'%s' is not a file!\n" % f)  # pragma: no cover
 
-    uniqueASNfiles = {}  # type: Dict[Filename, Tuple[AST_Lookup, List[AsnNode], AST_Leaftypes]]
-    asnParser.ParseAsnFileList(list(set(sys.argv[1:])))
+    uniqueFilenames = list(set(sys.argv[1:]))
+    asnParser.ParseAsnFileList(uniqueFilenames)
 
-    for asnFile in uniqueASNfiles:
+    uniqueASNfiles = {}  # type: Dict[Filename, Tuple[AST_Lookup, List[AsnNode], AST_Leaftypes]]
+    for asnFile in uniqueFilenames:
         tmpNames = {}  # type: AST_Lookup
         for name in asnParser.g_typesOfFile[asnFile]:
             tmpNames[name] = asnParser.g_names[name]

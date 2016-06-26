@@ -20,12 +20,15 @@
 #
 import re
 import os
+
+from typing import List  # NOQA pylint: disable=unused-import
+
 from ..commonPy import asnParser
 from ..commonPy.utility import panic, inform
 from ..commonPy.asnAST import (
     AsnBool, AsnInt, AsnReal, AsnString, isSequenceVariable, AsnEnumerated,
     AsnSequence, AsnSet, AsnChoice, AsnMetaMember, AsnSequenceOf, AsnSetOf,
-    AsnBasicNode)
+    AsnBasicNode, AsnNode)
 from ..commonPy.asnParser import AST_Lookup, AST_Leaftypes
 from ..commonPy.cleanupNodes import SetOfBadTypenames
 
@@ -387,7 +390,13 @@ def CreateGettersAndSetters(path, params, accessPathInC, node, names, leafTypeDi
         params.Pop()
 
 
-def DumpTypeDumper(codeIndent, outputIndent, lines, variableName, node, names):
+def DumpTypeDumper(
+        codeIndent: str,
+        outputIndent: str,
+        lines: List[str],  # pylint: disable=invalid-sequence-index
+        variableName: str,
+        node: AsnNode,
+        names: AST_Lookup):
     ''' Return the lines of code needed to display the value of a variable
         of a given type, in the ASN.1 Value Notation format (aka GSER) '''
     if isinstance(node, AsnBool):
@@ -410,7 +419,7 @@ def DumpTypeDumper(codeIndent, outputIndent, lines, variableName, node, names):
         lines.append(
             codeIndent +
             'lines.append("%s\\\""+str(%s.GetPyString()) + "\\\"")' % (outputIndent, variableName))
-        if variableName.startswth("path[i]"):
+        if variableName.startswith("path[i]"):
             lines.append(codeIndent + 'self.Reset(state)')
     elif isinstance(node, AsnEnumerated):
         mapping = str({val: name for name, val in node._members})
