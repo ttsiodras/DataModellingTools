@@ -316,7 +316,7 @@ def ConvertCatalogueToASN_AST(inputSmp2Files):
     # Do a first pass, verifying the primary assumption:
     # That 'Id' elements of types are unique across our set of SMP2 files.
     for inputSmp2File in inputSmp2Files:
-        a = etree.parse(open(inputSmp2File))
+        a = etree.parse(open(inputSmp2File))  # type: Any  # mypy bugs in ElementTree handling
         root = a.getroot()
         if len(root) < 1 or not root.tag.endswith('Catalogue'):
             panic('', "You must use an XML file that contains an SMP2 Catalogue")  # pragma: no cover

@@ -139,8 +139,7 @@ def OnStartup(unused_modelingLanguage: str, asnFile: str, outputDir: str, badTyp
 
     # mono_exe = "mono " if sys.argv[0].endswith('.py') and sys.platform.startswith('linux') else ""
     mono_exe = ""
-    makefile.write(
-        '''\
+    makefile_text = '''\
 ASN1SCC:=asn1.exe
 ASN2DATAMODEL:=asn2dataModel
 GRAMMAR := %(origGrammarBase)s
@@ -172,7 +171,8 @@ clean:
 %(tab)srm -f $(BDIR)/asn1crt.?  $(BDIR)/real.?  $(BDIR)/$(GRAMMAR).?  $(BDIR)/acn.?  $(BDIR)/ber.? $(BDIR)/xer.?
 %(tab)srm -f $(BDIR)/DV.py $(BDIR)/*.pyc $(BDIR)/$(BASEGRAMMAR)_getset.? $(BDIR)/$(BASEGRAMMAR)_getset.so
 %(tab)srm -f $(BDIR)/$(GRAMMAR)_asn.py
-''' % {'tab': '\t', 'base': base, 'origGrammarBase': origGrammarBase, 'mono': mono_exe})
+'''
+    makefile.write(makefile_text % {'tab': '\t', 'base': base, 'origGrammarBase': origGrammarBase, 'mono': mono_exe})
     makefile.close()
     CreateDeclarationsForAllTypes(asnParser.g_names, asnParser.g_leafTypeDict, badTypes)
     g_outputGetSetH.write('\n/* Helper functions for NATIVE encodings */\n\n')

@@ -32,9 +32,11 @@ import os
 import sys
 import getopt
 
+from typing import Dict
+
 from .commonPy import asnParser
 from .commonPy.createInternalTypes import ScanChildren
-from .commonPy.asnAST import AsnMetaType
+from .commonPy.asnParser import AST_Lookup  # NOQA pylint: disable=unused-import
 from .commonPy.commonSMP2 import (
     info, panic, green, white, red, setVerbosity,
     DashUnderscoreAgnosticDict, ConvertCatalogueToASN_AST)
@@ -55,12 +57,12 @@ def usage(coloredMsg=""):
     panic(usageMsg, coloredMsg)
 
 
-def MergeASN1_AST(smp2AsnAST):
+def MergeASN1_AST(smp2AsnAST) -> Dict[str, str]:
     '''Merges the ASN.1 AST generated from SMP2 files (smp2AsnAST param)
     into the ASN.1 AST stored in asnParser.g_names. Uses smart
     merging, i.e. diff-like semantics.'''
     typesToAddVerbatim = []
-    identicals = {}
+    identicals = {}  # type: Dict[str, str]
     d = asnParser.g_names
     for k, v in smp2AsnAST.items():
         if k in d:
@@ -96,14 +98,15 @@ def MergeASN1_AST(smp2AsnAST):
         for r in results:
             node = smp2AsnAST[r]
             d[r] = node
-            if isinstance(node, AsnMetaType):
-                asnParser.g_metatypes[r] = r._containedType  # pragma: no cover
-                d[r] = smp2AsnAST[r._containedType]  # pragma: no cover
+            # mypy helped me see that his is impossible (coverage agrees - notice the no cover!)
+            # if isinstance(node, AsnMetaType):
+            #     asnParser.g_metatypes[r] = r._containedType  # pragma: no cover
+            #     d[r] = smp2AsnAST[r._containedType]  # pragma: no cover
             asnParser.g_typesOfFile.setdefault(node._asnFilename, []).append(r)
     return identicals
 
 
-def SaveASN_AST(bPruneUnnamedInnerTASTEtypes, outputAsn1Grammar, identicals):
+def SaveASN_AST(bPruneUnnamedInnerTASTEtypes: bool, outputAsn1Grammar: str, identicals: Dict[str, str]):
     d = DashUnderscoreAgnosticDict()
     for k, v in asnParser.g_names.items():
         d[k] = v
@@ -124,8 +127,8 @@ def SaveASN_AST(bPruneUnnamedInnerTASTEtypes, outputAsn1Grammar, identicals):
             f.write('-- From ' + v._asnFilename + ' line ' + str(v._lineno) + '\n')
             f.write(k + ' ::= ')
             f.write(v.AsASN1(d) + "\n\n")
-        for k, v in identicals.items():
-            f.write(k + ' ::= ' + v + '\n\n')
+        for k2, v2 in identicals.items():
+            f.write(k2 + ' ::= ' + v2 + '\n\n')
         f.write('END\n')
 
 
