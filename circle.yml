@@ -1,6 +1,6 @@
 machine:
   pre:
-    - pyenv global 3.5.1
+    - pyenv install 3.5.1
 
 dependencies:
   pre:
