@@ -1,0 +1,9 @@
+dependencies:
+  pre:
+    - sudo apt-get update
+    - sudo apt-get install libxslt-dev libxml2-dev python3-pip
+    - pip3 install --user -r requirements.txt
+
+test:
+  override:
+    - make
