@@ -5,7 +5,7 @@ dependencies:
     - sudo apt-get update
     - sudo apt-get install libxslt-dev libxml2-dev
   override:
-    - sudo pip install -r requirements.txt
+    - pip install -r requirements.txt
 
 test:
   override:
