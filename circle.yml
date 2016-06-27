@@ -10,7 +10,7 @@ dependencies:
     - sudo apt-get update
     - sudo apt-get install libxslt-dev libxml2-dev mono-complete
     - wget -O - -q https://github.com/ttsiodras/asn1scc/releases/download/3.2.81/asn1scc-bin-3.2.81.tar.gz | tar zxvf -
-    - wget -O - -q https://github.com/ttsiodras/DataModellingTools/releases/download/2.0.1/antlr-2.7.7.tar.gz | tar zxvf - ; cd antlr-2.7.7/lib/python ; pip2 install .
+    - wget -O - -q https://github.com/ttsiodras/DataModellingTools/files/335591/antlr-2.7.7.tar.gz | tar zxvf - ; cd antlr-2.7.7/lib/python ; pip2 install .
 
   override:
     - pip3 install -r requirements.txt
