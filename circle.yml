@@ -1,6 +1,7 @@
 machine:
-  post:
-    - pyenv global 3.4.2
+  python:
+    version: 3.4.2
+
 dependencies:
   pre:
     - sudo apt-get update
