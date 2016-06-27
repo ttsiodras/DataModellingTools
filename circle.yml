@@ -1,11 +1,13 @@
+machine:
+  python:
+    version: 3.4.2
+
 dependencies:
   pre:
-    - pyenv install --skip-existing 3.4.2
-    - pyenv global 3.4.2
     - sudo apt-get update
     - sudo apt-get install libxslt-dev libxml2-dev
   override:
-    - /opt/circleci/.pyenv/shims/pip3 install -r requirements.txt
+    - pip3 install -r requirements.txt
 
 test:
   override:
