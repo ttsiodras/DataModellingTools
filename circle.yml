@@ -5,7 +5,7 @@ machine:
 dependencies:
   pre:
     - sudo apt-get update
-    - sudo apt-get install libxslt-dev libxml2-dev mono-runtime
+    - sudo apt-get install libxslt-dev libxml2-dev mono-runtime libmono-system-core4.0-cil
     - wget -O - -q https://github.com/ttsiodras/asn1scc/releases/download/3.2.81/asn1scc-bin-3.2.81.tar.gz | tar zxvf -
   override:
     - pip3 install -r requirements.txt
