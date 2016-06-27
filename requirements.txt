@@ -7,3 +7,4 @@ pytest==2.6.3
 lxml==3.6.0
 astroid==1.4.6
 pycodestyle==2.0.0
+typing==3.5.2.2

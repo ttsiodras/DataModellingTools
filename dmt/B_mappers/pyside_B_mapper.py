@@ -158,7 +158,7 @@ editor = None
 
     global g_firstElem
     g_firstElem = True
-    buttons = []
+    buttons = []  # type: List[List[str]]
     # RI = TC (Telecommand), PI = TM (Telemetry)
     if modelingLanguage.lower() == 'gui_ri':
         g_BackendFile.write('''

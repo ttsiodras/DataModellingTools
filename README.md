@@ -1,5 +1,7 @@
-TASTE Data Modelling Technologies
-=================================
+[![Build and Test Status of Data Modelling Tools on Circle CI](https://circleci.com/gh/ttsiodras/DataModellingTools.svg?&style=shield&circle-token=9df10d36b6b4ccd923415a5890155b7bf54b95c5)](https://circleci.com/gh/ttsiodras/DataModellingTools/tree/master)
+
+TASTE Data Modelling Tools
+==========================
 
 These are all the tools used by the [TASTE toolchain](https://taste.tuxfamily.org/)
 to automate handling of the Data Modelling challenges. They include more than two

@@ -459,7 +459,7 @@ def DumpTypeDumper(
                 variableName + "." + CleanNameAsPythonWants(child[0]), childNode, names)
         if not isinstance(node, AsnChoice):
             lines.append(codeIndent + 'lines.append("}")')
-    elif isinstance(node, AsnSetOf) or isinstance(node, AsnSequenceOf):
+    elif isinstance(node, (AsnSetOf, AsnSequenceOf)):
         lines.append(codeIndent + 'lines.append("{")')
         containedNode = node._containedType
         if isinstance(containedNode, str):

@@ -1,0 +1,14 @@
+machine:
+  python:
+    version: 3.4.2
+
+dependencies:
+  pre:
+    - sudo apt-get update
+    - sudo apt-get install libxslt-dev libxml2-dev
+  override:
+    - pip3 install -r requirements.txt
+
+test:
+  override:
+    - make
