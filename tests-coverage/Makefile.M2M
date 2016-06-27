@@ -30,7 +30,11 @@ ___dmt_A_mappers_%.py,cover:	../A_mappers/%.py DataTypesSimulink.asn
 	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage annotate -d . ../dmt/asn2dataModel.py ../dmt/A_mappers/*.py ../dmt/commonPy/*.py
 
 check:
+ifneq ($(CIRCLECI),)
+	@for i in ___dmt_commonPy_createInternalTypes.py,cover  ___dmt_asn2dataModel.py,cover $(PYSRC_A_COVER) ; do echo Checking $$i ... ; ./checkCoverage.pl $$i || { echo $$i failed... ; cp $$i ${CIRCLE_ARTIFACTS} ; exit 1 ; } ; done
+else
 	@for i in ___dmt_commonPy_createInternalTypes.py,cover  ___dmt_asn2dataModel.py,cover $(PYSRC_A_COVER) ; do echo Checking $$i ... ; ./checkCoverage.pl $$i || { ( echo $$i ; ./review.pl $$i ) | less -RS ; exit 1 ; } ; done
+endif
 
 clean:
 	${COVERAGE} erase

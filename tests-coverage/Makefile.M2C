@@ -26,7 +26,11 @@ ___dmt_B_mappers_%.py,cover:	../dmt/B_mappers/%.py mini_cv.aadl DataView.aadl Da
 	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage annotate -d . ../dmt/aadl2glueC.py ../dmt/B_mappers/*.py ../dmt/commonPy/*.py
 
 check:
+ifneq ($(CIRCLECI),)
+	@for i in $(PYSRC_B_COVER) ; do echo Checking $$i ... ; ./checkCoverage.pl $$i || { echo $$i failed... ; cp  $$i ${CIRCLE_ARTIFACTS} ; exit 1 ; } ; done
+else
 	@for i in $(PYSRC_B_COVER) ; do echo Checking $$i ... ; ./checkCoverage.pl $$i || { ( echo $$i ; ./review.pl $$i ) | less -RS ; echo $$i had issues... ; exit 1 ; } ; done
+endif
 
 clean:
 	${COVERAGE} erase

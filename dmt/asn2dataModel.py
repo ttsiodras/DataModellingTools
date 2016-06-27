@@ -163,7 +163,7 @@ def main():
                 backend.OnStartup(modelingLanguage, list(uniqueASNfiles.keys()), configMT.outputDir, badTypes)
             if 'OnShutdown' in dir(backend):
                 backend.OnShutdown(badTypes)
-            continue
+            continue  # bug in coverage.py...  # pragma: no cover
 
         # Work on each ASN.1 file's types
         for asnFile in uniqueASNfiles:

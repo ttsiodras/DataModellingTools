@@ -9,7 +9,11 @@ all:
 	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.smp2asn -o smp2.asn -a nonexisting.asn nonexisting.cat >/dev/null 2>&1 ; exit 0
 	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.smp2asn -o smp2.asn -a DataTypesSimulink.asn -v -p datatypessimulink.cat >/dev/null 2>&1 || exit 1
 	PYTHONPATH=.. LANG=C LC_ALL=C ${COVERAGE} annotate -d . ../dmt/smp2asn.py ../dmt/commonPy/*.py || exit 1
+ifneq ($(CIRCLECI),)
+	./checkCoverage.pl ___dmt_smp2asn.py,cover || { echo smp2asn.py failed... ; cp __dmt_smp2asn.py,cover ${CIRCLE_ARTIFACTS} ; exit 1 ; }
+else
 	./checkCoverage.pl ___dmt_smp2asn.py,cover || { echo smp2asn.py ; ./review.pl ___dmt_smp2asn.py,cover | less -RS ; exit 1 ; }
+endif
 	# ./checkCoverage.pl ___dmt_commonPy_commonSMP2.py,cover || { echo commonSMP2.py ; ./review.pl ___dmt_commonPy_commonSMP2.py,cover | less -RS ; exit 1 ; }
 
 clean:
