@@ -1,11 +1,11 @@
 dependencies:
   pre:
     - sudo apt-get update
-    - sudo apt-get install libxslt-dev libxml2-dev mono-complete
+    - sudo apt-get install libxslt-dev libxml2-dev mono-complete python-antlr
     - wget -O - -q https://github.com/ttsiodras/asn1scc/releases/download/3.2.81/asn1scc-bin-3.2.81.tar.gz | tar zxvf -
-    - pyenv install --skip-existing 3.4.2
+    - pyenv install --skip-existing 3.4.4
     - pyenv install --skip-existing 2.7.11
-    - pyenv global 3.4.2
+    - pyenv global 3.4.4
 
   override:
     - /opt/circleci/.pyenv/shims/pip3 install -r requirements.txt
