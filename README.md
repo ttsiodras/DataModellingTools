@@ -41,7 +41,7 @@ What is packaged:
     [ASN1SCC](https://github.com/ttsiodras/asn1scc) and simplification
     of the generated XML AST representation to the Python classes
     inside `asnAST.py`. The class diagram with the AST classes
-    is [packaged in the code](https://gitrepos.estec.esa.int/taste/dmt/blob/python3-setup-for-vm/dmt/commonPy/asnAST.py#L42).
+    is [packaged in the code](dmt/commonPy/asnAST.py#L42).
 
 - **asn2aadlPlus** (*utility*)
 
