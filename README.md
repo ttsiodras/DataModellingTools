@@ -40,39 +40,8 @@ What is packaged:
     Contains the basic API for parsing ASN.1 (via invocation of 
     [ASN1SCC](https://github.com/ttsiodras/asn1scc) and simplification
     of the generated XML AST representation to the Python classes
-    inside `asnAST.py`. The class diagram with the AST classes:
-
-                    +----------------+
-                    |  AsnBasicNode  |
-           +------->|----------------|<-------------------------+
-           |        |                |                          |
-     +-----------+  +----------------+               +--------------------+
-     |  AsnBool  |     ^          ^                  |     AsnString      |
-     |-----------|     |          |                  |--------------------|
-     |           |     |      +--------------------+ | _range: [min, max] |
-     +-----------+     |      |      AsnReal       | +--------------------+
-       +--------------------+ |--------------------|
-       |       AsnInt       | | _range: [min, max] |
-       |--------------------| +--------------------+
-       | _range: [min, max] |
-       +--------------------+          +----------------+
-                                       | AsnComplexNode |
-                     +---------------->|----------------|<----------+
-                     |                 |                |           |
-                     |                 +----------------+           |
-      +-----------------------------+           ^                   |
-      |        AsnEnumerated        |           |      +------------------------+
-      |-----------------------------|           |      | AsnSequenceOf/AsnSetOf |
-      | _members list:(name, value) |           |      |------------------------|
-      +-----------------------------+           |      | _containedType         |
-                       +-----------------------------+ | value: string,         |
-                       |     AsnSequence/AsnSet      | |        AsnBasicNode,   |
-                       |-----------------------------| |        AsnEnumerated   |
-                       | _members list:(name, value) | +------------------------+
-                       | value: AsnBasicNode,        |
-                       |        AsnEnumerated,       |
-                       |        AsnMetaMember        |
-                      +-----------------------------+
+    inside `asnAST.py`. The class diagram with the AST classes
+    is [packaged in the code](https://gitrepos.estec.esa.int/taste/dmt/blob/python3-setup-for-vm/dmt/commonPy/asnAST.py#L42).
 
 - **asn2aadlPlus** (*utility*)
 
