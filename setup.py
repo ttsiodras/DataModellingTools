@@ -9,13 +9,9 @@ Usage:  python setup.py sdist   --> to create a tarball
 
 from setuptools import setup, find_packages
 
-from dmt import (
-    commonPy, asn2dataModel, A_mappers, B_mappers, asn2aadlPlus,
-    aadl2glueC, msgPrinter, msgPrinterASN1)
-
 setup(
     name='dmt',
-    version=commonPy.__version__,
+    version="2.0.2",
     packages=find_packages(),
     author='Thanassis Tsiodras',
     author_email='Thanassis.Tsiodras@esa.int',
