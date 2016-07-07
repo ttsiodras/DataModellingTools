@@ -91,7 +91,10 @@ def OnStartup(modelingLanguage, asnFile, subProgram, unused_subProgramImplementa
     global g_SourceFile
     if g_SourceFile is None:
         g_SourceFile = open(outputDir + "python/gui_api.c", "w")
+        g_SourceFile.write('#include <stdio.h>\n')
         g_SourceFile.write('#include <string.h>\n')
+        g_SourceFile.write('#include <unistd.h>\n')
+        g_SourceFile.write('#include <sys/types.h>\n')
         g_SourceFile.write('#include <mqueue.h>\n\n')
         g_SourceFile.write('#include "%s.h"\n' % os.path.basename(os.path.splitext(asnFile)[0]))
         g_SourceFile.write('#include "%s_enums_def.h"\n' % cleanFVname)
