@@ -43,17 +43,17 @@ import re
 import platform
 import traceback
 
-from typing import Dict, Union, Match  # NOQA pylint: disable=unused-import
+from typing import Dict, Union, Match, Any  # NOQA pylint: disable=unused-import
 
 from . import configMT
 
 
-def inform(fmt: str, *args) -> None:
+def inform(fmt: str, *args: Any) -> None:
     if configMT.verbose:
         print(fmt % args)
 
 
-def warn(fmt: str, *args) -> None:
+def warn(fmt: str, *args: Any) -> None:
     sys.stderr.write(("WARNING: " + fmt) % args)
     sys.stderr.write("\n")
 
@@ -108,42 +108,42 @@ def readContexts(tapNumbers: str) -> Dict[str, str]:
 
 
 class Matcher:
-    def __init__(self, pattern, flags=0):
+    def __init__(self, pattern: str, flags: Any=0) -> None:
         self._pattern = re.compile(pattern, flags)
         self._lastOne = None  # type: Union[str, None]
         self._match = None  # type: Union[Match, None]
         self._search = None  # type: Union[Match, None]
 
-    def match(self, line):
+    def match(self, line: str) -> Match:
         self._match = re.match(self._pattern, line)
         self._lastOne = 'Match'
         return self._match
 
-    def search(self, line):
+    def search(self, line: str) -> Match:
         self._search = re.search(self._pattern, line)
         self._lastOne = 'Search'
         return self._search
 
-    def group(self, idx):
+    def group(self, idx: int) -> str:
         if self._lastOne == 'Match':
             return self._match.group(idx)
         elif self._lastOne == 'Search':
             return self._search.group(idx)
         else:
-            return panic(
+            panic(
                 "Matcher group called with index "
                 "%d before match/search!\n" % idx)
 
-    def groups(self):
+    def groups(self) -> Any:
         if self._lastOne == 'Match':
             return self._match.groups()
         elif self._lastOne == 'Search':
             return self._search.groups()
         else:
-            return panic("Matcher groups called with match/search!\n")
+            panic("Matcher groups called with match/search!\n")
 
 
-def mysystem(cmd):
+def mysystem(cmd: str) -> int:
     p = platform.system()
     if p == "Windows" or p.startswith("CYGWIN"):
         return os.system('"' + cmd + '"')

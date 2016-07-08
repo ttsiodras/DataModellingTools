@@ -23,22 +23,25 @@ to RTDS. It is used by the backend of Semantix's code generator A.'''
 
 import re
 
+from ..commonPy.cleanupNodes import SetOfBadTypenames
+from ..commonPy.asnParser import AST_Leaftypes, AsnNode
+
 g_outputDir = ""
 g_asnFile = ""
 
 
-def Version():
+def Version() -> None:
     print("Code generator: " + "$Id: og_A_mapper.py 1879 2010-05-17 10:13:12Z ttsiodras $")  # pragma: no cover
 
 
-def OnStartup(unused_modelingLanguage, asnFile, outputDir, unused_badTypes):
+def OnStartup(unused_modelingLanguage: str, asnFile: str, outputDir: str, unused_badTypes: SetOfBadTypenames) -> None:
     global g_asnFile
     g_asnFile = asnFile
     global g_outputDir
     g_outputDir = outputDir
 
 
-def OnBasic(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnBasic(unused_nodeTypename: str, unused_node: AsnNode, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass
 
 

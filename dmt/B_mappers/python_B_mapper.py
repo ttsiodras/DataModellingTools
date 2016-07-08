@@ -23,6 +23,9 @@ import os
 
 from typing import Set, Dict  # NOQA pylint: disable=unused-import
 
+from ..commonPy.aadlAST import ApLevelContainer, Param
+from ..commonPy.asnParser import AST_Leaftypes, AST_Lookup, AsnNode
+
 g_HeaderFile = None
 g_SourceFile = None
 g_PythonFile = None
@@ -37,15 +40,22 @@ g_asn_name = ""
 g_outputDir = ""
 g_maybeFVname = ""
 g_perFV = set()  # type: Set[str]
-g_langPerSP = {}  # type: Dict[str, str]
+g_langPerSP = {}  # type: Dict[ApLevelContainer, str]
 
 
-def CleanName(name):
+def CleanName(name: str) -> str:
     return re.sub(r'[^a-zA-Z0-9_]', '_', name)
 
 
 # Called once per RI (i.e. per SUBPROGRAM IMPLEMENTATION)
-def OnStartup(modelingLanguage, asnFile, subProgram, unused_subProgramImplementation, outputDir, maybeFVname, unused_useOSS):
+def OnStartup(
+        modelingLanguage: str,
+        asnFile: str,
+        subProgram: ApLevelContainer,
+        unused_subProgramImplementation: str,
+        outputDir: str,
+        maybeFVname: str,
+        unused_useOSS: bool) -> None:
     g_langPerSP[subProgram] = modelingLanguage
     CleanSP = CleanName(subProgram._id)
 
@@ -227,7 +237,7 @@ def OnStartup(modelingLanguage, asnFile, subProgram, unused_subProgramImplementa
         g_SourceFile.write('}\n')
 
 
-def Common(unused_nodeTypename, unused_node, unused_subProgram, unused_subProgramImplementation, unused_param, unused_leafTypeDict, unused_names):
+def Common(unused_nodeTypename: str, unused_node: AsnNode, unused_subProgram: ApLevelContainer, unused_subProgramImplementation: str, unused_param: Param, unused_leafTypeDict: AST_Leaftypes, unused_names: AST_Lookup) -> None:
     pass
 
 
