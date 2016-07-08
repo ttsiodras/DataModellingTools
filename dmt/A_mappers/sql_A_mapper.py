@@ -24,13 +24,16 @@ code generator A.'''
 import os
 import re
 
-from typing import Set, IO, Any  # NOQA pylint: disable=unused-import
+from typing import List, Union, Set, IO, Any  # NOQA pylint: disable=unused-import
 
 from ..commonPy.asnAST import (
-    AsnMetaMember, AsnChoice, AsnSet, AsnSequence, AsnSequenceOf, AsnSetOf)
+    AsnMetaMember, AsnChoice, AsnSet, AsnSequence, AsnSequenceOf, AsnSetOf,
+    AsnBasicNode, AsnSequenceOrSet, AsnSequenceOrSetOf, AsnEnumerated,
+    AsnOctetString, AsnInt, AsnReal)
 from ..commonPy.asnParser import g_names, g_leafTypeDict, CleanNameForAST
 from ..commonPy.utility import panic, warn
 from ..commonPy.cleanupNodes import SetOfBadTypenames
+from ..commonPy.asnParser import AST_Leaftypes
 
 g_sqlOutput = None  # type: IO[Any]
 g_innerTypes = set()  # type: Set[str]
@@ -43,51 +46,50 @@ g_asnFiles = None
 # The output can't contain forward declarations,
 # so this follows the FixupAst/OnShutdown pattern.
 
-def OnBasic(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnBasic(unused_nodeTypename: str, unused_node: AsnBasicNode, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass
 
 
-def OnSequence(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnSequence(unused_nodeTypename: str, unused_node: AsnSequenceOrSet, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass
 
 
-def OnSet(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnSet(unused_nodeTypename: str, unused_node: AsnSequenceOrSet, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass  # pragma: no cover
 
 
-def OnEnumerated(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnEnumerated(unused_nodeTypename: str, unused_node: AsnEnumerated, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass
 
 
-def OnSequenceOf(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnSequenceOf(unused_nodeTypename: str, unused_node: AsnSequenceOrSetOf, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass
 
 
-def OnSetOf(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnSetOf(unused_nodeTypename: str, unused_node: AsnSequenceOrSetOf, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass  # pragma: no cover
 
 
-def OnChoice(unused_nodeTypename, unused_unused_node,
-             unused_unused_leafTypeDict):
+def OnChoice(unused_nodeTypename: str, unused_node: AsnChoice, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass
 # ====== End of dummy stubs =====
 
 
-def Version():
+def Version() -> None:
     print("$Id: sql_A_mapper.py 1932 2010-06-15 13:41:15Z ttsiodras $")  # pragma: no cover
 
 
 g_dependencyGraph = {}  # type: Dict[str, Dict[str, int]]
 
 
-def FixupAstForSQL():
+def FixupAstForSQL() -> None:
     '''
     Find all the SEQUENCE, CHOICE and SEQUENCE OFs
     and make sure the contained types are not "naked" (i.e. unnamed)
     '''
     internalNo = 1
 
-    def neededToAddPseudoType():
+    def neededToAddPseudoType() -> bool:
         nonlocal internalNo
         addedNewPseudoType = False
         listOfTypenames = sorted(list(g_names.keys()) + list(g_innerTypes))
@@ -143,7 +145,7 @@ def FixupAstForSQL():
 g_bStartupRun = False
 
 
-def OnStartup(unused_modelingLanguage, asnFiles, outputDir, unused_badTypes):
+def OnStartup(unused_modelingLanguage: str, asnFiles: List[str], outputDir: str, unused_badTypes: SetOfBadTypenames) -> None:  # pylint: disable=invalid-sequence-index
     '''
     SQL cannot represent unnamed inner types
     e.g. this...
@@ -176,11 +178,11 @@ def OnStartup(unused_modelingLanguage, asnFiles, outputDir, unused_badTypes):
     FixupAstForSQL()
 
 
-def CleanName(fieldName):
+def CleanName(fieldName: str) -> str:
     return re.sub(r'[^a-zA-Z0-9_]', '_', fieldName)
 
 
-def CreateBasic(nodeTypename, node, leafTypeDict):
+def CreateBasic(nodeTypename: str, node: AsnBasicNode, leafTypeDict: AST_Leaftypes) -> None:
     baseType = leafTypeDict[node._leafType]
     baseSqlType = {
         'INTEGER': 'int',
@@ -189,10 +191,10 @@ def CreateBasic(nodeTypename, node, leafTypeDict):
         'OCTET STRING': 'VARCHAR'
     }[baseType]
     constraint = ""
-    if baseType == 'OCTET STRING':
+    if isinstance(node, AsnOctetString):
         constraint += "(" + str(node._range[-1]) + ") "
     constraint += "NOT NULL"
-    if baseType in ['INTEGER', 'REAL'] and node._range:
+    if isinstance(node, (AsnInt, AsnReal)) and node._range:
         constraint += ', CHECK(data>=%s and data<=%s)' % (
             node._range[0], node._range[-1])
     g_sqlOutput.write('''
@@ -205,7 +207,10 @@ CREATE TABLE {cleanTypename} (
            constraint=constraint))
 
 
-def CreateSequence(nodeTypename, node, unused_leafTypeDict, isChoice=False):
+def CommonSeqSetChoice(nodeTypename: str,
+                       node: Union[AsnChoice, AsnSet, AsnSequence],
+                       unused_leafTypeDict: AST_Leaftypes,
+                       isChoice: bool=False) -> None:
     cleanTypename = CleanName(nodeTypename)
     g_sqlOutput.write(
         '\nCREATE TABLE {cleanTypename} (\n    id int NOT NULL,\n'.format(
@@ -235,7 +240,11 @@ def CreateSequence(nodeTypename, node, unused_leafTypeDict, isChoice=False):
     g_sqlOutput.write(');\n\n')
 
 
-def CreateEnumerated(nodeTypename, node, unused_leafTypeDict):
+def CreateSequence(nodeTypename: str, node: AsnSequenceOrSet, leafTypeDict: AST_Leaftypes) -> None:
+    CommonSeqSetChoice(nodeTypename, node, leafTypeDict)
+
+
+def CreateEnumerated(nodeTypename: str, node: AsnEnumerated, unused_leafTypeDict: AST_Leaftypes) -> None:
     optionsCheck = [
         '        -- {optionName}\n        enumerant = {optionValue}'.format(
             optionName=opt[0], optionValue=opt[1])
@@ -252,7 +261,7 @@ CREATE TABLE {cleanTypename} (
            options='\n        OR\n'.join(optionsCheck)))
 
 
-def CreateSequenceOf(nodeTypename, node, unused_leafTypeDict):
+def CreateSequenceOf(nodeTypename: str, node: AsnSequenceOrSetOf, unused_leafTypeDict: AST_Leaftypes) -> None:
     cleanTypename = CleanName(nodeTypename)
     g_sqlOutput.write('\nCREATE TABLE %s (\n' % cleanTypename)
     g_sqlOutput.write('    id int PRIMARY KEY,\n')
@@ -277,13 +286,13 @@ def CreateSequenceOf(nodeTypename, node, unused_leafTypeDict):
     g_sqlOutput.write(');\n\n')
 
 
-def CreateChoice(nodeTypename, node, _):
-    CreateSequence(nodeTypename, node, _, isChoice=True)
+def CreateChoice(nodeTypename: str, node: AsnChoice, leafTypeDict: AST_Leaftypes) -> None:
+    CommonSeqSetChoice(nodeTypename, node, leafTypeDict, True)
 
 g_bShutdownRun = False
 
 
-def OnShutdown(badTypes: SetOfBadTypenames):
+def OnShutdown(badTypes: SetOfBadTypenames) -> None:
     global g_bShutdownRun
     if g_bShutdownRun:
         return   # pragma: no cover
@@ -325,15 +334,15 @@ def OnShutdown(badTypes: SetOfBadTypenames):
             node = g_names[nodeTypename]
             assert nodeTypename in g_leafTypeDict
             leafType = g_leafTypeDict[nodeTypename]
-            if leafType in ['BOOLEAN', 'INTEGER', 'REAL', 'OCTET STRING']:
+            if isinstance(node, AsnBasicNode):
                 CreateBasic(nodeTypename, node, g_leafTypeDict)
-            elif leafType in ['SEQUENCE', 'SET']:
+            elif isinstance(node, (AsnSequence, AsnSet)):
                 CreateSequence(nodeTypename, node, g_leafTypeDict)
-            elif leafType == 'CHOICE':
+            elif isinstance(node, AsnChoice):
                 CreateChoice(nodeTypename, node, g_leafTypeDict)
-            elif leafType in ['SEQUENCEOF', 'SETOF']:
+            elif isinstance(node, (AsnSequenceOf, AsnSetOf)):
                 CreateSequenceOf(nodeTypename, node, g_leafTypeDict)
-            elif leafType == 'ENUMERATED':
+            elif isinstance(node, AsnEnumerated):
                 CreateEnumerated(nodeTypename, node, g_leafTypeDict)
             else:  # pragma: no cover
                 warn("Ignoring unsupported node type: %s (%s)" % (

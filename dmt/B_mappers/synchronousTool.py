@@ -27,8 +27,10 @@ import os
 from typing import IO, Any  # NOQA pylint: disable=unused-import
 
 from ..commonPy.utility import panic, inform, panicWithCallStack
-from ..commonPy.aadlAST import InParam, OutParam, InOutParam
+from ..commonPy.aadlAST import InParam, OutParam, InOutParam, ApLevelContainer, Param
 from ..commonPy.recursiveMapper import RecursiveMapper
+from ..commonPy.asnAST import AsnNode
+from ..commonPy.asnParser import AST_Lookup, AST_Leaftypes
 
 
 class SynchronousToolGlueGenerator:
@@ -51,36 +53,36 @@ class SynchronousToolGlueGenerator:
     def FromOSStoTool(self) -> RecursiveMapper:  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a SynchronousToolGlueGenerator...")  # pragma: no cover
 
-    def HeadersOnStartup(self, unused_modelingLanguage, unused_asnFile, unused_subProgram, unused_subProgramImplementation, unused_outputDir, unused_maybeFVname):  # pylint: disable=no-self-use
+    def HeadersOnStartup(self, unused_modelingLanguage: str, unused_asnFile: str, unused_subProgram: ApLevelContainer, unused_subProgramImplementation: str, unused_outputDir: str, unused_maybeFVname: str) -> None:  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a SynchronousToolGlueGenerator...")  # pragma: no cover
 
-    def SourceVar(self, unused_nodeTypename, unused_encoding, unused_node, unused_subProgram, unused_subProgramImplementation, unused_param, unused_leafTypeDict, unused_names):  # pylint: disable=no-self-use
+    def SourceVar(self, unused_nodeTypename: str, unused_encoding: str, unused_node: AsnNode, unused_subProgram: ApLevelContainer, unused_subProgramImplementation: str, unused_param: Param, unused_leafTypeDict: AST_Leaftypes, unused_names: AST_Lookup) -> str:  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a SynchronousToolGlueGenerator...")  # pragma: no cover
 
-    def TargetVar(self, unused_nodeTypename, unused_encoding, unused_node, unused_subProgram, unused_subProgramImplementation, unused_param, unused_leafTypeDict, unused_names):  # pylint: disable=no-self-use
+    def TargetVar(self, unused_nodeTypename: str, unused_encoding: str, unused_node: AsnNode, unused_subProgram: ApLevelContainer, unused_subProgramImplementation: str, unused_param: Param, unused_leafTypeDict: AST_Leaftypes, unused_names: AST_Lookup) -> str:  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a SynchronousToolGlueGenerator...")  # pragma: no cover
 
-    def InitializeBlock(self, unused_modelingLanguage, unused_asnFile, unused_sp, unused_subProgramImplementation, unused_maybeFVname):  # pylint: disable=no-self-use
+    def InitializeBlock(self, unused_modelingLanguage: str, unused_asnFile: str, unused_sp: ApLevelContainer, unused_subProgramImplementation: str, unused_maybeFVname: str) -> None:  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a SynchronousToolGlueGenerator...")  # pragma: no cover
 
-    def ExecuteBlock(self, unused_modelingLanguage, unused_asnFile, unused_sp, unused_subProgramImplementation, unused_maybeFVname):  # pylint: disable=no-self-use
+    def ExecuteBlock(self, unused_modelingLanguage: str, unused_asnFile: str, unused_sp: ApLevelContainer, unused_subProgramImplementation: str, unused_maybeFVname: str) -> None:  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a SynchronousToolGlueGenerator...")  # pragma: no cover
 
     ########################################################
     # Parts to possibly override for each synchronous tool
 
     # noinspection PyMethodMayBeStatic
-    def CleanNameAsToolWants(self, name):  # pylint: disable=no-self-use
+    def CleanNameAsToolWants(self, name: str) -> str:  # pylint: disable=no-self-use
         return re.sub(r'[^a-zA-Z0-9_]', '_', name)
 
     # noinspection PyMethodMayBeStatic
-    def CleanNameAsADAWants(self, name):  # pylint: disable=no-self-use
+    def CleanNameAsADAWants(self, name: str) -> str:  # pylint: disable=no-self-use
         return re.sub(r'[^a-zA-Z0-9_]', '_', name)
 
     ##########################################
     # Common parts for all synchronous tools
 
-    def __init__(self):
+    def __init__(self) -> None:
         # The files written to
         self.C_HeaderFile = None  # type: IO[Any]
         self.C_SourceFile = None  # type: IO[Any]
@@ -91,7 +93,14 @@ class SynchronousToolGlueGenerator:
         self.dir = None  # type: str
         self.useOSS = None  # type: bool
 
-    def OnStartup(self, modelingLanguage, asnFile, subProgram, subProgramImplementation, outputDir, maybeFVname, useOSS):
+    def OnStartup(self,
+                  modelingLanguage: str,
+                  asnFile: str,
+                  subProgram: ApLevelContainer,
+                  subProgramImplementation: str,
+                  outputDir: str,
+                  maybeFVname: str,
+                  useOSS: bool) -> None:
         if modelingLanguage == "QGenAda":
             self.dir = outputDir
             self.useOSS = useOSS
@@ -179,7 +188,15 @@ class SynchronousToolGlueGenerator:
                 'package body %s is\n\n' %
                 self.CleanNameAsADAWants(subProgram._id + "_" + subProgramImplementation))
 
-    def Encoder(self, nodeTypename, encoding, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+    def Encoder(self,
+                nodeTypename: str,
+                encoding: str,
+                node: AsnNode,
+                subProgram: ApLevelContainer,
+                subProgramImplementation: str,
+                param: Param,
+                leafTypeDict: AST_Leaftypes,
+                names: AST_Lookup) -> None:
         if encoding.lower() not in self.supportedEncodings:
             panic(str(self.__class__) + ": in (%s), encoding can be one of %s (not '%s')" % (  # pragma: no cover
                 subProgram._id + "." + subProgramImplementation, self.supportedEncodings, encoding))  # pragma: no cover
@@ -202,12 +219,12 @@ class SynchronousToolGlueGenerator:
             self.ADA_SourceFile.write('begin\n')
 
             toolToAsn1 = self.FromToolToASN1SCC()
-            lines = toolToAsn1 and toolToAsn1.Map(
+            lines = toolToAsn1.Map(
                 "QGen_OUT",
                 "T_OUT",
                 node,
                 leafTypeDict,
-                names) or []
+                names) if toolToAsn1 else []
 
             lines = ["        " + x for x in lines]
             self.ADA_SourceFile.write("".join(lines))
@@ -256,12 +273,12 @@ class SynchronousToolGlueGenerator:
                 toolToAsn1 = self.FromToolToOSS()
             else:
                 toolToAsn1 = self.FromToolToASN1SCC()
-            lines = toolToAsn1 and toolToAsn1.Map(
+            lines = toolToAsn1.Map(
                 srcVar,
                 "var_" + self.CleanNameAsToolWants(nodeTypename),
                 node,
                 leafTypeDict,
-                names) or []
+                names) if toolToAsn1 else []
 
             lines = ["    " + x for x in lines]
             self.C_SourceFile.write("".join(lines))
@@ -303,7 +320,15 @@ class SynchronousToolGlueGenerator:
                 self.C_SourceFile.write("    return sizeof(asn1Scc%s);\n" % self.CleanNameAsToolWants(nodeTypename))
                 self.C_SourceFile.write("}\n\n")
 
-    def Decoder(self, nodeTypename, encoding, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+    def Decoder(self,
+                nodeTypename: str,
+                encoding: str,
+                node: AsnNode,
+                subProgram: ApLevelContainer,
+                subProgramImplementation: str,
+                param: Param,
+                leafTypeDict: AST_Leaftypes,
+                names: AST_Lookup) -> None:
         tmpSpName = "Convert_From_%s_To_%s_In_%s_%s" % \
             (encoding.lower(),
              self.CleanNameAsADAWants(nodeTypename),
@@ -322,12 +347,12 @@ class SynchronousToolGlueGenerator:
             self.ADA_SourceFile.write('    begin\n')
 
             asn1ToTool = self.FromASN1SCCtoTool()
-            lines = asn1ToTool and asn1ToTool.Map(
+            lines = asn1ToTool.Map(
                 "T_IN",
                 "QGen_IN",
                 node,
                 leafTypeDict,
-                names) or []
+                names) if asn1ToTool else []
             lines = ["        " + x for x in lines]
 
             self.ADA_SourceFile.write("".join(lines))
@@ -388,20 +413,20 @@ class SynchronousToolGlueGenerator:
 
             if self.useOSS and encoding.lower() == "uper":
                 asn1ToTool = self.FromOSStoTool()
-                lines = asn1ToTool and asn1ToTool.Map(
+                lines = asn1ToTool.Map(
                     "(*pVar_" + self.CleanNameAsToolWants(nodeTypename) + ")",
                     targetVar,
                     node,
                     leafTypeDict,
-                    names) or []
+                    names) if asn1ToTool else []
             else:
                 asn1ToTool = self.FromASN1SCCtoTool()
-                lines = asn1ToTool and asn1ToTool.Map(
+                lines = asn1ToTool.Map(
                     "var_" + self.CleanNameAsToolWants(nodeTypename),
                     targetVar,
                     node,
                     leafTypeDict,
-                    names) or []
+                    names) if asn1ToTool else []
             lines = ["        " + x for x in lines]
             self.C_SourceFile.write("".join(lines))
 
@@ -427,42 +452,49 @@ class SynchronousToolGlueGenerator:
                 self.C_SourceFile.write("    }\n")
                 self.C_SourceFile.write("}\n\n")
 
-    def Common(self, nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
-        if isinstance(param, InOutParam) or isinstance(param, InParam):
+    def Common(self,
+               nodeTypename: str,
+               node: AsnNode,
+               subProgram: ApLevelContainer,
+               subProgramImplementation: str,
+               param: Param,
+               leafTypeDict: AST_Leaftypes,
+               names: AST_Lookup) -> None:
+        if isinstance(param, (InOutParam, InParam)):
             self.Decoder(nodeTypename, param._sourceElement._encoding, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
-        if isinstance(param, InOutParam) or isinstance(param, OutParam):
+        if isinstance(param, (InOutParam, OutParam)):
             self.Encoder(nodeTypename, param._sourceElement._encoding, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
-    def OnBasic(self, nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+    def OnBasic(self, nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
         realLeafType = leafTypeDict[nodeTypename]
         inform(str(self.__class__) + ": BASE: %s (%s)", nodeTypename, realLeafType)
         self.Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
-    def OnSequence(self, nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+    def OnSequence(self, nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
         inform(str(self.__class__) + ": SEQUENCE: %s", nodeTypename)
         self.Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
-    def OnSet(self, nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+    def OnSet(self, nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
         inform(str(self.__class__) + ": SET: %s", nodeTypename)  # pragma: nocover
         self.Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)  # pragma: nocover
 
-    def OnEnumerated(self, nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+    def OnEnumerated(self, nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
         inform(str(self.__class__) + ": ENUMERATED: %s", nodeTypename)
         self.Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
-    def OnSequenceOf(self, nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+    def OnSequenceOf(self, nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
         inform(str(self.__class__) + ": SEQUENCEOF: %s", nodeTypename)
         self.Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
-    def OnSetOf(self, nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+    def OnSetOf(self, nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
         inform(str(self.__class__) + ": SETOF: %s", nodeTypename)  # pragma: nocover
         self.Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)  # pragma: nocover
 
-    def OnChoice(self, nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+    def OnChoice(self, nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
         inform(str(self.__class__) + ": CHOICE: %s", nodeTypename)
         self.Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
-    def OnShutdown(self, modelingLanguage, asnFile, sp, subProgramImplementation, maybeFVname):
+    def OnShutdown(self, modelingLanguage: str, asnFile: str, sp: ApLevelContainer, subProgramImplementation: str, maybeFVname: str) -> None:
         if modelingLanguage == "QGenAda":
             self.ADA_HeaderFile.write("    procedure Execute_%s (" % self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation))
             self.ADA_SourceFile.write("    procedure Execute_%s (" % self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation))

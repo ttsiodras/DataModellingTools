@@ -29,9 +29,11 @@ from ..commonPy.utility import panic, inform
 from ..commonPy import asnParser
 from ..commonPy.asnAST import (
     AsnBool, AsnInt, AsnReal, AsnString, AsnEnumerated, AsnSequence,
-    AsnSet, AsnChoice, AsnMetaMember, AsnSequenceOf, AsnSetOf)
+    AsnSet, AsnChoice, AsnMetaMember, AsnSequenceOf, AsnSetOf,
+    AsnBasicNode, AsnSequenceOrSet, AsnSequenceOrSetOf)
 from ..commonPy.createInternalTypes import ScanChildren
 from ..commonPy.cleanupNodes import SetOfBadTypenames
+from ..commonPy.asnParser import AST_Leaftypes
 
 # The file written to
 g_outputFile = None
@@ -72,31 +74,31 @@ def OnStartup(unused_modelingLanguage: str, unused_asnFiles: List[str], outputDi
     CreateDeclarationsForAllTypes(asnParser.g_names, asnParser.g_leafTypeDict)
 
 
-def OnBasic(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnBasic(unused_nodeTypename: str, unused_node: AsnBasicNode, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass  # pragma: no cover
 
 
-def OnSequence(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnSequence(unused_nodeTypename: str, unused_node: AsnSequenceOrSet, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass  # pragma: no cover
 
 
-def OnSet(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnSet(unused_nodeTypename: str, unused_node: AsnSequenceOrSet, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass  # pragma: nocover
 
 
-def OnEnumerated(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnEnumerated(unused_nodeTypename: str, unused_node: AsnEnumerated, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass  # pragma: no cover
 
 
-def OnSequenceOf(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnSequenceOf(unused_nodeTypename: str, unused_node: AsnSequenceOrSetOf, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass  # pragma: no cover
 
 
-def OnSetOf(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnSetOf(unused_nodeTypename: str, unused_node: AsnSequenceOrSetOf, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass  # pragma: nocover
 
 
-def OnChoice(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnChoice(unused_nodeTypename: str, unused_node: AsnChoice, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass  # pragma: no cover
 
 

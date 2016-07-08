@@ -33,10 +33,12 @@ from typing import Set  # NOQA pylint: disable=unused-import
 from ..commonPy.utility import inform, panic
 from ..commonPy.asnAST import (
     AsnBasicNode, AsnString, AsnEnumerated, AsnMetaMember, AsnSet,
-    AsnSetOf, AsnSequence, AsnSequenceOf, AsnChoice
+    AsnSetOf, AsnSequence, AsnSequenceOf, AsnChoice,
+    AsnSequenceOrSet, AsnSequenceOrSetOf
 )
 from ..commonPy import asnParser
 from ..commonPy.cleanupNodes import SetOfBadTypenames
+from ..commonPy.asnParser import AST_Leaftypes
 
 g_lookup = {
     "INTEGER": "int",
@@ -220,7 +222,7 @@ def HandleTypedef(nodeTypename: str) -> bool:
     return True
 
 
-def OnBasic(nodeTypename, node, unused_leafTypeDict):
+def OnBasic(nodeTypename: str, node: AsnBasicNode, unused_leafTypeDict: AST_Leaftypes) -> None:
     assert isinstance(node, AsnBasicNode)
     if nodeTypename in g_declaredTypes:
         return
@@ -283,11 +285,11 @@ def OnSequence(nodeTypename, node, unused_leafTypeDict, isChoice=False):
     RenderElements(controlString)
 
 
-def OnSet(nodeTypename, node, leafTypeDict):
+def OnSet(nodeTypename: str, node: AsnSequenceOrSet, leafTypeDict: AST_Leaftypes) -> None:
     OnSequence(nodeTypename, node, leafTypeDict)  # pragma: nocover
 
 
-def OnEnumerated(nodeTypename, node, unused_leafTypeDict):
+def OnEnumerated(nodeTypename: str, node: AsnEnumerated, unused_leafTypeDict: AST_Leaftypes) -> None:
     if nodeTypename in g_declaredTypes:
         return
     g_declaredTypes.add(nodeTypename)
@@ -316,7 +318,7 @@ def OnEnumerated(nodeTypename, node, unused_leafTypeDict):
     RenderElements(controlString)
 
 
-def OnSequenceOf(nodeTypename, node, unused_leafTypeDict):
+def OnSequenceOf(nodeTypename: str, node: AsnSequenceOrSetOf, unused_leafTypeDict: AST_Leaftypes) -> None:
     if nodeTypename in g_declaredTypes:
         return
     g_declaredTypes.add(nodeTypename)
@@ -341,11 +343,11 @@ def OnSequenceOf(nodeTypename, node, unused_leafTypeDict):
     RenderElements(controlString)
 
 
-def OnSetOf(nodeTypename, node, leafTypeDict):
+def OnSetOf(nodeTypename: str, node: AsnSequenceOrSetOf, leafTypeDict: AST_Leaftypes) -> None:
     OnSequenceOf(nodeTypename, node, leafTypeDict)  # pragma: nocover
 
 
-def OnChoice(nodeTypename, node, leafTypeDict):
+def OnChoice(nodeTypename: str, node: AsnChoice, leafTypeDict: AST_Leaftypes) -> None:
     OnSequence(nodeTypename, node, leafTypeDict, isChoice=True)
 
 

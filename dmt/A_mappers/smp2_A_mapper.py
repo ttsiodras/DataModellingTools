@@ -31,6 +31,8 @@ from ..commonPy.asnAST import AsnMetaMember, AsnChoice, AsnSet, AsnSequence, Asn
 from ..commonPy.asnParser import g_names, g_leafTypeDict, CleanNameForAST
 from ..commonPy.utility import panic, warn
 from ..commonPy.cleanupNodes import SetOfBadTypenames
+from ..commonPy.asnAST import AsnBasicNode, AsnSequenceOrSet, AsnSequenceOrSetOf, AsnEnumerated
+from ..commonPy.asnParser import AST_Leaftypes
 
 g_catalogueXML = None  # type: IO[Any]
 g_innerTypes = set()  # type: Set[str]
@@ -146,7 +148,7 @@ def CleanName(fieldName):
     return re.sub(r'[^a-zA-Z0-9_]', '_', fieldName)
 
 
-def OnBasic(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnBasic(unused_nodeTypename: str, unused_node: AsnBasicNode, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass  # pragma: no cover
 
 
@@ -183,7 +185,7 @@ def CreateBasic(nodeTypename, node, leafTypeDict):
     g_catalogueXML.write('    </Type>\n')
 
 
-def OnSequence(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnSequence(unused_nodeTypename: str, unused_node: AsnSequenceOrSet, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass  # pragma: no cover
 
 
@@ -210,11 +212,11 @@ def CreateSequence(nodeTypename, node, unused_leafTypeDict):
     g_catalogueXML.write('    </Type>\n')
 
 
-def OnSet(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnSet(unused_nodeTypename: str, unused_node: AsnSequenceOrSet, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass  # pragma: no cover
 
 
-def OnEnumerated(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnEnumerated(unused_nodeTypename: str, unused_node: AsnEnumerated, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass  # pragma: no cover
 
 
@@ -233,7 +235,7 @@ def CreateEnumerated(nodeTypename, node, unused_leafTypeDict):
     g_catalogueXML.write('    </Type>\n')
 
 
-def OnSequenceOf(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnSequenceOf(unused_nodeTypename: str, unused_node: AsnSequenceOrSetOf, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass  # pragma: no cover
 
 
@@ -262,11 +264,11 @@ def CreateSequenceOf(nodeTypename, node, unused_leafTypeDict):
     g_catalogueXML.write('    </Type>\n')
 
 
-def OnSetOf(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnSetOf(unused_nodeTypename: str, unused_node: AsnSequenceOrSetOf, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass  # pragma: no cover
 
 
-def OnChoice(unused_nodeTypename, unused_unused_node, unused_unused_leafTypeDict):
+def OnChoice(unused_nodeTypename: str, unused_node: AsnChoice, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass  # pragma: no cover
 
 

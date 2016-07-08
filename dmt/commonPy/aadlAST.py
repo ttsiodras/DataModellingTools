@@ -53,6 +53,7 @@ class AadlParameter:
         assert direction in ['IN', 'OUT', 'INOUT']
         self._direction = direction
         self._type = typ
+        self._encoding = ''
 
 
 class AadlSubProgramFeature:
@@ -71,12 +72,14 @@ class AadlPort:
     def __init__(self, direction: str, typ: str) -> None:
         self._direction = direction
         self._type = typ
+        self._encoding = ''
 
 
 class AadlEventPort:
     def __init__(self, direction: str, sp: 'ApLevelContainer') -> None:
         self._direction = direction
         self._sp = sp
+        self._encoding = ''
 
     def __repr__(self) -> str:
         result = "AadlEventPort(" + self._direction + ","

@@ -25,6 +25,8 @@
 
 from ..commonPy import asnParser
 from ..commonPy.cleanupNodes import SetOfBadTypenames
+from ..commonPy.asnAST import AsnBasicNode, AsnSequenceOrSet, AsnSequenceOrSetOf, AsnEnumerated, AsnChoice
+from ..commonPy.asnParser import AST_Leaftypes
 
 g_outputDir = ""
 g_asnFile = ""
@@ -41,31 +43,31 @@ def OnStartup(unused_modelingLanguage: str, asnFile: str, outputDir: str, unused
     g_outputDir = outputDir
 
 
-def OnBasic(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnBasic(unused_nodeTypename: str, unused_node: AsnBasicNode, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass
 
 
-def OnSequence(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnSequence(unused_nodeTypename: str, unused_node: AsnSequenceOrSet, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass
 
 
-def OnSet(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnSet(unused_nodeTypename: str, unused_node: AsnSequenceOrSet, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass  # pragma: nocover
 
 
-def OnEnumerated(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnEnumerated(unused_nodeTypename: str, unused_node: AsnEnumerated, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass
 
 
-def OnSequenceOf(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnSequenceOf(unused_nodeTypename: str, unused_node: AsnSequenceOrSetOf, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass
 
 
-def OnSetOf(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnSetOf(unused_nodeTypename: str, unused_node: AsnSequenceOrSetOf, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass  # pragma: nocover
 
 
-def OnChoice(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnChoice(unused_nodeTypename: str, unused_node: AsnChoice, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass
 
 # obsolete, now the grammar is re-created from the AST (PrintGrammarFromAST)

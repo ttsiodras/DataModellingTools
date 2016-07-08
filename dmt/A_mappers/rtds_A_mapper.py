@@ -25,6 +25,7 @@ import re
 
 from ..commonPy.cleanupNodes import SetOfBadTypenames
 from ..commonPy.asnParser import AST_Leaftypes, AsnNode
+from ..commonPy.asnAST import AsnSequenceOrSet, AsnSequenceOrSetOf, AsnEnumerated, AsnChoice
 
 g_outputDir = ""
 g_asnFile = ""
@@ -45,27 +46,27 @@ def OnBasic(unused_nodeTypename: str, unused_node: AsnNode, unused_leafTypeDict:
     pass
 
 
-def OnSequence(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnSequence(unused_nodeTypename: str, unused_node: AsnSequenceOrSet, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass
 
 
-def OnSet(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnSet(unused_nodeTypename: str, unused_node: AsnSequenceOrSet, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass  # pragma: no cover
 
 
-def OnEnumerated(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnEnumerated(unused_nodeTypename: str, unused_node: AsnEnumerated, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass
 
 
-def OnSequenceOf(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnSequenceOf(unused_nodeTypename: str, unused_node: AsnSequenceOrSetOf, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass
 
 
-def OnSetOf(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnSetOf(unused_nodeTypename: str, unused_node: AsnSequenceOrSetOf, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass  # pragma: no cover
 
 
-def OnChoice(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnChoice(unused_nodeTypename: str, unused_node: AsnChoice, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass
 
 
@@ -85,7 +86,7 @@ def OnChoice(unused_nodeTypename, unused_node, unused_leafTypeDict):
 #             outputText += c
 #     return outputText
 
-def OnShutdown(unused_badTypes):
+def OnShutdown(unused_badTypes: SetOfBadTypenames) -> None:
     # text = open(g_asnFile, 'r').read()
     # text = re.sub(r'^.*BEGIN', 'Datamodel DEFINITIONS ::= BEGIN', text)
     # text = re.sub(r'--.*', '', text)

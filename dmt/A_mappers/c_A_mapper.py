@@ -29,6 +29,8 @@ from typing import List
 
 from ..commonPy.utility import panic
 from ..commonPy.cleanupNodes import SetOfBadTypenames
+from ..commonPy.asnAST import AsnBasicNode, AsnSequenceOrSet, AsnSequenceOrSetOf, AsnEnumerated, AsnChoice
+from ..commonPy.asnParser import AST_Leaftypes
 
 
 def Version() -> None:
@@ -55,33 +57,33 @@ def OnStartup(unused_modelingLanguage: str, asnFiles: List[str], outputDir: str,
         os.system("rm -f \"" + outputDir + os.sep + os.path.basename(os.path.splitext(tmp)[0]) + ".c\"")
 
 
-def OnBasic(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnBasic(unused_nodeTypename: str, unused_node: AsnBasicNode, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass  # pragma: no cover
 
 
-def OnSequence(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnSequence(unused_nodeTypename: str, unused_node: AsnSequenceOrSet, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass  # pragma: no cover
 
 
-def OnSet(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnSet(unused_nodeTypename: str, unused_node: AsnSequenceOrSet, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass  # pragma: no cover
 
 
-def OnEnumerated(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnEnumerated(unused_nodeTypename: str, unused_node: AsnEnumerated, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass  # pragma: no cover
 
 
-def OnSequenceOf(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnSequenceOf(unused_nodeTypename: str, unused_node: AsnSequenceOrSetOf, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass  # pragma: no cover
 
 
-def OnSetOf(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnSetOf(unused_nodeTypename: str, unused_node: AsnSequenceOrSetOf, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass  # pragma: no cover
 
 
-def OnChoice(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnChoice(unused_nodeTypename: str, unused_node: AsnChoice, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass  # pragma: no cover
 
 
-def OnShutdown(unused_badTypes):
+def OnShutdown(unused_badTypes: SetOfBadTypenames) -> None:
     pass  # pragma: no cover

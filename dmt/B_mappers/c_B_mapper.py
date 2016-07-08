@@ -42,7 +42,7 @@ from ..commonPy.utility import panic
 from ..commonPy.asnAST import (
     sourceSequenceLimit, isSequenceVariable, targetSequenceLimit,
     AsnInt, AsnReal, AsnBool, AsnSequenceOrSet, AsnSequenceOrSetOf,
-    AsnChoice, AsnOctetString, AsnEnumerated)
+    AsnChoice, AsnOctetString, AsnEnumerated, AsnNode)
 from ..commonPy.asnParser import AST_Lookup, AST_Leaftypes
 from ..commonPy.recursiveMapper import RecursiveMapper
 from .asynchronousTool import ASynchronousToolGlueGenerator
@@ -51,17 +51,17 @@ isAsynchronous = True
 cBackend = None
 
 
-def Version():
+def Version() -> None:
     print("Code generator: " + "$Id: c_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")
 
 
 # noinspection PyListCreation
 # pylint: disable=no-self-use
 class FromCtoOSS(RecursiveMapper):
-    def __init__(self):
+    def __init__(self) -> None:
         self.uniqueID = 0
 
-    def UniqueID(self):
+    def UniqueID(self) -> int:
         self.uniqueID += 1
         return self.uniqueID
 
@@ -149,10 +149,10 @@ class FromCtoOSS(RecursiveMapper):
 # noinspection PyListCreation
 # pylint: disable=no-self-use
 class FromOSStoC(RecursiveMapper):
-    def __init__(self):
+    def __init__(self) -> None:
         self.uniqueID = 0
 
-    def UniqueID(self):
+    def UniqueID(self) -> int:
         self.uniqueID += 1
         return self.uniqueID
 
@@ -240,15 +240,15 @@ class FromOSStoC(RecursiveMapper):
 
 
 class C_GlueGenerator(ASynchronousToolGlueGenerator):
-    def __init__(self):
+    def __init__(self) -> None:
         ASynchronousToolGlueGenerator.__init__(self)
         self.FromOSStoC = FromOSStoC()
         self.FromCtoOSS = FromCtoOSS()
 
-    def Version(self):
+    def Version(self) -> None:
         print("Code generator: " + "$Id: c_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")  # pragma: no cover
 
-    def HeadersOnStartup(self, unused_asnFile, unused_outputDir, unused_maybeFVname):
+    def HeadersOnStartup(self, unused_asnFile: str, unused_outputDir: str, unused_maybeFVname: str) -> None:
         if self.useOSS:
             self.C_HeaderFile.write("#include \"%s.oss.h\" // OSS generated\n\n" % self.asn_name)
             self.C_SourceFile.write("\nextern OssGlobal *g_world;\n\n")
@@ -256,7 +256,7 @@ class C_GlueGenerator(ASynchronousToolGlueGenerator):
                                 self.asn_name)
         self.C_HeaderFile.write("#include \"../../system_config.h\" // Choose ASN.1 Types to use\n\n")
 
-    def Encoder(self, nodeTypename, node, leafTypeDict, names, encoding):
+    def Encoder(self, nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup, encoding: str) -> None:
         if encoding.lower() not in self.supportedEncodings:
             panic(str(self.__class__) + ": in (%s), encoding can be one of %s (not '%s')" %  # pragma: no cover
                   (nodeTypename, self.supportedEncodings, encoding))  # pragma: no cover
@@ -341,7 +341,7 @@ class C_GlueGenerator(ASynchronousToolGlueGenerator):
             self.C_SourceFile.write("}\n")
             self.C_SourceFile.write("#endif\n\n")
 
-    def Decoder(self, nodeTypename, node, leafTypeDict, names, encoding):
+    def Decoder(self, nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup, encoding: str) -> None:
         if encoding.lower() not in self.supportedEncodings:
             panic(str(self.__class__) + ": in (%s), encoding can be one of %s (not '%s')" %  # pragma: no cover
                   (nodeTypename, self.supportedEncodings, encoding))  # pragma: no cover
@@ -425,39 +425,39 @@ class C_GlueGenerator(ASynchronousToolGlueGenerator):
             self.C_SourceFile.write("#endif\n\n")
 
 
-def OnStartup(modelingLanguage, asnFile, outputDir, maybeFVname, useOSS):
+def OnStartup(modelingLanguage: str, asnFile: str, outputDir: str, maybeFVname: str, useOSS: bool) -> None:
     global cBackend
     cBackend = C_GlueGenerator()
     cBackend.OnStartup(modelingLanguage, asnFile, outputDir, maybeFVname, useOSS)
 
 
-def OnBasic(nodeTypename, node, leafTypeDict, names):
+def OnBasic(nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     cBackend.OnBasic(nodeTypename, node, leafTypeDict, names)
 
 
-def OnSequence(nodeTypename, node, leafTypeDict, names):
+def OnSequence(nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     cBackend.OnSequence(nodeTypename, node, leafTypeDict, names)
 
 
-def OnSet(nodeTypename, node, leafTypeDict, names):
+def OnSet(nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     cBackend.OnSet(nodeTypename, node, leafTypeDict, names)  # pragma: nocover
 
 
-def OnEnumerated(nodeTypename, node, leafTypeDict, names):
+def OnEnumerated(nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     cBackend.OnEnumerated(nodeTypename, node, leafTypeDict, names)
 
 
-def OnSequenceOf(nodeTypename, node, leafTypeDict, names):
+def OnSequenceOf(nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     cBackend.OnSequenceOf(nodeTypename, node, leafTypeDict, names)
 
 
-def OnSetOf(nodeTypename, node, leafTypeDict, names):
+def OnSetOf(nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     cBackend.OnSetOf(nodeTypename, node, leafTypeDict, names)  # pragma: nocover
 
 
-def OnChoice(nodeTypename, node, leafTypeDict, names):
+def OnChoice(nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     cBackend.OnChoice(nodeTypename, node, leafTypeDict, names)
 
 
-def OnShutdown(modelingLanguage, asnFile, maybeFVname):
+def OnShutdown(modelingLanguage: str, asnFile: str, maybeFVname: str) -> None:
     cBackend.OnShutdown(modelingLanguage, asnFile, maybeFVname)
