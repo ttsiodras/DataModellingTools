@@ -25,18 +25,20 @@ code generator A.'''
 import os
 import sys
 import distutils.spawn as spawn
+from typing import List
 
 from ..commonPy.utility import panic
+from ..commonPy.cleanupNodes import SetOfBadTypenames
 
 
-def Version():
+def Version() -> None:
     print("Code generator: " + "$Id: c_A_mapper.py 2382 2012-06-22 08:35:33Z ttsiodras $")  # pragma: no cover
 
 
 # Especially for the C mapper, since we need to pass the complete ASN.1 files list to ASN1SCC,
 # the second param is not asnFile, it is asnFiles
 
-def OnStartup(unused_modelingLanguage, asnFiles, outputDir, unused_badTypes):
+def OnStartup(unused_modelingLanguage: str, asnFiles: List[str], outputDir: str, unused_badTypes: SetOfBadTypenames) -> None:  # pylint: disable=invalid-sequence-index
     # print "Use ASN1SCC to generate the structures for '%s'" % asnFile
     asn1SccPath = spawn.find_executable('asn1.exe')
     if not asn1SccPath:

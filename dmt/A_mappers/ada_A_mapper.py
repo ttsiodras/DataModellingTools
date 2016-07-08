@@ -26,7 +26,9 @@ import os
 import sys
 import distutils.spawn as spawn
 
+from typing import List
 from ..commonPy.utility import panic
+from ..commonPy.cleanupNodes import SetOfBadTypenames
 
 
 def Version():
@@ -37,7 +39,7 @@ def Version():
 # the second param is not asnFile, it is asnFiles
 
 
-def OnStartup(unused_modelingLanguage, asnFiles, outputDir, unused_badTypes):
+def OnStartup(unused_modelingLanguage: str, asnFiles: List[str], outputDir: str, unused_badTypes: SetOfBadTypenames) -> None:  # pylint: disable=invalid-sequence-index
     # print "Use ASN1SCC to generate the structures for '%s'" % asnFile
     asn1SccPath = spawn.find_executable('asn1.exe')
     if not asn1SccPath:

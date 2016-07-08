@@ -31,7 +31,7 @@ from . import asnAST
 from .asnAST import AsnNode
 
 
-def VerifyNodeRange(node):
+def VerifyNodeRange(node: AsnNode) -> None:
     '''This function checks that
 - INTEGERs
 - REALs
@@ -64,7 +64,7 @@ on the exact location of the offending type in the ASN.1 grammar.'''
         if not node._range:
             panic("string (in %s) must have SIZE range set!\n" % node.Location())
 
-    elif isinstance(node, asnAST.AsnSequenceOf) or isinstance(node, asnAST.AsnSetOf):
+    elif isinstance(node, (asnAST.AsnSequenceOf, asnAST.AsnSetOf)):
         if not node._range:
             panic("SequenceOf (in %s) must have SIZE range set!\n" % node.Location())
 

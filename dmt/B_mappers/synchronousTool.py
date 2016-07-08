@@ -28,6 +28,7 @@ from typing import IO, Any  # NOQA pylint: disable=unused-import
 
 from ..commonPy.utility import panic, inform, panicWithCallStack
 from ..commonPy.aadlAST import InParam, OutParam, InOutParam
+from ..commonPy.recursiveMapper import RecursiveMapper
 
 
 class SynchronousToolGlueGenerator:
@@ -35,19 +36,19 @@ class SynchronousToolGlueGenerator:
     ##############################################
     # Parts to override for each synchronous tool
 
-    def Version(self):  # pylint: disable=no-self-use
+    def Version(self) -> None:  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a SynchronousToolGlueGenerator...")  # pragma: no cover
 
-    def FromToolToASN1SCC(self):  # pylint: disable=no-self-use
+    def FromToolToASN1SCC(self) -> RecursiveMapper:  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a SynchronousToolGlueGenerator...")  # pragma: no cover
 
-    def FromToolToOSS(self):  # pylint: disable=no-self-use
+    def FromToolToOSS(self) -> RecursiveMapper:  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a SynchronousToolGlueGenerator...")  # pragma: no cover
 
-    def FromASN1SCCtoTool(self):  # pylint: disable=no-self-use
+    def FromASN1SCCtoTool(self) -> RecursiveMapper:  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a SynchronousToolGlueGenerator...")  # pragma: no cover
 
-    def FromOSStoTool(self):  # pylint: disable=no-self-use
+    def FromOSStoTool(self) -> RecursiveMapper:  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a SynchronousToolGlueGenerator...")  # pragma: no cover
 
     def HeadersOnStartup(self, unused_modelingLanguage, unused_asnFile, unused_subProgram, unused_subProgramImplementation, unused_outputDir, unused_maybeFVname):  # pylint: disable=no-self-use

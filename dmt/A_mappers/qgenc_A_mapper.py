@@ -23,7 +23,7 @@
 #
 import re
 
-from typing import Set  # NOQA pylint: disable=unused-import
+from typing import Set, List  # NOQA pylint: disable=unused-import
 
 from ..commonPy.utility import panic, inform
 from ..commonPy import asnParser
@@ -31,6 +31,7 @@ from ..commonPy.asnAST import (
     AsnBool, AsnInt, AsnReal, AsnString, AsnEnumerated, AsnSequence,
     AsnSet, AsnChoice, AsnMetaMember, AsnSequenceOf, AsnSetOf)
 from ..commonPy.createInternalTypes import ScanChildren
+from ..commonPy.cleanupNodes import SetOfBadTypenames
 
 # The file written to
 g_outputFile = None
@@ -51,7 +52,7 @@ def CleanNameAsSimulinkWants(name):
     return re.sub(r'[^a-zA-Z0-9_]', '_', name)
 
 
-def OnStartup(unused_modelingLanguage, unused_asnFile, outputDir, unused_badTypes):
+def OnStartup(unused_modelingLanguage: str, unused_asnFiles: List[str], outputDir: str, unused_badTypes: SetOfBadTypenames) -> None:  # pylint: disable=invalid-sequence-index
     global g_bHasStartupRunOnce
     if g_bHasStartupRunOnce:
         # Don't rerun, it has already done all the work

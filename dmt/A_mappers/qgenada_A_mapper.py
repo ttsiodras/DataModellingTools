@@ -28,12 +28,15 @@ code generator A.'''
 import os
 import sys
 import re
+
 import distutils.spawn as spawn
+from typing import List
 
 from ..commonPy import asnParser
 from ..commonPy.utility import panic, inform
 from ..commonPy.asnAST import AsnBool, AsnInt, AsnReal, AsnString, AsnEnumerated, AsnSequence, AsnSet, AsnChoice, AsnMetaMember, AsnSequenceOf, AsnSetOf
 from ..commonPy.createInternalTypes import ScanChildren
+from ..commonPy.cleanupNodes import SetOfBadTypenames
 
 # The file written to
 g_outputFile = None
@@ -57,7 +60,7 @@ def CleanNameAsSimulinkWants(name):
 # Especially for the C mapper, since we need to pass the complete ASN.1 files list to ASN1SCC,
 # the second param is not asnFile, it is asnFiles
 
-def OnStartup(unused_modelingLanguage, asnFiles, outputDir, unused_badTypes):
+def OnStartup(unused_modelingLanguage: str, asnFiles: List[str], outputDir: str, unused_badTypes: SetOfBadTypenames) -> None:  # pylint: disable=invalid-sequence-index
     # print "Use ASN1SCC to generate the structures for '%s'" % asnFile
     asn1SccPath = spawn.find_executable('asn1.exe')
     if not asn1SccPath:

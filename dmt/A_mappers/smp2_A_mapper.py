@@ -25,7 +25,7 @@ import os
 import re
 import random
 
-from typing import Set, IO, Any  # NOQA pylint: disable=unused-import
+from typing import List, Set, IO, Any  # NOQA pylint: disable=unused-import
 
 from ..commonPy.asnAST import AsnMetaMember, AsnChoice, AsnSet, AsnSequence, AsnSequenceOf, AsnSetOf
 from ..commonPy.asnParser import g_names, g_leafTypeDict, CleanNameForAST
@@ -116,7 +116,7 @@ def FixupAstForSMP2():
 g_bStartupRun = False
 
 
-def OnStartup(unused_modelingLanguage, asnFiles, outputDir, unused_badTypes):
+def OnStartup(unused_modelingLanguage: str, asnFiles: List[str], outputDir: str, unused_badTypes: SetOfBadTypenames) -> None:  # pylint: disable=invalid-sequence-index
     '''
     Smp2 cannot represent constraint changes in unnamed inner types
     e.g. this...
