@@ -24,13 +24,12 @@ Semantix's code generator A.'''
 import os
 import re
 
-from typing import Union, IO, Any  # NOQA pylint: disable=unused-import
+from typing import List, Union, IO, Any  # NOQA pylint: disable=unused-import
 
 from ..commonPy.asnAST import (
     AsnMetaMember, AsnChoice, AsnSet, AsnSequence, AsnSequenceOf,
     AsnSetOf, isSequenceVariable, AsnBasicNode, AsnSequenceOrSet,
-    AsnSequenceOrSetOf, AsnEnumerated, AsnInt, AsnReal, AsnString,
-    AsnNode)
+    AsnSequenceOrSetOf, AsnEnumerated, AsnInt, AsnReal, AsnString)
 from ..commonPy.asnParser import g_names, g_leafTypeDict, CleanNameForAST, AST_Leaftypes
 from ..commonPy.utility import panic, warn
 from ..commonPy.cleanupNodes import SetOfBadTypenames
@@ -146,7 +145,7 @@ def FixupAstForSQLAlchemy() -> None:
 g_bStartupRun = False
 
 
-def OnStartup(unused_modelingLanguage: str, asnFiles: Union[str, List[str]], outputDir: str, unused_badTypes: SetOfBadTypenames) -> None:
+def OnStartup(unused_modelingLanguage: str, asnFiles: Union[str, List[str]], outputDir: str, unused_badTypes: SetOfBadTypenames) -> None:  # pylint: disable=invalid-sequence-index
     '''
     SQL cannot represent unnamed inner types
     e.g. this...

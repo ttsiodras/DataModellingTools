@@ -39,7 +39,8 @@ from ..commonPy.cleanupNodes import SetOfBadTypenames
 from ..commonPy.asnAST import (
     AsnBasicNode, AsnSequenceOrSet, AsnSequenceOrSetOf, AsnBool, AsnInt,
     AsnReal, AsnString, AsnEnumerated, AsnSequence, AsnSet, AsnChoice,
-    AsnMetaMember, AsnSequenceOf, AsnSetOf, AsnNode)
+    AsnMetaMember, AsnSequenceOf, AsnSetOf)
+from ..commonPy.asnAST import AsnNode  # NOQA pylint: disable=unused-import
 from ..commonPy.asnParser import AST_Leaftypes, AST_Lookup
 
 # The file written to
