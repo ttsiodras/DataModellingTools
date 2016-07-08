@@ -39,26 +39,26 @@ class ASynchronousToolGlueGenerator:
     def Version(self) -> None:  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a ASynchronousToolGlueGenerator...")  # pragma: no cover
 
-    def HeadersOnStartup(self,
+    def HeadersOnStartup(self,  # pylint: disable=no-self-use
                          unused_asnFile: str,
                          unused_outputDir: str,
-                         unused_maybeFVname: str) -> None:  # pylint: disable=no-self-use
+                         unused_maybeFVname: str) -> None:
         panicWithCallStack("Method undefined in a ASynchronousToolGlueGenerator...")  # pragma: no cover
 
-    def Encoder(self,
+    def Encoder(self,  # pylint: disable=no-self-use
                 unused_nodeTypename: str,
                 unused_node: AsnNode,
                 unused_leafTypeDict: AST_Leaftypes,
                 unused_names: AST_Lookup,
-                unused_encoding: str) -> None:  # pylint: disable=no-self-use
+                unused_encoding: str) -> None:
         panicWithCallStack("Method undefined in a ASynchronousToolGlueGenerator...")  # pragma: no cover
 
-    def Decoder(self,
+    def Decoder(self,  # pylint: disable=no-self-use
                 unused_nodeTypename: str,
                 unused_node: AsnNode,
                 unused_leafTypeDict: AST_Leaftypes,
                 unused_names: AST_Lookup,
-                unused_encoding: str) -> None:  # pylint: disable=no-self-use
+                unused_encoding: str) -> None:
         panicWithCallStack("Method undefined in a ASynchronousToolGlueGenerator...")  # pragma: no cover
 
     ########################################################

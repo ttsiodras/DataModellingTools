@@ -80,6 +80,8 @@ from typing import List, Union, Dict, Any  # NOQA pylint: disable=unused-import
 from . import utility
 
 Lookup = Dict[str, 'AsnNode']
+AsnSequenceOrSet = Union['AsnSequence', 'AsnSet']
+AsnSequenceOrSetOf = Union['AsnSequenceOf', 'AsnSetOf']
 
 
 class AsnNode(object):

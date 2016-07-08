@@ -18,6 +18,9 @@
 # Note that in both cases, there are no charges (royalties) for the
 # generated code.
 #
+
+# pylint: disable=too-many-lines
+
 import re
 import os
 

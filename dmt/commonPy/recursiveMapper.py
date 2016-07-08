@@ -23,10 +23,8 @@ from typing import Union, List, Dict, TypeVar, Generic
 
 from .utility import panicWithCallStack
 from .asnAST import (
-    AsnBasicNode, AsnSequence, AsnSet, AsnChoice, AsnSequenceOf,
-    AsnSetOf, AsnEnumerated, AsnMetaMember, AsnNode, AsnInt, AsnReal, AsnBool,
-    AsnOctetString
-)
+    AsnSequence, AsnSet, AsnChoice, AsnSequenceOf, AsnSetOf, AsnEnumerated,
+    AsnMetaMember, AsnNode, AsnInt, AsnReal, AsnBool, AsnOctetString)
 from .asnParser import AST_Leaftypes, AST_Lookup
 
 
