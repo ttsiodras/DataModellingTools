@@ -24,7 +24,8 @@ from typing import Union, List, Dict, TypeVar, Generic
 from .utility import panicWithCallStack
 from .asnAST import (
     AsnBasicNode, AsnSequence, AsnSet, AsnChoice, AsnSequenceOf,
-    AsnSetOf, AsnEnumerated, AsnMetaMember, AsnNode
+    AsnSetOf, AsnEnumerated, AsnMetaMember, AsnNode, AsnInt, AsnReal, AsnBool,
+    AsnOctetString
 )
 from .asnParser import AST_Leaftypes, AST_Lookup
 
@@ -48,34 +49,34 @@ class RecursiveMapperGeneric(Generic[TSrc, TDest]):
     def Version(self) -> None:  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a RecursiveMapper...")
 
-    def MapInteger(self, unused_srcVar: TSrc, unused_destVar: TDest, unused_node: AsnNode, unused_leafTypeDict: AST_Leaftypes, unused_names: AST_Lookup) -> List[str]:  # pylint: disable=no-self-use,invalid-sequence-index
+    def MapInteger(self, unused_srcVar: TSrc, unused_destVar: TDest, unused_node: AsnInt, unused_leafTypeDict: AST_Leaftypes, unused_names: AST_Lookup) -> List[str]:  # pylint: disable=no-self-use,invalid-sequence-index
         panicWithCallStack("Method undefined in a RecursiveMapper...")
 
-    def MapReal(self, unused_srcVar: TSrc, unused_destVar: TDest, unused_node: AsnNode, unused_leafTypeDict: AST_Leaftypes, unused_names: AST_Lookup) -> List[str]:  # pylint: disable=no-self-use,invalid-sequence-index
+    def MapReal(self, unused_srcVar: TSrc, unused_destVar: TDest, unused_node: AsnReal, unused_leafTypeDict: AST_Leaftypes, unused_names: AST_Lookup) -> List[str]:  # pylint: disable=no-self-use,invalid-sequence-index
         panicWithCallStack("Method undefined in a RecursiveMapper...")
 
-    def MapBoolean(self, unused_srcVar: TSrc, unused_destVar: TDest, unused_node: AsnNode, unused_leafTypeDict: AST_Leaftypes, unused_names: AST_Lookup) -> List[str]:  # pylint: disable=no-self-use,invalid-sequence-index
+    def MapBoolean(self, unused_srcVar: TSrc, unused_destVar: TDest, unused_node: AsnBool, unused_leafTypeDict: AST_Leaftypes, unused_names: AST_Lookup) -> List[str]:  # pylint: disable=no-self-use,invalid-sequence-index
         panicWithCallStack("Method undefined in a RecursiveMapper...")
 
-    def MapOctetString(self, unused_srcVar: TSrc, unused_destVar: TDest, unused_node: AsnNode, unused_leafTypeDict: AST_Leaftypes, unused_names: AST_Lookup) -> List[str]:  # pylint: disable=no-self-use,invalid-sequence-index
+    def MapOctetString(self, unused_srcVar: TSrc, unused_destVar: TDest, unused_node: AsnOctetString, unused_leafTypeDict: AST_Leaftypes, unused_names: AST_Lookup) -> List[str]:  # pylint: disable=no-self-use,invalid-sequence-index
         panicWithCallStack("Method undefined in a RecursiveMapper...")
 
-    def MapEnumerated(self, unused_srcVar: TSrc, unused_destVar: TDest, unused_node: AsnNode, unused_leafTypeDict: AST_Leaftypes, unused_names: AST_Lookup) -> List[str]:  # pylint: disable=no-self-use,invalid-sequence-index
+    def MapEnumerated(self, unused_srcVar: TSrc, unused_destVar: TDest, unused_node: AsnEnumerated, unused_leafTypeDict: AST_Leaftypes, unused_names: AST_Lookup) -> List[str]:  # pylint: disable=no-self-use,invalid-sequence-index
         panicWithCallStack("Method undefined in a RecursiveMapper...")
 
-    def MapSequence(self, unused_srcVar: TSrc, unused_destVar: TDest, unused_node: AsnNode, unused_leafTypeDict: AST_Leaftypes, unused_names: AST_Lookup) -> List[str]:  # pylint: disable=no-self-use,invalid-sequence-index
+    def MapSequence(self, unused_srcVar: TSrc, unused_destVar: TDest, unused_node: AsnSequence, unused_leafTypeDict: AST_Leaftypes, unused_names: AST_Lookup) -> List[str]:  # pylint: disable=no-self-use,invalid-sequence-index
         panicWithCallStack("Method undefined in a RecursiveMapper...")
 
-    def MapSet(self, unused_srcVar: TSrc, unused_destVar: TDest, unused_node: AsnNode, unused_leafTypeDict: AST_Leaftypes, unused_names: AST_Lookup) -> List[str]:  # pylint: disable=no-self-use,invalid-sequence-index
+    def MapSet(self, unused_srcVar: TSrc, unused_destVar: TDest, unused_node: AsnSet, unused_leafTypeDict: AST_Leaftypes, unused_names: AST_Lookup) -> List[str]:  # pylint: disable=no-self-use,invalid-sequence-index
         panicWithCallStack("Method undefined in a RecursiveMapper...")
 
-    def MapChoice(self, unused_srcVar: TSrc, unused_destVar: TDest, unused_node: AsnNode, unused_leafTypeDict: AST_Leaftypes, unused_names: AST_Lookup) -> List[str]:  # pylint: disable=no-self-use,invalid-sequence-index
+    def MapChoice(self, unused_srcVar: TSrc, unused_destVar: TDest, unused_node: AsnChoice, unused_leafTypeDict: AST_Leaftypes, unused_names: AST_Lookup) -> List[str]:  # pylint: disable=no-self-use,invalid-sequence-index
         panicWithCallStack("Method undefined in a RecursiveMapper...")
 
-    def MapSequenceOf(self, unused_srcVar: TSrc, unused_destVar: TDest, unused_node: AsnNode, unused_leafTypeDict: AST_Leaftypes, unused_names: AST_Lookup) -> List[str]:  # pylint: disable=no-self-use,invalid-sequence-index
+    def MapSequenceOf(self, unused_srcVar: TSrc, unused_destVar: TDest, unused_node: AsnSequenceOf, unused_leafTypeDict: AST_Leaftypes, unused_names: AST_Lookup) -> List[str]:  # pylint: disable=no-self-use,invalid-sequence-index
         panicWithCallStack("Method undefined in a RecursiveMapper...")
 
-    def MapSetOf(self, unused_srcVar: TSrc, unused_destVar: TDest, unused_node: AsnNode, unused_leafTypeDict: AST_Leaftypes, unused_names: AST_Lookup) -> List[str]:  # pylint: disable=no-self-use,invalid-sequence-index
+    def MapSetOf(self, unused_srcVar: TSrc, unused_destVar: TDest, unused_node: AsnSetOf, unused_leafTypeDict: AST_Leaftypes, unused_names: AST_Lookup) -> List[str]:  # pylint: disable=no-self-use,invalid-sequence-index
         panicWithCallStack("Method undefined in a RecursiveMapper...")
 
     def Map(self,
@@ -89,18 +90,14 @@ class RecursiveMapperGeneric(Generic[TSrc, TDest]):
         else:
             node = node_or_str
         lines = []  # type: List[str]
-        if isinstance(node, AsnBasicNode):
-            realLeafType = leafTypeDict[node._leafType]
-            if realLeafType == "INTEGER":
-                lines.extend(self.MapInteger(srcVar, destVar, node, leafTypeDict, names))
-            elif realLeafType == "REAL":
-                lines.extend(self.MapReal(srcVar, destVar, node, leafTypeDict, names))
-            elif realLeafType == "BOOLEAN":
-                lines.extend(self.MapBoolean(srcVar, destVar, node, leafTypeDict, names))
-            elif realLeafType == "OCTET STRING":
-                lines.extend(self.MapOctetString(srcVar, destVar, node, leafTypeDict, names))
-            else:
-                panicWithCallStack("Basic type %s can't be mapped..." % realLeafType)
+        if isinstance(node, AsnInt):
+            lines.extend(self.MapInteger(srcVar, destVar, node, leafTypeDict, names))
+        elif isinstance(node, AsnReal):
+            lines.extend(self.MapReal(srcVar, destVar, node, leafTypeDict, names))
+        elif isinstance(node, AsnBool):
+            lines.extend(self.MapBoolean(srcVar, destVar, node, leafTypeDict, names))
+        elif isinstance(node, AsnOctetString):
+            lines.extend(self.MapOctetString(srcVar, destVar, node, leafTypeDict, names))
         elif isinstance(node, AsnSequence):
             lines.extend(self.MapSequence(srcVar, destVar, node, leafTypeDict, names))
         elif isinstance(node, AsnSet):

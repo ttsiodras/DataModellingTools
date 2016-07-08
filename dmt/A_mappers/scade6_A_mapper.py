@@ -36,6 +36,7 @@ from ..commonPy.asnAST import (
     AsnSetOf, AsnSequence, AsnSequenceOf, AsnChoice
 )
 from ..commonPy import asnParser
+from ..commonPy.cleanupNodes import SetOfBadTypenames
 
 g_lookup = {
     "INTEGER": "int",
@@ -63,7 +64,7 @@ g_doc = None
 g_Declarations = None
 
 
-def Version():
+def Version() -> None:
     print("Code generator: " + "$Id: scade612_A_mapper.py 1842 2010-03-10 14:16:42Z ttsiodras $")  # pragma: no cover
 
 
@@ -78,7 +79,7 @@ def RandomHex(digits: int) -> str:
     return result
 
 
-def FixupNestedStringsAndEnumerated():
+def FixupNestedStringsAndEnumerated() -> None:
     names = asnParser.g_names
     leafTypeDict = asnParser.g_leafTypeDict
     for nodeTypename in list(names.keys()):
@@ -102,7 +103,7 @@ def FixupNestedStringsAndEnumerated():
                 node._containedType = newName                                                                           # pragma: no cover
 
 
-def OnStartup(unused_modelingLanguage, asnFile: str, outputDir: str, unused_badTypes) -> None:
+def OnStartup(unused_modelingLanguage: str, asnFile: str, outputDir: str, unused_badTypes: SetOfBadTypenames) -> None:
     outputFilename = CleanNameAsScadeWants(os.path.basename(os.path.splitext(asnFile)[0])) + ".xscade"
 
     FixupNestedStringsAndEnumerated()

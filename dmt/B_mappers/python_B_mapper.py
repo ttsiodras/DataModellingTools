@@ -48,14 +48,13 @@ def CleanName(name: str) -> str:
 
 
 # Called once per RI (i.e. per SUBPROGRAM IMPLEMENTATION)
-def OnStartup(
-        modelingLanguage: str,
-        asnFile: str,
-        subProgram: ApLevelContainer,
-        unused_subProgramImplementation: str,
-        outputDir: str,
-        maybeFVname: str,
-        unused_useOSS: bool) -> None:
+def OnStartup(modelingLanguage: str,
+              asnFile: str,
+              subProgram: ApLevelContainer,
+              unused_subProgramImplementation: str,
+              outputDir: str,
+              maybeFVname: str,
+              unused_useOSS: bool) -> None:
     g_langPerSP[subProgram] = modelingLanguage
     CleanSP = CleanName(subProgram._id)
 
@@ -241,39 +240,39 @@ def Common(unused_nodeTypename: str, unused_node: AsnNode, unused_subProgram: Ap
     pass
 
 
-def OnBasic(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+def OnBasic(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
-def OnSequence(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+def OnSequence(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
-def OnSet(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+def OnSet(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)  # pragma: nocover
 
 
-def OnEnumerated(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+def OnEnumerated(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
-def OnSequenceOf(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+def OnSequenceOf(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
-def OnSetOf(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+def OnSetOf(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)  # pragma: nocover
 
 
-def OnChoice(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+def OnChoice(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
-def OnShutdown(unused_modelingLanguage, unused_asnFile, unused_sp, unused_subProgramImplementation, unused_maybeFVname):
+def OnShutdown(unused_modelingLanguage: str, unused_asnFile: str, unused_sp: ApLevelContainer, unused_subProgramImplementation: str, unused_maybeFVname: str) -> None:
     pass
 
 
-def OnFinal():
+def OnFinal() -> None:
     g_HeaderFile.write("\n#endif\n")
     g_PythonFile.write('\n'.join(g_headerPython))
     g_PythonFile.write('\n\n')

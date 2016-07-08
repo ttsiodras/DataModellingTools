@@ -24,16 +24,17 @@
 # import re
 
 from ..commonPy import asnParser
+from ..commonPy.cleanupNodes import SetOfBadTypenames
 
 g_outputDir = ""
 g_asnFile = ""
 
 
-def Version():
+def Version() -> None:
     print("Code generator: " + "$Id: og_A_mapper.py 2382 2012-06-22 08:35:33Z ttsiodras $")  # pragma: no cover
 
 
-def OnStartup(unused_modelingLanguage, asnFile, outputDir, unused_badTypes):
+def OnStartup(unused_modelingLanguage: str, asnFile: str, outputDir: str, unused_badTypes: SetOfBadTypenames) -> None:
     global g_asnFile
     g_asnFile = asnFile
     global g_outputDir

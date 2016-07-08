@@ -91,8 +91,8 @@ hpredef.h :
 
 from typing import Set  # NOQA pylint: disable=unused-import
 
-from ..commonPy.asnAST import isSequenceVariable, sourceSequenceLimit, AsnInt, AsnBool, AsnReal, AsnEnumerated
-from ..commonPy.asnParser import Typename  # NOQA pylint: disable=unused-import
+from ..commonPy.asnAST import isSequenceVariable, sourceSequenceLimit, AsnInt, AsnBool, AsnReal, AsnEnumerated, AsnNode, AsnOctetString
+from ..commonPy.asnParser import Typename, AST_Lookup, AST_Leaftypes  # NOQA pylint: disable=unused-import
 
 from ..commonPy.recursiveMapper import RecursiveMapper
 from .asynchronousTool import ASynchronousToolGlueGenerator
@@ -101,33 +101,33 @@ isAsynchronous = True
 ogBackend = None
 
 
-def Version():
+def Version() -> None:
     print(("Code generator: " + "$Id: og_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $"))
 
 
 # noinspection PyListCreation
 # pylint: disable=no-self-use
 class FromObjectGeodeToASN1SCC(RecursiveMapper):
-    def __init__(self):
+    def __init__(self) -> None:
         self.uniqueID = 0
 
-    def UniqueID(self):
+    def UniqueID(self) -> int:
         self.uniqueID += 1
         return self.uniqueID
 
-    def DecreaseUniqueID(self):
+    def DecreaseUniqueID(self) -> None:
         self.uniqueID -= 1
 
-    def MapInteger(self, srcSDLVariable, destVar, _, __, ___):
+    def MapInteger(self, srcSDLVariable: str, destVar: str, _: AsnNode, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
         return ["%s = (asn1SccSint) %s;\n" % (destVar, srcSDLVariable)]
 
-    def MapReal(self, srcSDLVariable, destVar, _, __, ___):
+    def MapReal(self, srcSDLVariable: str, destVar: str, _: AsnNode, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
         return ["%s = (double)%s;\n" % (destVar, srcSDLVariable)]
 
-    def MapBoolean(self, srcSDLVariable, destVar, _, __, ___):
+    def MapBoolean(self, srcSDLVariable: str, destVar: str, _: AsnNode, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
         return ["%s = (%s==SDL_TRUE)?0xff:0;\n" % (destVar, srcSDLVariable)]
 
-    def MapOctetString(self, srcSDLVariable, destVar, node, __, ___):
+    def MapOctetString(self, srcSDLVariable: str, destVar: str, node: AsnOctetString, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
         lines = []  # type: List[str]
         lines.append("{\n")
         lines.append("    int i;\n")
@@ -150,10 +150,10 @@ class FromObjectGeodeToASN1SCC(RecursiveMapper):
         lines.append("}\n")
         return lines
 
-    def MapEnumerated(self, srcSDLVariable, destVar, _, __, ___):
+    def MapEnumerated(self, srcSDLVariable: str, destVar: str, _: AsnNode, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
         return ["%s = %s;\n" % (destVar, srcSDLVariable)]
 
-    def MapSequence(self, srcSDLVariable, destVar, node, leafTypeDict, names):
+    def MapSequence(self, srcSDLVariable, destVar, node, leafTypeDict, names) -> List[str]:
         lines = []  # type: List[str]
         for child in node._members:
             lines.extend(
@@ -165,10 +165,10 @@ class FromObjectGeodeToASN1SCC(RecursiveMapper):
                     names))
         return lines
 
-    def MapSet(self, srcSDLVariable, destVar, node, leafTypeDict, names):
+    def MapSet(self, srcSDLVariable: str, destVar: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
         return self.MapSequence(srcSDLVariable, destVar, node, leafTypeDict, names)  # pragma: nocover
 
-    def MapChoice(self, srcSDLVariable, destVar, node, leafTypeDict, names):
+    def MapChoice(self, srcSDLVariable: str, destVar: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
         lines = []  # type: List[str]
         childNo = 0
         for child in node._members:
@@ -186,7 +186,7 @@ class FromObjectGeodeToASN1SCC(RecursiveMapper):
             lines.append("}\n")
         return lines
 
-    def MapSequenceOf(self, srcSDLVariable, destVar, node, leafTypeDict, names):
+    def MapSequenceOf(self, srcSDLVariable: str, destVar: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
         lines = []  # type: List[str]
         lines.append("{\n")
         uniqueId = self.UniqueID()
@@ -207,7 +207,7 @@ class FromObjectGeodeToASN1SCC(RecursiveMapper):
         self.DecreaseUniqueID()
         return lines
 
-    def MapSetOf(self, srcSDLVariable, destVar, node, leafTypeDict, names):
+    def MapSetOf(self, srcSDLVariable: str, destVar: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
         return self.MapSequenceOf(srcSDLVariable, destVar, node, leafTypeDict, names)  # pragma: nocover
 
 
