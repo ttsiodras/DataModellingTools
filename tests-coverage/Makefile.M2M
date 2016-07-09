@@ -5,6 +5,13 @@ VPATH=..:../dmt/A_mappers:../dmt/commonPy
 PYSRC_A := ada_A_mapper.py c_A_mapper.py og_A_mapper.py simulink_A_mapper.py python_A_mapper.py scade6_A_mapper.py smp2_A_mapper.py sqlalchemy_A_mapper.py rtds_A_mapper.py qgenada_A_mapper.py qgenc_A_mapper.py
 PYSRC_A_COVER := $(PYSRC_A:%.py=___dmt_A_mappers_%.py,cover)
 
+# Python3.5 includes an older version of typing, which by default has priority over
+# the one installed in $HOME/.local via setup.py.
+#
+# To address this, we find where our pip-installed typing lives:
+TYPING_FOLDER:=$(shell pip3 show typing | grep ^Location | sed 's,^.*: ,,')
+export PYTHONPATH:=${TYPING_FOLDER}:..
+
 .PHONY:	check
 
 all:	$(PYSRC_A_COVER) check
@@ -13,21 +20,21 @@ ___dmt_A_mappers_%.py,cover:	../A_mappers/%.py DataTypesSimulink.asn
 	@echo Update required: $@ depends on $?
 	mkdir -p output
 	rm -rf output/*
-	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel 2>/dev/null || echo -n
-	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output 2>/dev/null || echo -n
-	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -toRTDS DataTypesSimulink.asn >/dev/null
-	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -toQGenAda DataTypesSimulink.asn >/dev/null
-	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -toQGenC DataTypesSimulink.asn >/dev/null
-	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -verbose -toSIMULINK DataTypesSimulink.asn >/dev/null
-	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -toOG DataTypesSimulink.asn
-	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -toAda DataTypesSimulink.asn
-	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -toC DataTypesSimulink.asn >/dev/null
-	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -toSMP2 DataTypesSimulink.asn >/dev/null
-	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -toPython DataTypesSimulink.asn >/dev/null
-	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -toSCADE6 DataTypesSimulink.asn >/dev/null
-	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -toSQL DataTypesSimulink.asn >/dev/null
-	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -toSqlalchemy DataTypesSimulink.asn >/dev/null
-	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage annotate -d . ../dmt/asn2dataModel.py ../dmt/A_mappers/*.py ../dmt/commonPy/*.py
+	LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel 2>/dev/null || echo -n
+	LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output 2>/dev/null || echo -n
+	LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -toRTDS DataTypesSimulink.asn >/dev/null
+	LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -toQGenAda DataTypesSimulink.asn >/dev/null
+	LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -toQGenC DataTypesSimulink.asn >/dev/null
+	LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -verbose -toSIMULINK DataTypesSimulink.asn >/dev/null
+	LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -toOG DataTypesSimulink.asn
+	LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -toAda DataTypesSimulink.asn
+	LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -toC DataTypesSimulink.asn >/dev/null
+	LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -toSMP2 DataTypesSimulink.asn >/dev/null
+	LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -toPython DataTypesSimulink.asn >/dev/null
+	LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -toSCADE6 DataTypesSimulink.asn >/dev/null
+	LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -toSQL DataTypesSimulink.asn >/dev/null
+	LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o output -toSqlalchemy DataTypesSimulink.asn >/dev/null
+	LANG=C LC_ALL=C python3 -m coverage annotate -d . ../dmt/asn2dataModel.py ../dmt/A_mappers/*.py ../dmt/commonPy/*.py
 
 check:
 ifneq ($(CIRCLECI),)

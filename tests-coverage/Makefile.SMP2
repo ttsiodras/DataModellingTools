@@ -1,14 +1,21 @@
 include common.mk
 
+# Python3.5 includes an older version of typing, which by default has priority over
+# the one installed in $HOME/.local via setup.py.
+#
+# To address this, we find where our pip-installed typing lives:
+TYPING_FOLDER:=$(shell pip3 show typing | grep ^Location | sed 's,^.*: ,,')
+export PYTHONPATH:=${TYPING_FOLDER}:..
+
 all:
 	make clean
-	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o . -toSMP2 DataTypesSimulink.asn >/dev/null
-	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.smp2asn >/dev/null 2>&1 ; exit 0
-	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.smp2asn -h >/dev/null 2>&1 ; exit 0
-	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.smp2asn -z >/dev/null 2>&1 ; exit 0
-	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.smp2asn -o smp2.asn -a nonexisting.asn nonexisting.cat >/dev/null 2>&1 ; exit 0
-	PYTHONPATH=.. LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.smp2asn -o smp2.asn -a DataTypesSimulink.asn -v -p datatypessimulink.cat >/dev/null 2>&1 || exit 1
-	PYTHONPATH=.. LANG=C LC_ALL=C ${COVERAGE} annotate -d . ../dmt/smp2asn.py ../dmt/commonPy/*.py || exit 1
+	LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.asn2dataModel -o . -toSMP2 DataTypesSimulink.asn >/dev/null
+	LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.smp2asn >/dev/null 2>&1 ; exit 0
+	LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.smp2asn -h >/dev/null 2>&1 ; exit 0
+	LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.smp2asn -z >/dev/null 2>&1 ; exit 0
+	LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.smp2asn -o smp2.asn -a nonexisting.asn nonexisting.cat >/dev/null 2>&1 ; exit 0
+	LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.smp2asn -o smp2.asn -a DataTypesSimulink.asn -v -p datatypessimulink.cat >/dev/null 2>&1 || exit 1
+	LANG=C LC_ALL=C ${COVERAGE} annotate -d . ../dmt/smp2asn.py ../dmt/commonPy/*.py || exit 1
 ifneq ($(CIRCLECI),)
 	./checkCoverage.pl ___dmt_smp2asn.py,cover || { echo smp2asn.py failed... ; cp __dmt_smp2asn.py,cover ${CIRCLE_ARTIFACTS} ; exit 1 ; }
 else

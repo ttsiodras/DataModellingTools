@@ -1,9 +1,10 @@
 import re
 import sys
 
+from lxml import etree
+
 from typing import List, Union, Optional, Any, Tuple, Dict  # NOQA pylint: disable=unused-import
 
-from lxml import etree
 from .asnAST import (
     AsnBool, AsnInt, AsnReal, AsnEnumerated, AsnOctetString, AsnSequenceOf,
     AsnSet, AsnSetOf, AsnSequence, AsnChoice, AsnMetaMember, AsnNode)
