@@ -301,7 +301,6 @@ def CreateDeclarationForType(nodeTypename: str, names: AST_Lookup, leafTypeDict:
         containedNode = contained  # type: Union[AsnNode, str]
         while isinstance(containedNode, str):
             containedNode = names[containedNode]
-
         if isinstance(containedNode, AsnBool):
             DeclareSimpleCollection(node, name, 'boolean')
         elif isinstance(containedNode, AsnInt):

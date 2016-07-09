@@ -42,9 +42,10 @@ from typing import List
 from ..commonPy.utility import panicWithCallStack
 from ..commonPy.asnAST import (
     sourceSequenceLimit, isSequenceVariable, AsnInt, AsnReal, AsnEnumerated,
-    AsnBool, AsnSequenceOrSet, AsnSequenceOrSetOf, AsnChoice, AsnOctetString)
+    AsnBool, AsnSequenceOrSet, AsnSequenceOrSetOf, AsnChoice, AsnOctetString,
+    AsnNode)
 from ..commonPy.asnParser import AST_Lookup, AST_Leaftypes
-from ..commonPy.aadlAST import AadlPort, AadlParameter
+from ..commonPy.aadlAST import AadlPort, AadlParameter, ApLevelContainer, Param
 from ..commonPy.recursiveMapper import RecursiveMapper
 from .synchronousTool import SynchronousToolGlueGenerator
 
@@ -52,11 +53,11 @@ isAsynchronous = False
 qgencBackend = None
 
 
-def Version():
+def Version() -> None:
     print("Code generator: " + "$Id: qgenc_B_mapper.py $")
 
 
-def IsElementMappedToPrimitive(node, names):
+def IsElementMappedToPrimitive(node: AsnSequenceOrSetOf, names: AST_Lookup) -> bool:
     contained = node._containedType
     while isinstance(contained, str):
         contained = names[contained]
@@ -130,7 +131,7 @@ class FromQGenCToASN1SCC(RecursiveMapper):
         lines = []  # type: List[str]
         for i in range(0, node._range[-1]):
             lines.extend(
-                self.Map(isMappedToPrimitive and ("%s.element_data[%d]" % (srcQGenC, i)) or ("%s.element_%02d" % (srcQGenC, i)),
+                self.Map(("%s.element_data[%d]" % (srcQGenC, i)) if isMappedToPrimitive else ("%s.element_%02d" % (srcQGenC, i)),
                          destVar + ".arr[%d]" % i,
                          node._containedType,
                          leafTypeDict,
@@ -216,7 +217,7 @@ class FromASN1SCCtoQGenC(RecursiveMapper):
         for i in range(0, node._range[-1]):
             lines.extend(self.Map(
                 srcVar + ".arr[%d]" % i,
-                isMappedToPrimitive and ("%s.element_data[%d]" % (dstQGenC, i)) or ("%s.element_%02d" % (dstQGenC, i)),
+                ("%s.element_data[%d]" % (dstQGenC, i)) if isMappedToPrimitive else ("%s.element_%02d" % (dstQGenC, i)),
                 node._containedType,
                 leafTypeDict,
                 names))
@@ -294,7 +295,7 @@ class FromQGenCToOSS(RecursiveMapper):
         lines = []  # type: List[str]
         for i in range(0, node._range[-1]):
             lines.extend(
-                self.Map(isMappedToPrimitive and ("%s.element_data[%d]" % (srcQGenC, i)) or ("%s.element_%02d" % (srcQGenC, i)),
+                self.Map(("%s.element_data[%d]" % (srcQGenC, i)) if isMappedToPrimitive else ("%s.element_%02d" % (srcQGenC, i)),
                          destVar + ".value[%d]" % i,
                          node._containedType,
                          leafTypeDict,
@@ -377,7 +378,7 @@ class FromOSStoQGenC(RecursiveMapper):
         for i in range(0, node._range[-1]):
             lines.extend(self.Map(
                 srcVar + ".value[%d]" % i,
-                isMappedToPrimitive and ("%s.element_data[%d]" % (dstQGenC, i)) or ("%s.element_%02d" % (dstQGenC, i)),
+                ("%s.element_data[%d]" % (dstQGenC, i)) if isMappedToPrimitive else ("%s.element_%02d" % (dstQGenC, i)),
                 node._containedType,
                 leafTypeDict,
                 names))
@@ -392,22 +393,22 @@ class FromOSStoQGenC(RecursiveMapper):
 class QGenCGlueGenerator(SynchronousToolGlueGenerator):
     g_FVname = None  # type: str
 
-    def Version(self):
+    def Version(self) -> None:
         print("Code generator: " + "$Id: qgenc_B_mapper.py 2390 2014-11-27 12:39:17Z dtuulik $")  # pragma: no cover
 
-    def FromToolToASN1SCC(self):
+    def FromToolToASN1SCC(self) -> RecursiveMapper:
         return FromQGenCToASN1SCC()
 
-    def FromToolToOSS(self):
+    def FromToolToOSS(self) -> RecursiveMapper:
         return FromQGenCToOSS()
 
-    def FromASN1SCCtoTool(self):
+    def FromASN1SCCtoTool(self) -> RecursiveMapper:
         return FromASN1SCCtoQGenC()
 
-    def FromOSStoTool(self):
+    def FromOSStoTool(self) -> RecursiveMapper:
         return FromOSStoQGenC()
 
-    def HeadersOnStartup(self, unused_modelingLanguage, unused_asnFile, subProgram, unused_subProgramImplementation, unused_outputDir, unused_maybeFVname):
+    def HeadersOnStartup(self, unused_modelingLanguage: str, unused_asnFile: str, subProgram: ApLevelContainer, unused_subProgramImplementation: str, unused_outputDir: str, unused_maybeFVname: str) -> None:
         if self.useOSS:
             self.C_SourceFile.write(
                 "#include \"%s.oss.h\" // OSS generated\n" % self.asn_name)
@@ -419,7 +420,15 @@ class QGenCGlueGenerator(SynchronousToolGlueGenerator):
         self.C_SourceFile.write("static comp_Output cOutput;\n\n")
         self.g_FVname = subProgram._id
 
-    def SourceVar(self, unused_nodeTypename, unused_encoding, unused_node, unused_subProgram, unused_subProgramImplementation, param, unused_leafTypeDict, unused_names):
+    def SourceVar(self,
+                  unused_nodeTypename: str,
+                  unused_encoding: str,
+                  unused_node: AsnNode,
+                  unused_subProgram: ApLevelContainer,
+                  unused_subProgramImplementation: str,
+                  param: Param,
+                  unused_leafTypeDict: AST_Leaftypes,
+                  unused_names: AST_Lookup) -> str:
         if isinstance(param._sourceElement, AadlPort):
             srcQGenC = "cOutput.%s" % param._id  # pragma: no cover
         elif isinstance(param._sourceElement, AadlParameter):
@@ -428,7 +437,15 @@ class QGenCGlueGenerator(SynchronousToolGlueGenerator):
             panicWithCallStack("%s not supported (yet?)\n" % str(param._sourceElement))  # pragma: no cover
         return srcQGenC
 
-    def TargetVar(self, unused_nodeTypename, unused_encoding, unused_node, unused_subProgram, unused_subProgramImplementation, param, unused_leafTypeDict, unused_names):
+    def TargetVar(self,
+                  unused_nodeTypename: str,
+                  unused_encoding: str,
+                  unused_node: AsnNode,
+                  unused_subProgram: ApLevelContainer,
+                  unused_subProgramImplementation: str,
+                  param: Param,
+                  unused_leafTypeDict: AST_Leaftypes,
+                  unused_names: AST_Lookup) -> str:
         if isinstance(param._sourceElement, AadlPort):
             dstQGenC = "cInput.%s" % param._id  # pragma: no cover
         elif isinstance(param._sourceElement, AadlParameter):
@@ -437,14 +454,14 @@ class QGenCGlueGenerator(SynchronousToolGlueGenerator):
             panicWithCallStack("%s not supported (yet?)\n" % str(param._sourceElement))  # pragma: no cover
         return dstQGenC
 
-    def InitializeBlock(self, unused_modelingLanguage, unused_asnFile, unused_sp, unused_subProgramImplementation, unused_maybeFVname):
+    def InitializeBlock(self, unused_modelingLanguage: str, unused_asnFile: str, unused_sp: ApLevelContainer, unused_subProgramImplementation: str, unused_maybeFVname: str) -> None:
         self.C_SourceFile.write("    static int initialized = 0;\n")
         self.C_SourceFile.write("    if (!initialized) {\n")
         self.C_SourceFile.write("        initialized = 1;\n")
         self.C_SourceFile.write("        %s_init();\n" % self.g_FVname)
         self.C_SourceFile.write("    }\n")
 
-    def ExecuteBlock(self, unused_modelingLanguage, unused_asnFile, unused_sp, unused_subProgramImplementation, unused_maybeFVname):
+    def ExecuteBlock(self, unused_modelingLanguage: str, unused_asnFile: str, unused_sp: ApLevelContainer, unused_subProgramImplementation: str, unused_maybeFVname: str) -> None:
         self.C_SourceFile.write("#ifndef rtmGetStopRequested\n")
         self.C_SourceFile.write("    %s_comp(&cInput, &cOutput);\n" % self.g_FVname)
         self.C_SourceFile.write("#else\n")
@@ -456,39 +473,39 @@ class QGenCGlueGenerator(SynchronousToolGlueGenerator):
         self.C_SourceFile.write("#endif\n")
 
 
-def OnStartup(modelingLanguage, asnFile, subProgram, subProgramImplementation, outputDir, maybeFVname, useOSS):
+def OnStartup(modelingLanguage: str, asnFile: str, subProgram: ApLevelContainer, subProgramImplementation: str, outputDir: str, maybeFVname: str, useOSS: bool) -> None:
     global qgencBackend
     qgencBackend = QGenCGlueGenerator()
     qgencBackend.OnStartup(modelingLanguage, asnFile, subProgram, subProgramImplementation, outputDir, maybeFVname, useOSS)
 
 
-def OnBasic(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+def OnBasic(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     qgencBackend.OnBasic(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
-def OnSequence(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+def OnSequence(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     qgencBackend.OnSequence(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
-def OnSet(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+def OnSet(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     qgencBackend.OnSet(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)  # pragma: nocover
 
 
-def OnEnumerated(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+def OnEnumerated(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     qgencBackend.OnEnumerated(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
-def OnSequenceOf(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+def OnSequenceOf(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     qgencBackend.OnSequenceOf(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
-def OnSetOf(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+def OnSetOf(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     qgencBackend.OnSetOf(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)  # pragma: nocover
 
 
-def OnChoice(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+def OnChoice(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     qgencBackend.OnChoice(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
-def OnShutdown(modelingLanguage, asnFile, sp, subProgramImplementation, maybeFVname):
+def OnShutdown(modelingLanguage: str, asnFile: str, sp: ApLevelContainer, subProgramImplementation: str, maybeFVname: str) -> None:
     qgencBackend.OnShutdown(modelingLanguage, asnFile, sp, subProgramImplementation, maybeFVname)

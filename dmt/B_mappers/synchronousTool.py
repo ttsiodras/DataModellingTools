@@ -24,16 +24,20 @@ Base class for all synchronous tools
 import re
 import os
 
-from typing import IO, Any  # NOQA pylint: disable=unused-import
+from typing import IO, Any, Generic, TypeVar  # NOQA pylint: disable=unused-import
 
 from ..commonPy.utility import panic, inform, panicWithCallStack
 from ..commonPy.aadlAST import InParam, OutParam, InOutParam, ApLevelContainer, Param
-from ..commonPy.recursiveMapper import RecursiveMapper
+from ..commonPy.recursiveMapper import RecursiveMapperGeneric
 from ..commonPy.asnAST import AsnNode
 from ..commonPy.asnParser import AST_Lookup, AST_Leaftypes
 
 
-class SynchronousToolGlueGenerator:
+TSource = TypeVar('TSource')
+TDestin = TypeVar('TDestin')
+
+
+class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
 
     ##############################################
     # Parts to override for each synchronous tool
@@ -41,25 +45,25 @@ class SynchronousToolGlueGenerator:
     def Version(self) -> None:  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a SynchronousToolGlueGenerator...")  # pragma: no cover
 
-    def FromToolToASN1SCC(self) -> RecursiveMapper:  # pylint: disable=no-self-use
+    def FromToolToASN1SCC(self) -> RecursiveMapperGeneric:  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a SynchronousToolGlueGenerator...")  # pragma: no cover
 
-    def FromToolToOSS(self) -> RecursiveMapper:  # pylint: disable=no-self-use
+    def FromToolToOSS(self) -> RecursiveMapperGeneric:  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a SynchronousToolGlueGenerator...")  # pragma: no cover
 
-    def FromASN1SCCtoTool(self) -> RecursiveMapper:  # pylint: disable=no-self-use
+    def FromASN1SCCtoTool(self) -> RecursiveMapperGeneric:  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a SynchronousToolGlueGenerator...")  # pragma: no cover
 
-    def FromOSStoTool(self) -> RecursiveMapper:  # pylint: disable=no-self-use
+    def FromOSStoTool(self) -> RecursiveMapperGeneric:  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a SynchronousToolGlueGenerator...")  # pragma: no cover
 
     def HeadersOnStartup(self, unused_modelingLanguage: str, unused_asnFile: str, unused_subProgram: ApLevelContainer, unused_subProgramImplementation: str, unused_outputDir: str, unused_maybeFVname: str) -> None:  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a SynchronousToolGlueGenerator...")  # pragma: no cover
 
-    def SourceVar(self, unused_nodeTypename: str, unused_encoding: str, unused_node: AsnNode, unused_subProgram: ApLevelContainer, unused_subProgramImplementation: str, unused_param: Param, unused_leafTypeDict: AST_Leaftypes, unused_names: AST_Lookup) -> str:  # pylint: disable=no-self-use
+    def SourceVar(self, unused_nodeTypename: str, unused_encoding: str, unused_node: AsnNode, unused_subProgram: ApLevelContainer, unused_subProgramImplementation: str, unused_param: Param, unused_leafTypeDict: AST_Leaftypes, unused_names: AST_Lookup) -> TSource:  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a SynchronousToolGlueGenerator...")  # pragma: no cover
 
-    def TargetVar(self, unused_nodeTypename: str, unused_encoding: str, unused_node: AsnNode, unused_subProgram: ApLevelContainer, unused_subProgramImplementation: str, unused_param: Param, unused_leafTypeDict: AST_Leaftypes, unused_names: AST_Lookup) -> str:  # pylint: disable=no-self-use
+    def TargetVar(self, unused_nodeTypename: str, unused_encoding: str, unused_node: AsnNode, unused_subProgram: ApLevelContainer, unused_subProgramImplementation: str, unused_param: Param, unused_leafTypeDict: AST_Leaftypes, unused_names: AST_Lookup) -> TDestin:  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a SynchronousToolGlueGenerator...")  # pragma: no cover
 
     def InitializeBlock(self, unused_modelingLanguage: str, unused_asnFile: str, unused_sp: ApLevelContainer, unused_subProgramImplementation: str, unused_maybeFVname: str) -> None:  # pylint: disable=no-self-use
@@ -662,3 +666,6 @@ class SynchronousToolGlueGenerator:
                 "end Ada_Execute_%s;\n\n" %
                 self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation))
             self.ADA_SourceFile.write('\nend %s;\n' % self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation))
+
+
+SynchronousToolGlueGenerator = SynchronousToolGlueGeneratorGeneric[str, str]

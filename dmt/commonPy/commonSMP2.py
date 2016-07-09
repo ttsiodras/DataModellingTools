@@ -6,7 +6,8 @@ from typing import List, Union, Optional, Any, Tuple, Dict  # NOQA pylint: disab
 from lxml import etree
 from .asnAST import (
     AsnBool, AsnInt, AsnReal, AsnEnumerated, AsnOctetString, AsnSequenceOf,
-    AsnSet, AsnSetOf, AsnSequence, AsnChoice, AsnMetaMember, AsnNode, Lookup)
+    AsnSet, AsnSetOf, AsnSequence, AsnChoice, AsnMetaMember, AsnNode)
+from .asnParser import AST_Lookup
 
 # Level of verbosity
 g_verboseLevel = 0
@@ -283,7 +284,7 @@ def MapSMP2Type(
     panic("Failed to map... (%s)" % attrs.type, location)  # pragma: no cover
 
 
-def FixupOutOfOrderIdReferences(nodeTypename: str, asnTypesDict: Lookup, idToTypeDict: Dict[str, str]) -> None:
+def FixupOutOfOrderIdReferences(nodeTypename: str, asnTypesDict: AST_Lookup, idToTypeDict: Dict[str, str]) -> None:
     """Based on the uniqueness of the 'Id' elements used in
     'xlink:href' remote references, we resolve the lookups of
     remote types that we stored in AsnMetaMembers during MapSMP2Type()."""
@@ -312,7 +313,7 @@ def FixupOutOfOrderIdReferences(nodeTypename: str, asnTypesDict: Lookup, idToTyp
 
 
 def ConvertCatalogueToASN_AST(
-        inputSmp2Files: List[str]) -> Tuple[Lookup, Dict[str, str]]:  # pylint: disable=invalid-sequence-index
+        inputSmp2Files: List[str]) -> Tuple[AST_Lookup, Dict[str, str]]:  # pylint: disable=invalid-sequence-index
     """Converts a list of input SMP2 Catalogues into an ASN.1 AST,
     which it returns to the caller."""
     asnTypesDict = DashUnderscoreAgnosticDict()

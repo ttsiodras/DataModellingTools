@@ -87,7 +87,7 @@ def OnChoice(unused_nodeTypename: str, unused_node: AsnChoice, unused_leafTypeDi
 #     return outputText
 
 
-def OnShutdown(unused_badTypes):
+def OnShutdown(unused_badTypes: SetOfBadTypenames) -> None:
     # text = open(g_asnFile, 'r').read()
     # text = re.sub(r'^.*BEGIN', 'Datamodel DEFINITIONS ::= BEGIN', text)
     # text = re.sub(r'--.*', '', text)

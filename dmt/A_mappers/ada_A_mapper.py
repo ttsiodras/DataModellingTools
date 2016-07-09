@@ -33,7 +33,7 @@ from ..commonPy.asnAST import AsnBasicNode, AsnSequenceOrSet, AsnSequenceOrSetOf
 from ..commonPy.asnParser import AST_Leaftypes
 
 
-def Version():
+def Version() -> None:
     print("Code generator: " + "$Id: ada_A_mapper.py 2382 2012-06-22 08:35:33Z ttsiodras $")  # pragma: no cover
 
 
@@ -81,5 +81,5 @@ def OnChoice(unused_nodeTypename: str, unused_node: AsnChoice, unused_leafTypeDi
     pass  # pragma: no cover
 
 
-def OnShutdown(unused_badTypes):
+def OnShutdown(unused_badTypes: SetOfBadTypenames) -> None:
     pass  # pragma: no cover

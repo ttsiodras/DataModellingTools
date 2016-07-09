@@ -34,7 +34,7 @@ from ..commonPy.utility import panic
 from ..commonPy.asnAST import (
     sourceSequenceLimit, isSequenceVariable, AsnInt, AsnReal, AsnEnumerated,
     AsnBool, AsnSequenceOrSet, AsnSequenceOrSetOf, AsnChoice, AsnOctetString,
-    AsnBasicNode)
+    AsnBasicNode, AsnNode, AsnSequence, AsnSet, AsnSetOf, AsnSequenceOf)
 from ..commonPy.asnParser import AST_Lookup, AST_Leaftypes
 from ..commonPy.recursiveMapper import RecursiveMapper
 from .asynchronousTool import ASynchronousToolGlueGenerator
@@ -46,21 +46,21 @@ rtdsBackend = None
 cBackend = None
 
 
-def Version():
+def Version() -> None:
     print("Code generator: " + "$Id: rtds_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")
 
 
 # noinspection PyListCreation
 # pylint: disable=no-self-use
 class FromRTDSToASN1SCC(RecursiveMapper):
-    def __init__(self):
+    def __init__(self) -> None:
         self.uniqueID = 0
 
-    def UniqueID(self):
+    def UniqueID(self) -> int:
         self.uniqueID += 1
         return self.uniqueID
 
-    def DecreaseUniqueID(self):
+    def DecreaseUniqueID(self) -> None:
         self.uniqueID -= 1
 
     def MapInteger(self, srcSDLVariable: str, destVar: str, _: AsnInt, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
@@ -150,14 +150,14 @@ class FromRTDSToASN1SCC(RecursiveMapper):
 # noinspection PyListCreation
 # pylint: disable=no-self-use
 class FromRTDSToOSS(RecursiveMapper):
-    def __init__(self):
+    def __init__(self) -> None:
         self.uniqueID = 0
 
-    def UniqueID(self):
+    def UniqueID(self) -> int:
         self.uniqueID += 1
         return self.uniqueID
 
-    def DecreaseUniqueID(self):
+    def DecreaseUniqueID(self) -> None:
         self.uniqueID -= 1
 
     def MapInteger(self, srcSDLVariable: str, destVar: str, _: AsnInt, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
@@ -254,14 +254,14 @@ class FromRTDSToOSS(RecursiveMapper):
 # noinspection PyListCreation
 # pylint: disable=no-self-use
 class FromASN1SCCtoRTDS(RecursiveMapper):
-    def __init__(self):
+    def __init__(self) -> None:
         self.uniqueID = 0
 
-    def UniqueID(self):
+    def UniqueID(self) -> int:
         self.uniqueID += 1
         return self.uniqueID
 
-    def DecreaseUniqueID(self):
+    def DecreaseUniqueID(self) -> None:
         self.uniqueID -= 1
 
     def MapInteger(self, srcVar: str, dstSDLVariable: str, _: AsnInt, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
@@ -356,14 +356,14 @@ class FromASN1SCCtoRTDS(RecursiveMapper):
 # noinspection PyListCreation
 # pylint: disable=no-self-use
 class FromOSStoRTDS(RecursiveMapper):
-    def __init__(self):
+    def __init__(self) -> None:
         self.uniqueID = 0
 
-    def UniqueID(self):
+    def UniqueID(self) -> int:
         self.uniqueID += 1
         return self.uniqueID
 
-    def DecreaseUniqueID(self):
+    def DecreaseUniqueID(self) -> None:
         self.uniqueID -= 1
 
     def MapInteger(self, srcVar: str, dstSDLVariable: str, _: AsnInt, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
@@ -471,23 +471,23 @@ class FromOSStoRTDS(RecursiveMapper):
 
 
 class RTDS_GlueGenerator(ASynchronousToolGlueGenerator):
-    def __init__(self):
+    def __init__(self) -> None:
         ASynchronousToolGlueGenerator.__init__(self)
         self.FromRTDSToASN1SCC = FromRTDSToASN1SCC()
         self.FromRTDSToOSS = FromRTDSToOSS()
         self.FromASN1SCCtoRTDS = FromASN1SCCtoRTDS()
         self.FromOSStoRTDS = FromOSStoRTDS()
 
-    def Version(self):
+    def Version(self) -> None:
         print("Code generator: " + "$Id: rtds_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")
 
-    def HeadersOnStartup(self, unused_asnFile, unused_outputDir, unused_maybeFVname):
+    def HeadersOnStartup(self, unused_asnFile: str, unused_outputDir: str, unused_maybeFVname: str) -> None:
         self.C_HeaderFile.write("#include <assert.h>\n\n")
         self.C_HeaderFile.write("#include \"%s.h\"\n" % self.asn_name)
         self.C_HeaderFile.write("#include \"RTDS_gen.h\"\n\n")
         self.C_HeaderFile.write("#include \"RTDSdataView.h\"\n\n")
 
-    def Encoder(self, nodeTypename, node, leafTypeDict, names, encoding):
+    def Encoder(self, nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup, encoding: str) -> None:
         if encoding.lower() in ["uper", "acn"]:
             return
         fileOutHeader = self.C_HeaderFile
@@ -523,7 +523,7 @@ class RTDS_GlueGenerator(ASynchronousToolGlueGenerator):
         fileOutSource.write("\n".join(lines))
         fileOutSource.write("\n}\n\n")
 
-    def Decoder(self, nodeTypename, node, leafTypeDict, names, encoding):
+    def Decoder(self, nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup, encoding: str) -> None:
         if encoding.lower() in ["uper", "acn"]:
             return
         fileOutHeader = self.C_HeaderFile
@@ -557,7 +557,7 @@ class RTDS_GlueGenerator(ASynchronousToolGlueGenerator):
         fileOutSource.write("\n}\n\n")
 
 
-def OnStartup(modelingLanguage, asnFile, outputDir, maybeFVname, useOSS):
+def OnStartup(modelingLanguage: str, asnFile: str, outputDir: str, maybeFVname: str, useOSS: bool) -> None:
     global rtdsBackend
     rtdsBackend = RTDS_GlueGenerator()
     rtdsBackend.OnStartup(modelingLanguage, asnFile, outputDir, maybeFVname, useOSS)
@@ -566,41 +566,41 @@ def OnStartup(modelingLanguage, asnFile, outputDir, maybeFVname, useOSS):
     cBackend.OnStartup("C", asnFile, outputDir, maybeFVname, useOSS)
 
 
-def OnBasic(nodeTypename, node, leafTypeDict, names):
+def OnBasic(nodeTypename: str, node: AsnBasicNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     rtdsBackend.OnBasic(nodeTypename, node, leafTypeDict, names)
     cBackend.OnBasic(nodeTypename, node, leafTypeDict, names)
 
 
-def OnSequence(nodeTypename, node, leafTypeDict, names):
+def OnSequence(nodeTypename: str, node: AsnSequence, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     rtdsBackend.OnSequence(nodeTypename, node, leafTypeDict, names)
     cBackend.OnSequence(nodeTypename, node, leafTypeDict, names)
 
 
-def OnSet(nodeTypename, node, leafTypeDict, names):
+def OnSet(nodeTypename: str, node: AsnSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     rtdsBackend.OnSet(nodeTypename, node, leafTypeDict, names)  # pragma: nocover
     cBackend.OnSet(nodeTypename, node, leafTypeDict, names)  # pragma: nocover
 
 
-def OnEnumerated(nodeTypename, node, leafTypeDict, names):
+def OnEnumerated(nodeTypename: str, node: AsnEnumerated, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     rtdsBackend.OnEnumerated(nodeTypename, node, leafTypeDict, names)
     cBackend.OnEnumerated(nodeTypename, node, leafTypeDict, names)
 
 
-def OnSequenceOf(nodeTypename, node, leafTypeDict, names):
+def OnSequenceOf(nodeTypename: str, node: AsnSequenceOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     rtdsBackend.OnSequenceOf(nodeTypename, node, leafTypeDict, names)
     cBackend.OnSequenceOf(nodeTypename, node, leafTypeDict, names)
 
 
-def OnSetOf(nodeTypename, node, leafTypeDict, names):
+def OnSetOf(nodeTypename: str, node: AsnSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     rtdsBackend.OnSetOf(nodeTypename, node, leafTypeDict, names)  # pragma: nocover
     cBackend.OnSetOf(nodeTypename, node, leafTypeDict, names)  # pragma: nocover
 
 
-def OnChoice(nodeTypename, node, leafTypeDict, names):
+def OnChoice(nodeTypename: str, node: AsnChoice, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     rtdsBackend.OnChoice(nodeTypename, node, leafTypeDict, names)
     cBackend.OnChoice(nodeTypename, node, leafTypeDict, names)
 
 
-def OnShutdown(modelingLanguage, asnFile, maybeFVname):
+def OnShutdown(modelingLanguage: str, asnFile: str, maybeFVname: str) -> None:
     rtdsBackend.OnShutdown(modelingLanguage, asnFile, maybeFVname)
     cBackend.OnShutdown("C", asnFile, maybeFVname)

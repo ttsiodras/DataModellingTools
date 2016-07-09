@@ -39,7 +39,7 @@ import sys
 import copy
 from importlib import import_module
 
-from typing import Tuple, Any  # NOQA pylint: disable=unused-import
+from typing import Dict, Tuple, Any  # NOQA pylint: disable=unused-import
 
 from .commonPy import configMT, asnParser, cleanupNodes, verify
 from .commonPy.utility import inform, panic
@@ -49,7 +49,7 @@ from .commonPy.asnAST import AsnNode  # NOQA pylint: disable=unused-import
 from . import A_mappers  # NOQA pylint:disable=unused-import
 
 
-def usage(argsToTools):
+def usage(argsToTools: Dict[str, str]) -> None:
     '''Print usage instructions.'''
     msg = 'Usage: %s <options> input1.asn1 [input2.asn1]...\nWhere options are:\n'
     msg += '\t-verbose\t\tDisplay more debug output\n'
@@ -59,7 +59,7 @@ def usage(argsToTools):
     panic(msg % sys.argv[0])
 
 
-def main():
+def main() -> None:
     argsToTools = {
         'toOG': 'OG',
         'toSCADE5': 'SCADE5',

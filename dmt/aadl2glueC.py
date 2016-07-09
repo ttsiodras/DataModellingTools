@@ -84,7 +84,7 @@ import copy
 import distutils.spawn as spawn
 from importlib import import_module
 
-from typing import Tuple, Any  # NOQA pylint: disable=unused-import
+from typing import Dict, List, Tuple, Any  # NOQA pylint: disable=unused-import
 
 from . import commonPy
 
@@ -111,7 +111,7 @@ g_mappedName = {
 }
 
 
-def ParseAADLfilesAndResolveSignals():
+def ParseAADLfilesAndResolveSignals() -> None:
     '''Invokes the ANTLR generated AADL parser, and resolves
 all references to AAADL Data types into the param._signal member
 of each SUBPROGRAM param.'''
@@ -127,8 +127,8 @@ of each SUBPROGRAM param.'''
             os.unlink(astFile)
         panic("AADL parsing failed. Aborting...")
 
-    def FixMetaClasses(sp):
-        def patchMe(o):
+    def FixMetaClasses(sp: ApLevelContainer) -> None:
+        def patchMe(o: Any) -> None:
             try:
                 python2className = str(o.__class__).split("'")[1]
                 if 'commonPy2' in python2className:
@@ -144,8 +144,8 @@ of each SUBPROGRAM param.'''
             patchMe(param)
             patchMe(param._signal)
             patchMe(param._sourceElement)
-        for c in sp._calls:
-            patchMe(c)
+        # for c in sp._calls:
+        #     patchMe(c)
         for cn in sp._connections:
             patchMe(cn)
     try:
@@ -168,7 +168,10 @@ of each SUBPROGRAM param.'''
         panic(str(e))
 
 
-def SpecialCodes(unused_SystemsAndImplementations, unused_uniqueDataFiles, asnFiles, unused_useOSS):
+def SpecialCodes(unused_SystemsAndImplementations: List[Tuple[str, str, str, str]],
+                 unused_uniqueDataFiles: Dict[Filename, Dict[str, List[ApLevelContainer]]],  # pylint: disable=invalid-sequence-index
+                 asnFiles: Dict[Filename, Tuple[AST_Lookup, List[AsnNode], AST_Leaftypes]],  # pylint: disable=invalid-sequence-index
+                 unused_useOSS: bool) -> None:
     '''This function handles the code generations needs that reside outside
 the scope of individual parameters (e.g. it needs access to all ASN.1
 types). This used to cover Dumpable C/Ada Types and OG headers.'''
@@ -181,7 +184,7 @@ types). This used to cover Dumpable C/Ada Types and OG headers.'''
                   .format(asn1SccPath, outputDir, '" "'.join(asnFiles)))
 
 
-def main():
+def main() -> None:
     if sys.argv.count("-o") != 0:
         idx = sys.argv.index("-o")
         try:
@@ -387,7 +390,7 @@ def main():
     workedOnGUIs = False
     workedOnVHDL = False
 
-    def mappers(lang):
+    def mappers(lang: str) -> List[Any]:  # pylint: disable=invalid-sequence-index
         if lang.lower() in ["gui_pi", "gui_ri"]:
             return [import_module(".python_B_mapper", "dmt.B_mappers"),
                     import_module(".pyside_B_mapper", "dmt.B_mappers")]  # pragma: no cover

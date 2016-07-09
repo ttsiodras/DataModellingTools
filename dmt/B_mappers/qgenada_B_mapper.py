@@ -44,18 +44,20 @@ output parameters, which have Ada callable interfaces.
 # from asynchronousTool import ASynchronousToolGlueGenerator
 
 from . import c_B_mapper
+from ..commonPy.asnAST import AsnBasicNode, AsnSequence, AsnSet, AsnEnumerated, AsnSequenceOf, AsnSetOf, AsnChoice
+from ..commonPy.asnParser import AST_Lookup, AST_Leaftypes
 
 isAsynchronous = True
 cBackend = None
 
 
-def Version():
+def Version() -> None:
     print("Code generator: " + "$Id: qgenada_B_mapper.py $")  # pragma: no cover
 
 # All the ada B mapper is now Obsolete, we are using ASN1SCC for Dumpables
 
 
-def OnStartup(unused_modelingLanguage, asnFile, outputDir, maybeFVname, useOSS):
+def OnStartup(unused_modelingLanguage: str, asnFile: str, outputDir: str, maybeFVname: str, useOSS: bool) -> None:
     global cBackend
     # 2009-02-10: Since we now use ASN1SCC structures as dumpables (even for Ada)
     # we no longer need these Ada-specific Dumpable structures.
@@ -63,33 +65,33 @@ def OnStartup(unused_modelingLanguage, asnFile, outputDir, maybeFVname, useOSS):
     cBackend.OnStartup("C", asnFile, outputDir, maybeFVname, useOSS)
 
 
-def OnBasic(nodeTypename, node, leafTypeDict, names):
+def OnBasic(nodeTypename: str, node: AsnBasicNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     cBackend.OnBasic(nodeTypename, node, leafTypeDict, names)
 
 
-def OnSequence(nodeTypename, node, leafTypeDict, names):
+def OnSequence(nodeTypename: str, node: AsnSequence, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     cBackend.OnSequence(nodeTypename, node, leafTypeDict, names)
 
 
-def OnSet(nodeTypename, node, leafTypeDict, names):
+def OnSet(nodeTypename: str, node: AsnSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     cBackend.OnSet(nodeTypename, node, leafTypeDict, names)  # pragma: nocover
 
 
-def OnEnumerated(nodeTypename, node, leafTypeDict, names):
+def OnEnumerated(nodeTypename: str, node: AsnEnumerated, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     cBackend.OnEnumerated(nodeTypename, node, leafTypeDict, names)
 
 
-def OnSequenceOf(nodeTypename, node, leafTypeDict, names):
+def OnSequenceOf(nodeTypename: str, node: AsnSequenceOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     cBackend.OnSequenceOf(nodeTypename, node, leafTypeDict, names)
 
 
-def OnSetOf(nodeTypename, node, leafTypeDict, names):
+def OnSetOf(nodeTypename: str, node: AsnSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     cBackend.OnSetOf(nodeTypename, node, leafTypeDict, names)  # pragma: nocover
 
 
-def OnChoice(nodeTypename, node, leafTypeDict, names):
+def OnChoice(nodeTypename: str, node: AsnChoice, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     cBackend.OnChoice(nodeTypename, node, leafTypeDict, names)
 
 
-def OnShutdown(unused_modelingLanguage, asnFile, maybeFVname):
+def OnShutdown(unused_modelingLanguage: str, asnFile: str, maybeFVname: str) -> None:
     cBackend.OnShutdown("C", asnFile, maybeFVname)

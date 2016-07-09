@@ -25,9 +25,9 @@ import os
 import re
 import random
 
-from typing import List, Set, IO, Any  # NOQA pylint: disable=unused-import
+from typing import Dict, List, Set, IO, Any  # NOQA pylint: disable=unused-import
 
-from ..commonPy.asnAST import AsnMetaMember, AsnChoice, AsnSet, AsnSequence, AsnSequenceOf, AsnSetOf
+from ..commonPy.asnAST import AsnMetaMember, AsnChoice, AsnSet, AsnSequence, AsnSequenceOf, AsnSetOf, AsnBool, AsnInt, AsnReal, AsnOctetString
 from ..commonPy.asnParser import g_names, g_leafTypeDict, CleanNameForAST
 from ..commonPy.utility import panic, warn
 from ..commonPy.cleanupNodes import SetOfBadTypenames
@@ -41,13 +41,13 @@ g_outputDir = "."
 g_asnFiles = None
 
 
-def Version():
+def Version() -> None:
     print("Code generator: " + "$Id: smp2_A_mapper.py 1932 2010-06-15 13:41:15Z ttsiodras $")  # pragma: no cover
 
 
 # noinspection PyDefaultArgument
-def getUID(strIdentifier, idStore={}):  # pylint: disable=dangerous-default-value
-    def h(digits):
+def getUID(strIdentifier: str, idStore: Dict[str, str]={}) -> str:  # pylint: disable=dangerous-default-value
+    def h(digits: int) -> str:
         ret = ""
         for _ in range(0, digits):
             ret += random.choice('0123456789abcdef')
@@ -60,14 +60,14 @@ def getUID(strIdentifier, idStore={}):  # pylint: disable=dangerous-default-valu
 g_dependencyGraph = {}  # type: Dict[str, Dict[str, int]]
 
 
-def FixupAstForSMP2():
+def FixupAstForSMP2() -> None:
     '''
     Find all the SEQUENCE, CHOICE and SEQUENCE OFs
     and make sure the contained types are not "naked" (i.e. unnamed)
     '''
     internalNo = 1
 
-    def neededToAddPseudoType():
+    def neededToAddPseudoType() -> bool:
         nonlocal internalNo
         addedNewPseudoType = False
         listOfTypenames = sorted(list(g_names.keys()) + list(g_innerTypes))
@@ -144,7 +144,7 @@ def OnStartup(unused_modelingLanguage: str, asnFiles: List[str], outputDir: str,
     FixupAstForSMP2()
 
 
-def CleanName(fieldName):
+def CleanName(fieldName: str) -> str:
     return re.sub(r'[^a-zA-Z0-9_]', '_', fieldName)
 
 
@@ -152,7 +152,7 @@ def OnBasic(unused_nodeTypename: str, unused_node: AsnBasicNode, unused_leafType
     pass  # pragma: no cover
 
 
-def CreateBasic(nodeTypename, node, leafTypeDict):
+def CreateBasic(nodeTypename: str, node: AsnBasicNode, leafTypeDict: AST_Leaftypes) -> None:
     baseType = leafTypeDict[node._leafType]
     xsitype = {
         'INTEGER': 'Types:Integer',
@@ -161,11 +161,11 @@ def CreateBasic(nodeTypename, node, leafTypeDict):
         'OCTET STRING': 'Types:Array'
     }[baseType]
     span = ""
-    if baseType == 'BOOLEAN':
+    if isinstance(node, AsnBool):
         span = 'Minimum="0" Maximum="1"'
-    elif baseType in ['INTEGER', 'REAL'] and node._range:
+    elif isinstance(node, (AsnInt, AsnReal)) and node._range:
         span = 'Minimum="%s" Maximum="%s"' % (node._range[0], node._range[-1])
-    elif baseType == 'OCTET STRING':
+    elif isinstance(node, AsnOctetString):
         span = 'Size="%s"' % node._range[-1]
     uid = getUID(nodeTypename)
     d = {"uid": uid, "xsitype": xsitype, "name": CleanName(nodeTypename), "range": span}
@@ -189,7 +189,7 @@ def OnSequence(unused_nodeTypename: str, unused_node: AsnSequenceOrSet, unused_l
     pass  # pragma: no cover
 
 
-def CreateSequence(nodeTypename, node, unused_leafTypeDict):
+def CreateSequence(nodeTypename: str, node: AsnSequenceOrSet, unused_leafTypeDict: AST_Leaftypes) -> None:
     uid = getUID(nodeTypename)
     d = {"uid": uid, "name": CleanName(nodeTypename)}
     g_catalogueXML.write('    <Type xsi:type="Types:Structure" Id="ID_%(uid)s" Name="%(name)s">\n' % d)
@@ -220,7 +220,7 @@ def OnEnumerated(unused_nodeTypename: str, unused_node: AsnEnumerated, unused_le
     pass  # pragma: no cover
 
 
-def CreateEnumerated(nodeTypename, node, unused_leafTypeDict):
+def CreateEnumerated(nodeTypename: str, node: AsnEnumerated, unused_leafTypeDict: AST_Leaftypes) -> None:
     uid = getUID(nodeTypename)
     d = {"uid": uid, "name": CleanName(nodeTypename)}
     g_catalogueXML.write('    <Type xsi:type="Types:Enumeration" Id="ID_%(uid)s" Name="%(name)s">\n' % d)
@@ -239,7 +239,7 @@ def OnSequenceOf(unused_nodeTypename: str, unused_node: AsnSequenceOrSetOf, unus
     pass  # pragma: no cover
 
 
-def CreateSequenceOf(nodeTypename, node, unused_leafTypeDict):
+def CreateSequenceOf(nodeTypename: str, node: AsnSequenceOrSetOf, unused_leafTypeDict: AST_Leaftypes) -> None:
     uid = getUID(nodeTypename)
     d = {"uid": uid, "name": CleanName(nodeTypename), "sz": node._range[-1]}
     g_catalogueXML.write('    <Type xsi:type="Types:Array" Id="ID_%(uid)s" Name="%(name)s" Size="%(sz)s">\n' % d)
@@ -272,7 +272,7 @@ def OnChoice(unused_nodeTypename: str, unused_node: AsnChoice, unused_leafTypeDi
     pass  # pragma: no cover
 
 
-def CreateChoice(nodeTypename, node, _):
+def CreateChoice(nodeTypename: str, node: AsnChoice, _: AST_Leaftypes) -> None:
     uid = getUID(nodeTypename)
     d = {"uid": uid, "name": CleanName(nodeTypename)}
     g_catalogueXML.write('    <Type xsi:type="Types:Structure" Id="ID_%(uid)s" Name="%(name)s">\n' % d)
@@ -302,7 +302,7 @@ def CreateChoice(nodeTypename, node, _):
 g_bShutdownRun = False
 
 
-def OnShutdown(badTypes: SetOfBadTypenames):
+def OnShutdown(badTypes: SetOfBadTypenames) -> None:
     global g_bShutdownRun
     if g_bShutdownRun:
         return   # pragma: no cover
@@ -348,15 +348,15 @@ def OnShutdown(badTypes: SetOfBadTypenames):
             node = g_names[nodeTypename]
             assert nodeTypename in g_leafTypeDict
             leafType = g_leafTypeDict[nodeTypename]
-            if leafType in ['BOOLEAN', 'INTEGER', 'REAL', 'OCTET STRING']:
+            if isinstance(node, AsnBasicNode):
                 CreateBasic(nodeTypename, node, g_leafTypeDict)
-            elif leafType in ['SEQUENCE', 'SET']:
+            elif isinstance(node, (AsnSequence, AsnSet)):
                 CreateSequence(nodeTypename, node, g_leafTypeDict)
-            elif leafType == 'CHOICE':
+            elif isinstance(node, AsnChoice):
                 CreateChoice(nodeTypename, node, g_leafTypeDict)
-            elif leafType in ['SEQUENCEOF', 'SETOF']:
+            elif isinstance(node, (AsnSequenceOf, AsnSetOf)):
                 CreateSequenceOf(nodeTypename, node, g_leafTypeDict)
-            elif leafType == 'ENUMERATED':
+            elif isinstance(node, AsnEnumerated):
                 CreateEnumerated(nodeTypename, node, g_leafTypeDict)
             else:  # pragma: no cover
                 warn("Ignoring unsupported node type: %s (%s)" % (leafType, nodeTypename))  # pragma: no cover

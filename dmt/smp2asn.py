@@ -42,7 +42,7 @@ from .commonPy.commonSMP2 import (
     DashUnderscoreAgnosticDict, ConvertCatalogueToASN_AST)
 
 
-def usage(coloredMsg=""):
+def usage(coloredMsg: str="") -> None:
     '''Prints help message and aborts. '''
     usageMsg = 'Usage: smp2asn <options> <smp2Catalogues...>\n\n' \
         'Where options must include:\n' \
@@ -57,7 +57,7 @@ def usage(coloredMsg=""):
     panic(usageMsg, coloredMsg)
 
 
-def MergeASN1_AST(smp2AsnAST) -> Dict[str, str]:
+def MergeASN1_AST(smp2AsnAST: AST_Lookup) -> Dict[str, str]:
     '''Merges the ASN.1 AST generated from SMP2 files (smp2AsnAST param)
     into the ASN.1 AST stored in asnParser.g_names. Uses smart
     merging, i.e. diff-like semantics.'''
@@ -106,7 +106,7 @@ def MergeASN1_AST(smp2AsnAST) -> Dict[str, str]:
     return identicals
 
 
-def SaveASN_AST(bPruneUnnamedInnerTASTEtypes: bool, outputAsn1Grammar: str, identicals: Dict[str, str]):
+def SaveASN_AST(bPruneUnnamedInnerTASTEtypes: bool, outputAsn1Grammar: str, identicals: Dict[str, str]) -> None:
     d = DashUnderscoreAgnosticDict()
     for k, v in asnParser.g_names.items():
         d[k] = v
@@ -132,7 +132,7 @@ def SaveASN_AST(bPruneUnnamedInnerTASTEtypes: bool, outputAsn1Grammar: str, iden
         f.write('END\n')
 
 
-def main():
+def main() -> int:
     try:
         optlist, args = getopt.gnu_getopt(
             sys.argv[1:],
@@ -162,7 +162,7 @@ def main():
     if not outputAsn1Grammar:
         usage("Mandatory option (-o newAsnGrammar.asn) missing")  # pragma: no cover
 
-    def CheckFileExists(x):
+    def CheckFileExists(x: str) -> None:
         if not os.path.isfile(os.path.realpath(x)):
             usage("Input (%s) is not a file" % x)
     for f in inputSmp2Files:

@@ -28,7 +28,7 @@ import os
 import random
 
 from xml.dom.minidom import Document, Node  # type: ignore  # NOQA  pylint: disable=unused-import
-from typing import Set  # NOQA pylint: disable=unused-import
+from typing import Union, Set  # NOQA pylint: disable=unused-import
 
 from ..commonPy.utility import inform, panic
 from ..commonPy.asnAST import (
@@ -134,7 +134,7 @@ def OnStartup(unused_modelingLanguage: str, asnFile: str, outputDir: str, unused
     File.appendChild(g_Declarations)
 
 
-def RenderElements(controlString: str):
+def RenderElements(controlString: str) -> None:
     if controlString.endswith(","):
         controlString = controlString[:-1]
     createdElements = {}  # type: Dict[str, Node]
@@ -171,7 +171,7 @@ def RenderElements(controlString: str):
         parent = newElement  # pylint: disable=redefined-variable-type
 
 
-def GetOID(nodeTypename):
+def GetOID(nodeTypename: str) -> str:
     global g_currOid
     if nodeTypename not in g_oid:
         oid = hex(g_currOid)[2:] + g_mainOid + RandomHex(12)
@@ -182,17 +182,17 @@ def GetOID(nodeTypename):
     return oid
 
 
-def CheckPrerequisites(nodeTypename):
+def CheckPrerequisites(nodeTypename: str) -> None:
     names = asnParser.g_names
     leafTypeDict = asnParser.g_leafTypeDict
     if nodeTypename not in g_declaredTypes:
         node = names[nodeTypename]
         leafType = leafTypeDict[nodeTypename]
         # If it is a base type,
-        if leafType in ['BOOLEAN', 'INTEGER', 'REAL', 'OCTET STRING']:
+        if isinstance(node, AsnBasicNode):
             OnBasic(nodeTypename, node, leafTypeDict)
         # if it is a complex type
-        elif leafType in ['SEQUENCE', 'SET', 'CHOICE', 'SEQUENCEOF', 'SETOF', 'ENUMERATED']:
+        elif isinstance(node, (AsnSequence, AsnSet, AsnChoice, AsnSequenceOf, AsnSetOf, AsnEnumerated)):
             # make sure we have mapping instructions for the element
             mappedName = {
                 'SEQUENCE': 'OnSequence',
@@ -256,7 +256,10 @@ def OnBasic(nodeTypename: str, node: AsnBasicNode, unused_leafTypeDict: AST_Leaf
     RenderElements(controlString)
 
 
-def OnSequence(nodeTypename, node, unused_leafTypeDict, isChoice=False):
+def CommonSeqSetChoice(nodeTypename: str,
+                       node: Union[AsnSequence, AsnSet, AsnChoice],
+                       unused_leafTypeDict: AST_Leaftypes,
+                       isChoice: bool=False) -> None:
     if nodeTypename in g_declaredTypes:
         return
     g_declaredTypes.add(nodeTypename)
@@ -285,8 +288,16 @@ def OnSequence(nodeTypename, node, unused_leafTypeDict, isChoice=False):
     RenderElements(controlString)
 
 
+def OnSequence(nodeTypename: str, node: AsnSequenceOrSet, leafTypeDict: AST_Leaftypes) -> None:
+    CommonSeqSetChoice(nodeTypename, node, leafTypeDict)  # pragma: nocover
+
+
 def OnSet(nodeTypename: str, node: AsnSequenceOrSet, leafTypeDict: AST_Leaftypes) -> None:
-    OnSequence(nodeTypename, node, leafTypeDict)  # pragma: nocover
+    CommonSeqSetChoice(nodeTypename, node, leafTypeDict)  # pragma: nocover
+
+
+def OnChoice(nodeTypename: str, node: AsnChoice, leafTypeDict: AST_Leaftypes) -> None:
+    CommonSeqSetChoice(nodeTypename, node, leafTypeDict, isChoice=True)
 
 
 def OnEnumerated(nodeTypename: str, node: AsnEnumerated, unused_leafTypeDict: AST_Leaftypes) -> None:
@@ -347,11 +358,7 @@ def OnSetOf(nodeTypename: str, node: AsnSequenceOrSetOf, leafTypeDict: AST_Leaft
     OnSequenceOf(nodeTypename, node, leafTypeDict)  # pragma: nocover
 
 
-def OnChoice(nodeTypename: str, node: AsnChoice, leafTypeDict: AST_Leaftypes) -> None:
-    OnSequence(nodeTypename, node, leafTypeDict, isChoice=True)
-
-
-def OnShutdown(unused_badTypes):
+def OnShutdown(unused_badTypes: SetOfBadTypenames) -> None:
     g_outputFile.write(g_doc.toprettyxml(indent="    ", encoding="UTF-8"))
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
