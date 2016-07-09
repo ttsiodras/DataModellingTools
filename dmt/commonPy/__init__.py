@@ -15,7 +15,7 @@ from . import verify
 from . import recursiveMapper
 from . import cleanupNodes
 
-__version__ = "2.0.2"
+__version__ = "2.0.3"
 
 def print_version() -> None:
     print("TASTE Data Modelling Tools version {}\n\n"
