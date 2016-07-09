@@ -20,7 +20,7 @@ Installation
 
 For using the tools, this should suffice:
 
-    $ sudo apt-get install libxslt1-dev libxml2-dev python3-pip
+    $ sudo apt-get install libxslt1-dev libxml2-dev zlib1g-dev python3-pip
     $ pip3 install --user --upgrade .
 
 For developing the tools, the packaged Makefile allow for easy static-analysis
