@@ -212,6 +212,12 @@ Where <files> is a list of ASN.1 and ACN files, and options can be:
 
 
 def main():
+    if "-v" in sys.argv:
+        import pkg_resources
+        version = pkg_resources.require("dmt")[0].version
+        print("asn2aadlPlus v" + str(version))
+        sys.exit(1)
+
     global g_keepFiles
     global g_privateHeapSize
 

@@ -60,6 +60,12 @@ def usage(argsToTools: Dict[str, str]) -> None:
 
 
 def main() -> None:
+    if "-v" in sys.argv:
+        import pkg_resources
+        version = pkg_resources.require("dmt")[0].version
+        print("asn2dataModel v" + str(version))
+        sys.exit(1)
+
     argsToTools = {
         'toOG': 'OG',
         'toSCADE5': 'SCADE5',
