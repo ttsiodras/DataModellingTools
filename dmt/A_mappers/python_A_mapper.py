@@ -21,14 +21,14 @@
 import re
 import os
 
-from typing import List  # NOQA pylint: disable=unused-import
+from typing import Union, List  # NOQA pylint: disable=unused-import
 
 from ..commonPy import asnParser
 from ..commonPy.utility import panic, inform
 from ..commonPy.asnAST import (
     AsnBool, AsnInt, AsnReal, AsnString, isSequenceVariable, AsnEnumerated,
     AsnSequence, AsnSet, AsnChoice, AsnMetaMember, AsnSequenceOf, AsnSetOf,
-    AsnBasicNode, AsnNode)
+    AsnBasicNode, AsnNode, AsnSequenceOrSet, AsnSequenceOrSetOf)
 from ..commonPy.asnParser import AST_Lookup, AST_Leaftypes
 from ..commonPy.cleanupNodes import SetOfBadTypenames
 
@@ -42,7 +42,7 @@ g_outputGetSetC = None
 g_bHasStartupRunOnce = False
 
 
-def Version():
+def Version() -> None:
     print("Code generator: " +
           "$Id: python_A_mapper.py 2400 2012-09-04 10:40:19Z ttsiodras $")  # pragma: no cover
 
@@ -51,7 +51,7 @@ def CleanNameAsPythonWants(name: str) -> str:
     return re.sub(r'[^a-zA-Z0-9_]', '_', name)
 
 
-def OnStartup(unused_modelingLanguage: str, asnFile: str, outputDir: str, badTypes: SetOfBadTypenames):
+def OnStartup(unused_modelingLanguage: str, asnFile: str, outputDir: str, badTypes: SetOfBadTypenames) -> None:
     os.system("bash -c '[ ! -f \"" + outputDir + "/" + asnFile + "\" ] && cp \"" + asnFile + "\" \"" + outputDir + "\"'")
     this_path = os.path.dirname(__file__)
     stubs = this_path + os.sep + 'Stubs.py'
@@ -181,7 +181,7 @@ clean:
     g_outputGetSetH.write('\n/* Helper functions for NATIVE encodings */\n\n')
     g_outputGetSetC.write('\n/* Helper functions for NATIVE encodings */\n\n')
 
-    def WorkOnType(nodeTypeName: str):
+    def WorkOnType(nodeTypeName: str) -> None:
         typ = CleanNameAsPythonWants(nodeTypeName)
         g_outputGetSetH.write('void SetDataFor_%s(void *dest, void *src);\n' % typ)
         g_outputGetSetH.write("byte* MovePtrBySizeOf_%s(byte *pData);\n" % typ)
@@ -226,35 +226,35 @@ clean:
     g_outputGetSetC.close()
 
 
-def OnBasic(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnBasic(unused_nodeTypename: str, unused_node: AsnBasicNode, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass
 
 
-def OnSequence(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnSequence(unused_nodeTypename: str, unused_node: AsnSequenceOrSet, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass
 
 
-def OnSet(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnSet(unused_nodeTypename: str, unused_node: AsnSequenceOrSet, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass  # pragma: nocover
 
 
-def OnEnumerated(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnEnumerated(unused_nodeTypename: str, unused_node: AsnEnumerated, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass
 
 
-def OnSequenceOf(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnSequenceOf(unused_nodeTypename: str, unused_node: AsnSequenceOrSetOf, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass
 
 
-def OnSetOf(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnSetOf(unused_nodeTypename: str, unused_node: AsnSequenceOrSetOf, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass  # pragma: nocover
 
 
-def OnChoice(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnChoice(unused_nodeTypename: str, unused_node: AsnChoice, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass
 
 
-def OnShutdown(unused_badTypes):
+def OnShutdown(unused_badTypes: SetOfBadTypenames) -> None:
     pass
 
 
@@ -272,7 +272,7 @@ class Params(object):
         self._types = []  # type: List[str]
         self._nodeTypeName = nodeTypename
 
-    def AddParam(self, node, varName, unused_leafTypeDict):
+    def AddParam(self, node: str, varName: str, unused_leafTypeDict: AST_Leaftypes) -> bool:
         # Handle variable name
         while varName in self._vars:
             varName += "_"
@@ -297,18 +297,24 @@ class Params(object):
         #     panic("Python_A_mapper: Can't map (%s,%s) to C type\n" % (varName, realLeafType))
         # return True
 
-    def Pop(self):
+    def Pop(self) -> None:
         self._vars.pop()
         self._types.pop()
 
-    def GetDecl(self):
+    def GetDecl(self) -> str:
         params = CleanNameAsPythonWants(self._nodeTypeName) + "* root"
         for vvv, ttt in zip(self._vars, self._types):
             params += ", " + ttt + " " + vvv
         return params
 
 
-def CommonBaseImpl(comment, ctype, path, params, accessPathInC, postfix="", returnPointer=False):
+def CommonBaseImpl(comment: str,
+                   ctype: str,
+                   path: str,
+                   params: Params,
+                   accessPathInC: str,
+                   postfix: str="",
+                   returnPointer: bool=False) -> None:
     takeAddr = '&' if returnPointer else ''
     g_outputGetSetH.write("\n/* %s */\n%s %s_Get%s(%s);\n" % (comment, ctype, path, postfix, params.GetDecl()))
     g_outputGetSetC.write("\n/* %s */\n%s %s_Get%s(%s)\n" % (comment, ctype, path, postfix, params.GetDecl()))
@@ -324,7 +330,13 @@ def CommonBaseImpl(comment, ctype, path, params, accessPathInC, postfix="", retu
 
 
 # def CommonBaseImplSequenceFixed(comment, ctype, path, params, accessPathInC, node, postfix = ""):
-def CommonBaseImplSequenceFixed(comment, ctype, path, params, _, node, postfix=""):
+def CommonBaseImplSequenceFixed(comment: str,
+                                ctype: str,
+                                path: str,
+                                params: Params,
+                                _: str,
+                                node: Union[AsnSequenceOf, AsnSetOf, AsnString],
+                                postfix: str="") -> None:
     g_outputGetSetH.write("\n/* %s */\n%s %s_Get%s(%s);\n" % (comment, ctype, path, postfix, params.GetDecl()))
     g_outputGetSetC.write("\n/* %s */\n%s %s_Get%s(%s)\n" % (comment, ctype, path, postfix, params.GetDecl()))
     g_outputGetSetC.write("{\n")
@@ -337,7 +349,13 @@ def CommonBaseImplSequenceFixed(comment, ctype, path, params, _, node, postfix="
     g_outputGetSetC.write("}\n")
 
 
-def CreateGettersAndSetters(path, params, accessPathInC, node, names, leafTypeDict):
+def CreateGettersAndSetters(
+        path: str,
+        params: Params,
+        accessPathInC: str,
+        node: AsnNode,
+        names: AST_Lookup,
+        leafTypeDict: AST_Leaftypes) -> None:
     if isinstance(node, str):
         node = names[node]
     if isinstance(node, AsnMetaMember):
@@ -361,7 +379,7 @@ def CreateGettersAndSetters(path, params, accessPathInC, node, names, leafTypeDi
         params.Pop()
     elif isinstance(node, AsnEnumerated):
         CommonBaseImpl("ENUMERATED", "int", path, params, accessPathInC)
-    elif isinstance(node, AsnSequence) or isinstance(node, AsnSet) or isinstance(node, AsnChoice):
+    elif isinstance(node, (AsnSequence, AsnSet, AsnChoice)):
         if isinstance(node, AsnChoice):
             CommonBaseImpl("CHOICE selector", "int", path + "_kind", params, accessPathInC + ".kind")
         union = ""
@@ -377,7 +395,7 @@ def CreateGettersAndSetters(path, params, accessPathInC, node, names, leafTypeDi
                     useStar = '' if baseTypeOfChild.endswith('OF') else '*'
                     CommonBaseImpl("Field " + childVarname + " selector", CleanNameAsPythonWants(childNode._containedType) + useStar, path + "_" + childVarname, params, accessPathInC + union + "." + childVarname, returnPointer=not baseTypeOfChild.endswith('OF'))
             CreateGettersAndSetters(path + "_" + childVarname, params, accessPathInC + union + "." + childVarname, child[1], names, leafTypeDict)
-    elif isinstance(node, AsnSequenceOf) or isinstance(node, AsnSetOf):
+    elif isinstance(node, (AsnSequenceOf, AsnSetOf)):
         containedNode = node._containedType
         if isinstance(containedNode, str):
             containedNode = names[containedNode]
@@ -396,7 +414,7 @@ def DumpTypeDumper(
         lines: List[str],  # pylint: disable=invalid-sequence-index
         variableName: str,
         node: AsnNode,
-        names: AST_Lookup):
+        names: AST_Lookup) -> None:
     ''' Return the lines of code needed to display the value of a variable
         of a given type, in the ASN.1 Value Notation format (aka GSER) '''
     if isinstance(node, AsnBool):
@@ -481,7 +499,7 @@ def DumpTypeDumper(
         lines.append(codeIndent + 'lines.append("}")')
 
 
-def CreateDeclarationForType(nodeTypename: str, names: AST_Lookup, leafTypeDict: AST_Leaftypes):
+def CreateDeclarationForType(nodeTypename: str, names: AST_Lookup, leafTypeDict: AST_Leaftypes) -> None:
     node = names[nodeTypename]
     name = CleanNameAsPythonWants(nodeTypename)
     if isinstance(node, (AsnBasicNode, AsnEnumerated, AsnSequence, AsnSet,
@@ -523,7 +541,7 @@ def CreateDeclarationForType(nodeTypename: str, names: AST_Lookup, leafTypeDict:
         panic("Unexpected ASN.1 type... Send this grammar to Semantix")  # pragma: no cover
 
 
-def CreateDeclarationsForAllTypes(names, leafTypeDict, badTypes: SetOfBadTypenames):
+def CreateDeclarationsForAllTypes(names: AST_Lookup, leafTypeDict: AST_Leaftypes, badTypes: SetOfBadTypenames) -> None:
     for nodeTypename in names:
         if not names[nodeTypename]._isArtificial and nodeTypename not in badTypes:
             CreateDeclarationForType(nodeTypename, names, leafTypeDict)

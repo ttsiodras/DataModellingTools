@@ -1,12 +1,13 @@
 import re
 import sys
 
-from typing import Any, Dict  # NOQA pylint: disable=unused-import
+from typing import List, Union, Optional, Any, Tuple, Dict  # NOQA pylint: disable=unused-import
 
 from lxml import etree
 from .asnAST import (
     AsnBool, AsnInt, AsnReal, AsnEnumerated, AsnOctetString, AsnSequenceOf,
-    AsnSet, AsnSetOf, AsnSequence, AsnChoice, AsnMetaMember)
+    AsnSet, AsnSetOf, AsnSequence, AsnChoice, AsnMetaMember, AsnNode)
+from .asnParser import AST_Lookup
 
 # Level of verbosity
 g_verboseLevel = 0
@@ -22,19 +23,19 @@ colors = [red, green, white, yellow]
 
 # Lookup table for SMP2 types that map to AsnBasicNodes
 class MagicSmp2SimpleTypesDict(dict):
-    def __getitem__(self, name):
+    def __getitem__(self, name: str) -> Any:
         # strip 'http://www.esa.int/XXXX/YY/Smp#Bool'
         # to    'http://www.esa.int/Smp#Bool'
         name = re.sub(r'/\d{4}/\d{2}/', '/', name)
         return super(MagicSmp2SimpleTypesDict, self).__getitem__(name)
 
     # ---------------------------------------------------------------------------
-    def __contains__(self, name):
+    def __contains__(self, name: Any) -> bool:
         name = re.sub(r'/\d{4}/\d{2}/', '/', name)
         return super(MagicSmp2SimpleTypesDict, self).__contains__(name)
 
     # ---------------------------------------------------------------------------
-    def has_key(self, name):
+    def has_key(self, name: str) -> bool:
         name = re.sub(r'/\d{4}/\d{2}/', '/', name)
         return name in super(MagicSmp2SimpleTypesDict, self)  # type: ignore  pylint: disable=unsupported-membership-test
 
@@ -57,12 +58,12 @@ simpleTypesTable = MagicSmp2SimpleTypesDict({
 })
 
 
-def setVerbosity(level):
+def setVerbosity(level: int) -> None:
     global g_verboseLevel
     g_verboseLevel = level
 
 
-def info(level, *args):
+def info(level: int, *args: Any) -> None:
     """Checks the 'level' argument against g_verboseLevel and then prints
     the rest of the args, one by one, separated by a space. It also
     has logic to deal with usage of one of the colors as arguments
@@ -83,7 +84,7 @@ def info(level, *args):
                 return
 
 
-def panic(x, coloredBanner=""):
+def panic(x: str, coloredBanner: str="") -> None:
     """Notifies the user that something fatal happened and aborts. """
     info(0, yellow + coloredBanner + white + '\n' + x)
     sys.exit(1)
@@ -91,13 +92,13 @@ def panic(x, coloredBanner=""):
 
 class DashUnderscoreAgnosticDict(dict):
     """A dictionary that automatically replaces '_' to '-' in its keys. """
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: Any, value: Any) -> None:
         super(DashUnderscoreAgnosticDict, self).__setitem__(key.replace('_', '-'), value)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: Any) -> Any:
         return super(DashUnderscoreAgnosticDict, self).__getitem__(key.replace('_', '-'))
 
-    def __contains__(self, key):
+    def __contains__(self, key: Any) -> bool:
         return super(DashUnderscoreAgnosticDict, self).__contains__(key.replace('_', '-'))
 
 
@@ -117,7 +118,7 @@ class Attributes:
     base = None  # type: str
     sourceline = None  # type: int
 
-    def __init__(self, t):
+    def __init__(self, t: Dict[str, Any]) -> None:
         """Argument t is an lxml Etree node."""
         self._attrs = {}  # type: Dict[str, Any]
         for k, v in list(t.items()):
@@ -126,17 +127,21 @@ class Attributes:
                 k = k[endBraceIdx + 1:]
             self._attrs[k] = v
 
-    def __getattr__(self, x):
+    def __getattr__(self, x: str) -> Any:
         return self._attrs.get(x, None)
 
 
-def Clean(fieldName):
+def Clean(fieldName: str) -> str:
     """When mapping field names and type names from SMP2 to ASN.1,
     we need to change '_' to '-'. """
     return re.sub(r'[^a-zA-Z0-9-]', '-', fieldName)
 
 
-def MapSMP2Type(attrs, enumOptions, itemTypes, fields):
+def MapSMP2Type(
+        attrs: Attributes,
+        enumOptions: List[Tuple[str, str]],
+        itemTypes: List[Any],  # pylint: disable=invalid-sequence-index
+        fields: List[Any]) -> AsnNode:  # pylint: disable=invalid-sequence-index
     """
     Core mapping function. Works on the XML attributes of the lxml Etree node,
     and returns a node from commonPy.asnAST.
@@ -144,14 +149,14 @@ def MapSMP2Type(attrs, enumOptions, itemTypes, fields):
     location = 'from %s, in line %s' % (attrs.base, attrs.sourceline)
     info(2, "Mapping SMP2 type", location)
 
-    def getMaybe(cast, x):
+    def getMaybe(cast: Any, x: str) -> Optional[Any]:
         try:
             return cast(x)
         except:  # pragma: no cover
             return None  # pragma: no cover
     dataDict = {"asnFilename": attrs.base, "lineno": attrs.sourceline}
 
-    def HandleTypesInteger():
+    def HandleTypesInteger() -> Union[AsnBool, AsnInt]:
         lowRange = getMaybe(int, attrs.Minimum)
         highRange = getMaybe(int, attrs.Maximum)
         if lowRange == 0 and highRange == 1:
@@ -163,14 +168,14 @@ def MapSMP2Type(attrs, enumOptions, itemTypes, fields):
             dataDict["range"] = spanRange
             return AsnInt(**dataDict)
 
-    def HandleTypesFloat():
+    def HandleTypesFloat() -> AsnReal:
         lowRange = getMaybe(float, attrs.Minimum)
         highRange = getMaybe(float, attrs.Maximum)
         spanRange = [lowRange, highRange] if lowRange is not None and highRange is not None else []
         dataDict["range"] = spanRange
         return AsnReal(**dataDict)
 
-    def HandleTypesArray():
+    def HandleTypesArray() -> Union[AsnOctetString, AsnSequenceOf]:
         if not itemTypes:
             panic("Missing mandatory ItemType element", location)  # pragma: no cover
         itemTypeAttrs = Attributes(itemTypes[0])
@@ -209,7 +214,7 @@ def MapSMP2Type(attrs, enumOptions, itemTypes, fields):
                 dataDict['containedType'] = containedHref
             return AsnSequenceOf(**dataDict)
 
-    def HandleTypesStructure():
+    def HandleTypesStructure() -> Union[AsnChoice, AsnSequence]:
         members = []
         for field in fields:
             try:
@@ -279,12 +284,12 @@ def MapSMP2Type(attrs, enumOptions, itemTypes, fields):
     panic("Failed to map... (%s)" % attrs.type, location)  # pragma: no cover
 
 
-def FixupOutOfOrderIdReferences(nodeTypename, asnTypesDict, idToTypeDict):
+def FixupOutOfOrderIdReferences(nodeTypename: str, asnTypesDict: AST_Lookup, idToTypeDict: Dict[str, str]) -> None:
     """Based on the uniqueness of the 'Id' elements used in
     'xlink:href' remote references, we resolve the lookups of
     remote types that we stored in AsnMetaMembers during MapSMP2Type()."""
     node = asnTypesDict[nodeTypename]
-    if isinstance(node, AsnChoice) or isinstance(node, AsnSequence) or isinstance(node, AsnSet):
+    if isinstance(node, (AsnChoice, AsnSequence, AsnSet)):
         for idx, child in enumerate(node._members):
             if isinstance(child[1], AsnMetaMember):
                 containedType = child[1]._containedType
@@ -295,7 +300,7 @@ def FixupOutOfOrderIdReferences(nodeTypename, asnTypesDict, idToTypeDict):
                 else:
                     panic("Could not resolve Field '%s' in type '%s' (contained: %s)..." %
                           (child[0], nodeTypename, containedType), node.Location())  # pragma: no cover
-    elif isinstance(node, AsnSequenceOf) or isinstance(node, AsnSetOf):
+    elif isinstance(node, (AsnSequenceOf, AsnSetOf)):
         if isinstance(node._containedType, str):
             containedType = node._containedType
             if containedType in idToTypeDict:
@@ -307,7 +312,8 @@ def FixupOutOfOrderIdReferences(nodeTypename, asnTypesDict, idToTypeDict):
                       (nodeTypename, containedType), node.Location())  # pragma: no cover
 
 
-def ConvertCatalogueToASN_AST(inputSmp2Files):
+def ConvertCatalogueToASN_AST(
+        inputSmp2Files: List[str]) -> Tuple[AST_Lookup, Dict[str, str]]:  # pylint: disable=invalid-sequence-index
     """Converts a list of input SMP2 Catalogues into an ASN.1 AST,
     which it returns to the caller."""
     asnTypesDict = DashUnderscoreAgnosticDict()
@@ -398,12 +404,12 @@ def ConvertCatalogueToASN_AST(inputSmp2Files):
             # Gather children node's info:
 
             # 1. Enumeration data
-            enumOptions = []
+            enumOptions = []  # type: List[Tuple[str, str]]
             if a.type == 'Types:Enumeration':
                 for node in t.xpath("Literal"):
-                    enumOptions.append(
-                        [x.replace('_', '-').lower()
-                         for x in [node.get('Name'), node.get('Value')]])
+                    nn = node.get('Name').replace('_', '-').lower()  # type: str
+                    vv = node.get('Value').replace('_', '-').lower()  # type: str
+                    enumOptions.append((nn, vv))
 
             # 2. ItemType data (used in arrays)
             itemTypes = t.xpath("ItemType")

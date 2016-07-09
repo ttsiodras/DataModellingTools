@@ -18,17 +18,22 @@
 # Note that in both cases, there are no charges (royalties) for the
 # generated code.
 #
+
+# pylint: disable=too-many-lines
+
 import re
 import os
 
-from typing import Set, IO, Any  # NOQA pylint: disable=unused-import
+from typing import Set, IO, Union, Any  # NOQA pylint: disable=unused-import
 
 from ..commonPy.asnAST import (
     AsnBasicNode, AsnEnumerated, AsnSequence, AsnSet, AsnChoice,
     AsnSequenceOf, AsnSetOf, AsnMetaMember, AsnInt, AsnReal, AsnOctetString,
-    AsnBool, isSequenceVariable, sourceSequenceLimit)
+    AsnNode, AsnBool, isSequenceVariable, sourceSequenceLimit)
 from ..commonPy.utility import panic, panicWithCallStack
 from ..commonPy import asnParser
+from ..commonPy.asnParser import AST_Lookup, AST_Leaftypes
+from ..commonPy.aadlAST import ApLevelContainer, Param
 
 g_HeaderFile = None  # type: IO[Any]
 g_SourceFile = None  # type: IO[Any]
@@ -54,11 +59,11 @@ g_perFV = set()  # type: Set[str]
 g_langPerSP = {}
 
 
-def CleanName(name):
+def CleanName(name: str) -> str:
     return re.sub(r'[^a-zA-Z0-9_]', '_', name)
 
 
-def WriteSourceFileStart():
+def WriteSourceFileStart() -> None:
     g_SourceFile.write('''#include "wx/wxprec.h"
 #include "wx/convauto.h"
 
@@ -174,10 +179,9 @@ void TeleCmds::CreateControls()
 enumFieldNames = {}  # type: Dict[str, int]
 
 
-def VerifySingleFieldEnums(node):
-    names = asnParser.g_names
+def VerifySingleFieldEnums(node: Union[str, AsnNode]) -> None:
     while isinstance(node, str):
-        node = names[node]
+        node = asnParser.g_names[node]
     if isinstance(node, AsnBasicNode):
         pass
     elif isinstance(node, AsnEnumerated):
@@ -186,18 +190,27 @@ def VerifySingleFieldEnums(node):
                 enumFieldNames[m[0]] = id(node)
             else:  # pragma: no cover
                 panic("ENUMERATED fields must be unique (across all ENUMERATED) for the GUI mapper to work... (%s)" % node.Location())  # pragma: no cover
-    elif isinstance(node, AsnSequence) or isinstance(node, AsnSet) or isinstance(node, AsnChoice):
+    elif isinstance(node, (AsnSequence, AsnSet, AsnChoice)):
         for x in node._members:
             VerifySingleFieldEnums(x[1])
-    elif isinstance(node, AsnSequenceOf) or isinstance(node, AsnSetOf):
+    elif isinstance(node, (AsnSequenceOf, AsnSetOf)):
         VerifySingleFieldEnums(node._containedType)
     elif isinstance(node, AsnMetaMember):
-        VerifySingleFieldEnums(names[node._containedType])
+        VerifySingleFieldEnums(asnParser.g_names[node._containedType])
     else:  # pragma: no cover
-        panicWithCallStack("unsupported %s (%s)" % (str(node.__class__), node.Location()))  # pragma: no cover
+        assert not isinstance(node, str)
+        panicWithCallStack(
+            "unsupported %s (%s)" % (str(node.__class__), node.Location()))  # pragma: no cover
 
 
-def OneTimeOnly(unused_modelingLanguage, asnFile, subProgram, subProgramImplementation, outputDir, maybeFVname, unused_useOSS):
+def OneTimeOnly(
+        unused_modelingLanguage: str,
+        asnFile: str,
+        subProgram: ApLevelContainer,
+        subProgramImplementation: str,
+        outputDir: str,
+        maybeFVname: str,
+        unused_useOSS: bool) -> None:
     for typename in asnParser.g_names:
         node = asnParser.g_names[typename]
         VerifySingleFieldEnums(node)
@@ -341,7 +354,14 @@ public:
 
 
 # Called once per RI (i.e. per SUBPROGRAM IMPLEMENTATION)
-def OnStartup(modelingLanguage, asnFile, subProgram, subProgramImplementation, outputDir, maybeFVname, useOSS):
+def OnStartup(
+        modelingLanguage: str,
+        asnFile: str,
+        subProgram: ApLevelContainer,
+        subProgramImplementation: str,
+        outputDir: str,
+        maybeFVname: str,
+        useOSS: bool) -> None:
     # print modelingLanguage, subProgram, subProgramImplementation, maybeFVname
     g_langPerSP[subProgram] = modelingLanguage
     global g_bStarted
@@ -480,7 +500,15 @@ def OnStartup(modelingLanguage, asnFile, subProgram, subProgramImplementation, o
         g_MyTelemetryActions.write("            break;\n")
 
 
-def WriteCodeForGUIControls(prefix, parentControl, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+def WriteCodeForGUIControls(
+        prefix: str,
+        parentControl: str,
+        node: AsnNode,
+        subProgram: ApLevelContainer,
+        subProgramImplementation: str,
+        param: Param,
+        leafTypeDict: AST_Leaftypes,
+        names: AST_Lookup) -> None:
     global g_IDs
     CleanSP = CleanName(subProgram._id)
     CleanParam = CleanName(param._id)
@@ -533,7 +561,7 @@ def WriteCodeForGUIControls(prefix, parentControl, node, subProgram, subProgramI
                            (varPrefix, ScrollWnd, varPrefix, varPrefix))
         g_MyCreation.write("%s->Add(_itemChoice_%s, 0, wxALIGN_LEFT|wxALL, 5);\n" %
                            (parentControl, varPrefix))
-    elif isinstance(node, AsnSequence) or isinstance(node, AsnChoice) or isinstance(node, AsnSet):
+    elif isinstance(node, (AsnSequence, AsnChoice, AsnSet)):
         # Recurse on the children, but first place them all inside a StaticBoxSizer
         g_MyCreation.write("wxStaticBox* itemStaticBoxSizer_%s_Static = new wxStaticBox(%s, wxID_ANY, _T(\"%s\"));\n" %
                            (varPrefix, ScrollWnd, txtPrefix))
@@ -584,7 +612,7 @@ def WriteCodeForGUIControls(prefix, parentControl, node, subProgram, subProgramI
             g_SourceFile.write("    _itemScrolledWindow_%s->FitInside();\n" % CleanSP)
             g_SourceFile.write("}\n\n")
         g_MyCreation.write("// End of SEQUENCE/CHOICE\n\n")
-    elif isinstance(node, AsnSequenceOf) or isinstance(node, AsnSetOf):
+    elif isinstance(node, (AsnSequenceOf, AsnSetOf)):
         # Inside a StaticBoxSizer...
         g_MyCreation.write("wxStaticBox* itemStaticBoxSizer_%s_Static = new wxStaticBox(%s, wxID_ANY, _T(\"%s\"));\n" %
                            (varPrefix, ScrollWnd, txtPrefix))
@@ -618,14 +646,14 @@ def WriteCodeForGUIControls(prefix, parentControl, node, subProgram, subProgramI
         panic("GUI codegen doesn't support this type yet (%s)" % str(node))  # pragma: no cover
 
 
-def maybeElseZero(childNo):
+def maybeElseZero(childNo: int) -> str:
     if childNo == 0:
         return ""
     else:
         return "else "
 
 
-def CopyDataFromDlgToASN1(f, srcVar, destVar, node, leafTypeDict, names):
+def CopyDataFromDlgToASN1(f: IO[Any], srcVar: str, destVar: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     if isinstance(node, AsnInt) or isinstance(node, AsnReal):
         targetType = {"INTEGER": "asn1SccSint", "REAL": "double"}[node._leafType]
         f.write("if (false == StringToAny<%s>(\"%s\", _itemTextCtrl_%s->GetValue().ToAscii().release(), %s, msgError)) {\n" % (targetType, srcVar, srcVar, destVar))
@@ -650,7 +678,7 @@ def CopyDataFromDlgToASN1(f, srcVar, destVar, node, leafTypeDict, names):
             f.write("    " + destVar + " = ENUM_asn1Scc" + CleanName(enumOption[0]) + ";\n")
             f.write("}\n")
             enumNo += 1
-    elif isinstance(node, AsnSequence) or isinstance(node, AsnSet):
+    elif isinstance(node, (AsnSequence, AsnSet)):
         for child in node._members:
             CleanChild = CleanName(child[0])
             childType = child[1]
@@ -669,7 +697,7 @@ def CopyDataFromDlgToASN1(f, srcVar, destVar, node, leafTypeDict, names):
             f.write("    " + destVar + ".kind = CHOICE_" + child[2] + ";\n")
             f.write("}\n")
             childNo += 1
-    elif isinstance(node, AsnSequenceOf) or isinstance(node, AsnSetOf):
+    elif isinstance(node, (AsnSequenceOf, AsnSetOf)):
         containedNode = node._containedType
         while isinstance(containedNode, str):
             containedNode = names[containedNode]
@@ -691,7 +719,14 @@ def CopyDataFromDlgToASN1(f, srcVar, destVar, node, leafTypeDict, names):
                 f.write("}\n")
 
 
-def CopyDataFromASN1ToDlg(fDesc, prefix, srcVar, destVar, node, leafTypeDict, names, bClear=False):
+def CopyDataFromASN1ToDlg(fDesc: IO[Any],
+                          prefix: str,
+                          srcVar: str,
+                          destVar: str,
+                          node: AsnNode,
+                          leafTypeDict: AST_Leaftypes,
+                          names: AST_Lookup,
+                          bClear: bool=False) -> None:
     if isinstance(node, AsnInt):
         fDesc.write("{\n")
         fDesc.write("    ostringstream s;\n")
@@ -733,7 +768,7 @@ def CopyDataFromASN1ToDlg(fDesc, prefix, srcVar, destVar, node, leafTypeDict, na
                 enumNo += 1
         else:
             fDesc.write("    " + prefix + "_itemChoice_" + destVar + "->SetSelection(0);\n")
-    elif isinstance(node, AsnSequence) or isinstance(node, AsnSet):
+    elif isinstance(node, (AsnSequence, AsnSet)):
         for child in node._members:
             CleanChild = CleanName(child[0])
             childType = child[1]
@@ -755,7 +790,7 @@ def CopyDataFromASN1ToDlg(fDesc, prefix, srcVar, destVar, node, leafTypeDict, na
             CopyDataFromASN1ToDlg(fDesc, prefix, srcVar + ".u." + CleanChild, destVar + "_" + CleanChild, childType, leafTypeDict, names, bClear)
             fDesc.write("}\n")
             childNo += 1
-    elif isinstance(node, AsnSequenceOf) or isinstance(node, AsnSetOf):
+    elif isinstance(node, (AsnSequenceOf, AsnSetOf)):
         containedNode = node._containedType
         while isinstance(containedNode, str):
             containedNode = names[containedNode]
@@ -777,7 +812,13 @@ def CopyDataFromASN1ToDlg(fDesc, prefix, srcVar, destVar, node, leafTypeDict, na
             fDesc.write("}\n")
 
 
-def WriteCodeForSave(nodeTypename, node, subProgram, unused_subProgramImplementation, param, leafTypeDict, names):
+def WriteCodeForSave(nodeTypename: str,
+                     node: AsnNode,
+                     subProgram: ApLevelContainer,
+                     unused_subProgramImplementation: str,
+                     param: Param,
+                     leafTypeDict: AST_Leaftypes,
+                     names: AST_Lookup) -> None:
     CleanSP = CleanName(subProgram._id)
     CleanParam = CleanName(param._id)
     CopyDataFromDlgToASN1(g_MySave, "%s_%s" % (CleanSP, CleanParam), "var_" + CleanParam, node, leafTypeDict, names)
@@ -813,7 +854,13 @@ def WriteCodeForSave(nodeTypename, node, subProgram, unused_subProgramImplementa
     g_MySave.write("}\n")
 
 
-def WriteCodeForLoad(nodeTypename, node, subProgram, unused_subProgramImplementation, param, leafTypeDict, names):
+def WriteCodeForLoad(nodeTypename: str,
+                     node: AsnNode,
+                     subProgram: ApLevelContainer,
+                     unused_subProgramImplementation: str,
+                     param: Param,
+                     leafTypeDict: AST_Leaftypes,
+                     names: AST_Lookup) -> None:
     CleanSP = CleanName(subProgram._id)
     CleanParam = CleanName(param._id)
     g_MyLoad.write("    {\n")
@@ -843,7 +890,7 @@ def WriteCodeForLoad(nodeTypename, node, subProgram, unused_subProgramImplementa
     g_MyLoad.write("    }\n")
 
 
-def WriteCodeForGnuPlot(prefix, node, subProgram, param, names):
+def WriteCodeForGnuPlot(prefix: str, node: AsnNode, subProgram: ApLevelContainer, param: Param, names: AST_Lookup) -> None:
     CleanSP = CleanName(subProgram._id)
     CleanParam = CleanName(param._id)
     if prefix in ("TCDATA: ", "TMDATA: "):
@@ -854,7 +901,7 @@ def WriteCodeForGnuPlot(prefix, node, subProgram, param, names):
         pass
     elif isinstance(node, AsnEnumerated):
         pass
-    elif isinstance(node, AsnSequence) or isinstance(node, AsnSet):
+    elif isinstance(node, (AsnSequence, AsnSet)):
         for child in node._members:
             CleanChild = CleanName(child[0])
             childType = child[1]
@@ -868,7 +915,7 @@ def WriteCodeForGnuPlot(prefix, node, subProgram, param, names):
             if isinstance(childType, AsnMetaMember):
                 childType = names[childType._containedType]
             WriteCodeForGnuPlot(prefix + "::" + CleanChild, childType, subProgram, param, names)
-    elif isinstance(node, AsnSequenceOf) or isinstance(node, AsnSetOf):
+    elif isinstance(node, (AsnSequenceOf, AsnSetOf)):
         containedNode = node._containedType
         while isinstance(containedNode, str):
             containedNode = names[containedNode]
@@ -876,7 +923,13 @@ def WriteCodeForGnuPlot(prefix, node, subProgram, param, names):
             WriteCodeForGnuPlot(prefix + "::Elem", containedNode, subProgram, param, names)
 
 
-def WriteCodeForAction(nodeTypename, node, subProgram, unused_subProgramImplementation, param, leafTypeDict, names):
+def WriteCodeForAction(nodeTypename: str,
+                       node: AsnNode,
+                       subProgram: ApLevelContainer,
+                       unused_subProgramImplementation: str,
+                       param: Param,
+                       leafTypeDict: AST_Leaftypes,
+                       names: AST_Lookup) -> None:
     CleanSP = CleanName(subProgram._id)
     CleanParam = CleanName(param._id)
     CopyDataFromDlgToASN1(g_MyAction, "%s_%s" % (CleanSP, CleanParam), "var_" + CleanParam, node, leafTypeDict, names)
@@ -923,7 +976,13 @@ g_SPs = []  # type: List[str]
 g_bBraceOpen = False
 
 
-def Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+def Common(nodeTypename: str,
+           node: AsnNode,
+           subProgram: ApLevelContainer,
+           subProgramImplementation: str,
+           param: Param,
+           leafTypeDict: AST_Leaftypes,
+           names: AST_Lookup) -> None:
     control = "itemBoxSizer_%s" % CleanName(subProgram._id)
     WriteCodeForGUIControls('', control, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
     global g_bBraceOpen
@@ -954,39 +1013,39 @@ def Common(nodeTypename, node, subProgram, subProgramImplementation, param, leaf
         WriteCodeForGnuPlot("TMDATA: ", node, subProgram, param, names)
 
 
-def OnBasic(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+def OnBasic(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
-def OnSequence(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+def OnSequence(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
-def OnSet(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+def OnSet(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)  # pragma: nocover
 
 
-def OnEnumerated(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+def OnEnumerated(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
-def OnSequenceOf(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+def OnSequenceOf(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
-def OnSetOf(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+def OnSetOf(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)  # pragma: nocover
 
 
-def OnChoice(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+def OnChoice(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
-def OnShutdown(unused_modelingLanguage, unused_asnFile, unused_sp, unused_subProgramImplementation, unused_maybeFVname):
+def OnShutdown(unused_modelingLanguage: str, unused_asnFile: str, unused_sp: ApLevelContainer, unused_subProgramImplementation: str, unused_maybeFVname: str) -> None:
     pass
 
 
-def OnFinal():
+def OnFinal() -> None:
     if g_bBraceOpen:
         g_MyAction.write("}\n")
         g_MySave.write("}\n")

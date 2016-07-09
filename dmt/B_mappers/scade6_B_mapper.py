@@ -35,9 +35,15 @@ parameters, which have C callable interfaces. The necessary
 stubs (to allow calling from the VM side) are also generated.
 '''
 
+from typing import List
+
 from ..commonPy.utility import panic, panicWithCallStack
-from ..commonPy.asnAST import isSequenceVariable, sourceSequenceLimit
-from ..commonPy.aadlAST import AadlPort, AadlParameter
+from ..commonPy.asnAST import (
+    isSequenceVariable, sourceSequenceLimit, AsnInt, AsnBool, AsnReal, AsnBasicNode,
+    AsnEnumerated, AsnOctetString, AsnChoice, AsnSequenceOrSet, AsnSequenceOrSetOf,
+    AsnNode, AsnSet, AsnSequence, AsnSetOf, AsnSequenceOf)
+from ..commonPy.asnParser import AST_Lookup, AST_Leaftypes
+from ..commonPy.aadlAST import AadlPort, AadlParameter, ApLevelContainer, Param
 
 from ..commonPy.recursiveMapper import RecursiveMapper
 from .synchronousTool import SynchronousToolGlueGenerator
@@ -46,7 +52,7 @@ isAsynchronous = False
 scadeBackend = None
 
 
-def Version():
+def Version() -> None:
     print("Code generator: " +
           "$Id: scade6_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")
 
@@ -54,16 +60,16 @@ def Version():
 # noinspection PyListCreation
 # pylint: disable=no-self-use
 class FromSCADEtoASN1SCC(RecursiveMapper):
-    def MapInteger(self, srcScadeMacro, destVar, _, __, ___):
+    def MapInteger(self, srcScadeMacro: str, destVar: str, _: AsnInt, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return ["%s = (asn1SccSint) %s;\n" % (destVar, srcScadeMacro)]
 
-    def MapReal(self, srcScadeMacro, destVar, _, __, ___):
+    def MapReal(self, srcScadeMacro: str, destVar: str, _: AsnReal, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return ["%s = (double) %s;\n" % (destVar, srcScadeMacro)]
 
-    def MapBoolean(self, srcScadeMacro, destVar, _, __, ___):
+    def MapBoolean(self, srcScadeMacro: str, destVar: str, _: AsnBool, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return ["%s = (int)%s;\n" % (destVar, srcScadeMacro)]
 
-    def MapOctetString(self, srcScadeMacro, destVar, node, _, __):
+    def MapOctetString(self, srcScadeMacro: str, destVar: str, node: AsnOctetString, _: AST_Leaftypes, __: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         lines = []  # type: List[str]
         lines.append("{\n")
         if not node._range:
@@ -77,10 +83,10 @@ class FromSCADEtoASN1SCC(RecursiveMapper):
         lines.append("}\n")
         return lines
 
-    def MapEnumerated(self, srcScadeMacro, destVar, _, __, ___):
+    def MapEnumerated(self, srcScadeMacro: str, destVar: str, _: AsnEnumerated, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return ["%s = %s;\n" % (destVar, srcScadeMacro)]
 
-    def MapSequence(self, srcScadeMacro, destVar, node, leafTypeDict, names):
+    def MapSequence(self, srcScadeMacro: str, destVar: str, node: AsnSequenceOrSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         lines = []  # type: List[str]
         for child in node._members:
             lines.extend(
@@ -92,10 +98,10 @@ class FromSCADEtoASN1SCC(RecursiveMapper):
                     names))
         return lines
 
-    def MapSet(self, srcScadeMacro, destVar, node, leafTypeDict, names):
+    def MapSet(self, srcScadeMacro: str, destVar: str, node: AsnSequenceOrSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return self.MapSequence(srcScadeMacro, destVar, node, leafTypeDict, names)  # pragma: nocover  # pragma: nocover
 
-    def MapChoice(self, srcScadeMacro, destVar, node, leafTypeDict, names):
+    def MapChoice(self, srcScadeMacro: str, destVar: str, node: AsnChoice, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         lines = []  # type: List[str]
         childNo = 0
         for child in node._members:
@@ -114,7 +120,7 @@ class FromSCADEtoASN1SCC(RecursiveMapper):
             lines.append("}")
         return lines
 
-    def MapSequenceOf(self, srcScadeMacro, destVar, node, leafTypeDict, names):
+    def MapSequenceOf(self, srcScadeMacro: str, destVar: str, node: AsnSequenceOrSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         if not node._range:
             panicWithCallStack(
                 "A SIZE constraint is required, or else SCADE can't generate C code (%s)!\n" %   # pragma: no cover
@@ -131,25 +137,25 @@ class FromSCADEtoASN1SCC(RecursiveMapper):
             lines.append("%s.nCount = %d;\n" % (destVar, node._range[-1]))
         return lines
 
-    def MapSetOf(self, srcScadeMacro, destVar, node, leafTypeDict, names):
+    def MapSetOf(self, srcScadeMacro: str, destVar: str, node: AsnSequenceOrSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return self.MapSequenceOf(srcScadeMacro, destVar, node, leafTypeDict, names)  # pragma: nocover
 
 
 # pylint: disable=no-self-use
 class FromASN1SCCtoSCADE(RecursiveMapper):
-    def __init__(self):
+    def __init__(self) -> None:
         self._seqIndex = 1
 
-    def MapInteger(self, srcVar, dstScadeMacro, _, __, ___):
+    def MapInteger(self, srcVar: str, dstScadeMacro: str, _: AsnInt, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return ["%s = %s;\n" % (dstScadeMacro, srcVar)]
 
-    def MapReal(self, srcVar, dstScadeMacro, _, __, ___):
+    def MapReal(self, srcVar: str, dstScadeMacro: str, _: AsnReal, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return ["%s = %s;\n" % (dstScadeMacro, srcVar)]
 
-    def MapBoolean(self, srcVar, dstScadeMacro, _, __, ___):
+    def MapBoolean(self, srcVar: str, dstScadeMacro: str, _: AsnBool, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return ["%s = (%s)?1:0;\n" % (dstScadeMacro, srcVar)]
 
-    def MapOctetString(self, srcVar, dstScadeMacro, node, _, __):
+    def MapOctetString(self, srcVar: str, dstScadeMacro: str, node: AsnOctetString, _: AST_Leaftypes, __: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         if not node._range:
             panicWithCallStack(
                 "OCTET STRING (in %s) must have a SIZE constraint "  # pragma: no cover
@@ -165,10 +171,10 @@ class FromASN1SCCtoSCADE(RecursiveMapper):
         lines.append("}\n")
         return lines
 
-    def MapEnumerated(self, srcVar, dstScadeMacro, _, __, ___):
+    def MapEnumerated(self, srcVar: str, dstScadeMacro: str, _: AsnEnumerated, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return ["%s = %s;\n" % (dstScadeMacro, srcVar)]
 
-    def MapSequence(self, srcVar, dstScadeMacro, node, leafTypeDict, names):
+    def MapSequence(self, srcVar: str, dstScadeMacro: str, node: AsnSequenceOrSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         lines = []  # type: List[str]
         for child in node._members:
             lines.extend(
@@ -180,10 +186,10 @@ class FromASN1SCCtoSCADE(RecursiveMapper):
                     names))
         return lines
 
-    def MapSet(self, srcVar, dstScadeMacro, node, leafTypeDict, names):
+    def MapSet(self, srcVar: str, dstScadeMacro: str, node: AsnSequenceOrSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return self.MapSequence(srcVar, dstScadeMacro, node, leafTypeDict, names)  # pragma: nocover
 
-    def MapChoice(self, srcVar, dstScadeMacro, node, leafTypeDict, names):
+    def MapChoice(self, srcVar: str, dstScadeMacro: str, node: AsnChoice, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         lines = []  # type: List[str]
         childNo = 0
         for child in node._members:
@@ -202,7 +208,7 @@ class FromASN1SCCtoSCADE(RecursiveMapper):
             lines.append("}\n")
         return lines
 
-    def MapSequenceOf(self, srcVar, dstScadeMacro, node, leafTypeDict, names):
+    def MapSequenceOf(self, srcVar: str, dstScadeMacro: str, node: AsnSequenceOrSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         if not node._range:
             panicWithCallStack(
                 "A SIZE constraint is required or else SCADE can't generate C code (%s)!\n" %   # pragma: no cover
@@ -228,23 +234,23 @@ class FromASN1SCCtoSCADE(RecursiveMapper):
         lines.append("}\n")
         return lines
 
-    def MapSetOf(self, srcVar, dstScadeMacro, node, leafTypeDict, names):
+    def MapSetOf(self, srcVar: str, dstScadeMacro: str, node: AsnSequenceOrSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return self.MapSequenceOf(srcVar, dstScadeMacro, node, leafTypeDict, names)  # pragma: nocover
 
 
 # noinspection PyListCreation
 # pylint: disable=no-self-use
 class FromSCADEtoOSS(RecursiveMapper):
-    def MapInteger(self, srcScadeMacro, destVar, _, __, ___):
+    def MapInteger(self, srcScadeMacro: str, destVar: str, _: AsnInt, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return ["%s = %s;\n" % (destVar, srcScadeMacro)]
 
-    def MapReal(self, srcScadeMacro, destVar, _, __, ___):
+    def MapReal(self, srcScadeMacro: str, destVar: str, _: AsnReal, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return ["%s = %s;\n" % (destVar, srcScadeMacro)]
 
-    def MapBoolean(self, srcScadeMacro, destVar, _, __, ___):
+    def MapBoolean(self, srcScadeMacro: str, destVar: str, _: AsnBool, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return ["%s = (char)%s;\n" % (destVar, srcScadeMacro)]
 
-    def MapOctetString(self, srcScadeMacro, destVar, node, _, __):
+    def MapOctetString(self, srcScadeMacro: str, destVar: str, node: AsnOctetString, _: AST_Leaftypes, __: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         lines = []  # type: List[str]
         lines.append("{\n")
         if not node._range:
@@ -257,10 +263,10 @@ class FromSCADEtoOSS(RecursiveMapper):
         lines.append("}\n")
         return lines
 
-    def MapEnumerated(self, srcScadeMacro, destVar, _, __, ___):
+    def MapEnumerated(self, srcScadeMacro: str, destVar: str, _: AsnEnumerated, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return ["%s = %s;\n" % (destVar, srcScadeMacro)]
 
-    def MapSequence(self, srcScadeMacro, destVar, node, leafTypeDict, names):
+    def MapSequence(self, srcScadeMacro: str, destVar: str, node: AsnSequenceOrSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         lines = []  # type: List[str]
         for child in node._members:
             lines.extend(
@@ -272,10 +278,10 @@ class FromSCADEtoOSS(RecursiveMapper):
                     names))
         return lines
 
-    def MapSet(self, srcScadeMacro, destVar, node, leafTypeDict, names):
+    def MapSet(self, srcScadeMacro: str, destVar: str, node: AsnSequenceOrSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return self.MapSequence(srcScadeMacro, destVar, node, leafTypeDict, names)  # pragma: nocover
 
-    def MapChoice(self, srcScadeMacro, destVar, node, leafTypeDict, names):
+    def MapChoice(self, srcScadeMacro: str, destVar: str, node: AsnChoice, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         lines = []  # type: List[str]
         childNo = 0
         for child in node._members:
@@ -294,7 +300,7 @@ class FromSCADEtoOSS(RecursiveMapper):
             lines.append("}")
         return lines
 
-    def MapSequenceOf(self, srcScadeMacro, destVar, node, leafTypeDict, names):
+    def MapSequenceOf(self, srcScadeMacro: str, destVar: str, node: AsnSequenceOrSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         if not node._range:
             panicWithCallStack(
                 "A SIZE constraint is required, or else SCADE can't generate C code (%s)!\n" %   # pragma: no cover
@@ -310,26 +316,26 @@ class FromSCADEtoOSS(RecursiveMapper):
         lines.append("%s.count = %d;\n" % (destVar, node._range[-1]))
         return lines
 
-    def MapSetOf(self, srcScadeMacro, destVar, node, leafTypeDict, names):
+    def MapSetOf(self, srcScadeMacro: str, destVar: str, node: AsnSequenceOrSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return self.MapSequenceOf(srcScadeMacro, destVar, node, leafTypeDict, names)  # pragma: nocover
 
 
 # noinspection PyListCreation
 # pylint: disable=no-self-use
 class FromOSStoSCADE(RecursiveMapper):
-    def __init__(self):
+    def __init__(self) -> None:
         self._seqIndex = 1
 
-    def MapInteger(self, srcVar, dstScadeMacro, _, __, ___):
+    def MapInteger(self, srcVar: str, dstScadeMacro: str, _: AsnInt, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return ["%s = %s;\n" % (dstScadeMacro, srcVar)]
 
-    def MapReal(self, srcVar, dstScadeMacro, _, __, ___):
+    def MapReal(self, srcVar: str, dstScadeMacro: str, _: AsnReal, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return ["%s = %s;\n" % (dstScadeMacro, srcVar)]
 
-    def MapBoolean(self, srcVar, dstScadeMacro, _, __, ___):
+    def MapBoolean(self, srcVar: str, dstScadeMacro: str, _: AsnBool, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return ["%s = (%s)?1:0;\n" % (dstScadeMacro, srcVar)]
 
-    def MapOctetString(self, srcVar, dstScadeMacro, node, _, __):
+    def MapOctetString(self, srcVar: str, dstScadeMacro: str, node: AsnOctetString, _: AST_Leaftypes, __: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         if not node._range:
             panicWithCallStack(
                 "OCTET STRING (in %s) must have a SIZE constraint "  # pragma: no cover
@@ -342,10 +348,10 @@ class FromOSStoSCADE(RecursiveMapper):
         lines.append("}\n")
         return lines
 
-    def MapEnumerated(self, srcVar, dstScadeMacro, _, __, ___):
+    def MapEnumerated(self, srcVar: str, dstScadeMacro: str, _: AsnEnumerated, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return ["%s = %s;\n" % (dstScadeMacro, srcVar)]
 
-    def MapSequence(self, srcVar, dstScadeMacro, node, leafTypeDict, names):
+    def MapSequence(self, srcVar: str, dstScadeMacro: str, node: AsnSequenceOrSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         lines = []  # type: List[str]
         for child in node._members:
             lines.extend(
@@ -357,10 +363,10 @@ class FromOSStoSCADE(RecursiveMapper):
                     names))
         return lines
 
-    def MapSet(self, srcVar, dstScadeMacro, node, leafTypeDict, names):
+    def MapSet(self, srcVar: str, dstScadeMacro: str, node: AsnSequenceOrSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return self.MapSequence(srcVar, dstScadeMacro, node, leafTypeDict, names)  # pragma: nocover
 
-    def MapChoice(self, srcVar, dstScadeMacro, node, leafTypeDict, names):
+    def MapChoice(self, srcVar: str, dstScadeMacro: str, node: AsnChoice, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         lines = []  # type: List[str]
         childNo = 0
         for child in node._members:
@@ -379,7 +385,7 @@ class FromOSStoSCADE(RecursiveMapper):
             lines.append("}\n")
         return lines
 
-    def MapSequenceOf(self, srcVar, dstScadeMacro, node, leafTypeDict, names):
+    def MapSequenceOf(self, srcVar: str, dstScadeMacro: str, node: AsnSequenceOrSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         if not node._range:
             panicWithCallStack(
                 "A SIZE constraint is required or else SCADE can't generate C code (%s)!\n" %   # pragma: no cover
@@ -404,27 +410,27 @@ class FromOSStoSCADE(RecursiveMapper):
         lines.append("}\n")
         return lines
 
-    def MapSetOf(self, srcVar, dstScadeMacro, node, leafTypeDict, names):
+    def MapSetOf(self, srcVar: str, dstScadeMacro: str, node: AsnSequenceOrSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return self.MapSequenceOf(srcVar, dstScadeMacro, node, leafTypeDict, names)  # pragma: nocover
 
 
 class ScadeGlueGenerator(SynchronousToolGlueGenerator):
-    def Version(self):
+    def Version(self) -> None:
         print("Code generator: " + "$Id: scade6_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")  # pragma: no cover
 
-    def FromToolToASN1SCC(self):
+    def FromToolToASN1SCC(self) -> RecursiveMapper:
         return FromSCADEtoASN1SCC()
 
-    def FromToolToOSS(self):
+    def FromToolToOSS(self) -> RecursiveMapper:
         return FromSCADEtoOSS()
 
-    def FromASN1SCCtoTool(self):
+    def FromASN1SCCtoTool(self) -> RecursiveMapper:
         return FromASN1SCCtoSCADE()
 
-    def FromOSStoTool(self):
+    def FromOSStoTool(self) -> RecursiveMapper:
         return FromOSStoSCADE()
 
-    def HeadersOnStartup(self, unused_modelingLanguage, unused_asnFile, subProgram, unused_subProgramImplementation, unused_outputDir, maybeFVname):
+    def HeadersOnStartup(self, unused_modelingLanguage: str, unused_asnFile: str, subProgram: ApLevelContainer, unused_subProgramImplementation: str, unused_outputDir: str, maybeFVname: str) -> None:
         if self.useOSS:
             self.C_SourceFile.write(
                 "#include \"%s.oss.h\" // OSS generated\n" % self.asn_name)
@@ -442,7 +448,7 @@ class ScadeGlueGenerator(SynchronousToolGlueGenerator):
             self.C_SourceFile.write("%s %s;\n" % (self.CleanNameAsToolWants(param._signal._asnNodename), param._id))
         self.C_SourceFile.write("\n")
 
-    def SourceVar(self, unused_nodeTypename, unused_encoding, unused_node, unused_subProgram, unused_subProgramImplementation, param, unused_leafTypeDict, unused_names):
+    def SourceVar(self, unused_nodeTypename: str, unused_encoding: str, unused_node: AsnNode, unused_subProgram: ApLevelContainer, unused_subProgramImplementation: str, param: Param, unused_leafTypeDict: AST_Leaftypes, unused_names: AST_Lookup) -> str:
         if isinstance(param._sourceElement, AadlPort):  # Both AadlPort and AadlEventDataPort
             panic("Unsupported old construct")  # pragma: no cover
             # srcScadeMacro = "AADL2SCADE_OUTPUT_DATA_PORT(var_%s, %s, %s)" % \
@@ -459,7 +465,7 @@ class ScadeGlueGenerator(SynchronousToolGlueGenerator):
             panic(str(self.__class__) + ": %s not supported (yet?)\n" % str(param._sourceElement))  # pragma: no cover
         return srcScadeMacro
 
-    def TargetVar(self, unused_nodeTypename, unused_encoding, unused_node, unused_subProgram, unused_subProgramImplementation, param, unused_leafTypeDict, unused_names):
+    def TargetVar(self, unused_nodeTypename: str, unused_encoding: str, unused_node: AsnNode, unused_subProgram: ApLevelContainer, unused_subProgramImplementation: str, param: Param, unused_leafTypeDict: AST_Leaftypes, unused_names: AST_Lookup) -> str:
         if isinstance(param._sourceElement, AadlPort):  # Both AadlPort and AadlEventDataPort
             panic("Unsupported old construct")  # pragma: no cover
             # dstScadeMacro = "AADL2SCADE_INPUT_DATA_PORT(var_%s, %s, %s)" % \
@@ -476,46 +482,46 @@ class ScadeGlueGenerator(SynchronousToolGlueGenerator):
             panic(str(self.__class__) + ": %s not supported (yet?)\n" % str(param._sourceElement))  # pragma: no cover
         return dstScadeMacro
 
-    def InitializeBlock(self, unused_modelingLanguage, unused_asnFile, sp, unused_subProgramImplementation, unused_maybeFVname):
+    def InitializeBlock(self, unused_modelingLanguage: str, unused_asnFile: str, sp: ApLevelContainer, unused_subProgramImplementation: str, unused_maybeFVname: str) -> None:
         self.C_SourceFile.write("    %s_reset();\n" % (self.CleanNameAsToolWants(sp._id)))
 
-    def ExecuteBlock(self, unused_modelingLanguage, unused_asnFile, sp, unused_subProgramImplementation, unused_maybeFVname):
+    def ExecuteBlock(self, unused_modelingLanguage: str, unused_asnFile: str, sp: ApLevelContainer, unused_subProgramImplementation: str, unused_maybeFVname: str) -> None:
         self.C_SourceFile.write("    %s();\n" % (self.CleanNameAsToolWants(sp._id)))
 
 
-def OnStartup(modelingLanguage, asnFile, subProgram, subProgramImplementation, outputDir, maybeFVname, useOSS):
+def OnStartup(modelingLanguage: str, asnFile: str, subProgram: ApLevelContainer, subProgramImplementation: str, outputDir: str, maybeFVname: str, useOSS: bool) -> None:
     global scadeBackend
     scadeBackend = ScadeGlueGenerator()
     scadeBackend.OnStartup(modelingLanguage, asnFile, subProgram, subProgramImplementation, outputDir, maybeFVname, useOSS)
 
 
-def OnBasic(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+def OnBasic(nodeTypename: str, node: AsnBasicNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     scadeBackend.OnBasic(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
-def OnSequence(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+def OnSequence(nodeTypename: str, node: AsnSequence, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     scadeBackend.OnSequence(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
-def OnSet(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+def OnSet(nodeTypename: str, node: AsnSet, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     scadeBackend.OnSet(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)  # pragma: nocover
 
 
-def OnEnumerated(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+def OnEnumerated(nodeTypename: str, node: AsnEnumerated, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     scadeBackend.OnEnumerated(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
-def OnSequenceOf(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+def OnSequenceOf(nodeTypename: str, node: AsnSequenceOf, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     scadeBackend.OnSequenceOf(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
-def OnSetOf(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+def OnSetOf(nodeTypename: str, node: AsnSetOf, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     scadeBackend.OnSetOf(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)  # pragma: nocover
 
 
-def OnChoice(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names):
+def OnChoice(nodeTypename: str, node: AsnChoice, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     scadeBackend.OnChoice(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
-def OnShutdown(modelingLanguage, asnFile, sp, subProgramImplementation, maybeFVname):
+def OnShutdown(modelingLanguage: str, asnFile: str, sp: ApLevelContainer, subProgramImplementation: str, maybeFVname: str) -> None:
     scadeBackend.OnShutdown(modelingLanguage, asnFile, sp, subProgramImplementation, maybeFVname)

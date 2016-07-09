@@ -36,9 +36,14 @@ To that end, this backend creates "glue" functions for input and
 output parameters, which have C callable interfaces.
 '''
 
-from ..commonPy.utility import panic
-from ..commonPy.asnAST import sourceSequenceLimit, isSequenceVariable, targetSequenceLimit
+from typing import List
 
+from ..commonPy.utility import panic
+from ..commonPy.asnAST import (
+    sourceSequenceLimit, isSequenceVariable, targetSequenceLimit,
+    AsnInt, AsnReal, AsnBool, AsnSequenceOrSet, AsnSequenceOrSetOf,
+    AsnChoice, AsnOctetString, AsnEnumerated, AsnNode)
+from ..commonPy.asnParser import AST_Lookup, AST_Leaftypes
 from ..commonPy.recursiveMapper import RecursiveMapper
 from .asynchronousTool import ASynchronousToolGlueGenerator
 
@@ -46,30 +51,30 @@ isAsynchronous = True
 cBackend = None
 
 
-def Version():
+def Version() -> None:
     print("Code generator: " + "$Id: c_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")
 
 
 # noinspection PyListCreation
 # pylint: disable=no-self-use
 class FromCtoOSS(RecursiveMapper):
-    def __init__(self):
+    def __init__(self) -> None:
         self.uniqueID = 0
 
-    def UniqueID(self):
+    def UniqueID(self) -> int:
         self.uniqueID += 1
         return self.uniqueID
 
-    def MapInteger(self, srcCVariable, destVar, _, __, ___):
+    def MapInteger(self, srcCVariable: str, destVar: str, _: AsnInt, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return ["%s = %s;\n" % (destVar, srcCVariable)]
 
-    def MapReal(self, srcCVariable, destVar, _, __, ___):
+    def MapReal(self, srcCVariable: str, destVar: str, _: AsnReal, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return ["%s = %s;\n" % (destVar, srcCVariable)]
 
-    def MapBoolean(self, srcCVariable, destVar, _, __, ___):
+    def MapBoolean(self, srcCVariable: str, destVar: str, _: AsnBool, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return ["%s = (char)%s;\n" % (destVar, srcCVariable)]
 
-    def MapOctetString(self, srcCVariable, destVar, node, __, ___):
+    def MapOctetString(self, srcCVariable: str, destVar: str, node: AsnOctetString, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         lines = []  # type: List[str]
         lines.append("{\n")
         lines.append("    int i;\n")
@@ -80,10 +85,10 @@ class FromCtoOSS(RecursiveMapper):
         lines.append("}\n")
         return lines
 
-    def MapEnumerated(self, srcCVariable, destVar, _, __, ___):
+    def MapEnumerated(self, srcCVariable: str, destVar: str, _: AsnEnumerated, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return ["%s = %s;\n" % (destVar, srcCVariable)]
 
-    def MapSequence(self, srcCVariable, destVar, node, leafTypeDict, names):
+    def MapSequence(self, srcCVariable: str, destVar: str, node: AsnSequenceOrSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         lines = []  # type: List[str]
         for child in node._members:
             lines.extend(
@@ -95,10 +100,10 @@ class FromCtoOSS(RecursiveMapper):
                     names))
         return lines
 
-    def MapSet(self, srcCVariable, destVar, node, leafTypeDict, names):
+    def MapSet(self, srcCVariable: str, destVar: str, node: AsnSequenceOrSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return self.MapSequence(srcCVariable, destVar, node, leafTypeDict, names)  # pragma: nocover
 
-    def MapChoice(self, srcCVariable, destVar, node, leafTypeDict, names):
+    def MapChoice(self, srcCVariable: str, destVar: str, node: AsnChoice, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         lines = []  # type: List[str]
         childNo = 0
         for child in node._members:
@@ -117,7 +122,7 @@ class FromCtoOSS(RecursiveMapper):
             lines.append("}\n")
         return lines
 
-    def MapSequenceOf(self, srcCVariable, destVar, node, leafTypeDict, names):
+    def MapSequenceOf(self, srcCVariable: str, destVar: str, node: AsnSequenceOrSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         lines = []  # type: List[str]
         lines.append("{\n")
         uniqueId = self.UniqueID()
@@ -137,30 +142,30 @@ class FromCtoOSS(RecursiveMapper):
         lines.append("}\n")
         return lines
 
-    def MapSetOf(self, srcCVariable, destVar, node, leafTypeDict, names):
+    def MapSetOf(self, srcCVariable: str, destVar: str, node: AsnSequenceOrSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return self.MapSequenceOf(srcCVariable, destVar, node, leafTypeDict, names)  # pragma: nocover
 
 
 # noinspection PyListCreation
 # pylint: disable=no-self-use
 class FromOSStoC(RecursiveMapper):
-    def __init__(self):
+    def __init__(self) -> None:
         self.uniqueID = 0
 
-    def UniqueID(self):
+    def UniqueID(self) -> int:
         self.uniqueID += 1
         return self.uniqueID
 
-    def MapInteger(self, srcVar, dstCVariable, _, __, ___):
+    def MapInteger(self, srcVar: str, dstCVariable: str, _: AsnInt, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return ["%s = %s;\n" % (dstCVariable, srcVar)]
 
-    def MapReal(self, srcVar, dstCVariable, _, __, ___):
+    def MapReal(self, srcVar: str, dstCVariable: str, _: AsnReal, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return ["%s = %s;\n" % (dstCVariable, srcVar)]
 
-    def MapBoolean(self, srcVar, dstCVariable, _, __, ___):
+    def MapBoolean(self, srcVar: str, dstCVariable: str, _: AsnBool, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return ["%s = (%s)?1:0;\n" % (dstCVariable, srcVar)]
 
-    def MapOctetString(self, srcVar, dstCVariable, node, _, __):
+    def MapOctetString(self, srcVar: str, dstCVariable: str, node: AsnOctetString, _: AST_Leaftypes, __: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         lines = []  # type: List[str]
         lines.append("{\n")
         lines.append("    int i;\n")
@@ -172,10 +177,10 @@ class FromOSStoC(RecursiveMapper):
         lines.append("}\n")
         return lines
 
-    def MapEnumerated(self, srcVar, dstCVariable, _, __, ___):
+    def MapEnumerated(self, srcVar: str, dstCVariable: str, _: AsnEnumerated, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return ["%s = %s;\n" % (dstCVariable, srcVar)]
 
-    def MapSequence(self, srcVar, dstCVariable, node, leafTypeDict, names):
+    def MapSequence(self, srcVar: str, dstCVariable: str, node: AsnSequenceOrSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         lines = []  # type: List[str]
         for child in node._members:
             lines.extend(
@@ -187,10 +192,10 @@ class FromOSStoC(RecursiveMapper):
                     names))
         return lines
 
-    def MapSet(self, srcVar, dstCVariable, node, leafTypeDict, names):
+    def MapSet(self, srcVar: str, dstCVariable: str, node: AsnSequenceOrSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return self.MapSequence(srcVar, dstCVariable, node, leafTypeDict, names)  # pragma: nocover
 
-    def MapChoice(self, srcVar, dstCVariable, node, leafTypeDict, names):
+    def MapChoice(self, srcVar: str, dstCVariable: str, node: AsnChoice, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         lines = []  # type: List[str]
         childNo = 0
         for child in node._members:
@@ -209,7 +214,7 @@ class FromOSStoC(RecursiveMapper):
             lines.append("}\n")
         return lines
 
-    def MapSequenceOf(self, srcVar, dstCVariable, node, leafTypeDict, names):
+    def MapSequenceOf(self, srcVar: str, dstCVariable: str, node: AsnSequenceOrSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         lines = []  # type: List[str]
         lines.append("{\n")
         uniqueId = self.UniqueID()
@@ -230,20 +235,20 @@ class FromOSStoC(RecursiveMapper):
         lines.append("}\n")
         return lines
 
-    def MapSetOf(self, srcVar, dstCVariable, node, leafTypeDict, names):
+    def MapSetOf(self, srcVar: str, dstCVariable: str, node: AsnSequenceOrSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return self.MapSequenceOf(srcVar, dstCVariable, node, leafTypeDict, names)  # pragma: nocover
 
 
 class C_GlueGenerator(ASynchronousToolGlueGenerator):
-    def __init__(self):
+    def __init__(self) -> None:
         ASynchronousToolGlueGenerator.__init__(self)
         self.FromOSStoC = FromOSStoC()
         self.FromCtoOSS = FromCtoOSS()
 
-    def Version(self):
+    def Version(self) -> None:
         print("Code generator: " + "$Id: c_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")  # pragma: no cover
 
-    def HeadersOnStartup(self, unused_asnFile, unused_outputDir, unused_maybeFVname):
+    def HeadersOnStartup(self, unused_asnFile: str, unused_outputDir: str, unused_maybeFVname: str) -> None:
         if self.useOSS:
             self.C_HeaderFile.write("#include \"%s.oss.h\" // OSS generated\n\n" % self.asn_name)
             self.C_SourceFile.write("\nextern OssGlobal *g_world;\n\n")
@@ -251,7 +256,7 @@ class C_GlueGenerator(ASynchronousToolGlueGenerator):
                                 self.asn_name)
         self.C_HeaderFile.write("#include \"../../system_config.h\" // Choose ASN.1 Types to use\n\n")
 
-    def Encoder(self, nodeTypename, node, leafTypeDict, names, encoding):
+    def Encoder(self, nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup, encoding: str) -> None:
         if encoding.lower() not in self.supportedEncodings:
             panic(str(self.__class__) + ": in (%s), encoding can be one of %s (not '%s')" %  # pragma: no cover
                   (nodeTypename, self.supportedEncodings, encoding))  # pragma: no cover
@@ -336,7 +341,7 @@ class C_GlueGenerator(ASynchronousToolGlueGenerator):
             self.C_SourceFile.write("}\n")
             self.C_SourceFile.write("#endif\n\n")
 
-    def Decoder(self, nodeTypename, node, leafTypeDict, names, encoding):
+    def Decoder(self, nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup, encoding: str) -> None:
         if encoding.lower() not in self.supportedEncodings:
             panic(str(self.__class__) + ": in (%s), encoding can be one of %s (not '%s')" %  # pragma: no cover
                   (nodeTypename, self.supportedEncodings, encoding))  # pragma: no cover
@@ -420,39 +425,39 @@ class C_GlueGenerator(ASynchronousToolGlueGenerator):
             self.C_SourceFile.write("#endif\n\n")
 
 
-def OnStartup(modelingLanguage, asnFile, outputDir, maybeFVname, useOSS):
+def OnStartup(modelingLanguage: str, asnFile: str, outputDir: str, maybeFVname: str, useOSS: bool) -> None:
     global cBackend
     cBackend = C_GlueGenerator()
     cBackend.OnStartup(modelingLanguage, asnFile, outputDir, maybeFVname, useOSS)
 
 
-def OnBasic(nodeTypename, node, leafTypeDict, names):
+def OnBasic(nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     cBackend.OnBasic(nodeTypename, node, leafTypeDict, names)
 
 
-def OnSequence(nodeTypename, node, leafTypeDict, names):
+def OnSequence(nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     cBackend.OnSequence(nodeTypename, node, leafTypeDict, names)
 
 
-def OnSet(nodeTypename, node, leafTypeDict, names):
+def OnSet(nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     cBackend.OnSet(nodeTypename, node, leafTypeDict, names)  # pragma: nocover
 
 
-def OnEnumerated(nodeTypename, node, leafTypeDict, names):
+def OnEnumerated(nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     cBackend.OnEnumerated(nodeTypename, node, leafTypeDict, names)
 
 
-def OnSequenceOf(nodeTypename, node, leafTypeDict, names):
+def OnSequenceOf(nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     cBackend.OnSequenceOf(nodeTypename, node, leafTypeDict, names)
 
 
-def OnSetOf(nodeTypename, node, leafTypeDict, names):
+def OnSetOf(nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     cBackend.OnSetOf(nodeTypename, node, leafTypeDict, names)  # pragma: nocover
 
 
-def OnChoice(nodeTypename, node, leafTypeDict, names):
+def OnChoice(nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     cBackend.OnChoice(nodeTypename, node, leafTypeDict, names)
 
 
-def OnShutdown(modelingLanguage, asnFile, maybeFVname):
+def OnShutdown(modelingLanguage: str, asnFile: str, maybeFVname: str) -> None:
     cBackend.OnShutdown(modelingLanguage, asnFile, maybeFVname)

@@ -20,14 +20,19 @@
 #
 import re
 
-from typing import Set  # NOQA pylint: disable=unused-import
+from typing import Union, Set  # NOQA pylint: disable=unused-import
 
 from ..commonPy.utility import panic, inform
 from ..commonPy import asnParser
 from ..commonPy.asnAST import (
     AsnBool, AsnInt, AsnReal, AsnString, AsnEnumerated, AsnSequence,
-    AsnSet, AsnChoice, AsnMetaMember, AsnSequenceOf, AsnSetOf)
+    AsnSet, AsnChoice, AsnMetaMember, AsnSequenceOf, AsnSetOf,
+    AsnBasicNode, AsnSequenceOrSet, AsnSequenceOrSetOf)
+from ..commonPy.asnAST import AsnNode  # NOQA pylint: disable=unused-import
 from ..commonPy.createInternalTypes import ScanChildren
+from ..commonPy.asnParser import AST_Leaftypes, AST_Lookup
+from ..commonPy.cleanupNodes import SetOfBadTypenames
+
 
 # The file written to
 g_outputFile = None
@@ -40,15 +45,15 @@ g_octetStrings = 0
 g_bHasStartupRunOnce = False
 
 
-def Version():
+def Version() -> None:
     print("Code generator: " + "$Id: simulink_A_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")  # pragma: no cover
 
 
-def CleanNameAsSimulinkWants(name):
+def CleanNameAsSimulinkWants(name: str) -> str:
     return re.sub(r'[^a-zA-Z0-9_]', '_', name)
 
 
-def OnStartup(unused_modelingLanguage, unused_asnFile, outputDir, unused_badTypes):
+def OnStartup(unused_modelingLanguage: str, unused_asnFile: str, outputDir: str, unused_badTypes: SetOfBadTypenames) -> None:
     global g_bHasStartupRunOnce
     if g_bHasStartupRunOnce:
         # Don't rerun, it has already done all the work
@@ -68,39 +73,39 @@ def OnStartup(unused_modelingLanguage, unused_asnFile, outputDir, unused_badType
     CreateDeclarationsForAllTypes(asnParser.g_names, asnParser.g_leafTypeDict)
 
 
-def OnBasic(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnBasic(unused_nodeTypename: str, unused_node: AsnBasicNode, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass
 
 
-def OnSequence(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnSequence(unused_nodeTypename: str, unused_node: AsnSequenceOrSet, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass
 
 
-def OnSet(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnSet(unused_nodeTypename: str, unused_node: AsnSequenceOrSet, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass  # pragma: nocover
 
 
-def OnEnumerated(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnEnumerated(unused_nodeTypename: str, unused_node: AsnEnumerated, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass
 
 
-def OnSequenceOf(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnSequenceOf(unused_nodeTypename: str, unused_node: AsnSequenceOrSetOf, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass
 
 
-def OnSetOf(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnSetOf(unused_nodeTypename: str, unused_node: AsnSequenceOrSetOf, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass  # pragma: nocover
 
 
-def OnChoice(unused_nodeTypename, unused_node, unused_leafTypeDict):
+def OnChoice(unused_nodeTypename: str, unused_node: AsnChoice, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass
 
 
-def OnShutdown(unused_badTypes):
+def OnShutdown(unused_badTypes: SetOfBadTypenames) -> None:
     pass
 
 
-def MapInteger(node):
+def MapInteger(node: AsnInt) -> str:
     if node._range[0] >= 0 and node._range[1] <= 255:
         return "uint8"
     elif node._range[0] >= -128 and node._range[1] <= 127:
@@ -115,15 +120,14 @@ def MapInteger(node):
         return "int32"
 
 
-def CreateAlias(nodeTypename, mappedType, description):
+def CreateAlias(nodeTypename: str, mappedType: str, description: str) -> None:
     # Requirements have changed: Simulink has an issue with AliasType...
     g_outputFile.write("%s = Simulink.AliasType;\n" % CleanNameAsSimulinkWants(nodeTypename))
     g_outputFile.write("%s.BaseType = '%s';\n" % (CleanNameAsSimulinkWants(nodeTypename), mappedType))
     g_outputFile.write("%s.Description = '%s';\n\n" % (CleanNameAsSimulinkWants(nodeTypename), description))
-    return
 
 
-def DeclareCollection(node, name, internal):
+def DeclareCollection(node: AsnSequenceOrSetOf, name: str, internal: str) -> None:
     for i in range(0, node._range[-1]):
         g_outputFile.write('%s_member_%02d=Simulink.BusElement;\n' % (name, i))
         # Andreas(ESA) wants them to be called 'element_%02d'
@@ -144,7 +148,7 @@ def DeclareCollection(node, name, internal):
     g_outputFile.write(";\n\n")
 
 
-def DeclareSimpleCollection(node, name, internal):
+def DeclareSimpleCollection(node: Union[AsnString, AsnSequenceOf, AsnSetOf], name: str, internal: str) -> None:
     g_outputFile.write('%s_member_data=Simulink.BusElement;\n' % name)
     g_outputFile.write("%s_member_data.name='element_data';\n" % name)
     g_outputFile.write("%s_member_data.DataType='%s';\n" % (name, internal))
@@ -170,7 +174,7 @@ def DeclareSimpleCollection(node, name, internal):
     g_outputFile.write(";\n\n")
 
 
-def CreateDeclarationForType(nodeTypename, names, leafTypeDict):
+def CreateDeclarationForType(nodeTypename: str, names: AST_Lookup, leafTypeDict: AST_Leaftypes) -> None:
     if nodeTypename in g_definedTypes:
         return
     g_definedTypes.add(nodeTypename)
@@ -204,7 +208,7 @@ def CreateDeclarationForType(nodeTypename, names, leafTypeDict):
                 panic("Simulink_A_mapper: must have values for enumerants (%s)" % node.Location())  # pragma: no cover
         CreateAlias(nodeTypename, "int32", "values of ENUMERATED %s" % nodeTypename)
         g_outputFile.write("\n")
-    elif isinstance(node, AsnSequence) or isinstance(node, AsnSet) or isinstance(node, AsnChoice):
+    elif isinstance(node, (AsnSequence, AsnSet, AsnChoice)):
         if len(node._members) == 0:
             panic("Simulink_A_mapper: Simulink can't support empty Seq/Set/Choice! (%s)" % node.Location())  # pragma: no cover
         elemNo = 0
@@ -269,14 +273,13 @@ def CreateDeclarationForType(nodeTypename, names, leafTypeDict):
         if elemNo > 1:
             g_outputFile.write(']')
         g_outputFile.write(";\n\n")
-    elif isinstance(node, AsnSequenceOf) or isinstance(node, AsnSetOf):
+    elif isinstance(node, (AsnSequenceOf, AsnSetOf)):
         name = CleanNameAsSimulinkWants(nodeTypename)
         contained = node._containedType
         assert isinstance(contained, str)
-        containedNode = contained
+        containedNode = contained  # type: Union[AsnNode, str]
         while isinstance(containedNode, str):
             containedNode = names[containedNode]
-
         if isinstance(containedNode, AsnBool):
             DeclareSimpleCollection(node, name, 'boolean')
         elif isinstance(containedNode, AsnInt):
@@ -300,6 +303,6 @@ def CreateDeclarationForType(nodeTypename, names, leafTypeDict):
         panic("Unexpected ASN.1 type... Send this grammar to Semantix")  # pragma: no cover
 
 
-def CreateDeclarationsForAllTypes(names, leafTypeDict):
+def CreateDeclarationsForAllTypes(names: AST_Lookup, leafTypeDict: AST_Leaftypes) -> None:
     for nodeTypename in list(names.keys()):
         CreateDeclarationForType(nodeTypename, names, leafTypeDict)

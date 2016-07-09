@@ -36,38 +36,51 @@ class ASynchronousToolGlueGenerator:
     ################################################
     # Parts to override for each asynchronous tool
 
-    def Version(self):  # pylint: disable=no-self-use
+    def Version(self) -> None:  # pylint: disable=no-self-use
         panicWithCallStack("Method undefined in a ASynchronousToolGlueGenerator...")  # pragma: no cover
 
-    def HeadersOnStartup(self, unused_asnFile, unused_outputDir, unused_maybeFVname):  # pylint: disable=no-self-use
+    def HeadersOnStartup(self,  # pylint: disable=no-self-use
+                         unused_asnFile: str,
+                         unused_outputDir: str,
+                         unused_maybeFVname: str) -> None:
         panicWithCallStack("Method undefined in a ASynchronousToolGlueGenerator...")  # pragma: no cover
 
-    def Encoder(self, unused_nodeTypename, unused_node, unused_leafTypeDict, unused_names, unused_encoding):  # pylint: disable=no-self-use
+    def Encoder(self,  # pylint: disable=no-self-use
+                unused_nodeTypename: str,
+                unused_node: AsnNode,
+                unused_leafTypeDict: AST_Leaftypes,
+                unused_names: AST_Lookup,
+                unused_encoding: str) -> None:
         panicWithCallStack("Method undefined in a ASynchronousToolGlueGenerator...")  # pragma: no cover
 
-    def Decoder(self, unused_nodeTypename, unused_node, unused_leafTypeDict, unused_names, unused_encoding):  # pylint: disable=no-self-use
+    def Decoder(self,  # pylint: disable=no-self-use
+                unused_nodeTypename: str,
+                unused_node: AsnNode,
+                unused_leafTypeDict: AST_Leaftypes,
+                unused_names: AST_Lookup,
+                unused_encoding: str) -> None:
         panicWithCallStack("Method undefined in a ASynchronousToolGlueGenerator...")  # pragma: no cover
 
     ########################################################
     # Parts to possibly override for each synchronous tool
 
     # noinspection PyMethodMayBeStatic
-    def CleanNameAsToolWants(self, name):  # pylint: disable=no-self-use
+    def CleanNameAsToolWants(self, name: str) -> str:  # pylint: disable=no-self-use
         return re.sub(r'[^a-zA-Z0-9_]', '_', name)
 
     ##########################################
     # Common parts for all asynchronous tools
 
-    def __init__(self):
+    def __init__(self) -> None:
         # The files written to
         self.C_HeaderFile = None  # type: IO[Any]
         self.C_SourceFile = None  # type: IO[Any]
         self.asn_name = ""
         self.supportedEncodings = ['native', 'uper', 'acn']
         self.useOSS = None  # type: bool
-        self.typesToWorkOn = {}  # type: Dict[str, Tuple[Typename, AST_Lookup, AST_Leaftypes]]
+        self.typesToWorkOn = {}  # type: Dict[str, Tuple[AsnNode, AST_Leaftypes, AST_Lookup]]
 
-    def OnStartup(self, modelingLanguage, asnFile, outputDir, maybeFVname, useOSS):
+    def OnStartup(self, modelingLanguage: str, asnFile: str, outputDir: str, maybeFVname: str, useOSS: bool) -> None:
         self.useOSS = useOSS
         prefix = modelingLanguage
         if prefix == "SDL":
@@ -96,9 +109,9 @@ class ASynchronousToolGlueGenerator:
 
         self.HeadersOnStartup(asnFile, outputDir, maybeFVname)
 
-        self.typesToWorkOn = {}
+        self.typesToWorkOn = {}  # type: Dict[str, Tuple[AsnNode, AST_Leaftypes, AST_Lookup]]
 
-    def Common(self, nodeTypename, node, leafTypeDict, names):
+    def Common(self, nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
         # Async backends are different: they work on ASN.1 types, not SP params.
 
         # OG for example, needs macros to be generated, not functions. This breaks the normal
@@ -120,37 +133,37 @@ class ASynchronousToolGlueGenerator:
         self.Decoder(nodeTypename, node, leafTypeDict, names, 'acn')
         self.Decoder(nodeTypename, node, leafTypeDict, names, 'native')
 
-    def OnBasic(self, nodeTypename, node, leafTypeDict, names):
+    def OnBasic(self, nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
         realLeafType = leafTypeDict[nodeTypename]
         inform(str(self.__class__) + ": BASE: %s (%s)", nodeTypename, realLeafType)
-        self.typesToWorkOn[nodeTypename] = [node, leafTypeDict, names]
+        self.typesToWorkOn[nodeTypename] = (node, leafTypeDict, names)
 
-    def OnSequence(self, nodeTypename, node, leafTypeDict, names):
+    def OnSequence(self, nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
         inform(str(self.__class__) + ": SEQUENCE: %s", nodeTypename)
-        self.typesToWorkOn[nodeTypename] = [node, leafTypeDict, names]
+        self.typesToWorkOn[nodeTypename] = (node, leafTypeDict, names)
 
-    def OnSet(self, nodeTypename, node, leafTypeDict, names):
+    def OnSet(self, nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
         inform(str(self.__class__) + ": SET: %s", nodeTypename)  # pragma: nocover
-        self.typesToWorkOn[nodeTypename] = [node, leafTypeDict, names]  # pragma: nocover
+        self.typesToWorkOn[nodeTypename] = (node, leafTypeDict, names)  # pragma: nocover
 
-    def OnEnumerated(self, nodeTypename, node, leafTypeDict, names):
+    def OnEnumerated(self, nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
         inform(str(self.__class__) + ": ENUMERATED: %s", nodeTypename)
-        self.typesToWorkOn[nodeTypename] = [node, leafTypeDict, names]
+        self.typesToWorkOn[nodeTypename] = (node, leafTypeDict, names)
 
-    def OnSequenceOf(self, nodeTypename, node, leafTypeDict, names):
+    def OnSequenceOf(self, nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
         inform(str(self.__class__) + ": SEQUENCEOF: %s", nodeTypename)
-        self.typesToWorkOn[nodeTypename] = [node, leafTypeDict, names]
+        self.typesToWorkOn[nodeTypename] = (node, leafTypeDict, names)
 
-    def OnSetOf(self, nodeTypename, node, leafTypeDict, names):
+    def OnSetOf(self, nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
         inform(str(self.__class__) + ": SETOF: %s", nodeTypename)  # pragma: nocover
-        self.typesToWorkOn[nodeTypename] = [node, leafTypeDict, names]  # pragma: nocover
+        self.typesToWorkOn[nodeTypename] = (node, leafTypeDict, names)  # pragma: nocover
 
-    def OnChoice(self, nodeTypename, node, leafTypeDict, names):
+    def OnChoice(self, nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
         inform(str(self.__class__) + ": CHOICE: %s", nodeTypename)
-        self.typesToWorkOn[nodeTypename] = [node, leafTypeDict, names]
+        self.typesToWorkOn[nodeTypename] = (node, leafTypeDict, names)
 
-    def OnShutdown(self, unused_modelingLanguage, unused_asnFile, unused_maybeFVname):
-        for nodeTypename, value in list(self.typesToWorkOn.items()):
+    def OnShutdown(self, unused_modelingLanguage: str, unused_asnFile: str, unused_maybeFVname: str) -> None:
+        for nodeTypename, value in self.typesToWorkOn.items():
             inform(str(self.__class__) + "Really working on " + nodeTypename)
             (node, leafTypeDict, names) = value
             self.Common(nodeTypename, node, leafTypeDict, names)

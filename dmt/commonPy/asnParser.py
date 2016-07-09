@@ -53,7 +53,7 @@ import re
 import distutils.spawn as spawn
 
 import xml.sax  # type: ignore
-from typing import Union, List, Dict, Tuple, Any  # NOQA pylint: disable=W0611
+from typing import IO, TypeVar, Type, Optional, Callable, Union, List, Dict, Tuple, Any  # NOQA pylint: disable=W0611
 
 from . import configMT
 from . import utility
@@ -104,24 +104,18 @@ lotokens = [tkn.lower() for tkn in tokens]
 
 #    'BIT': 'BIT',
 reserved = {
-    'DEFINITIONS': 'DEFINITIONS', 'APPLICATION': 'APPLICATION',
-    'TAGS': 'TAGS', 'BEGIN': 'BEGIN', 'CHOICE': 'CHOICE',
-    'SEQUENCE': 'SEQUENCE', 'SET': 'SET', 'OF': 'OF',
-    'END': 'END', 'OPTIONAL': 'OPTIONAL', 'BOOLEAN': 'BOOLEAN',
-    'INTEGER': 'INTEGER', 'REAL': 'REAL', 'OCTET': 'OCTET',
-    'STRING': 'STRING', 'UTF8String': 'UTF8STRING',
-    'AsciiString': 'ASCIISTRING', 'NumberString': 'NUMBERSTRING',
-    'VisibleString': 'VISIBLESTRING', 'PrintableString': 'PRINTABLESTRING',
-    'ENUMERATED': 'ENUMERATED', 'AUTOMATIC': 'AUTOMATIC',
-    'IMPLICIT': 'IMPLICIT', 'EXPLICIT': 'EXPLICIT', 'SIZE': 'SIZE',
-    'TRUE': 'TRUE', 'FALSE': 'FALSE', 'DEFAULT': 'DEFAULT',
-    'mantissa': 'MANTISSA', 'base': 'BASE', 'exponent': 'EXPONENT',
-    'WITH': 'WITH', 'FROM': 'FROM', 'IMPORTS': 'IMPORTS',
-    'EXPORTS': 'EXPORTS', 'ALL': 'ALL', 'COMPONENTS': 'COMPONENTS'
+    'DEFINITIONS': 'DEFINITIONS', 'APPLICATION': 'APPLICATION', 'TAGS': 'TAGS', 'BEGIN': 'BEGIN', 'CHOICE': 'CHOICE',
+    'SEQUENCE': 'SEQUENCE', 'SET': 'SET', 'OF': 'OF', 'END': 'END', 'OPTIONAL': 'OPTIONAL', 'BOOLEAN': 'BOOLEAN',
+    'INTEGER': 'INTEGER', 'REAL': 'REAL', 'OCTET': 'OCTET', 'STRING': 'STRING', 'UTF8String': 'UTF8STRING',
+    'AsciiString': 'ASCIISTRING', 'NumberString': 'NUMBERSTRING', 'VisibleString': 'VISIBLESTRING',
+    'PrintableString': 'PRINTABLESTRING', 'ENUMERATED': 'ENUMERATED', 'AUTOMATIC': 'AUTOMATIC', 'SIZE': 'SIZE',
+    'IMPLICIT': 'IMPLICIT', 'EXPLICIT': 'EXPLICIT', 'TRUE': 'TRUE', 'FALSE': 'FALSE', 'DEFAULT': 'DEFAULT',
+    'mantissa': 'MANTISSA', 'base': 'BASE', 'exponent': 'EXPONENT', 'WITH': 'WITH', 'FROM': 'FROM',
+    'IMPORTS': 'IMPORTS', 'EXPORTS': 'EXPORTS', 'ALL': 'ALL', 'COMPONENTS': 'COMPONENTS'
 }
 
 
-def KnownType(node, names):
+def KnownType(node: AsnNode, names: AST_Lookup) -> bool:
     retVal = True
     if isinstance(node, str):
         utility.panic("Referenced type (%s) does not exist!\n" % node)
@@ -134,10 +128,9 @@ def KnownType(node, names):
     elif isinstance(node, AsnMetaMember):
         retVal = KnownType(names.get(node._containedType, node._containedType), names)
     elif isinstance(node, (AsnSequenceOf, AsnSetOf)):
-        if isinstance(node._containedType, str):
-            containedType = names.get(node._containedType, node._containedType)
-        else:
-            containedType = node._containedType
+        containedType = node._containedType
+        while isinstance(containedType, str):
+            containedType = names[containedType]
         retVal = KnownType(containedType, names)
     elif isinstance(node, AsnMetaType):
         retVal = KnownType(names.get(node._containedType, node._containedType), names)
@@ -385,7 +378,7 @@ def CheckForInvalidKeywords(node_or_str: Union[str, AsnNode]) -> None:
                 CheckForInvalidKeywords(g_names[node._containedType])
 
 
-def ParseAsnFileList(listOfFilenames):
+def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=invalid-sequence-index
     asn1SccPath = spawn.find_executable('asn1.exe')
     if asn1SccPath is None:
         utility.panic("ASN1SCC seems not installed on your system (asn1.exe not found in PATH).\n")
@@ -430,7 +423,7 @@ def ParseAsnFileList(listOfFilenames):
                 g_names[nodeTypename]._isArtificial = True
 
 
-def Dump():
+def Dump() -> None:
     for nodeTypename in sorted(g_names.keys()):
         if g_names[nodeTypename]._isArtificial:
             continue
@@ -439,7 +432,7 @@ def Dump():
         print("::", g_names[nodeTypename], g_leafTypeDict[nodeTypename])
 
 
-def test_asn1():
+def test_asn1() -> None:
     if "-debug" in sys.argv:
         configMT.debugParser = True
         sys.argv.remove("-debug")
@@ -461,14 +454,14 @@ g_lineno = -1
 
 
 class Element:
-    def __init__(self, name, attrs):
+    def __init__(self, name: str, attrs: Dict[str, Any]) -> None:
         self._name = name
         self._attrs = attrs
         self._children = []  # type: List[Element]
 
 
 class InputFormatXMLHandler(xml.sax.ContentHandler):
-    def __init__(self, debug=False):
+    def __init__(self, debug: bool=False) -> None:
         xml.sax.ContentHandler.__init__(self)
         self._debug = False
         if debug:
@@ -477,7 +470,7 @@ class InputFormatXMLHandler(xml.sax.ContentHandler):
         self._root = Element('root', {})
         self._roots = [self._root]
 
-    def startElement(self, name, attrs):
+    def startElement(self, name: str, attrs: Dict[str, Any]) -> None:
         if self._debug:
             print(self._indent + "(", name, ")", ", ".join(list(attrs.keys())))  # pragma: no cover
             self._indent += "    "  # pragma: no cover
@@ -486,7 +479,7 @@ class InputFormatXMLHandler(xml.sax.ContentHandler):
         self._roots.append(newElement)
 
     # def endElement(self, name):
-    def endElement(self, _):
+    def endElement(self, _: Any) -> None:
         if self._debug:
             if len(self._indent) > 4:  # pragma: no cover
                 self._indent = self._indent[:len(self._indent) - 4]  # pragma: no cover
@@ -499,24 +492,27 @@ class InputFormatXMLHandler(xml.sax.ContentHandler):
 #        Travel(indent+"    ", c)
 
 
-def VisitAll(node, expectedType, Action):
+Action = Callable[[Element], Any]
+
+
+def VisitAll(node: Element, expectedType: str, action: Action) -> List[Any]:  # pylint: disable=invalid-sequence-index
     results = []  # type: List[Any]
     if node is not None:
         if node._name == expectedType:
-            results = [Action(node)]
+            results = [action(node)]
         for child in node._children:
-            results += VisitAll(child, expectedType, Action)
+            results += VisitAll(child, expectedType, action)
     return results
 
 
-def GetAttr(node, attrName):
+def GetAttr(node: Element, attrName: str) -> Optional[Any]:
     if attrName not in list(node._attrs.keys()):
         return None
     else:
         return node._attrs[attrName]
 
 
-def GetChild(node, childName):
+def GetChild(node: Element, childName: str) -> Optional[Element]:
     for x in node._children:
         if x._name == childName:
             return x
@@ -524,7 +520,7 @@ def GetChild(node, childName):
 
 
 class Pretty:
-    def __repr__(self):
+    def __repr__(self) -> str:
         result = ""  # pragma: no cover
         for i in dir(self):  # pragma: no cover
             if i != "__repr__":  # pragma: no cover
@@ -534,14 +530,29 @@ class Pretty:
         return result  # pragma: no cover
 
 
+class Module(Pretty):
+    _id = None                 # type: str
+    _asnFilename = None        # type: str
+    _exportedTypes = None      # type: List[str]
+    _exportedVariables = None  # type: List[str]
+
+    # (tuples of ModuleName, imported types, imported vars)
+    _importedModules = None    # type: List[Tuple[str, List[str], List[str]]]
+    # (tuples of Typename, AsnNode)
+    _typeAssignments = None    # type: List[Tuple[str, AsnNode]]
+
+
 # def CreateBoolean(newModule, lineNo, xmlBooleanNode):
-def CreateBoolean(newModule, lineNo, _):
+def CreateBoolean(newModule: Module, lineNo: int, _: Any) -> AsnBool:
     return AsnBool(
         asnFilename=newModule._asnFilename,
         lineno=lineNo)
 
 
-def GetRange(newModule, lineNo, nodeWithMinAndMax, valueType):
+U = TypeVar('U', int, float)
+
+
+def GetRange(newModule: Module, lineNo: int, nodeWithMinAndMax: Element, valueType: Type[U]) -> Tuple[U, U]:
     try:
         mmin = GetAttr(nodeWithMinAndMax, "Min")
         # rangel = ( mmin == "MIN" ) and -2147483648L or valueType(mmin)
@@ -557,24 +568,24 @@ def GetRange(newModule, lineNo, nodeWithMinAndMax, valueType):
         descr = {int: "integer", float: "floating point"}  # pragma: no cover
         utility.panic("Expecting %s value ranges (%s, %s)" %  # pragma: no cover
                       (descr[valueType], newModule._asnFilename, lineNo))  # pragma: no cover
-    return [rangel, rangeh]
+    return (rangel, rangeh)
 
 
-def CreateInteger(newModule, lineNo, xmlIntegerNode):
+def CreateInteger(newModule: Module, lineNo: int, xmlIntegerNode: Element) -> AsnInt:
     return AsnInt(
         asnFilename=newModule._asnFilename,
         lineno=lineNo,
         range=GetRange(newModule, lineNo, xmlIntegerNode, int))
 
 
-def CreateReal(newModule, lineNo, xmlRealNode):
+def CreateReal(newModule: Module, lineNo: int, xmlRealNode: Element) -> AsnReal:
     return AsnReal(
         asnFilename=newModule._asnFilename,
         lineno=lineNo,
         range=GetRange(newModule, lineNo, xmlRealNode, float))
 
 
-def CreateEnumerated(newModule, lineNo, xmlEnumeratedNode):
+def CreateEnumerated(newModule: Module, lineNo: int, xmlEnumeratedNode: Element) -> AsnEnumerated:
     # bSetIntValue = True
     # if GetAttr(xmlEnumeratedNode, "ValuesAutoCalculated") == "True":
     #    bSetIntValue = False
@@ -590,19 +601,19 @@ def CreateEnumerated(newModule, lineNo, xmlEnumeratedNode):
 
 
 # def CreateBitString(newModule, lineNo, xmlBitString):
-def CreateBitString(_, __, ___):
+def CreateBitString(_, __, ___):  # type: ignore
     utility.panic("BitString type is not supported by the toolchain. "  # pragma: no cover
                   "Please use SEQUENCE OF BOOLEAN")  # pragma: no cover
 
 
-def CreateOctetString(newModule, lineNo, xmlOctetString):
+def CreateOctetString(newModule: Module, lineNo: int, xmlOctetString: Element) -> AsnOctetString:
     return AsnOctetString(
         asnFilename=newModule._asnFilename,
         lineno=lineNo,
         range=GetRange(newModule, lineNo, xmlOctetString, int))
 
 
-def CreateIA5String(newModule, lineNo, xmlIA5StringNode):
+def CreateIA5String(newModule: Module, lineNo: int, xmlIA5StringNode: Element) -> AsnAsciiString:
     # utility.panic("IA5Strings are supported by ASN1SCC, but are not supported yet " # pragma: no cover
     #               "by the toolchain. Please use OCTET STRING") # pragma: no cover
     # return CreateOctetString(newModule, lineNo, xmlIA5StringNode)
@@ -612,7 +623,7 @@ def CreateIA5String(newModule, lineNo, xmlIA5StringNode):
         range=GetRange(newModule, lineNo, xmlIA5StringNode, int))
 
 
-def CreateNumericString(newModule, lineNo, xmlNumericStringNode):
+def CreateNumericString(newModule: Module, lineNo: int, xmlNumericStringNode: Element) -> AsnOctetString:
     return CreateOctetString(newModule, lineNo, xmlNumericStringNode)  # pragma: no cover
 
 
@@ -629,7 +640,7 @@ def getIntOrFloatOrNone(d: str) -> Union[int, float, None]:
             return None
 
 
-def CreateReference(newModule, lineNo, xmlReferenceNode):
+def CreateReference(newModule: Module, lineNo: int, xmlReferenceNode: Element) -> AsnMetaType:
     return AsnMetaType(
         asnFilename=newModule._asnFilename,
         lineno=lineNo,
@@ -638,7 +649,10 @@ def CreateReference(newModule, lineNo, xmlReferenceNode):
         Max=getIntOrFloatOrNone(GetAttr(xmlReferenceNode, "Max")))
 
 
-def CommonSetSeqOf(newModule, lineNo, xmlSequenceOfNode, classToCreate):
+V = TypeVar('V', AsnSequenceOf, AsnSetOf)
+
+
+def CommonSetSeqOf(newModule: Module, lineNo: int, xmlSequenceOfNode: Element, classToCreate: Type[V]) -> V:
     xmlType = GetChild(xmlSequenceOfNode, "Type")
     if xmlType is None:
         utility.panic("CommonSetSeqOf: No child under SequenceOfType (%s, %s)" %  # pragma: no cover
@@ -657,15 +671,23 @@ def CommonSetSeqOf(newModule, lineNo, xmlSequenceOfNode, classToCreate):
         containedType=contained)
 
 
-def CreateSequenceOf(newModule, lineNo, xmlSequenceOfNode):
+def CreateSequenceOf(newModule: Module, lineNo: int, xmlSequenceOfNode: Element) -> AsnSequenceOf:
     return CommonSetSeqOf(newModule, lineNo, xmlSequenceOfNode, AsnSequenceOf)
 
 
-def CreateSetOf(newModule, lineNo, xmlSetOfNode):
+def CreateSetOf(newModule: Module, lineNo: int, xmlSetOfNode: Element) -> AsnSetOf:
     return CommonSetSeqOf(newModule, lineNo, xmlSetOfNode, AsnSetOf)
 
 
-def CommonSeqSetChoice(newModule, lineNo, xmlSequenceNode, classToCreate, childTypeName):
+W = TypeVar('W', AsnSequence, AsnSet, AsnChoice)
+
+
+def CommonSeqSetChoice(
+        newModule: Module,
+        lineNo: int,
+        xmlSequenceNode: Element,
+        classToCreate: Type[W],
+        childTypeName: str) -> W:
     # Bug fixed in ASN1SCC, this check is no longer needed
     # if len(xmlSequenceNode._children) == 0:
     #     utility.panic("CommonSeqSetChoice: No children under Sequence/Choice/SetType (%s, %s)" %  # pragma: no cover
@@ -696,25 +718,25 @@ def CommonSeqSetChoice(newModule, lineNo, xmlSequenceNode, classToCreate, childT
         members=myMembers)
 
 
-def CreateSequence(newModule, lineNo, xmlSequenceNode):
+def CreateSequence(newModule: Module, lineNo: int, xmlSequenceNode: Element) -> AsnSequence:
     return CommonSeqSetChoice(
         newModule, lineNo, xmlSequenceNode,
         AsnSequence, "SequenceOrSetChild")
 
 
-def CreateSet(newModule, lineNo, xmlSetNode):
+def CreateSet(newModule: Module, lineNo: int, xmlSetNode: Element) -> AsnSet:
     return CommonSeqSetChoice(
         newModule, lineNo, xmlSetNode,
         AsnSet, "SequenceOrSetChild")
 
 
-def CreateChoice(newModule, lineNo, xmlChoiceNode):
+def CreateChoice(newModule: Module, lineNo: int, xmlChoiceNode: Element) -> AsnChoice:
     return CommonSeqSetChoice(
         newModule, lineNo, xmlChoiceNode,
         AsnChoice, "ChoiceChild")
 
 
-def GenericFactory(newModule, xmlType):
+def GenericFactory(newModule: Module, xmlType: Element) -> AsnNode:
     Factories = {
         "BooleanType": CreateBoolean,
         "IntegerType": CreateInteger,
@@ -730,7 +752,7 @@ def GenericFactory(newModule, xmlType):
         "SequenceType": CreateSequence,
         "SetType": CreateSet,
         "ChoiceType": CreateChoice
-    }
+    }  # type: Dict[str, Callable[[Module, int, Element], AsnNode]]
     lineNo = GetAttr(xmlType, "Line")
     global g_lineno
     g_lineno = lineNo
@@ -741,11 +763,11 @@ def GenericFactory(newModule, xmlType):
     if xmlContainedType._name not in list(Factories.keys()):
         utility.panic("Unsupported XML type node: '%s' (%s, %s)" %  # pragma: no cover
                       (xmlContainedType._name, newModule._asnFilename, lineNo))  # pragma: no cover
-    return Factories[xmlContainedType._name](
-        newModule, lineNo, xmlContainedType)
+    maker = Factories[xmlContainedType._name]
+    return maker(newModule, lineNo, xmlContainedType)
 
 
-def VisitTypeAssignment(newModule, xmlTypeAssignment):
+def VisitTypeAssignment(newModule: Module, xmlTypeAssignment: Element) -> Tuple[str, AsnNode]:
     xmlType = GetChild(xmlTypeAssignment, "Type")
     if xmlType is None:
         utility.panic("VisitTypeAssignment: No child under TypeAssignment")  # pragma: no cover
@@ -754,19 +776,7 @@ def VisitTypeAssignment(newModule, xmlTypeAssignment):
         GenericFactory(newModule, xmlType))
 
 
-class Module(Pretty):
-    _id = None                 # type: str
-    _asnFilename = None        # type: str
-    _exportedTypes = None      # type: List[str]
-    _exportedVariables = None  # type: List[str]
-
-    # (tuples of ModuleName, imported types, imported vars)
-    _importedModules = None    # type: List[Tuple[str, List[str], List[str]]]
-    # (tuples of Typename, AsnNode)
-    _typeAssignments = None    # type: List[Tuple[str, AsnNode]]
-
-
-def VisitAsn1Module(xmlAsn1File, xmlModule, modules):
+def VisitAsn1Module(xmlAsn1File: Element, xmlModule: Element, modules: List[Module]) -> None:  # pylint: disable=invalid-sequence-index
     newModule = Module()
     newModule._id = GetAttr(xmlModule, "ID")
     newModule._asnFilename = GetAttr(xmlAsn1File, "FileName")
@@ -804,7 +814,7 @@ def VisitAsn1Module(xmlAsn1File, xmlModule, modules):
     modules.append(newModule)
 
 
-def ParseASN1SCC_AST(filename):
+def ParseASN1SCC_AST(filename: str) -> None:
     parser = xml.sax.make_parser()
     handler = InputFormatXMLHandler()
     parser.setContentHandler(handler)
@@ -844,11 +854,11 @@ def ParseASN1SCC_AST(filename):
             CheckForInvalidKeywords(nodeTypename)
 
 
-def SimpleCleaner(x):
+def SimpleCleaner(x: str) -> str:
     return re.sub(r'[^a-zA-Z0-9_]', '_', x)
 
 
-def PrintType(f, xmlType, indent, nameCleaner):
+def PrintType(f: IO[Any], xmlType: Element, indent: str, nameCleaner: Callable[[str], str]) -> None:
     if len(xmlType._children) == 0:
         utility.panic("AST inconsistency: xmlType._children == 0\nContact ESA")  # pragma: no cover
     realType = xmlType._children[0]
@@ -877,7 +887,7 @@ def PrintType(f, xmlType, indent, nameCleaner):
         f.write('ENUMERATED {\n')
         options = []
 
-        def addNewOption(x):
+        def addNewOption(x: Any) -> None:
             options.append(x)
         VisitAll(realType, "EnumValue", addNewOption)
         if len(options) > 0:
@@ -946,7 +956,7 @@ def PrintType(f, xmlType, indent, nameCleaner):
         utility.panic("AST inconsistency: Unknown type (%s)\nContact ESA" % realType._name)  # pragma: no cover
 
 
-def PrintGrammarFromAST(f, nameCleaner=SimpleCleaner):
+def PrintGrammarFromAST(f: IO[Any], nameCleaner: Callable[[str], str]=SimpleCleaner) -> None:
     ourtypeAssignments = []
     VisitAll(
         g_xmlASTrootNode._children[0], "Asn1File",
@@ -963,12 +973,12 @@ def PrintGrammarFromAST(f, nameCleaner=SimpleCleaner):
             utility.panic("AST inconsistency: typeChild is None\nContact ESA")  # pragma: no cover
 
 
-def PrintGrammarFromASTtoStdOut():
+def PrintGrammarFromASTtoStdOut() -> None:
     # Starting from the xmlASTrootNode, recurse and print the ASN.1 grammar
     PrintGrammarFromAST(sys.stdout)
 
 
-def test_xml():
+def test_xml() -> None:
     if len(sys.argv) != 2 or not os.path.isfile(sys.argv[1]):
         sys.stderr.write("Missing or invalid path provided!\n")
         sys.exit(1)

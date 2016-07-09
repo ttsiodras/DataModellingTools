@@ -75,36 +75,40 @@
 #                     |        AsnMetaMember        |
 #                     +-----------------------------+
 
-from typing import Union, Dict  # NOQA pylint: disable=unused-import
+from typing import List, Union, Dict, Any  # NOQA pylint: disable=unused-import
 
 from . import utility
+
+Lookup = Dict[str, 'AsnNode']
+AsnSequenceOrSet = Union['AsnSequence', 'AsnSet']
+AsnSequenceOrSetOf = Union['AsnSequenceOf', 'AsnSetOf']
 
 
 class AsnNode(object):
 
-    def __init__(self, asnFilename):
+    def __init__(self, asnFilename: str) -> None:
         self._leafType = "unknown"
         self._asnFilename = asnFilename
         self._lineno = -1
         self._isArtificial = False
 
-    def Location(self):
+    def Location(self) -> str:
         return "file %s, line %d" % (self._asnFilename, int(self._lineno))  # pragma: no cover
 
-    def IdenticalPerSMP2(self, _, __, ___):  # pylint: disable=no-self-use
+    def IdenticalPerSMP2(self, _: 'AsnNode', __: Lookup, ___: Lookup) -> bool:  # pylint: disable=no-self-use
         utility.panic("internal error: Must be defined in derived class...")
 
-    def AsASN1(self, _):  # pylint: disable=no-self-use
+    def AsASN1(self, _: Lookup) -> str:  # pylint: disable=no-self-use
         utility.panic("internal error: Must be defined in derived class...")
 
 
 class AsnBasicNode(AsnNode):
-    def __init__(self, asnFilename):
+    def __init__(self, asnFilename: str) -> None:
         AsnNode.__init__(self, asnFilename)
 
 
 class AsnComplexNode(AsnNode):
-    def __init__(self, asnFilename):
+    def __init__(self, asnFilename: str) -> None:
         AsnNode.__init__(self, asnFilename)
 
 #########################################################
@@ -112,9 +116,9 @@ class AsnComplexNode(AsnNode):
 #########################################################
 
 
-def CommonIdenticalRangePerSMP2(range1, range2):
+def CommonIdenticalRangePerSMP2(range1: List[int], range2: List[int]) -> bool:  # pylint: disable=invalid-sequence-index
     '''Helper for SMP2 comparisons of types with ranges.'''
-    def collapseSpan(r):
+    def collapseSpan(r: List[int]) -> List[int]:  # pylint: disable=invalid-sequence-index
         if len(r) == 2 and r[0] == r[1]:
             return [r[0]]
         return r
@@ -135,7 +139,7 @@ Members:
 '''
     validOptions = ['bDefaultValue', 'lineno', 'asnFilename']
 
-    def __init__(self, **args):
+    def __init__(self, **args: Any) -> None:
         AsnBasicNode.__init__(self, args.get('asnFilename', ''))
         self._name = "BOOLEAN"  # default in case of SEQUENCE_OF BOOLEAN
         self._leafType = "BOOLEAN"
@@ -144,16 +148,16 @@ Members:
         for i in args.keys():
             assert i in AsnBool.validOptions
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         result = self._leafType
         if self._bDefaultValue is not None:
             result += ", default value " + self._bDefaultValue  # pragma: no cover
         return result
 
-    def IdenticalPerSMP2(self, other, _, __):
+    def IdenticalPerSMP2(self, other: AsnNode, _: Lookup, __: Lookup) -> bool:
         return isinstance(other, AsnBool)
 
-    def AsASN1(self, _):
+    def AsASN1(self, _: Lookup) -> str:
         return 'BOOLEAN'
 
 
@@ -167,7 +171,7 @@ Members:
 '''
     validOptions = ['range', 'iDefaultValue', 'lineno', 'asnFilename']
 
-    def __init__(self, **args):
+    def __init__(self, **args: Any) -> None:
         AsnBasicNode.__init__(self, args.get('asnFilename', ''))
         self._name = "INTEGER"  # default in case of SEQUENCE_OF INTEGER
         self._leafType = "INTEGER"
@@ -177,7 +181,7 @@ Members:
         for i in args.keys():
             assert i in AsnInt.validOptions
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         result = self._leafType
         if self._range:
             result += " within [%s,%s]" % (self._range[0], self._range[1])
@@ -185,10 +189,10 @@ Members:
             result += " with default value of %s" % self._iDefaultValue  # pragma: no cover
         return result
 
-    def IdenticalPerSMP2(self, other, _, __):
+    def IdenticalPerSMP2(self, other: AsnNode, _: Lookup, __: Lookup) -> bool:
         return isinstance(other, AsnInt) and CommonIdenticalRangePerSMP2(self._range, other._range)
 
-    def AsASN1(self, _):
+    def AsASN1(self, _: Lookup) -> str:
         ret = 'INTEGER'
         if self._range:
             ret += ' (' + str(self._range[0]) + ' .. ' + str(self._range[1]) + ')'
@@ -210,7 +214,7 @@ Members:
 '''
     validOptions = ['range', 'mantissa', 'base', 'exponent', 'defaultValue', 'lineno', 'asnFilename']
 
-    def __init__(self, **args):
+    def __init__(self, **args: Any) -> None:
         AsnBasicNode.__init__(self, args.get('asnFilename', ''))
         self._name = "REAL"  # default in case of SEQUENCE_OF REAL
         self._leafType = "REAL"
@@ -223,7 +227,7 @@ Members:
         for i in args.keys():
             assert i in AsnReal.validOptions
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         result = self._leafType
         if self._mantissaRange is not None:
             result += ", mantissa range is"  # pragma: no cover
@@ -242,10 +246,10 @@ Members:
             result += " within [%s,%s]" % (self._range[0], self._range[1])
         return result
 
-    def IdenticalPerSMP2(self, other, _, __):
+    def IdenticalPerSMP2(self, other: AsnNode, _: Lookup, __: Lookup) -> bool:
         return isinstance(other, AsnReal) and CommonIdenticalRangePerSMP2(self._range, other._range)
 
-    def AsASN1(self, _):
+    def AsASN1(self, _: Lookup) -> str:
         ret = 'REAL'
         if self._range:
             ret += ' (' + ("%f" % self._range[0]) + ' .. ' + ("%f" % self._range[1]) + ')'
@@ -261,7 +265,7 @@ Members:
 '''
     validOptions = ['range', 'lineno', 'asnFilename']
 
-    def __init__(self, **args):
+    def __init__(self, **args: Any) -> None:
         AsnBasicNode.__init__(self, args.get('asnFilename', ''))
         self._leafType = "unknown"
         self._lineno = args.get('lineno', None)
@@ -273,17 +277,17 @@ Members:
         for i in args.keys():
             assert i in AsnString.validOptions
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         result = self._leafType
         if self._range:
             result += ", length within "
             result += str(self._range)
         return result
 
-    def IdenticalPerSMP2(self, other, _, __):
+    def IdenticalPerSMP2(self, other: AsnNode, _: Lookup, __: Lookup) -> bool:
         return isinstance(other, AsnString) and CommonIdenticalRangePerSMP2(self._range, other._range)
 
-    def AsASN1(self, _):
+    def AsASN1(self, _: Lookup) -> str:
         ret = 'OCTET STRING'
         if self._range:
             if len(self._range) > 1 and self._range[0] != self._range[1]:
@@ -296,7 +300,7 @@ Members:
 class AsnOctetString(AsnString):
     '''This class stores the semantic content of an ASN.1 OCTET STRING.'''
 
-    def __init__(self, **args):
+    def __init__(self, **args: Any) -> None:
         AsnString.__init__(self, **args)
         self._name = "OCTET STRING"  # default in case of SEQUENCE_OF OCTET STRING
         self._leafType = "OCTET STRING"
@@ -312,7 +316,7 @@ class AsnOctetString(AsnString):
 class AsnUTF8String(AsnString):
     '''This class stores the semantic content of an ASN.1 UTF8String.'''
 
-    def __init__(self, **args):
+    def __init__(self, **args: Any) -> None:
         AsnString.__init__(self, **args)  # pragma: no cover
         self._name = "UTF8String"  # default in case of SEQUENCE_OF UTF8String  # pragma: no cover
         self._leafType = "UTF8String"  # pragma: no cover
@@ -321,7 +325,7 @@ class AsnUTF8String(AsnString):
 class AsnAsciiString(AsnString):
     '''This class stores the semantic content of an ASN.1 AsciiString.'''
 
-    def __init__(self, **args):
+    def __init__(self, **args: Any) -> None:
         AsnString.__init__(self, **args)  # pragma: no cover
         self._name = "AsciiString"  # default in case of SEQUENCE_OF AsciiString  # pragma: no cover
         self._leafType = "AsciiString"  # pragma: no cover
@@ -330,7 +334,7 @@ class AsnAsciiString(AsnString):
 class AsnNumberString(AsnString):
     '''This class stores the semantic content of an ASN.1 NumberString.'''
 
-    def __init__(self, **args):
+    def __init__(self, **args: Any) -> None:
         AsnString.__init__(self, **args)  # pragma: no cover
         self._name = "NumberString"  # default in case of SEQUENCE_OF NumberString  # pragma: no cover
         self._leafType = "NumberString"  # pragma: no cover
@@ -339,7 +343,7 @@ class AsnNumberString(AsnString):
 class AsnVisibleString(AsnString):
     '''This class stores the semantic content of an ASN.1 VisibleString.'''
 
-    def __init__(self, **args):
+    def __init__(self, **args: Any) -> None:
         AsnString.__init__(self, **args)  # pragma: no cover
         self._name = "VisibleString"  # default in case of SEQUENCE_OF VisibleString  # pragma: no cover
         self._leafType = "VisibleString"  # pragma: no cover
@@ -348,7 +352,7 @@ class AsnVisibleString(AsnString):
 class AsnPrintableString(AsnString):
     '''This class stores the semantic content of an ASN.1 PrintableString.'''
 
-    def __init__(self, **args):
+    def __init__(self, **args: Any) -> None:
         AsnString.__init__(self, **args)  # pragma: no cover
         self._name = "PrintableString"  # default in case of SEQUENCE_OF PrintableString  # pragma: no cover
         self._leafType = "PrintableString"  # pragma: no cover
@@ -372,7 +376,7 @@ Members:
 '''
     validOptions = ['members', 'default', 'lineno', 'asnFilename']
 
-    def __init__(self, **args):
+    def __init__(self, **args: Any) -> None:
         AsnComplexNode.__init__(self, args.get('asnFilename', ''))
         self._name = "ENUMERATED"  # default in case of SEQUENCE_OF ENUMERATED
         self._leafType = "ENUMERATED"
@@ -395,7 +399,7 @@ Members:
             else:
                 existing[elem[0]] = 1
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         result = self._leafType
         assert self._members != []
         for member in self._members:
@@ -403,17 +407,20 @@ Members:
             result += str(member)
         return result
 
-    def IdenticalPerSMP2(self, other, _, __):
+    def IdenticalPerSMP2(self, other: AsnNode, _: Lookup, __: Lookup) -> bool:
         return isinstance(other, AsnEnumerated) and sorted(self._members) == sorted(other._members)
 
-    def AsASN1(self, _):
+    def AsASN1(self, _: Lookup) -> str:
         ret = []
         for m in self._members:
             ret.append(m[0] + '(' + m[1] + ')')
         return 'ENUMERATED {' + ", ".join(ret) + "}"
 
 
-def CommonIdenticalCheck(me, other, mynames, othernames):
+TypeWithMembers = Union['AsnSequence', 'AsnSet', 'AsnChoice']
+
+
+def CommonIdenticalCheck(me: TypeWithMembers, other: TypeWithMembers, mynames: Lookup, othernames: Lookup) -> bool:
     # sort members on variable name
     myMembers = [y[1] for y in sorted((x[0], x[1]) for x in me._members)]
     otherMembers = [y[1] for y in sorted((x[0], x[1]) for x in other._members)]
@@ -434,7 +441,7 @@ def CommonIdenticalCheck(me, other, mynames, othernames):
     return all(x.IdenticalPerSMP2(y, mynames, othernames) for x, y in zip(myMembers, otherMembers))
 
 
-def CommonAsASN1(kind, node, typeDict):
+def CommonAsASN1(kind: str, node: TypeWithMembers, typeDict: Lookup) -> str:
     ret = []
     for m in node._members:
         child = m[1]
@@ -459,7 +466,7 @@ Members:
 '''
     validOptions = ['members', 'lineno', 'asnFilename']
 
-    def __init__(self, **args):
+    def __init__(self, **args: Any) -> None:
         AsnComplexNode.__init__(self, args.get('asnFilename', ''))
         self._name = "SEQUENCE"
         self._leafType = "SEQUENCE"
@@ -477,7 +484,7 @@ Members:
             else:
                 existing[elem[0]] = 1
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         result = self._leafType
         assert self._members != []
         for member in self._members:
@@ -485,14 +492,14 @@ Members:
             result += str(member)
         return result
 
-    def IdenticalPerSMP2(self, other, mynames, othernames):
+    def IdenticalPerSMP2(self, other: AsnNode, mynames: Lookup, othernames: Lookup) -> bool:
         # to allow for SMP2 mappings, where there's no AsnSet
         # return isinstance(other, AsnSequence) and CommonIdenticalCheck(self, other, mynames, othernames)
         return \
-            (isinstance(other, AsnSet) or isinstance(other, AsnSequence)) and \
+            isinstance(other, (AsnSet, AsnSequence, AsnChoice)) and \
             CommonIdenticalCheck(self, other, mynames, othernames)
 
-    def AsASN1(self, typeDict=None):
+    def AsASN1(self, typeDict: Lookup=None) -> str:
         if typeDict is None:
             typeDict = {}
         return CommonAsASN1('SEQUENCE', self, typeDict)
@@ -500,7 +507,7 @@ Members:
 
 class AsnSet(AsnComplexNode):
 
-    def __init__(self, **args):
+    def __init__(self, **args: Any) -> None:
         AsnComplexNode.__init__(self, args.get('asnFilename', ''))
         self._name = "SET"
         self._leafType = "SET"
@@ -518,7 +525,7 @@ class AsnSet(AsnComplexNode):
             else:
                 existing[elem[0]] = 1
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         result = self._leafType
         assert self._members != []
         for member in self._members:
@@ -526,14 +533,14 @@ class AsnSet(AsnComplexNode):
             result += str(member)
         return result
 
-    def IdenticalPerSMP2(self, other, mynames, othernames):
+    def IdenticalPerSMP2(self, other: AsnNode, mynames: Lookup, othernames: Lookup) -> bool:
         # to allow for SMP2 mappings, where there's no AsnSet
         # return isinstance(other, AsnSet) and CommonIdenticalCheck(self, other, mynames, othernames)
         return \
-            (isinstance(other, AsnSet) or isinstance(other, AsnSequence)) and \
+            isinstance(other, (AsnSet, AsnSequence, AsnChoice)) and \
             CommonIdenticalCheck(self, other, mynames, othernames)
 
-    def AsASN1(self, typeDict=None):
+    def AsASN1(self, typeDict: Lookup=None) -> str:
         if typeDict is None:
             typeDict = {}
         return CommonAsASN1('SET', self, typeDict)
@@ -550,7 +557,7 @@ Members:
 '''
     validOptions = ['members', 'lineno', 'asnFilename']
 
-    def __init__(self, **args):
+    def __init__(self, **args: Any) -> None:
         AsnComplexNode.__init__(self, args.get('asnFilename', ''))
         self._name = "CHOICE"  # default in case of SEQUENCE_OF CHOICE
         self._leafType = "CHOICE"
@@ -568,7 +575,7 @@ Members:
             else:
                 existing[elem[0]] = 1
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         result = self._leafType
         assert self._members != []
         for member in self._members:
@@ -576,16 +583,19 @@ Members:
             result += str(member)
         return result
 
-    def IdenticalPerSMP2(self, other, mynames, othernames):
+    def IdenticalPerSMP2(self, other: AsnNode, mynames: Lookup, othernames: Lookup) -> bool:
         return isinstance(other, AsnChoice) and CommonIdenticalCheck(self, other, mynames, othernames)
 
-    def AsASN1(self, typeDict=None):
+    def AsASN1(self, typeDict: Lookup=None) -> str:
         if typeDict is None:
             typeDict = {}
         return CommonAsASN1('CHOICE', self, typeDict)
 
 
-def CommonIdenticalArrayCheck(me, other, mynames, othernames):
+TypeWithRange = Union['AsnSequenceOf', 'AsnSetOf']
+
+
+def CommonIdenticalArrayCheck(me: TypeWithRange, other: TypeWithRange, mynames: Lookup, othernames: Lookup) -> bool:
     if not CommonIdenticalRangePerSMP2(me._range, other._range):
         return False
     cont = [[me._containedType, mynames], [other._containedType, othernames]]
@@ -599,7 +609,7 @@ def CommonIdenticalArrayCheck(me, other, mynames, othernames):
     return cont[0][0].IdenticalPerSMP2(cont[1][0], mynames, othernames)
 
 
-def CommonAsASN1array(kind, node, typeDict):
+def CommonAsASN1array(kind: str, node: TypeWithRange, typeDict: Lookup) -> str:
     contained = node._containedType
     while isinstance(contained, str):
         if contained not in typeDict:
@@ -625,7 +635,7 @@ Members:
 '''
     validOptions = ['range', 'containedType', 'lineno', 'asnFilename']
 
-    def __init__(self, **args):
+    def __init__(self, **args: Any) -> None:
         AsnComplexNode.__init__(self, args.get('asnFilename', ''))
         self._range = args.get('range', [])
         self._containedType = args.get('containedType', None)
@@ -635,7 +645,7 @@ Members:
         for i in args.keys():
             assert i in AsnSequenceOf.validOptions
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         result = self._leafType
         if self._range:
             result += ", valid sizes in "
@@ -645,12 +655,12 @@ Members:
         result += str(self._containedType)
         return result
 
-    def IdenticalPerSMP2(self, other, mynames, othernames):
+    def IdenticalPerSMP2(self, other: AsnNode, mynames: Lookup, othernames: Lookup) -> bool:
         return \
-            (isinstance(other, AsnSequenceOf) or isinstance(other, AsnSetOf)) and \
+            isinstance(other, (AsnSequenceOf, AsnSetOf)) and \
             CommonIdenticalArrayCheck(self, other, mynames, othernames)
 
-    def AsASN1(self, typeDict=None):
+    def AsASN1(self, typeDict: Lookup=None) -> str:
         if typeDict is None:
             typeDict = {}
         return CommonAsASN1array('SEQUENCE', self, typeDict)
@@ -658,7 +668,7 @@ Members:
 
 class AsnSetOf(AsnComplexNode):
 
-    def __init__(self, **args):
+    def __init__(self, **args: Any) -> None:
         AsnComplexNode.__init__(self, args.get('asnFilename', ''))
         self._range = args.get('range', [])
         self._containedType = args.get('containedType', None)
@@ -668,7 +678,7 @@ class AsnSetOf(AsnComplexNode):
         for i in args.keys():
             assert i in AsnSequenceOf.validOptions
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         result = self._leafType
         if self._range:
             result += ", valid sizes in "
@@ -678,12 +688,12 @@ class AsnSetOf(AsnComplexNode):
         result += str(self._containedType)
         return result
 
-    def IdenticalPerSMP2(self, other, mynames, othernames):
+    def IdenticalPerSMP2(self, other: AsnNode, mynames: Lookup, othernames: Lookup) -> bool:
         return \
-            (isinstance(other, AsnSequenceOf) or isinstance(other, AsnSetOf)) and \
+            isinstance(other, (AsnSequenceOf, AsnSetOf)) and \
             CommonIdenticalArrayCheck(self, other, mynames, othernames)
 
-    def AsASN1(self, typeDict=None):
+    def AsASN1(self, typeDict: Lookup=None) -> str:
         if typeDict is None:
             typeDict = {}
         return CommonAsASN1array('SET', self, typeDict)
@@ -698,7 +708,7 @@ Members:
 '''
     validOptions = ['containedType', 'Min', 'Max', 'lineno', 'asnFilename']
 
-    def __init__(self, **args):
+    def __init__(self, **args: Any) -> None:
         AsnNode.__init__(self, args.get('asnFilename', ''))
         self._leafType = args.get('containedType', None)
         self._containedType = args.get('containedType', None)
@@ -708,13 +718,13 @@ Members:
         for i in args.keys():
             assert i in AsnMetaMember.validOptions
 
-#    def __repr__(self):
-#       result = self._leafType
-#       assert self._leafType != None
-#       result += ", contained member is "
-#       result += " of type "
-#       result += self._containedType
-#       return result
+    def __repr__(self) -> str:
+        result = self._leafType
+        assert self._leafType is not None
+        result += ", contained member is "
+        result += " of type "
+        result += self._containedType
+        return result
 
 
 class AsnMetaType(AsnNode):
@@ -730,7 +740,7 @@ e.g.:
 '''
     validOptions = ['containedType', 'Min', 'Max', 'lineno', 'asnFilename']
 
-    def __init__(self, **args):
+    def __init__(self, **args: Any) -> None:
         AsnNode.__init__(self, args.get('asnFilename', ''))
         self._leafType = args.get('containedType', None)
         self._containedType = args.get('containedType', None)
@@ -740,7 +750,7 @@ e.g.:
         for i in args.keys():
             assert i in AsnMetaType.validOptions
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         result = "typedefed to " + self._leafType  # pragma: no cover
         if self._Min is not None:
             result += ", min=" + str(self._Min)  # pragma: no cover
@@ -752,15 +762,15 @@ e.g.:
 # Helper functions
 
 
-def isSequenceVariable(node):
+def isSequenceVariable(node: Union[AsnString, AsnSequenceOf, AsnSetOf]) -> bool:
     return len(node._range) == 2 and node._range[0] != node._range[1]
 
 
-def sourceSequenceLimit(node, srcCVariable):
+def sourceSequenceLimit(node: Union[AsnString, AsnSequenceOf, AsnSetOf], srcCVariable: str) -> str:
     return str(node._range[-1]) if not isSequenceVariable(node) else "%s.nCount" % srcCVariable
 
 
-def targetSequenceLimit(node, dstCVariable):
+def targetSequenceLimit(node: Union[AsnString, AsnSequenceOf, AsnSetOf], dstCVariable: str) -> str:
     return str(node._range[-1]) if not isSequenceVariable(node) else "%s.nCount" % dstCVariable
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
