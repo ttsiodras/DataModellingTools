@@ -61,10 +61,10 @@ def usage(argsToTools: Dict[str, str]) -> None:
 
 def main() -> None:
     if "-v" in sys.argv:
-        import pkg_resources
-        version = pkg_resources.require("dmt")[0].version
-        print("asn2dataModel v" + str(version))
-        sys.exit(1)
+        import pkg_resources  # pragma: no cover
+        version = pkg_resources.require("dmt")[0].version  # pragma: no cover
+        print("asn2dataModel v" + str(version))  # pragma: no cover
+        sys.exit(1)  # pragma: no cover
 
     argsToTools = {
         'toOG': 'OG',

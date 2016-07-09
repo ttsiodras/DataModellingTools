@@ -186,10 +186,10 @@ types). This used to cover Dumpable C/Ada Types and OG headers.'''
 
 def main() -> None:
     if "-v" in sys.argv:
-        import pkg_resources
-        version = pkg_resources.require("dmt")[0].version
-        print("aadl2glueC v" + str(version))
-        sys.exit(1)
+        import pkg_resources  # pragma: no cover
+        version = pkg_resources.require("dmt")[0].version  # pragma: no cover
+        print("aadl2glueC v" + str(version))  # pragma: no cover
+        sys.exit(1)  # pragma: no cover
 
     if sys.argv.count("-o") != 0:
         idx = sys.argv.index("-o")
