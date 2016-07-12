@@ -76,11 +76,13 @@ AST_Lookup = Dict[Typename, AsnNode]
 AST_TypenamesOfFile = Dict[Filename, List[str]]  # pylint: disable=invalid-sequence-index
 AST_TypesOfFile = Dict[Filename, List[AsnNode]]  # pylint: disable=invalid-sequence-index
 AST_Leaftypes = Dict[Typename, str]
+AST_Modules = Dict[str, List[Typename]]  # pylint: disable=invalid-sequence-index
 
 g_names = {}         # type: AST_Lookup
 g_typesOfFile = {}   # type: AST_TypenamesOfFile
 g_leafTypeDict = {}  # type: AST_Leaftypes
 g_astOfFile = {}     # type: AST_TypesOfFile
+g_modules = {}       # type: AST_Modules
 
 g_checkedSoFarForKeywords = {}  # type: Dict[str, int]
 
@@ -844,6 +846,7 @@ def ParseASN1SCC_AST(filename: str) -> None:
         for typeName, typeData in m._typeAssignments:
             # print "Type:", typeName
             g_names[typeName] = typeData
+            g_modules.setdefault(m._id, []).append(typeName)
     g_leafTypeDict.update(VerifyAndFixAST())
 
     for nodeTypename in list(g_names.keys()):
