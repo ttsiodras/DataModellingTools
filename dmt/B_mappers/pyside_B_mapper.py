@@ -170,6 +170,7 @@ tcId = -1
 msgQ = False
 udp = False
 shared_lib = False
+ASN1_AST = None # Set by Scenario.py - point to the ASN.1 AST from Python.stg
 
 # Variable containing a signal that is used to send a message via a dll
 send_via_dll = None
@@ -427,17 +428,17 @@ def expect(Q, VNvalue, ignoreOther=False, timeout=None):
             # Timeout expired
             raise IOError('Timeout expired')
         if msgId == tmId:
-            expectedValue = '{{ {interfaceName} ' + VNvalue + ' }}'
+            #expectedValue = '{{ {interfaceName} ' + VNvalue + ' }}'
+            expectedValue = VNvalue
             nativeData = decode_TM(pDataFromMQ)
-            receivedValue = fromASN1ToPyside(nativeData)
-            receivedValue = vn.toASN1ValueNotation(receivedValue)
+            receivedValue = nativeData.GSER()
             if asn1_python.compareVnValues(receivedValue, expectedValue):
                 Q.task_done()
                 return
             else:
                 Q.task_done()
                 raise ValueError('Received {interfaceName} with wrong data: '\
-+ str(receivedValue))
++ vn.format_gser(receivedValue))
         elif not ignoreOther:
             Q.task_done()
             raise TypeError(
@@ -453,11 +454,16 @@ def expect(Q, VNvalue, ignoreOther=False, timeout=None):
             g_BackendFile.write('''
 
 
-def send_{interfaceName}_VN(tc):
+def send_{interfaceName}_VN(tc_gser):
     \''\' Send the TC with from input parameter in ASN.1 Value Notation \''\'
-    pyVar = vn.fromValueNotationToPySide("{interfaceName}", tc)
-    asnVar = fromPysideToASN1(pyVar)
-    sendTC(asnVar)
+    instance = typeInstance()
+    vn.valueNotationToCTypes(gser=tc_gser,
+                             dest=instance,
+                             sort=ASN1_AST['{asn1Type}'].type,
+                             ASN1Mod=ASN1,
+                             ASN1_AST=ASN1_AST)
+
+    sendTC(instance)
 
 
 def sendTC(tc):
@@ -488,7 +494,7 @@ def sendTC(tc):
         send_via_dll.dll.emit("{interfaceName}",
                               {interfaceName}_via_shared_lib,
                               tc)
-'''.format(interfaceName=CleanSP))
+'''.format(interfaceName=CleanSP, asn1Type=param._signal._asnNodename))
 
         global g_fromPysideToASN1
         g_fromPysideToASN1 = ['''
