@@ -492,10 +492,11 @@ def DumpTypeDumper(
                        'path[i]',
                        containedNode,
                        names)
+        lines.append(codeIndent + "state = self.GetState()")
         lines.append(codeIndent + "length = %s.GetLength()" % variableName)
+        lines.append(codeIndent + "self.Reset(state)")
         lines.append(codeIndent + "map(partial(emitElem, %s), xrange(length))" % variableName)
-        if variableName.startswith("path[i]"):
-            lines.append(codeIndent + 'self.Reset(state)')
+        lines.append(codeIndent + 'self.Reset(state)')
         lines.append(codeIndent + 'lines.append("}")')
 
 
