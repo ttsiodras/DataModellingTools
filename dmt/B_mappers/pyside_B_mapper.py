@@ -236,9 +236,10 @@ def setUDP():
 
 
 def {tmName}(tm_ptr, size):
-    """ Callback function when receiving this TM """
+    """ Callback function when receiving this TM (opengeode-simulator) """
     if editor:
-        editor.pendingTM = tm_ptr
+        editor.asn1Instance.SetData(tm_ptr)
+        editor.pendingTM = True
         tm_callback.got_tm.emit()
 
 
