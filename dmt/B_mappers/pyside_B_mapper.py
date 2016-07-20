@@ -34,7 +34,7 @@ def CleanName(name: str) -> str:
 
 def OneTimeOnly(
         unused_modelingLanguage: str,
-        asnFile: str,
+        unused_asnFile: str,
         subProgram: ApLevelContainer,
         subProgramImplementation: str,
         outputDir: str,
@@ -533,8 +533,8 @@ def fromASN1ToPyside(_):
 ''']
 
 
-def WriteCodeForGUIControls(prefixes: List[str],
-                            parentControl: List[int],
+def WriteCodeForGUIControls(prefixes: List[str],  # pylint: disable=invalid-sequence-index
+                            parentControl: List[int],  # pylint: disable=invalid-sequence-index
                             node: AsnNode,
                             subProgram: ApLevelContainer,
                             subProgramImplementation: str,
@@ -544,7 +544,6 @@ def WriteCodeForGUIControls(prefixes: List[str],
                             nodeTypename: str='') -> None:
     global g_firstElem
     global g_onceOnly
-    global g_iter
     global g_asnId
     for prefix in prefixes:
         txtPrefix = re.sub(r'^.*\.', '', prefix)
