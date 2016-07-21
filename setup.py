@@ -11,7 +11,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='dmt',
-    version="2.0.3",
+    version="2.1.0",
     packages=find_packages(),
     author='Thanassis Tsiodras',
     author_email='Thanassis.Tsiodras@esa.int',
@@ -32,7 +32,6 @@ setup(
         'pyflakes==1.2.3',
         'pylint==1.5.6',
         'pytest==2.6.3',
-        'lxml==3.6.0',
         'astroid==1.4.6',
         'pycodestyle==2.0.0',
         'typing==3.5.2.2',

@@ -1,5 +1,9 @@
 # Change Log
 
+## 2.1.0
+ - Major update of the PySide B mapper (API updates)
+ - Bug fix in the Python A mapper
+
 ## 2.0.0
 
 - Moved to Python3
