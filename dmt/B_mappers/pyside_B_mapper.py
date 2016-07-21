@@ -3,13 +3,16 @@
 
 import re
 import os
+from typing import List
 
 from ..commonPy.asnAST import (
     AsnInt, AsnBool, AsnReal, AsnEnumerated,
     AsnOctetString, AsnChoice, AsnSequence, AsnSet,
-    AsnSequenceOf, AsnSetOf, AsnMetaMember)
+    AsnSequenceOf, AsnSetOf, AsnMetaMember, AsnNode)
 
 from ..commonPy.utility import panic
+from ..commonPy.asnParser import AST_Lookup, AST_Leaftypes
+from ..commonPy.aadlAST import ApLevelContainer, Param
 
 g_PyDataModel = None
 g_iter = 1
@@ -18,22 +21,30 @@ g_BackendFile = None
 g_fromPysideToASN1 = []  # type: List[str]
 g_fromASN1ToPyside = []  # type: List[str]
 g_QUiFile = None
-g_bStarted = False
-g_firstElem = True
-g_needsComa = False
-g_onceOnly = True
+g_bStarted = False       # type: bool
+g_firstElem = True       # type: bool
+g_asnId = ""             # type: str
+g_needsComa = False      # type: bool
+g_onceOnly = True        # type: bool
 
 
-def CleanName(name):
+def CleanName(name: str) -> str:
     return re.sub(r'[^a-zA-Z0-9_]', '_', name)
 
 
-def OneTimeOnly(_, __, subProgram, subProgramImplementation,
-                outputDir, FVname, ___):
-
+def OneTimeOnly(
+        unused_modelingLanguage: str,
+        unused_asnFile: str,
+        subProgram: ApLevelContainer,
+        subProgramImplementation: str,
+        outputDir: str,
+        FVname: str,
+        unused_useOSS: bool) -> None:
     global g_PyDataModel
     g_PyDataModel = open(outputDir + 'datamodel.py', 'w')
     g_PyDataModel.write('''#!/usr/bin/python
+
+import DV
 
 FVname = "{fvname}"
 
@@ -118,8 +129,14 @@ errCodes = {{}}
               subProgram._id + "." + subProgramImplementation)  # pragma: no cover
 
 
-def OnStartup(modelingLanguage, asnFile, subProgram, subProgramImplementation,
-              outputDir, FVname, useOSS):
+def OnStartup(
+        modelingLanguage: str,
+        asnFile: str,
+        subProgram: ApLevelContainer,
+        subProgramImplementation: str,
+        outputDir: str,
+        FVname: str,
+        useOSS: bool) -> None:
     '''
         Called once per interface (PI or RI)
         (SUBPROGRAM IMPLEMENTATION in mini_cv.aadl)
@@ -166,6 +183,7 @@ tcId = -1
 msgQ = False
 udp = False
 shared_lib = False
+ASN1_AST = None # Set by Scenario.py - point to the ASN.1 AST from Python.stg
 
 # Variable containing a signal that is used to send a message via a dll
 send_via_dll = None
@@ -231,9 +249,10 @@ def setUDP():
 
 
 def {tmName}(tm_ptr, size):
-    """ Callback function when receiving this TM """
+    """ Callback function when receiving this TM (opengeode-simulator) """
     if editor:
-        editor.pendingTM = tm_ptr
+        editor.asn1Instance.SetData(tm_ptr)
+        editor.pendingTM = True
         tm_callback.got_tm.emit()
 
 
@@ -328,6 +347,7 @@ udpController = None
 
 def checkConstraints(asnVal):
     \'\'\' Check if the ASN.1 constraints are respected \'\'\'
+    # asnVal input is a ctypes instance of an ASN.1 type
     isValid, errCode = asnVal.IsConstraintValid()
     if not isValid:
         errorMsg = datamodel.errCodes[errCode]['name'] + ': Constraint error! Constraint is: ' + datamodel.errCodes[errCode]['constraint']
@@ -422,17 +442,17 @@ def expect(Q, VNvalue, ignoreOther=False, timeout=None):
             # Timeout expired
             raise IOError('Timeout expired')
         if msgId == tmId:
-            expectedValue = '{{ {interfaceName} ' + VNvalue + ' }}'
+            #expectedValue = '{{ {interfaceName} ' + VNvalue + ' }}'
+            expectedValue = VNvalue
             nativeData = decode_TM(pDataFromMQ)
-            receivedValue = fromASN1ToPyside(nativeData)
-            receivedValue = vn.toASN1ValueNotation(receivedValue)
+            receivedValue = nativeData.GSER()
             if asn1_python.compareVnValues(receivedValue, expectedValue):
                 Q.task_done()
                 return
             else:
                 Q.task_done()
                 raise ValueError('Received {interfaceName} with wrong data: '\
-+ str(receivedValue))
++ vn.format_gser(receivedValue))
         elif not ignoreOther:
             Q.task_done()
             raise TypeError(
@@ -448,15 +468,21 @@ def expect(Q, VNvalue, ignoreOther=False, timeout=None):
             g_BackendFile.write('''
 
 
-def send_{interfaceName}_VN(tc):
+def send_{interfaceName}_VN(tc_gser):
     \''\' Send the TC with from input parameter in ASN.1 Value Notation \''\'
-    pyVar = vn.fromValueNotationToPySide("{interfaceName}", tc)
-    asnVar = fromPysideToASN1(pyVar)
-    sendTC(asnVar)
+    instance = typeInstance()
+    vn.valueNotationToCTypes(gser=tc_gser,
+                             dest=instance,
+                             sort=ASN1_AST['{asn1Type}'].type,
+                             ASN1Mod=ASN1,
+                             ASN1_AST=ASN1_AST)
+
+    sendTC(instance)
 
 
 def sendTC(tc):
     \''\' Depending on the configuration, send to msgQ, UDP or shared lib \''\'
+    # tc is a ctypes instance of an ASN.1 type
     if msgQ:
         if checkConstraints(tc):
             try:
@@ -482,51 +508,62 @@ def sendTC(tc):
         send_via_dll.dll.emit("{interfaceName}",
                               {interfaceName}_via_shared_lib,
                               tc)
-'''.format(interfaceName=CleanSP))
+'''.format(interfaceName=CleanSP, asn1Type=param._signal._asnNodename))
 
         global g_fromPysideToASN1
         g_fromPysideToASN1 = ['''
 
-def fromPysideToASN1(val):
-    # Create a native ASN1. variable of type {asn1Type} using the SWIG backend
-    {interfaceName} = ASN1.{asn1Type}()
+def fromPysideToASN1(_):
+    print('DEPRECATED call to "fromPysideToASN1"')
+    # Create a native ASN.1 variable of type {asn1Type}
+    # {interfaceName} = ASN1.{asn1Type}()
+    return None
 
-    # Set the value
+def typeInstance():
+    # Create an intance of an ASN.1 ctype
+    return ASN1.{asn1Type}()
 '''.format(interfaceName=CleanSP, asn1Type=CleanASNType)]
 
         global g_fromASN1ToPyside
         g_fromASN1ToPyside = ['''
 
-def fromASN1ToPyside({interfaceName}):
-    val = {{}}
-'''.format(interfaceName=CleanSP)]
+def fromASN1ToPyside(_):
+    print('DEPRECATED call to "fromASN1ToPyside"')
+    return None
+''']
 
 
-def WriteCodeForGUIControls(prefixes, parentControl, node, subProgram,
-                            subProgramImplementation, param, leafTypeDict,
-                            names, nodeTypename=''):
+def WriteCodeForGUIControls(prefixes: List[str],  # pylint: disable=invalid-sequence-index
+                            parentControl: List[int],  # pylint: disable=invalid-sequence-index
+                            node: AsnNode,
+                            subProgram: ApLevelContainer,
+                            subProgramImplementation: str,
+                            param: Param,
+                            leafTypeDict: AST_Leaftypes,
+                            names: AST_Lookup,
+                            nodeTypename: str='') -> None:
     global g_firstElem
-    # global g_fromPysideToASN1
-    # global g_fromASN1ToPyside
     global g_onceOnly
-    global g_iter
+    global g_asnId
     for prefix in prefixes:
         txtPrefix = re.sub(r'^.*\.', '', prefix)
     if not g_firstElem and g_onceOnly:
         g_PyDataModel.write(",\n")
     else:
+        g_asnId = prefixes[0]
         g_firstElem = False
 
     # Create string to store the Asn1 and python representation of a field
-    # (e.g. tc.a[0].b and ["tc"]["a"][0]["b"])
-    pyStr = ""
-    asnStr = prefixes[0]
+    # (e.g. in asnStr: tc.a[0].b and in pyStr: ["tc"]["a"][0]["b"])
+    pyStr = ""  # type: str
+    asnStr = prefixes[0]  # type: str
     for i in range(1, len(prefixes)):
         if len(parentControl) >= i:
             asnStr += "[{index}]".format(index=parentControl[i - 1])
         asnStr += prefixes[i][len(prefixes[i - 1]):]
 
-    for item in prefixes[0].split('.'):
+    splitted = prefixes[0].split('.')
+    for item in splitted:
         pyStr += '''["{prefixKey}"]'''.format(prefixKey=item)
     for i in range(1, len(prefixes)):
         if len(parentControl) >= i:
@@ -534,51 +571,6 @@ def WriteCodeForGUIControls(prefixes, parentControl, node, subProgram,
         for item in prefixes[i][len(prefixes[i - 1]):].split('.'):
             if len(item) > 0:
                 pyStr += '''["{prefixKey}"]'''.format(prefixKey=item)
-
-    # Write code for mapping of data between Pyside and ASN1Scc structures
-    if isinstance(node, AsnInt):
-        g_fromPysideToASN1.append(
-            g_iter * "    " + asnStr + ".Set(int(val" + pyStr + "))\n")
-
-    elif isinstance(node, AsnReal):
-        g_fromPysideToASN1.append(
-            g_iter * "    " + asnStr + ".Set(float(val" + pyStr + "))\n")
-
-    elif isinstance(node, AsnBool):
-        g_fromPysideToASN1.append(
-            g_iter * "    " + asnStr + ".Set(val" + pyStr + ")\n")
-
-    if isinstance(node, AsnBool):
-        g_fromASN1ToPyside.append(
-            g_iter * "    " + "val" + pyStr + " = bool(" + asnStr + ".Get())\n")
-
-    elif isinstance(node, AsnReal) or isinstance(node, AsnInt):
-        g_fromASN1ToPyside.append(
-            g_iter * "    " + "val" + pyStr + " = " + asnStr + ".Get()\n")
-
-    if isinstance(node, AsnOctetString):
-        g_fromPysideToASN1.append(
-            g_iter * "    " + asnStr + ".SetFromPyString(val" + pyStr + ")\n")
-        g_fromASN1ToPyside.append(
-            g_iter * "    " + "val" + pyStr + " = " + asnStr + ".GetPyString()\n")
-
-    if isinstance(node, AsnEnumerated):
-        g_fromASN1ToPyside.append(g_iter * "    " + "val" + pyStr + " = {}\n")
-        for enum_value in node._members:
-            g_fromPysideToASN1.append(
-                g_iter * "    " + "if val" + pyStr +
-                '''["Enum"] == "%s":\n''' % enum_value[0])
-            g_fromASN1ToPyside.append(
-                g_iter * "    " + "if " + asnStr + ".Get() == DV." +
-                CleanName(enum_value[0]) + ":\n")
-
-            g_iter += 1
-            g_fromPysideToASN1.append(
-                g_iter * "    " + asnStr + ".Set(DV.%s)\n" % CleanName(enum_value[0]))
-
-            g_fromASN1ToPyside.append(
-                g_iter * "    " + "val" + pyStr + "[\"Enum\"] = \"" + enum_value[0] + "\"\n")
-            g_iter -= 1
 
     if isinstance(node, (AsnInt, AsnReal, AsnOctetString)):
         if isinstance(node, (AsnInt, AsnReal)):
@@ -607,15 +599,16 @@ def WriteCodeForGUIControls(prefixes, parentControl, node, subProgram,
             g_PyDataModel.write(
                 '''{'nodeTypename': '%s', 'type': '%s', 'id': '%s', 'values':[''' % (
                     nodeTypename, node._name, txtPrefix))
+            values = []
+            valuesmap = []
             for enum_value in node._members:
-                if g_needsComa:
-                    g_PyDataModel.write(',')
-                g_PyDataModel.write("'%s'" % enum_value[0])
-                g_needsComa = True
-            g_PyDataModel.write(']}')
+                values.append('"' + enum_value[0] + '"')
+                valuesmap.append('"%s": %s' % (enum_value[0], enum_value[1]))
+                # enum_value[0]: name, enum_value[1]: integer value (or None)
+            g_PyDataModel.write(', '.join(values) + ']')
+            g_PyDataModel.write(', "valuesInt": {' + ', '.join(valuesmap) + '}}')
 
-    elif isinstance(node, AsnSequence) or isinstance(
-            node, AsnChoice) or isinstance(node, AsnSet):
+    elif isinstance(node, (AsnSequence, AsnChoice, AsnSet)):
         if g_onceOnly:
             g_PyDataModel.write(
                 '''{'nodeTypename': '%s', 'type': '%s', 'id': '%s', ''' % (
@@ -624,32 +617,17 @@ def WriteCodeForGUIControls(prefixes, parentControl, node, subProgram,
                 g_PyDataModel.write('''"choices":[''')
             elif isinstance(node, AsnSequence) or isinstance(node, AsnSet):
                 g_PyDataModel.write('''"children":[''')
-        g_fromASN1ToPyside.append(g_iter * "    " + "val" + pyStr + " = {}\n")
         # Recurse on children
         if node._members:
             g_firstElem = True
         else:
             # Empty sequence, nothing to set
-            g_fromPysideToASN1.append(g_iter * "    " + "pass  # Empty sequence\n")
+            pass
 
         for child in node._members:
             # child[0] is the name of the field
             # child[2] is the string "field_PRESENT" used for choice indexes
             CleanChild = CleanName(child[0])
-            if isinstance(node, AsnChoice):
-                g_fromPysideToASN1.append(
-                    g_iter * "    " + "if val" + pyStr +
-                    "[\"Choice\"] == \"" + CleanChild + "\":\n")
-                g_fromASN1ToPyside.append(
-                    g_iter * "    " + "if " + asnStr +
-                    ".kind.Get() == DV." + child[2] + ":\n")
-                g_iter += 1
-                g_fromPysideToASN1.append(
-                    g_iter * "    " + asnStr +
-                    ".kind.Set(DV." + child[2] + ")\n")
-                g_fromASN1ToPyside.append(
-                    g_iter * "    " + "val" + pyStr +
-                    "[\"Choice\"] = \"" + CleanChild + "\"\n")
             childType = child[1]
             if isinstance(childType, AsnMetaMember):
                 childType = names[childType._containedType]
@@ -658,44 +636,40 @@ def WriteCodeForGUIControls(prefixes, parentControl, node, subProgram,
             WriteCodeForGUIControls(prefixes, parentControl, childType,
                                     subProgram, subProgramImplementation,
                                     param, leafTypeDict, names)
-            if isinstance(node, AsnChoice):
-                g_iter -= 1
             prefixes[-1] = seqPrefix
         if g_onceOnly:
-            g_PyDataModel.write("]}")
+            if isinstance(node, AsnChoice):
+                g_PyDataModel.write('], "choiceIdx": {')
+                # the mapping choice->DV.choice_PRESENT is needed by the GUIs
+                indexes = []
+                for child in node._members:
+                    indexes.append('"%s": DV.%s' % (CleanName(child[0]),
+                                                    CleanName(child[2])))
+                g_PyDataModel.write("%s}}" % ','.join(indexes))
 
-    elif isinstance(node, AsnSequenceOf) or isinstance(node, AsnSetOf):
+            else:
+                g_PyDataModel.write("]}")
+    elif isinstance(node, (AsnSequenceOf, AsnSetOf)):
         if g_onceOnly:
             g_PyDataModel.write(
-                '''{'nodeTypename': '%s', 'type': 'SEQOF', 'id': '%s', 'minSize': %d, 'maxSize': %d, 'seqoftype':''' % (
+                "{'nodeTypename': '%s', 'type': 'SEQOF', 'id': '%s', 'minSize': %d, 'maxSize': %d, 'seqoftype':" % (
                     nodeTypename, txtPrefix, node._range[0], node._range[1]))
-
         containedNode = node._containedType
         if isinstance(containedNode, str):
             containedNode = names[containedNode]
         g_firstElem = True
-        # Write sequence of size for encoding
-        if node._range[0] != node._range[1]:
-            g_fromPysideToASN1.append(
-                g_iter * "    " + asnStr + ".SetLength (len(val" + pyStr + "))\n")
-        g_fromASN1ToPyside.append(g_iter * "    " + "val" + pyStr + " = []\n")
-        # g_iter += 1
         prefixes.append(prefixes[-1])
         l_lock = False
         for i in range(node._range[1]):
-            # Add a size check for each element of the SEQUENCE OF
-            g_fromPysideToASN1.append(
-                g_iter * "    " + "if " + asnStr + ".GetLength() > %d:\n" % i)
-            g_fromASN1ToPyside.append(
-                g_iter * "    " + "if " + asnStr + ".GetLength() > %d:\n" % i)
-            g_iter += 1
-            g_fromASN1ToPyside.append(
-                g_iter * "    " + "val" + pyStr + ".append(%d)\n" % i)
-
             parentControl.append(i)
-            WriteCodeForGUIControls(prefixes, parentControl, containedNode,
-                                    subProgram, subProgramImplementation,
-                                    param, leafTypeDict, names)
+            WriteCodeForGUIControls(prefixes,
+                                    parentControl,
+                                    containedNode,
+                                    subProgram,
+                                    subProgramImplementation,
+                                    param,
+                                    leafTypeDict,
+                                    names)
             if g_onceOnly:
                 g_PyDataModel.write("\n}")
             # l_lock prevents g_onceOnly to be reset during a recursive call
@@ -703,7 +677,6 @@ def WriteCodeForGUIControls(prefixes, parentControl, node, subProgram,
                 g_onceOnly = False
                 l_lock = True
             del parentControl[-1]
-            g_iter -= 1
         if l_lock:
             g_onceOnly = True
         del prefixes[-1]
@@ -711,69 +684,62 @@ def WriteCodeForGUIControls(prefixes, parentControl, node, subProgram,
         panic("GUI codegen doesn't support this type yet (%s)" % str(node))  # pragma: nocover
 
 
-def Common(nodeTypename, node, subProgram,
-           subProgramImplementation, param, leafTypeDict, names):
+def Common(
+        nodeTypename: str,
+        node: AsnNode,
+        subProgram: ApLevelContainer,
+        subProgramImplementation: str,
+        param: Param,
+        leafTypeDict: AST_Leaftypes,
+        names: AST_Lookup) -> None:
     control = CleanName(subProgram._id)
-    WriteCodeForGUIControls(
-        [control], [], node, subProgram,
-        subProgramImplementation, param, leafTypeDict, names, nodeTypename)
-    # global g_BackendFile
-    # global g_fromPysideToASN1
-    # global g_fromASN1ToPyside
-    g_fromPysideToASN1.append("    return %s\n" % CleanName(subProgram._id))
-    g_fromASN1ToPyside.append("    return val\n")
+    WriteCodeForGUIControls([control],   # prefixes, start with interface name
+                            [],          # parentControl
+                            node,
+                            subProgram,
+                            subProgramImplementation,
+                            param,
+                            leafTypeDict,
+                            names,
+                            nodeTypename)
     g_BackendFile.write(''.join(g_fromPysideToASN1))
     g_BackendFile.write(''.join(g_fromASN1ToPyside))
     g_BackendFile.close()
 
 
-def OnBasic(nodeTypename, node, subProgram, subProgramImplementation,
-            param, leafTypeDict, names):
-    Common(nodeTypename, node, subProgram, subProgramImplementation, param,
-           leafTypeDict, names)
+def OnBasic(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
+    Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
-def OnSequence(nodeTypename, node, subProgram, subProgramImplementation,
-               param, leafTypeDict, names):
-    Common(nodeTypename, node, subProgram, subProgramImplementation,
-           param, leafTypeDict, names)
+def OnSequence(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
+    Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
-def OnSet(nodeTypename, node, subProgram, subProgramImplementation,
-          param, leafTypeDict, names):
-    Common(nodeTypename, node, subProgram, subProgramImplementation,
-           param, leafTypeDict, names)  # pragma: nocover
+def OnSet(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
+    Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)  # pragma: nocover
 
 
-def OnEnumerated(nodeTypename, node, subProgram, subProgramImplementation,
-                 param, leafTypeDict, names):
-    Common(nodeTypename, node, subProgram, subProgramImplementation,
-           param, leafTypeDict, names)
+def OnEnumerated(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
+    Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
-def OnSequenceOf(nodeTypename, node, subProgram, subProgramImplementation,
-                 param, leafTypeDict, names):
-    Common(nodeTypename, node, subProgram, subProgramImplementation,
-           param, leafTypeDict, names)
+def OnSequenceOf(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
+    Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
-def OnSetOf(nodeTypename, node, subProgram, subProgramImplementation,
-            param, leafTypeDict, names):
-    Common(nodeTypename, node, subProgram, subProgramImplementation,
-           param, leafTypeDict, names)  # pragma: nocover
+def OnSetOf(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
+    Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)  # pragma: nocover
 
 
-def OnChoice(nodeTypename, node, subProgram, subProgramImplementation,
-             param, leafTypeDict, names):
-    Common(nodeTypename, node, subProgram, subProgramImplementation,
-           param, leafTypeDict, names)
+def OnChoice(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
+    Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
-def OnShutdown(unused_modelingLanguage, unused_asnFile, unused_sp, unused_subProgramImplementation, unused_FVname):
+def OnShutdown(unused_modelingLanguage: str, unused_asnFile: str, unused_sp: ApLevelContainer, unused_subProgramImplementation: str, unused_maybeFVname: str) -> None:
     pass
 
 
-def OnFinal():
+def OnFinal() -> None:
     # global g_PyDataModel
     # global g_QUiFile
     g_PyDataModel.write("\n")
