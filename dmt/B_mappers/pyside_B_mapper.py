@@ -8,31 +8,38 @@ from typing import List
 from ..commonPy.asnAST import (
     AsnInt, AsnBool, AsnReal, AsnEnumerated,
     AsnOctetString, AsnChoice, AsnSequence, AsnSet,
-    AsnSequenceOf, AsnSetOf, AsnMetaMember)
+    AsnSequenceOf, AsnSetOf, AsnMetaMember, AsnNode)
 
 from ..commonPy.utility import panic
+from ..commonPy.asnParser import AST_Lookup, AST_Leaftypes
+from ..commonPy.aadlAST import ApLevelContainer, Param
 
 g_PyDataModel = None
 g_iter = 1
 g_IFCount = 0
 g_BackendFile = None
-g_fromPysideToASN1 = []
-g_fromASN1ToPyside = []
+g_fromPysideToASN1 = []  # type: List[str]
+g_fromASN1ToPyside = []  # type: List[str]
 g_QUiFile = None
-g_bStarted = False  # type: bool
-g_firstElem = True  # type: bool
-g_asnId = ""  # type: str
-g_needsComa = False # type: bool
-g_onceOnly = True  # type: bool
+g_bStarted = False       # type: bool
+g_firstElem = True       # type: bool
+g_asnId = ""             # type: str
+g_needsComa = False      # type: bool
+g_onceOnly = True        # type: bool
 
 
-def CleanName(name):
+def CleanName(name: str) -> str:
     return re.sub(r'[^a-zA-Z0-9_]', '_', name)
 
 
-def OneTimeOnly(_, __, subProgram, subProgramImplementation,
-                outputDir, FVname, ___):
-
+def OneTimeOnly(
+        unused_modelingLanguage: str,
+        unused_asnFile: str,
+        subProgram: ApLevelContainer,
+        subProgramImplementation: str,
+        outputDir: str,
+        FVname: str,
+        unused_useOSS: bool) -> None:
     global g_PyDataModel
     g_PyDataModel = open(outputDir + 'datamodel.py', 'w')
     g_PyDataModel.write('''#!/usr/bin/python
@@ -122,8 +129,14 @@ errCodes = {{}}
               subProgram._id + "." + subProgramImplementation)  # pragma: no cover
 
 
-def OnStartup(modelingLanguage, asnFile, subProgram, subProgramImplementation,
-              outputDir, FVname, useOSS):
+def OnStartup(
+        modelingLanguage: str,
+        asnFile: str,
+        subProgram: ApLevelContainer,
+        subProgramImplementation: str,
+        outputDir: str,
+        FVname: str,
+        useOSS: bool) -> None:
     '''
         Called once per interface (PI or RI)
         (SUBPROGRAM IMPLEMENTATION in mini_cv.aadl)
@@ -162,7 +175,7 @@ editor = None
 
     global g_firstElem
     g_firstElem = True
-    buttons = []
+    buttons = []  # type: List[List[str]]
     # RI = TC (Telecommand), PI = TM (Telemetry)
     if modelingLanguage.lower() == 'gui_ri':
         g_BackendFile.write('''
@@ -520,18 +533,17 @@ def fromASN1ToPyside(_):
 ''']
 
 
-def WriteCodeForGUIControls(prefixes: List[str],
-                            parentControl,
-                            node,
-                            subProgram,
-                            subProgramImplementation,
-                            param,
-                            leafTypeDict,
-                            names,
-                            nodeTypename=''):
+def WriteCodeForGUIControls(prefixes: List[str],  # pylint: disable=invalid-sequence-index
+                            parentControl: List[int],  # pylint: disable=invalid-sequence-index
+                            node: AsnNode,
+                            subProgram: ApLevelContainer,
+                            subProgramImplementation: str,
+                            param: Param,
+                            leafTypeDict: AST_Leaftypes,
+                            names: AST_Lookup,
+                            nodeTypename: str='') -> None:
     global g_firstElem
     global g_onceOnly
-    global g_iter
     global g_asnId
     for prefix in prefixes:
         txtPrefix = re.sub(r'^.*\.', '', prefix)
@@ -543,7 +555,7 @@ def WriteCodeForGUIControls(prefixes: List[str],
 
     # Create string to store the Asn1 and python representation of a field
     # (e.g. in asnStr: tc.a[0].b and in pyStr: ["tc"]["a"][0]["b"])
-    pyStr = "" # type: str
+    pyStr = ""  # type: str
     asnStr = prefixes[0]  # type: str
     for i in range(1, len(prefixes)):
         if len(parentControl) >= i:
@@ -637,7 +649,7 @@ def WriteCodeForGUIControls(prefixes: List[str],
 
             else:
                 g_PyDataModel.write("]}")
-    elif isinstance(node, AsnSequenceOf) or isinstance(node, AsnSetOf):
+    elif isinstance(node, (AsnSequenceOf, AsnSetOf)):
         if g_onceOnly:
             g_PyDataModel.write(
                 "{'nodeTypename': '%s', 'type': 'SEQOF', 'id': '%s', 'minSize': %d, 'maxSize': %d, 'seqoftype':" % (
@@ -672,8 +684,14 @@ def WriteCodeForGUIControls(prefixes: List[str],
         panic("GUI codegen doesn't support this type yet (%s)" % str(node))  # pragma: nocover
 
 
-def Common(nodeTypename, node, subProgram,
-           subProgramImplementation, param, leafTypeDict, names):
+def Common(
+        nodeTypename: str,
+        node: AsnNode,
+        subProgram: ApLevelContainer,
+        subProgramImplementation: str,
+        param: Param,
+        leafTypeDict: AST_Leaftypes,
+        names: AST_Lookup) -> None:
     control = CleanName(subProgram._id)
     WriteCodeForGUIControls([control],   # prefixes, start with interface name
                             [],          # parentControl
@@ -689,53 +707,39 @@ def Common(nodeTypename, node, subProgram,
     g_BackendFile.close()
 
 
-def OnBasic(nodeTypename, node, subProgram, subProgramImplementation,
-            param, leafTypeDict, names):
-    Common(nodeTypename, node, subProgram, subProgramImplementation, param,
-           leafTypeDict, names)
+def OnBasic(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
+    Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
-def OnSequence(nodeTypename, node, subProgram, subProgramImplementation,
-               param, leafTypeDict, names):
-    Common(nodeTypename, node, subProgram, subProgramImplementation,
-           param, leafTypeDict, names)
+def OnSequence(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
+    Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
-def OnSet(nodeTypename, node, subProgram, subProgramImplementation,
-          param, leafTypeDict, names):
-    Common(nodeTypename, node, subProgram, subProgramImplementation,
-           param, leafTypeDict, names)  # pragma: nocover
+def OnSet(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
+    Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)  # pragma: nocover
 
 
-def OnEnumerated(nodeTypename, node, subProgram, subProgramImplementation,
-                 param, leafTypeDict, names):
-    Common(nodeTypename, node, subProgram, subProgramImplementation,
-           param, leafTypeDict, names)
+def OnEnumerated(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
+    Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
-def OnSequenceOf(nodeTypename, node, subProgram, subProgramImplementation,
-                 param, leafTypeDict, names):
-    Common(nodeTypename, node, subProgram, subProgramImplementation,
-           param, leafTypeDict, names)
+def OnSequenceOf(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
+    Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
-def OnSetOf(nodeTypename, node, subProgram, subProgramImplementation,
-            param, leafTypeDict, names):
-    Common(nodeTypename, node, subProgram, subProgramImplementation,
-           param, leafTypeDict, names)  # pragma: nocover
+def OnSetOf(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
+    Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)  # pragma: nocover
 
 
-def OnChoice(nodeTypename, node, subProgram, subProgramImplementation,
-             param, leafTypeDict, names):
-    Common(nodeTypename, node, subProgram, subProgramImplementation,
-           param, leafTypeDict, names)
+def OnChoice(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
+    Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
-def OnShutdown(unused_modelingLanguage, unused_asnFile, unused_sp, unused_subProgramImplementation, unused_FVname):
+def OnShutdown(unused_modelingLanguage: str, unused_asnFile: str, unused_sp: ApLevelContainer, unused_subProgramImplementation: str, unused_maybeFVname: str) -> None:
     pass
 
 
-def OnFinal():
+def OnFinal() -> None:
     # global g_PyDataModel
     # global g_QUiFile
     g_PyDataModel.write("\n")

@@ -1,5 +1,5 @@
 PY_SRC:=$(wildcard dmt/asn2dataModel.py dmt/aadl2glueC.py dmt/smp2asn.py dmt/*mappers/[a-zA-Z]*py dmt/commonPy/[a-zA-Z]*py)
-PY_SRC:=$(filter-out dmt/B_mappers/antlr.main.py dmt/A_mappers/Stubs.py dmt/B_mappers/pyside_B_mapper.py, ${PY_SRC})
+PY_SRC:=$(filter-out dmt/B_mappers/antlr.main.py dmt/A_mappers/Stubs.py, ${PY_SRC})
 
 # Python3.5 includes an older version of typing, which by default has priority over
 # the one installed in $HOME/.local via setup.py.
