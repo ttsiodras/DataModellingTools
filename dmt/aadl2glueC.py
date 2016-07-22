@@ -83,8 +83,7 @@ import sys
 import copy
 import distutils.spawn as spawn
 
-from types import ModuleType
-from typing import Dict, List, Tuple, Any  # NOQA pylint: disable=unused-import
+from typing import cast, Dict, List, Tuple, Any  # NOQA pylint: disable=unused-import
 
 # from importlib import import_module
 from .B_mappers import ada_B_mapper
@@ -101,6 +100,8 @@ from .B_mappers import scade6_B_mapper
 from .B_mappers import simulink_B_mapper
 from .B_mappers import vhdl_B_mapper
 
+from .B_mappers.module_protos import Sync_B_Mapper, Async_B_Mapper
+
 from . import commonPy
 
 from .commonPy.utility import panic, inform
@@ -108,7 +109,7 @@ from .commonPy import verify
 from .commonPy.cleanupNodes import DiscoverBadTypes, SetOfBadTypenames
 from .commonPy.asnParser import Filename, Typename, AST_Lookup, AST_TypesOfFile, AST_Leaftypes  # NOQA pylint: disable=unused-import
 from .commonPy.asnAST import AsnNode  # NOQA pylint: disable=unused-import
-from .commonPy.aadlAST import ApLevelContainer  # NOQA pylint: disable=unused-import
+from .commonPy.aadlAST import ApLevelContainer, Param  # NOQA pylint: disable=unused-import
 
 from . import B_mappers  # NOQA pylint: disable=unused-import
 
@@ -278,7 +279,7 @@ def main() -> None:
     if {"ada", "qgenada"} & {y[2].lower() for y in SystemsAndImplementations}:
         SpecialCodes(SystemsAndImplementations, uniqueDataFiles, uniqueASNfiles, useOSS)
 
-    asynchronousBackends = set([])  # type: Set[ModuleType]
+    asynchronousBackends = set([])  # type: Set[Async_B_Mapper]
 
     # Moving to static typing - no more dynamic imports,
     # so this information must be statically available
@@ -316,33 +317,14 @@ def main() -> None:
     ProcessCustomBackends(asnFile, useOSS, SystemsAndImplementations)
 
 
-def getBackend(modelingLanguage: str) -> ModuleType:  # pylint: disable=too-many-return-statements
-    if modelingLanguage == 'C':
-        return c_B_mapper
-    elif modelingLanguage == 'Ada':
-        return ada_B_mapper
-    elif modelingLanguage == 'SDL':
-        return sdl_B_mapper
-    elif modelingLanguage == 'OG':
-        return og_B_mapper
-    elif modelingLanguage == 'QGenAda':
-        return qgenada_B_mapper
-    elif modelingLanguage == 'rtds':
-        return rtds_B_mapper
-    elif modelingLanguage == 'gui':
-        return gui_B_mapper
-    elif modelingLanguage == 'python':
-        return python_B_mapper
-    elif modelingLanguage == 'QgenC':
-        return qgenc_B_mapper
-    elif modelingLanguage == 'Scade6':
-        return scade6_B_mapper
-    elif modelingLanguage == 'Simulink':
-        return simulink_B_mapper
-    elif modelingLanguage == 'vhdl':
-        return vhdl_B_mapper
-    else:
+def getSyncBackend(modelingLanguage: str) -> Sync_B_Mapper:
+    backends = {
+        'Scade6': scade6_B_mapper,
+        'Simulink': simulink_B_mapper,
+    }
+    if modelingLanguage not in backends:
         panic("Modeling language '%s' not supported" % modelingLanguage)
+    return cast(Sync_B_Mapper, backends[modelingLanguage])
 
 
 def ProcessSync(
@@ -352,8 +334,8 @@ def ProcessSync(
         sp_impl: str,
         maybeFVname: str,
         useOSS: bool,
-        badTypes: SetOfBadTypenames):
-    backend = getBackend(modelingLanguage)
+        badTypes: SetOfBadTypenames) -> Sync_B_Mapper:
+    backend = getSyncBackend(modelingLanguage)
 
     # Asynchronous backends are only generating standalone encoders and decoders
     # (they are not doing this per sp.param).
@@ -409,6 +391,25 @@ def ProcessSync(
 
     # For synchronous backend, call OnShutdown once per each sp_impl
     backend.OnShutdown(modelingLanguage, asnFile, sp, sp_impl, maybeFVname)
+    return backend
+
+
+def getAsyncBackend(modelingLanguage: str) -> Async_B_Mapper:
+    backends = {
+        'C': c_B_mapper,
+        'Ada': ada_B_mapper,
+        'SDL': sdl_B_mapper,
+        'OG': og_B_mapper,
+        'QGenAda': qgenada_B_mapper,
+        'rtds': rtds_B_mapper,
+        'gui': gui_B_mapper,
+        'python': python_B_mapper,
+        'QgenC': qgenc_B_mapper,
+        'vhdl': vhdl_B_mapper,
+    }
+    if modelingLanguage not in backends:
+        panic("Modeling language '%s' not supported" % modelingLanguage)
+    return cast(Async_B_Mapper, backends[modelingLanguage])
 
 
 def ProcessAsync(  # pylint: disable=dangerous-default-value
@@ -418,9 +419,9 @@ def ProcessAsync(  # pylint: disable=dangerous-default-value
         maybeFVname: str,
         useOSS: bool,
         badTypes: SetOfBadTypenames,
-        loaded_languages_cache: List[str]=[]) -> ModuleType:  # pylint: disable=invalid-sequence-index
+        loaded_languages_cache: List[str]=[]) -> Async_B_Mapper:  # pylint: disable=invalid-sequence-index
 
-    backend = getBackend(modelingLanguage)
+    backend = getAsyncBackend(modelingLanguage)
 
     # Asynchronous backends are only generating standalone encoders and decoders
     # (they are not doing this per sp.param).
@@ -450,12 +451,6 @@ def ProcessAsync(  # pylint: disable=dangerous-default-value
             if nodeTypename in badTypes:
                 continue
 
-            # Async backends need to collect all types and create Encode/Decode functions for them.
-            # So we allow async backends to pass thru this "if" - the collection of types
-            # is done in the typesToWorkOn dictionary *inside* the base class (asynchronousTool.py)
-            if (not backend.isAsynchronous) and nodeTypename != param._signal._asnNodename:
-                # For sync tools, only allow the typename we are using in this param to pass
-                continue
             node = names[nodeTypename]
             inform("ASN.1 node is %s", nodeTypename)
 
@@ -498,11 +493,11 @@ def ProcessCustomBackends(
     workedOnGUIs = False
     workedOnVHDL = False
 
-    def getCustomBackends(lang: str) -> List[ModuleType]:  # pylint: disable=invalid-sequence-index
+    def getCustomBackends(lang: str) -> List[Sync_B_Mapper]:  # pylint: disable=invalid-sequence-index
         if lang.lower() in ["gui_pi", "gui_ri"]:
-            return [python_B_mapper, pyside_B_mapper]  # pragma: no cover
+            return [cast(Sync_B_Mapper, x) for x in [python_B_mapper, pyside_B_mapper]]  # pragma: no cover
         elif lang.lower() == "vhdl":  # pragma: no cover
-            return [vhdl_B_mapper]  # pragma: no cover
+            return [cast(Sync_B_Mapper, vhdl_B_mapper)]  # pragma: no cover
 
     for si in [x for x in SystemsAndImplementations if x[2] is not None and x[2].lower() in ["gui_ri", "gui_pi", "vhdl"]]:
         # We do, start the work
