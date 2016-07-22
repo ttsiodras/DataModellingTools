@@ -37,9 +37,8 @@ declarations (e.g. SCADE/Lustre, Matlab/Simulink statements, etc).
 import os
 import sys
 import copy
-from importlib import import_module
 
-from typing import Dict, Tuple, Any  # NOQA pylint: disable=unused-import
+from typing import cast, Dict, Tuple, Any  # NOQA pylint: disable=unused-import
 
 from .commonPy import configMT, asnParser, cleanupNodes, verify
 from .commonPy.utility import inform, panic
@@ -47,6 +46,22 @@ from .commonPy.asnParser import Filename, Typename, AST_Lookup, AST_TypesOfFile,
 from .commonPy.asnAST import AsnNode  # NOQA pylint: disable=unused-import
 
 from . import A_mappers  # NOQA pylint:disable=unused-import
+
+from .A_mappers import ada_A_mapper
+from .A_mappers import c_A_mapper
+from .A_mappers import og_A_mapper
+from .A_mappers import python_A_mapper
+from .A_mappers import qgenada_A_mapper
+from .A_mappers import qgenc_A_mapper
+from .A_mappers import rtds_A_mapper
+from .A_mappers import scade6_A_mapper
+from .A_mappers import simulink_A_mapper
+from .A_mappers import smp2_A_mapper
+from .A_mappers import sqlalchemy_A_mapper
+from .A_mappers import sql_A_mapper
+from .A_mappers import vdm_A_mapper
+
+from .A_mappers.module_protos import A_Mapper
 
 
 def usage(argsToTools: Dict[str, str]) -> None:
@@ -57,6 +72,28 @@ def usage(argsToTools: Dict[str, str]) -> None:
     for opt in sorted(argsToTools.keys()):
         msg += '\t-' + opt + ' (for ' + argsToTools[opt][0].upper() + argsToTools[opt][1:] + ')\n'
     panic(msg % sys.argv[0])
+
+
+def getBackend(modelingLanguage: str) -> A_Mapper:
+    backends = {
+        'OG': og_A_mapper,
+        'SCADE5': scade6_A_mapper,
+        'SCADE6': scade6_A_mapper,
+        'Simulink': simulink_A_mapper,
+        'C': c_A_mapper,
+        'RTDS': rtds_A_mapper,
+        'ada': ada_A_mapper,
+        'python': python_A_mapper,
+        'smp2': smp2_A_mapper,
+        'qgenada': qgenada_A_mapper,
+        'qgenc': qgenc_A_mapper,
+        'sql': sql_A_mapper,
+        'sqlalchemy': sqlalchemy_A_mapper,
+        'vdm': vdm_A_mapper,
+    }
+    if modelingLanguage not in backends:
+        panic("Modeling language '%s' not supported" % modelingLanguage)  # pragma: no cover
+    return cast(A_Mapper, backends[modelingLanguage])
 
 
 def main() -> None:
@@ -142,8 +179,6 @@ def main() -> None:
     if configMT.debugParser:
         sys.exit(0)  # pragma: no cover
 
-    loadedBackends = {}  # type: Dict[Filename, Any]
-
     # If some AST nodes must be skipped (for any reason), go learn about them
     badTypes = cleanupNodes.DiscoverBadTypes()
 
@@ -151,24 +186,13 @@ def main() -> None:
     for arg, modelingLanguage in argsToTools.items():
         if not toolSelected[arg]:
             continue
-        backendFilename = "." + modelingLanguage.lower() + "_A_mapper.py"
-        inform("Parsing %s...", backendFilename)
-        try:
-            backend = import_module(backendFilename[:-3], 'dmt.A_mappers')  # pragma: no cover
-            if backendFilename[:-3] not in loadedBackends:
-                loadedBackends[backendFilename[:-3]] = 1
-                if configMT.verbose:
-                    backend.Version()
-        except ImportError as err:  # pragma: no cover
-            panic("Failed to load backend (%s): %s" % (backendFilename, str(err)))  # pragma: no cover
+        backend = getBackend(modelingLanguage)
 
-        # Esp. for C, we want to pass the complete list of ASN.1 files to ASN1SCC,
+        # For some languages we want to pass the complete list of ASN.1 files to ASN1SCC,
         # instead of working per type:
         if modelingLanguage.lower() in ["c", "ada", "smp2", "qgenc", "qgenada"]:
-            if 'OnStartup' in dir(backend):
-                backend.OnStartup(modelingLanguage, list(uniqueASNfiles.keys()), configMT.outputDir, badTypes)
-            if 'OnShutdown' in dir(backend):
-                backend.OnShutdown(badTypes)
+            backend.OnStartup(modelingLanguage, list(uniqueASNfiles.keys()), configMT.outputDir, badTypes)
+            backend.OnShutdown(badTypes)
             continue  # bug in coverage.py...  # pragma: no cover
 
         # Work on each ASN.1 file's types
@@ -191,30 +215,23 @@ def main() -> None:
                 assert nodeTypename in leafTypeDict
 
                 leafType = leafTypeDict[nodeTypename]
-                # If it is a base type,
                 if leafType in ['BOOLEAN', 'INTEGER', 'REAL', 'OCTET STRING']:
-                    # make sure we have mapping instructions for BASE elements
-                    if 'OnBasic' not in dir(backend):
-                        panic("ASN.1 grammar contains literal(%s) but no BASE section found in the mapping grammar (%s)" % (nodeTypename, sys.argv[2]))  # pragma: no cover
-                    backend.OnBasic(nodeTypename, node, leafTypeDict)
-                # if it is a complex type
-                elif leafType in ['SEQUENCE', 'SET', 'CHOICE', 'SEQUENCEOF', 'SETOF', 'ENUMERATED']:
-                    # make sure we have mapping instructions for the element
-                    mappedName = {
-                        'SEQUENCE': 'OnSequence',
-                        'SET': 'OnSet',
-                        'CHOICE': 'OnChoice',
-                        'SEQUENCEOF': 'OnSequenceOf',
-                        'SETOF': 'OnSetOf',
-                        'ENUMERATED': 'OnEnumerated'
-                    }
-                    if mappedName[leafType] not in dir(backend):
-                        panic("ASN.1 grammar contains %s but no %s section found in the mapping grammar (%s)" % (nodeTypename, mappedName[leafType], backendFilename))  # pragma: no cover
-                    processor = backend.__dict__[mappedName[leafType]]
-                    processor(nodeTypename, node, leafTypeDict)
-                # what type is it?
+                    processor = backend.OnBasic
+                elif leafType == 'SEQUENCE':
+                    processor = backend.OnSequence
+                elif leafType == 'SET':
+                    processor = backend.OnSet  # pragma: no cover
+                elif leafType == 'CHOICE':
+                    processor = backend.OnChoice
+                elif leafType == 'SEQUENCEOF':
+                    processor = backend.OnSequenceOf
+                elif leafType == 'SETOF':
+                    processor = backend.OnSetOf  # pragma: no cover
+                elif leafType == 'ENUMERATED':
+                    processor = backend.OnEnumerated
                 else:  # pragma: no cover
-                    panic("Unexpected type of element: %s" % leafTypeDict[nodeTypename])  # pragma: no cover
+                    panic("Unexpected type of element: %s" % leafType)  # pragma: no cover
+                processor(nodeTypename, node, leafTypeDict)
 
             if 'OnShutdown' in dir(backend):
                 backend.OnShutdown(badTypes)
