@@ -52,11 +52,6 @@ isAsynchronous = False
 scadeBackend = None
 
 
-def Version() -> None:
-    print("Code generator: " +
-          "$Id: scade6_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")
-
-
 # noinspection PyListCreation
 # pylint: disable=no-self-use
 class FromSCADEtoASN1SCC(RecursiveMapper):

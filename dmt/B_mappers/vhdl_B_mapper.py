@@ -66,10 +66,6 @@ vhdlBackend = None
 g_octStr = []  # type: List[int]
 
 
-def Version() -> None:
-    print("Code generator: " + "$Id: vhdl_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")  # pragma: no cover
-
-
 def CleanName(name: str) -> str:
     return re.sub(r'[^a-zA-Z0-9_]', '_', name)
 

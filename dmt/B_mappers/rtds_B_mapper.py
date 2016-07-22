@@ -46,10 +46,6 @@ rtdsBackend = None
 cBackend = None
 
 
-def Version() -> None:
-    print("Code generator: " + "$Id: rtds_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")
-
-
 # noinspection PyListCreation
 # pylint: disable=no-self-use
 class FromRTDSToASN1SCC(RecursiveMapper):

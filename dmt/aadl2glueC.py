@@ -82,14 +82,30 @@ import os
 import sys
 import copy
 import distutils.spawn as spawn
-from importlib import import_module
 
+from types import ModuleType
 from typing import Dict, List, Tuple, Any  # NOQA pylint: disable=unused-import
+
+# from importlib import import_module
+from .B_mappers import ada_B_mapper
+from .B_mappers import c_B_mapper
+from .B_mappers import gui_B_mapper
+from .B_mappers import og_B_mapper
+from .B_mappers import sdl_B_mapper
+from .B_mappers import pyside_B_mapper
+from .B_mappers import python_B_mapper
+from .B_mappers import qgenada_B_mapper
+from .B_mappers import qgenc_B_mapper
+from .B_mappers import rtds_B_mapper
+from .B_mappers import scade6_B_mapper
+from .B_mappers import simulink_B_mapper
+from .B_mappers import vhdl_B_mapper
 
 from . import commonPy
 
 from .commonPy.utility import panic, inform
 from .commonPy import verify
+from .commonPy.cleanupNodes import DiscoverBadTypes, SetOfBadTypenames
 from .commonPy.asnParser import Filename, Typename, AST_Lookup, AST_TypesOfFile, AST_Leaftypes  # NOQA pylint: disable=unused-import
 from .commonPy.asnAST import AsnNode  # NOQA pylint: disable=unused-import
 from .commonPy.aadlAST import ApLevelContainer  # NOQA pylint: disable=unused-import
@@ -100,15 +116,6 @@ from . import B_mappers  # NOQA pylint: disable=unused-import
 #    http://stackoverflow.com/questions/2121874/python-pickling-after-changing-a-modules-directory
 from . import commonPy2
 sys.modules['commonPy2'] = commonPy2
-
-g_mappedName = {
-    'SEQUENCE': 'OnSequence',
-    'SET': 'OnSet',
-    'CHOICE': 'OnChoice',
-    'SEQUENCEOF': 'OnSequenceOf',
-    'SETOF': 'OnSetOf',
-    'ENUMERATED': 'OnEnumerated'
-}
 
 
 def ParseAADLfilesAndResolveSignals() -> None:
@@ -246,8 +253,6 @@ def main() -> None:
         for node in list(tmpNames.values()):
             verify.VerifyRanges(node, commonPy.asnParser.g_names)
 
-    loadedBackends = set()  # type: Set[str]
-
     SystemsAndImplementations = commonPy.aadlAST.g_subProgramImplementations[:]
     SystemsAndImplementations.extend(commonPy.aadlAST.g_threadImplementations[:])
     SystemsAndImplementations.extend(commonPy.aadlAST.g_processImplementations[:])
@@ -259,7 +264,6 @@ def main() -> None:
         for param in sp._params:
             asnFile = param._signal._asnFilename
             names = uniqueASNfiles[asnFile][0]
-            leafTypeDict = uniqueASNfiles[asnFile][2]
             for nodeTypename in names:
                 if nodeTypename != param._signal._asnNodename:
                     continue
@@ -269,19 +273,23 @@ def main() -> None:
                 # (typo?) node._asnSize = param._signal._asnSize
 
     # If some AST nodes must be skipped (for any reason), go learn about them
-    badTypes = commonPy.cleanupNodes.DiscoverBadTypes()
+    badTypes = DiscoverBadTypes()
 
     if {"ada", "qgenada"} & {y[2].lower() for y in SystemsAndImplementations}:
         SpecialCodes(SystemsAndImplementations, uniqueDataFiles, uniqueASNfiles, useOSS)
 
-    asynchronousBackends = []  # type: List[Any]  # No idea how to say list of module
+    asynchronousBackends = set([])  # type: Set[ModuleType]
+
+    # Moving to static typing - no more dynamic imports,
+    # so this information must be statically available
+    async_languages = ['Ada', 'C', 'OG', 'QGenAda', 'rtds', 'SDL']
 
     for si in SystemsAndImplementations:
         spName, sp_impl, modelingLanguage, maybeFVname = si[0], si[1], si[2], si[3]
-        sp = commonPy.aadlAST.g_apLevelContainers[spName]
-        inform("Creating glue for parameters of %s.%s...", sp._id, sp_impl)
         if modelingLanguage is None:
             continue  # pragma: no cover
+        sp = commonPy.aadlAST.g_apLevelContainers[spName]
+        inform("Creating glue for parameters of %s.%s...", sp._id, sp_impl)
 
         # Avoid generating empty glue - no parameters for this APLC
         if len(sp._params) == 0:
@@ -295,98 +303,192 @@ def main() -> None:
         if modelingLanguage.lower() in ["gui_ri", "gui_pi", "vhdl", "rhapsody"]:
             modelingLanguage = "C"
 
-        backendFilename = "." + modelingLanguage.lower() + "_B_mapper.py"
-        inform("Parsing %s...", backendFilename)
-        try:
-            backend = import_module(backendFilename[:-3], 'dmt.B_mappers')  # pragma: no cover
-            if backendFilename[:-3] not in loadedBackends:
-                loadedBackends.add(backendFilename[:-3])
-                if commonPy.configMT.verbose:
-                    backend.Version()
-        except ImportError as err:  # pragma: no cover
-            panic("Failed to load backend ({}) for {}.{}: {}\n".format(backendFilename, sp._id, sp_impl, str(err)))  # pragma: no cover
-            continue  # pragma: no cover
-
-        # Asynchronous backends are only generating standalone encoders and decoders
-        # (they are not doing this per sp.param).
-        #
-        # They must however do this when they have collected ALL the types they are
-        # supposed to handle, so this can only be done when the loop over
-        # SystemsAndImplementations has completed. We therefore accumulate them in a
-        # container, and call their 'OnShutdown' method (which generates the encoders
-        # and decoders) at the end (outside the loop). This of course means that we
-        # can only call OnStartup once (when the backend is first loaded)
-        if backend.isAsynchronous:
-            if backend not in asynchronousBackends:
-                asynchronousBackends.append(backend)
-                # Only call OnStartup ONCE for asynchronous backends
-                if 'OnStartup' in dir(backend):
-                    # Also notice, no SP or SPIMPL are passed. We are asynchronous, so
-                    # we only generate "generic" encoders and decoders, not SP-specific ones.
-                    backend.OnStartup(modelingLanguage, asnFile, commonPy.configMT.outputDir, maybeFVname, useOSS)
+        if modelingLanguage in async_languages:
+            m = ProcessAsync(modelingLanguage, asnFile, sp, maybeFVname, useOSS, badTypes)
+            asynchronousBackends.add(m)
         else:
-            # In synchronous tools, always call OnStartup and OnShutdown for each SystemsAndImplementation
-            if 'OnStartup' in dir(backend):
-                backend.OnStartup(modelingLanguage, asnFile, sp, sp_impl, commonPy.configMT.outputDir, maybeFVname, useOSS)
-
-        for param in sp._params:
-            inform("Creating glue for param %s...", param._id)
-            asnFile = param._signal._asnFilename
-            names = commonPy.asnParser.g_names
-            leafTypeDict = commonPy.asnParser.g_leafTypeDict
-
-            inform("This param uses definitions from %s", asnFile)
-            for nodeTypename in names:
-                # Check if this type must be skipped
-                if nodeTypename in badTypes:
-                    continue
-
-                # Async backends need to collect all types and create Encode/Decode functions for them.
-                # So we allow async backends to pass thru this "if" - the collection of types
-                # is done in the typesToWorkOn dictionary *inside* the base class (asynchronousTool.py)
-                if (not backend.isAsynchronous) and nodeTypename != param._signal._asnNodename:
-                    # For sync tools, only allow the typename we are using in this param to pass
-                    continue
-                node = names[nodeTypename]
-                inform("ASN.1 node is %s", nodeTypename)
-
-                # First, make sure we know what leaf type this node is
-                if node._isArtificial:
-                    continue  # artificially created (inner) type
-
-                leafType = leafTypeDict[nodeTypename]
-                # If it is a base type,
-                if leafType in ['BOOLEAN', 'INTEGER', 'REAL', 'OCTET STRING']:
-                    # make sure we have mapping instructions for BASE elements
-                    if 'OnBasic' not in dir(backend):
-                        panic("ASN.1 grammar contains literal(%s) but no BASE section found in the mapping grammar (%s)" % (nodeTypename, backendFilename))  # pragma: no cover
-                    if not backend.isAsynchronous:
-                        backend.OnBasic(nodeTypename, node, sp, sp_impl, param, leafTypeDict, names)
-                    else:
-                        backend.OnBasic(nodeTypename, node, leafTypeDict, names)
-                # if it is a complex type
-                elif leafType in ['SEQUENCE', 'SET', 'CHOICE', 'SEQUENCEOF', 'SETOF', 'ENUMERATED']:
-                    # make sure we have mapping instructions for the element
-                    if g_mappedName[leafType] not in dir(backend):
-                        panic("ASN.1 grammar contains %s but no %s section found in the mapping grammar (%s)" % (nodeTypename, g_mappedName[leafType], backendFilename))  # pragma: no cover
-                    processor = backend.__dict__[g_mappedName[leafType]]
-                    if not backend.isAsynchronous:
-                        processor(nodeTypename, node, sp, sp_impl, param, leafTypeDict, names)
-                    else:
-                        processor(nodeTypename, node, leafTypeDict, names)
-                # what type is it?
-                else:  # pragma: no cover
-                    panic("Unexpected type of element: %s" % leafTypeDict[nodeTypename])  # pragma: no cover
-
-        # For synchronous backend, call OnShutdown once per each sp_impl
-        if not backend.isAsynchronous:
-            if 'OnShutdown' in dir(backend):
-                backend.OnShutdown(modelingLanguage, asnFile, sp, sp_impl, maybeFVname)
+            ProcessSync(modelingLanguage, asnFile, sp, sp_impl, maybeFVname, useOSS, badTypes)
 
     # SystemsAndImplementation loop completed - time to call OnShutdown ONCE for each async backend that we loaded
     for asyncBackend in asynchronousBackends:
-        if 'OnShutdown' in dir(backend):
-            asyncBackend.OnShutdown(modelingLanguage, asnFile, maybeFVname)
+        asyncBackend.OnShutdown(modelingLanguage, asnFile, maybeFVname)
+
+    ProcessCustomBackends(asnFile, useOSS, SystemsAndImplementations)
+
+
+def getBackend(modelingLanguage: str) -> ModuleType:  # pylint: disable=too-many-return-statements
+    if modelingLanguage == 'C':
+        return c_B_mapper
+    elif modelingLanguage == 'Ada':
+        return ada_B_mapper
+    elif modelingLanguage == 'SDL':
+        return sdl_B_mapper
+    elif modelingLanguage == 'OG':
+        return og_B_mapper
+    elif modelingLanguage == 'QGenAda':
+        return qgenada_B_mapper
+    elif modelingLanguage == 'rtds':
+        return rtds_B_mapper
+    elif modelingLanguage == 'gui':
+        return gui_B_mapper
+    elif modelingLanguage == 'python':
+        return python_B_mapper
+    elif modelingLanguage == 'QgenC':
+        return qgenc_B_mapper
+    elif modelingLanguage == 'Scade6':
+        return scade6_B_mapper
+    elif modelingLanguage == 'Simulink':
+        return simulink_B_mapper
+    elif modelingLanguage == 'vhdl':
+        return vhdl_B_mapper
+    else:
+        panic("Modeling language '%s' not supported" % modelingLanguage)
+
+
+def ProcessSync(
+        modelingLanguage: str,
+        asnFile: str,
+        sp: ApLevelContainer,
+        sp_impl: str,
+        maybeFVname: str,
+        useOSS: bool,
+        badTypes: SetOfBadTypenames):
+    backend = getBackend(modelingLanguage)
+
+    # Asynchronous backends are only generating standalone encoders and decoders
+    # (they are not doing this per sp.param).
+    #
+    # They must however do this when they have collected ALL the types they are
+    # supposed to handle, so this can only be done when the loop over
+    # SystemsAndImplementations has completed. We therefore accumulate them in a
+    # container, and call their 'OnShutdown' method (which generates the encoders
+    # and decoders) at the end (outside the loop). This of course means that we
+    # can only call OnStartup once (when the backend is first loaded)
+
+    # In synchronous tools, always call OnStartup and OnShutdown for each SystemsAndImplementation
+    backend.OnStartup(modelingLanguage, asnFile, sp, sp_impl, commonPy.configMT.outputDir, maybeFVname, useOSS)
+
+    for param in sp._params:
+        inform("Creating glue for param %s...", param._id)
+        asnFile = param._signal._asnFilename
+        names = commonPy.asnParser.g_names
+        leafTypeDict = commonPy.asnParser.g_leafTypeDict
+
+        inform("This param uses definitions from %s", asnFile)
+        nodeTypename = param._signal._asnNodename
+
+        # Check if this type must be skipped
+        if nodeTypename in badTypes:
+            continue
+
+        node = names[nodeTypename]
+        inform("ASN.1 node is %s", nodeTypename)
+
+        # First, make sure we know what leaf type this node is
+        if node._isArtificial:
+            continue  # artificially created (inner) type
+
+        leafType = leafTypeDict[nodeTypename]
+        if leafType in ['BOOLEAN', 'INTEGER', 'REAL', 'OCTET STRING']:
+            processor = backend.OnBasic
+        elif leafType == 'SEQUENCE':
+            processor = backend.OnSequence
+        elif leafType == 'SET':
+            processor = backend.OnSet
+        elif leafType == 'CHOICE':
+            processor = backend.OnChoice
+        elif leafType == 'SEQUENCEOF':
+            processor = backend.OnSequenceOf
+        elif leafType == 'SETOF':
+            processor = backend.OnSetOf
+        elif leafType == 'ENUMERATED':
+            processor = backend.OnEnumerated
+        else:  # pragma: no cover
+            panic("Unexpected type of element: %s" % leafType)  # pragma: no cover
+        processor(nodeTypename, node, sp, sp_impl, param, leafTypeDict, names)
+
+    # For synchronous backend, call OnShutdown once per each sp_impl
+    backend.OnShutdown(modelingLanguage, asnFile, sp, sp_impl, maybeFVname)
+
+
+def ProcessAsync(  # pylint: disable=dangerous-default-value
+        modelingLanguage: str,
+        asnFile: str,
+        sp: ApLevelContainer,
+        maybeFVname: str,
+        useOSS: bool,
+        badTypes: SetOfBadTypenames,
+        loaded_languages_cache: List[str]=[]) -> ModuleType:  # pylint: disable=invalid-sequence-index
+
+    backend = getBackend(modelingLanguage)
+
+    # Asynchronous backends are only generating standalone encoders and decoders
+    # (they are not doing this per sp.param).
+    #
+    # They must however do this when they have collected ALL the types they are
+    # supposed to handle, so this can only be done when the loop over
+    # SystemsAndImplementations has completed. We therefore accumulate them in a
+    # container, and call their 'OnShutdown' method (which generates the encoders
+    # and decoders) at the end (outside the loop). This of course means that we
+    # can only call OnStartup once (when the backend is first loaded)
+    if modelingLanguage not in loaded_languages_cache:
+        loaded_languages_cache.append(modelingLanguage)
+        # Only call OnStartup ONCE for asynchronous backends
+        # Also notice, no SP or SPIMPL are passed. We are asynchronous, so
+        # we only generate "generic" encoders and decoders, not SP-specific ones.
+        backend.OnStartup(modelingLanguage, asnFile, commonPy.configMT.outputDir, maybeFVname, useOSS)
+
+    for param in sp._params:
+        inform("Creating glue for param %s...", param._id)
+        asnFile = param._signal._asnFilename
+        names = commonPy.asnParser.g_names
+        leafTypeDict = commonPy.asnParser.g_leafTypeDict
+
+        inform("This param uses definitions from %s", asnFile)
+        for nodeTypename in names:
+            # Check if this type must be skipped
+            if nodeTypename in badTypes:
+                continue
+
+            # Async backends need to collect all types and create Encode/Decode functions for them.
+            # So we allow async backends to pass thru this "if" - the collection of types
+            # is done in the typesToWorkOn dictionary *inside* the base class (asynchronousTool.py)
+            if (not backend.isAsynchronous) and nodeTypename != param._signal._asnNodename:
+                # For sync tools, only allow the typename we are using in this param to pass
+                continue
+            node = names[nodeTypename]
+            inform("ASN.1 node is %s", nodeTypename)
+
+            # First, make sure we know what leaf type this node is
+            if node._isArtificial:
+                continue  # artificially created (inner) type
+
+            leafType = leafTypeDict[nodeTypename]
+            if leafType in ['BOOLEAN', 'INTEGER', 'REAL', 'OCTET STRING']:
+                processor = backend.OnBasic
+            elif leafType == 'SEQUENCE':
+                processor = backend.OnSequence
+            elif leafType == 'SET':
+                processor = backend.OnSet
+            elif leafType == 'CHOICE':
+                processor = backend.OnChoice
+            elif leafType == 'SEQUENCEOF':
+                processor = backend.OnSequenceOf
+            elif leafType == 'SETOF':
+                processor = backend.OnSetOf
+            elif leafType == 'ENUMERATED':
+                processor = backend.OnEnumerated
+            else:  # pragma: no cover
+                panic("Unexpected type of element: %s" % leafType)  # pragma: no cover
+            processor(nodeTypename, node, leafTypeDict, names)
+    return backend
+
+
+def ProcessCustomBackends(
+        # Taking list of tuples made of (spName, sp_impl, language, maybeFVname)
+        asnFile: str,
+        useOSS: bool,
+        SystemsAndImplementations: List[Tuple[str, str, str, str]]) -> None:
 
     # The code generators for GUIs, Python mappers and VHDL mappers are different: they need access to
     # both ASN.1 types and SP params.
@@ -396,12 +498,11 @@ def main() -> None:
     workedOnGUIs = False
     workedOnVHDL = False
 
-    def mappers(lang: str) -> List[Any]:  # pylint: disable=invalid-sequence-index
+    def getCustomBackends(lang: str) -> List[ModuleType]:  # pylint: disable=invalid-sequence-index
         if lang.lower() in ["gui_pi", "gui_ri"]:
-            return [import_module(".python_B_mapper", "dmt.B_mappers"),
-                    import_module(".pyside_B_mapper", "dmt.B_mappers")]  # pragma: no cover
+            return [python_B_mapper, pyside_B_mapper]  # pragma: no cover
         elif lang.lower() == "vhdl":  # pragma: no cover
-            return [import_module(".vhdl_B_mapper", "dmt.B_mappers")]  # pragma: no cover
+            return [vhdl_B_mapper]  # pragma: no cover
 
     for si in [x for x in SystemsAndImplementations if x[2] is not None and x[2].lower() in ["gui_ri", "gui_pi", "vhdl"]]:
         # We do, start the work
@@ -417,8 +518,8 @@ def main() -> None:
         if lang.lower() == "vhdl":
             workedOnVHDL = True  # pragma: no cover
         inform("Creating %s for %s.%s", lang.upper(), sp._id, sp_impl)
-        for b in mappers(lang):
-            b.OnStartup(lang, asnFile, sp, sp_impl, commonPy.configMT.outputDir, maybeFVname, useOSS)
+        for backend in getCustomBackends(lang):
+            backend.OnStartup(lang, asnFile, sp, sp_impl, commonPy.configMT.outputDir, maybeFVname, useOSS)
         for param in sp._params:
             inform("Processing param %s...", param._id)
             asnFile = param._signal._asnFilename
@@ -431,24 +532,37 @@ def main() -> None:
             #     continue # artificially created (inner) type pragma: no cover
             leafType = leafTypeDict[nodeTypename]
             if leafType in ['BOOLEAN', 'INTEGER', 'REAL', 'OCTET STRING']:
-                for b in mappers(lang):
-                    b.OnBasic(nodeTypename, node, sp, sp_impl, param, leafTypeDict, names)
+                for backend in getCustomBackends(lang):
+                    backend.OnBasic(nodeTypename, node, sp, sp_impl, param, leafTypeDict, names)
             elif leafType in ['SEQUENCE', 'SET', 'CHOICE', 'SEQUENCEOF', 'SETOF', 'ENUMERATED']:
-                for b in mappers(lang):
-                    processor = b.__dict__[g_mappedName[leafType]]
+                for backend in getCustomBackends(lang):
+                    if leafType == 'SEQUENCE':
+                        processor = backend.OnSequence
+                    elif leafType == 'SET':
+                        processor = backend.OnSet
+                    elif leafType == 'CHOICE':
+                        processor = backend.OnChoice
+                    elif leafType == 'SEQUENCEOF':
+                        processor = backend.OnSequenceOf
+                    elif leafType == 'SETOF':
+                        processor = backend.OnSetOf
+                    elif leafType == 'ENUMERATED':
+                        processor = backend.OnEnumerated
                     processor(nodeTypename, node, sp, sp_impl, param, leafTypeDict, names)
             else:  # pragma: no cover
                 panic("Unexpected type of element: %s" % leafTypeDict[nodeTypename])  # pragma: no cover
-        for b in mappers(lang):
-            b.OnShutdown(lang, asnFile, sp, sp_impl, maybeFVname)
+        for backend in getCustomBackends(lang):
+            backend.OnShutdown(lang, asnFile, sp, sp_impl, maybeFVname)
+
     # if we processed any GUI subprogram, add footers and close files
     if workedOnGUIs:
-        for b in mappers('gui_ri'):
-            b.OnFinal()
+        for backend in getCustomBackends('gui_ri'):
+            backend.OnFinal()
     # if we processed any VHDL subprogram, add footers and close files
     if workedOnVHDL:
-        for b in mappers('vhdl'):  # pragma: no cover
-            b.OnFinal()  # pragma: no cover
+        for backend in getCustomBackends('vhdl'):  # pragma: no cover
+            backend.OnFinal()  # pragma: no cover
+
 
 if __name__ == "__main__":
     if "-pdb" in sys.argv:
