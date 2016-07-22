@@ -80,10 +80,9 @@ but with an extra call to OnFinal at the end.
 
 import os
 import sys
-import copy
 import distutils.spawn as spawn
 
-from typing import cast, Dict, List, Tuple, Any  # NOQA pylint: disable=unused-import
+from typing import cast, Optional, Dict, List, Tuple, Any  # NOQA pylint: disable=unused-import
 
 # from importlib import import_module
 from .B_mappers import ada_B_mapper
@@ -117,6 +116,26 @@ from . import B_mappers  # NOQA pylint: disable=unused-import
 #    http://stackoverflow.com/questions/2121874/python-pickling-after-changing-a-modules-directory
 from . import commonPy2
 sys.modules['commonPy2'] = commonPy2
+
+
+g_async_mappers = {
+    'C': c_B_mapper,
+    'Ada': ada_B_mapper,
+    'SDL': sdl_B_mapper,
+    'OG': og_B_mapper,
+    'QGenAda': qgenada_B_mapper,
+    'RTDS': rtds_B_mapper,
+}
+
+
+g_sync_mappers = {
+    'Scade6': scade6_B_mapper,
+    'Simulink': simulink_B_mapper,
+    'gui': gui_B_mapper,
+    'python': python_B_mapper,
+    'QgenC': qgenc_B_mapper,
+    'vhdl': vhdl_B_mapper,
+}
 
 
 def ParseAADLfilesAndResolveSignals() -> None:
@@ -176,155 +195,23 @@ of each SUBPROGRAM param.'''
         panic(str(e))
 
 
-def SpecialCodes(unused_SystemsAndImplementations: List[Tuple[str, str, str, str]],
-                 unused_uniqueDataFiles: Dict[Filename, Dict[str, List[ApLevelContainer]]],  # pylint: disable=invalid-sequence-index
-                 asnFiles: Dict[Filename, Tuple[AST_Lookup, List[AsnNode], AST_Leaftypes]],  # pylint: disable=invalid-sequence-index
-                 unused_useOSS: bool) -> None:
+def SpecialCodes(asnFile: str) -> None:
     '''This function handles the code generations needs that reside outside
 the scope of individual parameters (e.g. it needs access to all ASN.1
 types). This used to cover Dumpable C/Ada Types and OG headers.'''
     outputDir = commonPy.configMT.outputDir
     asn1SccPath = spawn.find_executable('asn1.exe')
-    if len(asnFiles) != 0:
+    if asnFile is not None:
         if not asn1SccPath:
             panic("ASN1SCC seems not installed on your system (asn1.exe not found in PATH).\n")  # pragma: no cover
         os.system('mono "{}" -wordSize 8 -typePrefix asn1Scc -Ada -equal -uPER -o "{}" "{}"'
-                  .format(asn1SccPath, outputDir, '" "'.join(asnFiles)))
-
-
-def main() -> None:
-    if "-v" in sys.argv:
-        import pkg_resources  # pragma: no cover
-        version = pkg_resources.require("dmt")[0].version  # pragma: no cover
-        print("aadl2glueC v" + str(version))  # pragma: no cover
-        sys.exit(1)  # pragma: no cover
-
-    if sys.argv.count("-o") != 0:
-        idx = sys.argv.index("-o")
-        try:
-            commonPy.configMT.outputDir = os.path.normpath(sys.argv[idx + 1]) + os.sep
-        except:  # pragma: no cover
-            panic('Usage: %s [-v] [-verbose] [-useOSS] [-o dirname] input1.aadl [input2.aadl] ...\n' % sys.argv[0])  # pragma: no cover
-        del sys.argv[idx]
-        del sys.argv[idx]
-        if not os.path.isdir(commonPy.configMT.outputDir):
-            panic("'%s' is not a directory!\n" % commonPy.configMT.outputDir)  # pragma: no cover
-    if "-onlySP" in sys.argv:  # pragma: no cover
-        commonPy.configMT.g_bOnlySubprograms = True  # pragma: no cover
-        sys.argv.remove("-onlySP")  # pragma: no cover
-    if "-verbose" in sys.argv:
-        commonPy.configMT.verbose = True
-        sys.argv.remove("-verbose")
-    useOSS = "-useOSS" in sys.argv
-    if useOSS:
-        sys.argv.remove("-useOSS")
-
-    # No other options must remain in the cmd line...
-    if len(sys.argv) < 2:
-        panic('Usage: %s [-v] [-verbose] [-useOSS] [-o dirname] input1.aadl [input2.aadl] ...\n' % sys.argv[0])  # pragma: no cover
-    commonPy.configMT.showCode = True
-    for f in sys.argv[1:]:
-        if not os.path.isfile(f):
-            panic("'%s' is not a file!\n" % f)  # pragma: no cover
-
-    ParseAADLfilesAndResolveSignals()
-
-    uniqueDataFiles = {}  # type: Dict[Filename, Dict[str, List[ApLevelContainer]]]
-    for sp in list(commonPy.aadlAST.g_apLevelContainers.values()):
-        for param in sp._params:
-            uniqueDataFiles.setdefault(param._signal._asnFilename, {})
-            uniqueDataFiles[param._signal._asnFilename].setdefault(sp._language, [])
-            uniqueDataFiles[param._signal._asnFilename][sp._language].append(sp)
-
-    uniqueASNfiles = {}  # type: Dict[Filename, Tuple[AST_Lookup, List[AsnNode], AST_Leaftypes]]
-    if len(list(uniqueDataFiles.keys())) != 0:
-        commonPy.asnParser.ParseAsnFileList(list(uniqueDataFiles.keys()))
-
-    for asnFile in uniqueDataFiles:
-        tmpNames = {}  # type: AST_Lookup
-        for name in commonPy.asnParser.g_typesOfFile[asnFile]:
-            tmpNames[name] = commonPy.asnParser.g_names[name]
-
-        uniqueASNfiles[asnFile] = (
-            copy.copy(tmpNames),                            # map Typename to type definition class from asnAST
-            copy.copy(commonPy.asnParser.g_astOfFile[asnFile]),    # list of nameless type definitions
-            copy.copy(commonPy.asnParser.g_leafTypeDict))   # map from Typename to leafType
-
-        inform("Checking that all base nodes have mandatory ranges set in %s..." % asnFile)
-        for node in list(tmpNames.values()):
-            verify.VerifyRanges(node, commonPy.asnParser.g_names)
-
-    SystemsAndImplementations = commonPy.aadlAST.g_subProgramImplementations[:]
-    SystemsAndImplementations.extend(commonPy.aadlAST.g_threadImplementations[:])
-    SystemsAndImplementations.extend(commonPy.aadlAST.g_processImplementations[:])
-
-    # Update ASN.1 nodes to carry size info (only for Signal params)
-    for si in SystemsAndImplementations:
-        spName, sp_impl, modelingLanguage = si[0], si[1], si[2]
-        sp = commonPy.aadlAST.g_apLevelContainers[spName]
-        for param in sp._params:
-            asnFile = param._signal._asnFilename
-            names = uniqueASNfiles[asnFile][0]
-            for nodeTypename in names:
-                if nodeTypename != param._signal._asnNodename:
-                    continue
-                node = names[nodeTypename]
-                if node._leafType == "AsciiString":
-                    panic("You cannot use IA5String as a parameter - use OCTET STRING instead\n(%s)" % node.Location())  # pragma: no cover
-                # (typo?) node._asnSize = param._signal._asnSize
-
-    # If some AST nodes must be skipped (for any reason), go learn about them
-    badTypes = DiscoverBadTypes()
-
-    if {"ada", "qgenada"} & {y[2].lower() for y in SystemsAndImplementations}:
-        SpecialCodes(SystemsAndImplementations, uniqueDataFiles, uniqueASNfiles, useOSS)
-
-    asynchronousBackends = set([])  # type: Set[Async_B_Mapper]
-
-    # Moving to static typing - no more dynamic imports,
-    # so this information must be statically available
-    async_languages = ['Ada', 'C', 'OG', 'QGenAda', 'RTDS', 'SDL']
-
-    for si in SystemsAndImplementations:
-        spName, sp_impl, modelingLanguage, maybeFVname = si[0], si[1], si[2], si[3]
-        if modelingLanguage is None:
-            continue  # pragma: no cover
-        sp = commonPy.aadlAST.g_apLevelContainers[spName]
-        inform("Creating glue for parameters of %s.%s...", sp._id, sp_impl)
-
-        # Avoid generating empty glue - no parameters for this APLC
-        if len(sp._params) == 0:
-            continue
-
-        # All SCADE versions are handled by lustre_B_mapper
-        # if modelingLanguage[:6] == "Lustre" or modelingLanguage[:5] == "SCADE":
-        #    modelingLanguage = "Lustre"  # pragma: no cover
-
-        # The code for these mappers needs C ASN.1 codecs
-        if modelingLanguage.lower() in ["gui_ri", "gui_pi", "vhdl", "rhapsody"]:
-            modelingLanguage = "C"
-
-        if modelingLanguage in async_languages:
-            m = ProcessAsync(modelingLanguage, asnFile, sp, maybeFVname, useOSS, badTypes)
-            asynchronousBackends.add(m)
-        else:
-            ProcessSync(modelingLanguage, asnFile, sp, sp_impl, maybeFVname, useOSS, badTypes)
-
-    # SystemsAndImplementation loop completed - time to call OnShutdown ONCE for each async backend that we loaded
-    for asyncBackend in asynchronousBackends:
-        asyncBackend.OnShutdown(modelingLanguage, asnFile, maybeFVname)
-
-    ProcessCustomBackends(asnFile, useOSS, SystemsAndImplementations)
+                  .format(asn1SccPath, outputDir, '" "'.join([asnFile])))
 
 
 def getSyncBackend(modelingLanguage: str) -> Sync_B_Mapper:
-    backends = {
-        'Scade6': scade6_B_mapper,
-        'Simulink': simulink_B_mapper,
-    }
-    if modelingLanguage not in backends:
-        panic("Modeling language '%s' not supported" % modelingLanguage)
-    return cast(Sync_B_Mapper, backends[modelingLanguage])
+    if modelingLanguage not in g_sync_mappers:
+        panic("Synchronous modeling language '%s' not supported" % modelingLanguage)
+    return cast(Sync_B_Mapper, g_sync_mappers[modelingLanguage])
 
 
 def ProcessSync(
@@ -352,7 +239,7 @@ def ProcessSync(
 
     for param in sp._params:
         inform("Creating glue for param %s...", param._id)
-        asnFile = param._signal._asnFilename
+        assert asnFile == param._signal._asnFilename
         names = commonPy.asnParser.g_names
         leafTypeDict = commonPy.asnParser.g_leafTypeDict
 
@@ -395,21 +282,9 @@ def ProcessSync(
 
 
 def getAsyncBackend(modelingLanguage: str) -> Async_B_Mapper:
-    backends = {
-        'C': c_B_mapper,
-        'Ada': ada_B_mapper,
-        'SDL': sdl_B_mapper,
-        'OG': og_B_mapper,
-        'QGenAda': qgenada_B_mapper,
-        'RTDS': rtds_B_mapper,
-        'gui': gui_B_mapper,
-        'python': python_B_mapper,
-        'QgenC': qgenc_B_mapper,
-        'vhdl': vhdl_B_mapper,
-    }
-    if modelingLanguage not in backends:
-        panic("Modeling language '%s' not supported" % modelingLanguage)
-    return cast(Async_B_Mapper, backends[modelingLanguage])
+    if modelingLanguage not in g_async_mappers:
+        panic("Asynchronous modeling language '%s' not supported" % modelingLanguage)
+    return cast(Async_B_Mapper, g_async_mappers[modelingLanguage])
 
 
 def ProcessAsync(  # pylint: disable=dangerous-default-value
@@ -441,7 +316,7 @@ def ProcessAsync(  # pylint: disable=dangerous-default-value
 
     for param in sp._params:
         inform("Creating glue for param %s...", param._id)
-        asnFile = param._signal._asnFilename
+        assert asnFile == param._signal._asnFilename
         names = commonPy.asnParser.g_names
         leafTypeDict = commonPy.asnParser.g_leafTypeDict
 
@@ -517,7 +392,7 @@ def ProcessCustomBackends(
             backend.OnStartup(lang, asnFile, sp, sp_impl, commonPy.configMT.outputDir, maybeFVname, useOSS)
         for param in sp._params:
             inform("Processing param %s...", param._id)
-            asnFile = param._signal._asnFilename
+            assert asnFile == param._signal._asnFilename
             names = commonPy.asnParser.g_names
             leafTypeDict = commonPy.asnParser.g_leafTypeDict
             nodeTypename = param._signal._asnNodename
@@ -557,6 +432,125 @@ def ProcessCustomBackends(
     if workedOnVHDL:
         for backend in getCustomBackends('vhdl'):  # pragma: no cover
             backend.OnFinal()  # pragma: no cover
+
+
+def main() -> None:
+    if "-v" in sys.argv:
+        import pkg_resources  # pragma: no cover
+        version = pkg_resources.require("dmt")[0].version  # pragma: no cover
+        print("aadl2glueC v" + str(version))  # pragma: no cover
+        sys.exit(1)  # pragma: no cover
+
+    if sys.argv.count("-o") != 0:
+        idx = sys.argv.index("-o")
+        try:
+            commonPy.configMT.outputDir = os.path.normpath(sys.argv[idx + 1]) + os.sep
+        except:  # pragma: no cover
+            panic('Usage: %s [-v] [-verbose] [-useOSS] [-o dirname] input1.aadl [input2.aadl] ...\n' % sys.argv[0])  # pragma: no cover
+        del sys.argv[idx]
+        del sys.argv[idx]
+        if not os.path.isdir(commonPy.configMT.outputDir):
+            panic("'%s' is not a directory!\n" % commonPy.configMT.outputDir)  # pragma: no cover
+    if "-onlySP" in sys.argv:  # pragma: no cover
+        commonPy.configMT.g_bOnlySubprograms = True  # pragma: no cover
+        sys.argv.remove("-onlySP")  # pragma: no cover
+    if "-verbose" in sys.argv:
+        commonPy.configMT.verbose = True
+        sys.argv.remove("-verbose")
+    useOSS = "-useOSS" in sys.argv
+    if useOSS:
+        sys.argv.remove("-useOSS")
+
+    # No other options must remain in the cmd line...
+    if len(sys.argv) < 2:
+        panic('Usage: %s [-v] [-verbose] [-useOSS] [-o dirname] input1.aadl [input2.aadl] ...\n' % sys.argv[0])  # pragma: no cover
+    commonPy.configMT.showCode = True
+    for f in sys.argv[1:]:
+        if not os.path.isfile(f):
+            panic("'%s' is not a file!\n" % f)  # pragma: no cover
+
+    ParseAADLfilesAndResolveSignals()
+
+    uniqueDataFiles = {}  # type: Dict[Filename, Dict[str, List[ApLevelContainer]]]
+    for sp in list(commonPy.aadlAST.g_apLevelContainers.values()):
+        for param in sp._params:
+            uniqueDataFiles.setdefault(param._signal._asnFilename, {})
+            uniqueDataFiles[param._signal._asnFilename].setdefault(sp._language, [])
+            uniqueDataFiles[param._signal._asnFilename][sp._language].append(sp)
+
+    asn1files = list(uniqueDataFiles.keys())
+    asnFile = None  # type: Optional[str]
+    if len(asn1files) == 1:
+        asnFile = asn1files[0]
+        commonPy.asnParser.ParseAsnFileList(asn1files)
+    elif len(asn1files) != 0:
+        panic("There appear to be more than one ASN.1 files referenced (%s)..." % str(asn1files))
+
+    if asnFile is not None:
+        inform("Checking that all base nodes have mandatory ranges set in %s..." % asnFile)
+        names = commonPy.asnParser.g_names
+        for node in names.values():
+            verify.VerifyRanges(node, names)
+
+    SystemsAndImplementations = commonPy.aadlAST.g_subProgramImplementations[:]
+    SystemsAndImplementations.extend(commonPy.aadlAST.g_threadImplementations[:])
+    SystemsAndImplementations.extend(commonPy.aadlAST.g_processImplementations[:])
+
+    # Update ASN.1 nodes to carry size info (only for Signal params)
+    for si in SystemsAndImplementations:
+        spName, sp_impl, modelingLanguage = si[0], si[1], si[2]
+        sp = commonPy.aadlAST.g_apLevelContainers[spName]
+        for param in sp._params:
+            # If there is a parameter used, then there MUST be an asnFile referenced!
+            assert asnFile == param._signal._asnFilename
+            nodeTypename = param._signal._asnNodename
+            node = commonPy.asnParser.g_names[nodeTypename]
+            if node._leafType == "AsciiString":
+                panic("You cannot use IA5String as a parameter - use OCTET STRING instead\n(%s)" % node.Location())  # pragma: no cover
+                # (typo?) node._asnSize = param._signal._asnSize
+
+    # If some AST nodes must be skipped (for any reason), go learn about them
+    badTypes = DiscoverBadTypes()
+
+    if {"ada", "qgenada"} & {y[2].lower() for y in SystemsAndImplementations}:
+        SpecialCodes(asnFile)
+
+    asynchronousBackends = set([])  # type: Set[Async_B_Mapper]
+
+    # Moving to static typing - no more dynamic imports,
+    # so this information must be statically available
+    async_languages = list(g_async_mappers.keys())
+
+    for si in SystemsAndImplementations:
+        spName, sp_impl, modelingLanguage, maybeFVname = si[0], si[1], si[2], si[3]
+        if modelingLanguage is None:
+            continue  # pragma: no cover
+        sp = commonPy.aadlAST.g_apLevelContainers[spName]
+        inform("Creating glue for parameters of %s.%s...", sp._id, sp_impl)
+
+        # Avoid generating empty glue - no parameters for this APLC
+        if len(sp._params) == 0:
+            continue
+
+        # All SCADE versions are handled by lustre_B_mapper
+        # if modelingLanguage[:6] == "Lustre" or modelingLanguage[:5] == "SCADE":
+        #    modelingLanguage = "Lustre"  # pragma: no cover
+
+        # The code for these mappers needs C ASN.1 codecs
+        if modelingLanguage.lower() in ["gui_ri", "gui_pi", "vhdl", "rhapsody"]:
+            modelingLanguage = "C"
+
+        if modelingLanguage in async_languages:
+            m = ProcessAsync(modelingLanguage, asnFile, sp, maybeFVname, useOSS, badTypes)
+            asynchronousBackends.add(m)
+        else:
+            ProcessSync(modelingLanguage, asnFile, sp, sp_impl, maybeFVname, useOSS, badTypes)
+
+    # SystemsAndImplementation loop completed - time to call OnShutdown ONCE for each async backend that we loaded
+    for asyncBackend in asynchronousBackends:
+        asyncBackend.OnShutdown(modelingLanguage, asnFile, maybeFVname)
+
+    ProcessCustomBackends(asnFile, useOSS, SystemsAndImplementations)
 
 
 if __name__ == "__main__":
