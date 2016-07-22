@@ -283,7 +283,7 @@ def main() -> None:
 
     # Moving to static typing - no more dynamic imports,
     # so this information must be statically available
-    async_languages = ['Ada', 'C', 'OG', 'QGenAda', 'rtds', 'SDL']
+    async_languages = ['Ada', 'C', 'OG', 'QGenAda', 'RTDS', 'SDL']
 
     for si in SystemsAndImplementations:
         spName, sp_impl, modelingLanguage, maybeFVname = si[0], si[1], si[2], si[3]
@@ -401,7 +401,7 @@ def getAsyncBackend(modelingLanguage: str) -> Async_B_Mapper:
         'SDL': sdl_B_mapper,
         'OG': og_B_mapper,
         'QGenAda': qgenada_B_mapper,
-        'rtds': rtds_B_mapper,
+        'RTDS': rtds_B_mapper,
         'gui': gui_B_mapper,
         'python': python_B_mapper,
         'QgenC': qgenc_B_mapper,
