@@ -7,3 +7,5 @@ tests-coverage/datatypessimulink.cat
 tests-coverage/datatypessimulink.pkg
 tests-coverage/Simulink_DataView_asn.m
 *swp
+antlr-2.7.7
+asn1scc
