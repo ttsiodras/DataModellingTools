@@ -51,10 +51,6 @@ isAsynchronous = False
 simulinkBackend = None
 
 
-def Version() -> None:
-    print("Code generator: " + "$Id: simulink_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")
-
-
 def IsElementMappedToPrimitive(node: AsnSequenceOrSetOf, names: AST_Lookup) -> bool:
     contained = node._containedType
     while isinstance(contained, str):

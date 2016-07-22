@@ -53,10 +53,6 @@ isAsynchronous = False
 qgencBackend = None
 
 
-def Version() -> None:
-    print("Code generator: " + "$Id: qgenc_B_mapper.py $")
-
-
 def IsElementMappedToPrimitive(node: AsnSequenceOrSetOf, names: AST_Lookup) -> bool:
     contained = node._containedType
     while isinstance(contained, str):

@@ -51,9 +51,6 @@ isAsynchronous = True
 cBackend = None
 
 
-def Version() -> None:
-    print("Code generator: " + "$Id: qgenada_B_mapper.py $")  # pragma: no cover
-
 # All the ada B mapper is now Obsolete, we are using ASN1SCC for Dumpables
 
 

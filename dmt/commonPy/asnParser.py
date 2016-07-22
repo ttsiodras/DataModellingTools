@@ -834,12 +834,9 @@ def ParseASN1SCC_AST(filename: str) -> None:
     global g_xmlASTrootNode
     g_xmlASTrootNode = handler._root
 
-    global g_names
-    g_names = {}
-    global g_checkedSoFarForKeywords
-    g_checkedSoFarForKeywords = {}
-    global g_leafTypeDict
-    g_leafTypeDict = {}
+    g_names.clear()
+    g_checkedSoFarForKeywords.clear()
+    g_leafTypeDict.clear()
 
     for m in modules:
         # print "Module", m._id

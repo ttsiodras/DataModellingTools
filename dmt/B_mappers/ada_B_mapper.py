@@ -48,10 +48,6 @@ isAsynchronous = True
 cBackend = None
 
 
-def Version() -> None:
-    print("Code generator: " + "$Id: ada_B_mapper.py 2382 2012-06-22 08:35:33Z ttsiodras $")  # pragma: no cover
-
-
 def OnStartup(unused_modelingLanguage: str, asnFile: str, outputDir: str, maybeFVname: str, useOSS: bool) -> None:
     global cBackend
     # 2009-02-10: Since we now use ASN1SCC structures as dumpables (even for Ada)

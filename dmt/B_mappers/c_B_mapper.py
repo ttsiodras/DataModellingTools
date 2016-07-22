@@ -51,10 +51,6 @@ isAsynchronous = True
 cBackend = None
 
 
-def Version() -> None:
-    print("Code generator: " + "$Id: c_B_mapper.py 2390 2012-07-19 12:39:17Z ttsiodras $")
-
-
 # noinspection PyListCreation
 # pylint: disable=no-self-use
 class FromCtoOSS(RecursiveMapper):
