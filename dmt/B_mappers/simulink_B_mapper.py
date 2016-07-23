@@ -55,11 +55,18 @@ def IsElementMappedToPrimitive(node: AsnSequenceOrSetOf, names: AST_Lookup) -> b
     contained = node._containedType
     while isinstance(contained, str):
         contained = names[contained]
-    return isinstance(contained, AsnInt) or isinstance(contained, AsnReal) or isinstance(contained, AsnBool) or isinstance(contained, AsnEnumerated)
+    return isinstance(contained, (AsnInt, AsnReal, AsnBool, AsnEnumerated))
 
 
 # pylint: disable=no-self-use
 class FromSimulinkToASN1SCC(RecursiveMapper):
+    def __init__(self) -> None:
+        self.uniqueID = 0
+
+    def UniqueID(self) -> int:
+        self.uniqueID += 1
+        return self.uniqueID
+
     def MapInteger(self, srcSimulink: str, destVar: str, _: AsnInt, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return ["%s = (asn1SccSint) %s;\n" % (destVar, srcSimulink)]
 
@@ -71,15 +78,17 @@ class FromSimulinkToASN1SCC(RecursiveMapper):
 
     def MapOctetString(self, srcSimulink: str, destVar: str, node: AsnOctetString, _: AST_Leaftypes, __: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         lines = []  # type: List[str]
+        lines.append("{")
+        uniqueId = self.UniqueID()
+        lines.append("    int i%s;\n" % uniqueId)
         if not node._range:
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
-        for i in range(0, node._range[-1]):
-            lines.append("%s.arr[%d] = %s.element_data[%d];\n" % (destVar, i, srcSimulink, i))
+        limit = node._range[-1]
+        lines.append("    for(i%s=0; i%s<%s; i%s++)\n" % (uniqueId, uniqueId, limit, uniqueId))
+        lines.append("        %s.arr[i%s] = %s.element_data[i%s];\n" % (destVar, uniqueId, srcSimulink, uniqueId))
         if isSequenceVariable(node):
-            lines.append("%s.nCount = %s.length;\n" % (destVar, srcSimulink))
-        # No nCount anymore
-        # else:
-        #     lines.append("%s.nCount = %s;\n" % (destVar, node._range[-1]))
+            lines.append("    %s.nCount = %s.length;\n" % (destVar, srcSimulink))
+        lines.append("}\n")
         return lines
 
     def MapEnumerated(self, srcSimulink: str, destVar: str, _: AsnEnumerated, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
@@ -121,20 +130,33 @@ class FromSimulinkToASN1SCC(RecursiveMapper):
     def MapSequenceOf(self, srcSimulink: str, destVar: str, node: AsnSequenceOrSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         if not node._range:
             panicWithCallStack("need a SIZE constraint or else we can't generate C code (%s)!\n" % node.Location())  # pragma: no cover
-        isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
         lines = []  # type: List[str]
-        for i in range(0, node._range[-1]):
+        if IsElementMappedToPrimitive(node, names):
+            lines.append("{\n")
+            uniqueId = self.UniqueID()
+            limit = node._range[-1] if not isSequenceVariable(node) else "%s.length" % srcSimulink
+            lines.append("    int i%s;\n" % uniqueId)
+            lines.append("    for(i%s=0; i%s<%s; i%s++) {\n" % (uniqueId, uniqueId, limit, uniqueId))
             lines.extend(
-                self.Map(("%s.element_data[%d]" % (srcSimulink, i)) if isMappedToPrimitive else ("%s.element_%02d" % (srcSimulink, i)),
-                         destVar + ".arr[%d]" % i,
-                         node._containedType,
-                         leafTypeDict,
-                         names))
+                ["        " + x
+                 for x in self.Map(
+                     "%s.element_data[i%s]" % (srcSimulink, uniqueId),
+                     destVar + ".arr[i%s]" % uniqueId,
+                     node._containedType,
+                     leafTypeDict,
+                     names)])
+            lines.append("    }")
+            lines.append("}")
+        else:
+            for i in range(node._range[-1]):
+                lines.extend(
+                    self.Map(("%s.element_%02d" % (srcSimulink, i)),
+                             destVar + ".arr[%d]" % i,
+                             node._containedType,
+                             leafTypeDict,
+                             names))
         if isSequenceVariable(node):
             lines.append("%s.nCount = %s.length;\n" % (destVar, srcSimulink))
-        # No nCount anymore
-        # else:
-        #     lines.append("%s.nCount = %s;\n" % (destVar, node._range[-1]))
         return lines
 
     def MapSetOf(self, srcSimulink: str, destVar: str, node: AsnSequenceOrSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
@@ -143,6 +165,13 @@ class FromSimulinkToASN1SCC(RecursiveMapper):
 
 # pylint: disable=no-self-use
 class FromASN1SCCtoSimulink(RecursiveMapper):
+    def __init__(self) -> None:
+        self.uniqueID = 0
+
+    def UniqueID(self) -> int:
+        self.uniqueID += 1
+        return self.uniqueID
+
     def MapInteger(self, srcVar: str, dstSimulink: str, _: AsnInt, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return ["%s = %s;\n" % (dstSimulink, srcVar)]
 
@@ -157,10 +186,16 @@ class FromASN1SCCtoSimulink(RecursiveMapper):
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
 
         lines = []  # type: List[str]
+        lines.append("{\n")
+        uniqueId = self.UniqueID()
+        lines.append("    int i%s;\n" % uniqueId)
         limit = sourceSequenceLimit(node, srcVar)
-        for i in range(0, node._range[-1]):
-            lines.append("if (%s>=%d) %s.element_data[%d] = %s.arr[%d]; else %s.element_data[%d] = 0;\n" %
-                         (limit, i + 1, dstSimulink, i, srcVar, i, dstSimulink, i))
+        arrVar = dstSimulink + ".element_data"
+        lines.append("    // Clear it all - even past valid length\n")
+        lines.append("    memset(%s, 0, sizeof(%s));\n" % (arrVar, arrVar))
+        lines.append("    for(i%s=0; i%s<%s; i%s++)\n" % (uniqueId, uniqueId, limit, uniqueId))
+        lines.append("        %s[i%s] = %s.arr[i%s];\n" % (arrVar, uniqueId, srcVar, uniqueId))
+        lines.append("}\n")
         if len(node._range) > 1 and node._range[0] != node._range[1]:
             lines.append("%s.length = %s;\n" % (dstSimulink, limit))
         return lines
@@ -206,178 +241,34 @@ class FromASN1SCCtoSimulink(RecursiveMapper):
     def MapSequenceOf(self, srcVar: str, dstSimulink: str, node: AsnSequenceOrSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         if not node._range:
             panicWithCallStack("need a SIZE constraint or else we can't generate C code (%s)!\n" % node.Location())  # pragma: no cover
-        isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
         lines = []  # type: List[str]
-        for i in range(0, node._range[-1]):
-            lines.extend(self.Map(
-                srcVar + ".arr[%d]" % i,
-                ("%s.element_data[%d]" % (dstSimulink, i)) if isMappedToPrimitive else ("%s.element_%02d" % (dstSimulink, i)),
-                node._containedType,
-                leafTypeDict,
-                names))
+        if IsElementMappedToPrimitive(node, names):
+            lines.append("{\n")
+            uniqueId = self.UniqueID()
+            lines.append("    int i%s;\n" % uniqueId)
+            limit = sourceSequenceLimit(node, srcVar)
+            lines.append("    for(i%s=0; i%s<%s; i%s++) {\n" % (uniqueId, uniqueId, limit, uniqueId))
+            lines.extend(
+                ["        " + x
+                 for x in self.Map(
+                     srcVar + ".arr[i%s]" % uniqueId,
+                     "%s.element_data[i%s]" % (dstSimulink, uniqueId),
+                     node._containedType,
+                     leafTypeDict,
+                     names)])
+            lines.append("    }\n")
+            lines.append("}\n")
+        else:
+            for i in range(node._range[-1]):
+                lines.extend(
+                    self.Map(
+                        srcVar + ".arr[%d]" % i,
+                        "%s.element_%02d" % (dstSimulink, i),
+                        node._containedType,
+                        leafTypeDict,
+                        names))
         if isSequenceVariable(node):
             lines.append("%s.length = %s.nCount;\n" % (dstSimulink, srcVar))
-        return lines
-
-    def MapSetOf(self, srcVar: str, dstSimulink: str, node: AsnSequenceOrSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
-        return self.MapSequenceOf(srcVar, dstSimulink, node, leafTypeDict, names)  # pragma: nocover
-
-
-# pylint: disable=no-self-use
-class FromSimulinkToOSS(RecursiveMapper):
-    def MapInteger(self, srcSimulink: str, destVar: str, _: AsnInt, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
-        return ["%s = %s;\n" % (destVar, srcSimulink)]
-
-    def MapReal(self, srcSimulink: str, destVar: str, _: AsnReal, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
-        return ["%s = %s;\n" % (destVar, srcSimulink)]
-
-    def MapBoolean(self, srcSimulink: str, destVar: str, _: AsnBool, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
-        return ["%s = (char) %s;\n" % (destVar, srcSimulink)]
-
-    def MapOctetString(self, srcSimulink: str, destVar: str, node: AsnOctetString, _: AST_Leaftypes, __: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
-        lines = []  # type: List[str]
-        if not node._range:
-            panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
-        for i in range(0, node._range[-1]):
-            lines.append("%s.value[%d] = %s.element_data[%d];\n" % (destVar, i, srcSimulink, i))
-        if len(node._range) > 1 and node._range[0] != node._range[1]:
-            lines.append("%s.length = %s.length;\n" % (destVar, srcSimulink))
-        else:
-            lines.append("%s.length = %s;\n" % (destVar, node._range[-1]))
-        return lines
-
-    def MapEnumerated(self, srcSimulink: str, destVar: str, _: AsnEnumerated, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
-        return ["%s = %s;\n" % (destVar, srcSimulink)]
-
-    def MapSequence(self, srcSimulink: str, destVar: str, node: AsnSequenceOrSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
-        lines = []  # type: List[str]
-        for child in node._members:
-            lines.extend(
-                self.Map(
-                    "%s.%s" % (srcSimulink, self.CleanName(child[0])),
-                    destVar + "." + self.CleanName(child[0]),
-                    child[1],
-                    leafTypeDict,
-                    names))
-        return lines
-
-    def MapSet(self, srcSimulink: str, destVar: str, node: AsnSequenceOrSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
-        return self.MapSequence(srcSimulink, destVar, node, leafTypeDict, names)  # pragma: nocover
-
-    def MapChoice(self, srcSimulink: str, destVar: str, node: AsnChoice, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
-        lines = []  # type: List[str]
-        childNo = 0
-        for child in node._members:
-            childNo += 1
-            lines.append("%sif (%s.choiceIdx == %d) {\n" % (self.maybeElse(childNo), srcSimulink, childNo))
-            lines.extend(
-                ['    ' + x
-                 for x in self.Map(
-                     "%s.%s" % (srcSimulink, self.CleanName(child[0])),
-                     destVar + ".u." + self.CleanName(child[0]),
-                     child[1],
-                     leafTypeDict,
-                     names)])
-            lines.append("    %s.choice = OSS_%s_chosen;\n" % (destVar, self.CleanName(child[0])))
-            lines.append("}\n")
-        return lines
-
-    def MapSequenceOf(self, srcSimulink: str, destVar: str, node: AsnSequenceOrSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
-        if not node._range:
-            panicWithCallStack("(%s) needs a SIZE constraint or else we can't generate C code!\n" % node.Location())  # pragma: no cover
-        isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
-        lines = []  # type: List[str]
-        for i in range(0, node._range[-1]):
-            lines.extend(
-                self.Map(("%s.element_data[%d]" % (srcSimulink, i)) if isMappedToPrimitive else ("%s.element_%02d" % (srcSimulink, i)),
-                         destVar + ".value[%d]" % i,
-                         node._containedType,
-                         leafTypeDict,
-                         names))
-        if len(node._range) > 1 and node._range[0] != node._range[1]:
-            lines.append("%s.count = %s.length;\n" % (destVar, srcSimulink))
-        else:
-            lines.append("%s.count = %s;\n" % (destVar, node._range[-1]))
-        return lines
-
-    def MapSetOf(self, srcSimulink: str, destVar: str, node: AsnSequenceOrSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
-        return self.MapSequenceOf(srcSimulink, destVar, node, leafTypeDict, names)  # pragma: nocover
-
-
-# pylint: disable=no-self-use
-class FromOSStoSimulink(RecursiveMapper):
-    def MapInteger(self, srcVar: str, dstSimulink: str, _: AsnInt, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
-        return ["%s = %s;\n" % (dstSimulink, srcVar)]
-
-    def MapReal(self, srcVar: str, dstSimulink: str, _: AsnReal, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
-        return ["%s = %s;\n" % (dstSimulink, srcVar)]
-
-    def MapBoolean(self, srcVar: str, dstSimulink: str, _: AsnBool, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
-        return ["%s = %s;\n" % (dstSimulink, srcVar)]
-
-    def MapOctetString(self, srcVar: str, dstSimulink: str, node: AsnOctetString, _: AST_Leaftypes, __: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
-        if not node._range:
-            panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
-        lines = []  # type: List[str]
-        for i in range(0, node._range[-1]):
-            lines.append("if (%s.length >= %d) %s.element_data[%d] = %s.value[%d]; else %s.element_data[%d] = 0;\n" %
-                         (srcVar, i + 1, dstSimulink, i, srcVar, i, dstSimulink, i))
-        if len(node._range) > 1 and node._range[0] != node._range[1]:
-            lines.append("%s.length = %s.length;" % (dstSimulink, srcVar))
-        return lines
-
-    def MapEnumerated(self, srcVar: str, dstSimulink: str, node: AsnEnumerated, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
-        if None in [x[1] for x in node._members]:
-            panicWithCallStack("an ENUMERATED must have integer values! (%s)" % node.Location())  # pragma: no cover
-        return ["%s = %s;\n" % (dstSimulink, srcVar)]
-
-    def MapSequence(self, srcVar: str, dstSimulink: str, node: AsnSequenceOrSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
-        lines = []  # type: List[str]
-        for child in node._members:
-            lines.extend(
-                self.Map(
-                    srcVar + "." + self.CleanName(child[0]),
-                    "%s.%s" % (dstSimulink, self.CleanName(child[0])),
-                    child[1],
-                    leafTypeDict,
-                    names))
-        return lines
-
-    def MapSet(self, srcVar: str, dstSimulink: str, node: AsnSequenceOrSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
-        return self.MapSequence(srcVar, dstSimulink, node, leafTypeDict, names)  # pragma: nocover
-
-    def MapChoice(self, srcVar: str, dstSimulink: str, node: AsnChoice, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
-        lines = []  # type: List[str]
-        childNo = 0
-        for child in node._members:
-            childNo += 1
-            lines.append("%sif (%s.choice == OSS_%s_chosen) {\n" % (self.maybeElse(childNo), srcVar, self.CleanName(child[0])))
-            lines.extend(
-                ['    ' + x
-                 for x in self.Map(
-                     srcVar + ".u." + self.CleanName(child[0]),
-                     "%s.%s" % (dstSimulink, self.CleanName(child[0])),
-                     child[1],
-                     leafTypeDict,
-                     names)])
-            lines.append("    %s.choiceIdx = %d;\n" % (dstSimulink, childNo))
-            lines.append("}\n")
-        return lines
-
-    def MapSequenceOf(self, srcVar: str, dstSimulink: str, node: AsnSequenceOrSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
-        if not node._range:
-            panicWithCallStack("(%s) needs a SIZE constraint or else we can't generate C code!\n" % node.Location())  # pragma: no cover
-        isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
-        lines = []  # type: List[str]
-        for i in range(0, node._range[-1]):
-            lines.extend(self.Map(
-                srcVar + ".value[%d]" % i,
-                ("%s.element_data[%d]" % (dstSimulink, i)) if isMappedToPrimitive else ("%s.element_%02d" % (dstSimulink, i)),
-                node._containedType,
-                leafTypeDict,
-                names))
-        if len(node._range) > 1 and node._range[0] != node._range[1]:
-            lines.append("%s.length = %s.count;\n" % (dstSimulink, srcVar))
         return lines
 
     def MapSetOf(self, srcVar: str, dstSimulink: str, node: AsnSequenceOrSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
@@ -394,13 +285,13 @@ class SimulinkGlueGenerator(SynchronousToolGlueGenerator):
         return FromSimulinkToASN1SCC()
 
     def FromToolToOSS(self) -> RecursiveMapper:
-        return FromSimulinkToOSS()
+        return FromSimulinkToASN1SCC()
 
     def FromASN1SCCtoTool(self) -> RecursiveMapper:
         return FromASN1SCCtoSimulink()
 
     def FromOSStoTool(self) -> RecursiveMapper:
-        return FromOSStoSimulink()
+        return FromASN1SCCtoSimulink()
 
     def HeadersOnStartup(self, unused_modelingLanguage: str, unused_asnFile: str, subProgram: ApLevelContainer, unused_subProgramImplementation: str, unused_outputDir: str, unused_maybeFVname: str) -> None:
         if self.useOSS:
