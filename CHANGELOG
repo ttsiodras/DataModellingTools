@@ -1,0 +1,26 @@
+# Change Log
+
+## 2.1.0
+ - Major update of the PySide B mapper (API updates)
+ - Bug fix in the Python A mapper
+
+## 2.0.0
+
+- Moved to Python3
+- Added type annotations, checked via mypy
+- Added git commit hooks to check via flake8 AND pylint
+- Configuration files used to customize the checks for the project's
+  naming conventions.
+- Many bugs identified and fixed.
+
+## 1.2.3
+- ctypes backend: emit all ENUMERATED values in DV.py
+
+## 1.2.0
+- Not using SWIG anymore for the Python mappers
+
+## 1.1.2
+- pyside_b_mapper: added combo box for the asn1 value editor
+
+## 1.1.1
+- support empty SEQUENCEs (MyType ::= SEQUENCE {}) - except for Simulink

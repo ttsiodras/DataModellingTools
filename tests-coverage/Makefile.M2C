@@ -1,32 +1,45 @@
-VPATH=.:../aadl2glueC:../commonPy
+include common.mk
 
-PYSRC_B := aadl2glueC.py asynchronousTool.py synchronousTool.py ada_B_mapper.py c_B_mapper.py og_B_mapper.py simulink_B_mapper.py scade6_B_mapper.py pyside_B_mapper.py # vhdl_B_mapper.py
-PYSRC_B_COVER := $(PYSRC_B:%.py=___aadl2glueC_%.py,cover)
+VPATH=..:../dmt/B_mappers:../dmt/commonPy
+
+PYSRC_B := asynchronousTool.py ada_B_mapper.py c_B_mapper.py og_B_mapper.py simulink_B_mapper.py scade6_B_mapper.py pyside_B_mapper.py # vhdl_B_mapper.py
+PYSRC_B_COVER := $(PYSRC_B:%.py=___dmt_B_mappers_%.py,cover)
+
+# Python3.5 includes an older version of typing, which by default has priority over
+# the one installed in $HOME/.local via setup.py.
+#
+# To address this, we find where our pip-installed typing lives:
+TYPING_FOLDER:=$(shell pip3 show typing | grep ^Location | sed 's,^.*: ,,')
+export PYTHONPATH:=${TYPING_FOLDER}:..
 
 .PHONY:	check
 
 all:	$(PYSRC_B_COVER) check
 
 DataView.aadl:	DataTypesSimulink.asn
-	../asn2aadlPlus/asn2aadlPlus.py $< $@
+	PYTHONPATH=.. python3 -m dmt.asn2aadlPlus $< $@
 
 DataViewVHDL.aadl:	DataTypesSimulinkVHDL.asn
-	../asn2aadlPlus/asn2aadlPlus.py $< $@
+	PYTHONPATH=.. python3 -m dmt.asn2aadlPlus $< $@
  
-___aadl2glueC_%.py,cover:	../aadl2glueC/%.py mini_cv.aadl DataView.aadl DataViewVHDL.aadl
+___dmt_B_mappers_%.py,cover:	../dmt/B_mappers/%.py mini_cv.aadl DataView.aadl DataViewVHDL.aadl
 	@echo Update required: $@ depends on $?
 	$(MAKE) -f Makefile.M2C clean
 	mkdir -p output
 	rm -rf output/*
-	# coverage run -a ../aadl2glueC.py -o output -verbose mini_cv_vhdl.aadl DataViewVHDL.aadl >/dev/null
-	COVERAGE=1 LANG=C LC_ALL=C python-coverage run -a ../aadl2glueC/aadl2glueC.py -o output -verbose mini_cv.aadl DataView.aadl >/dev/null
-	COVERAGE=1 LANG=C LC_ALL=C python-coverage run -a ../aadl2glueC/aadl2glueC.py -o output -verbose -useOSS mini_cv.aadl DataView.aadl >/dev/null
-	COVERAGE=1 LANG=C LC_ALL=C python-coverage annotate -d . ../aadl2glueC/*.py ../commonPy/*.py
+	# LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.aadl2glueC -o output -verbose mini_cv_vhdl.aadl DataViewVHDL.aadl >/dev/null
+	LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.aadl2glueC -o output -verbose mini_cv.aadl DataView.aadl >/dev/null
+	LANG=C LC_ALL=C python3 -m coverage run -a -m dmt.aadl2glueC -o output -verbose -useOSS mini_cv.aadl DataView.aadl >/dev/null
+	LANG=C LC_ALL=C python3 -m coverage annotate -d . ../dmt/aadl2glueC.py ../dmt/B_mappers/*.py ../dmt/commonPy/*.py
 
 check:
+ifneq ($(CIRCLECI),)
+	@for i in $(PYSRC_B_COVER) ; do echo Checking $$i ... ; ./checkCoverage.pl $$i || { echo $$i failed... ; cp  $$i ${CIRCLE_ARTIFACTS} ; exit 1 ; } ; done
+else
 	@for i in $(PYSRC_B_COVER) ; do echo Checking $$i ... ; ./checkCoverage.pl $$i || { ( echo $$i ; ./review.pl $$i ) | less -RS ; echo $$i had issues... ; exit 1 ; } ; done
+endif
 
 clean:
-	python-coverage erase
+	${COVERAGE} erase
 	rm -f ./___*,cover
 	rm -rf output/

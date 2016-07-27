@@ -4,3 +4,6 @@
 tests-coverage/output
 tests-coverage/smp2.asn
 tests-coverage/datatypessimulink.cat
+tests-coverage/datatypessimulink.pkg
+tests-coverage/Simulink_DataView_asn.m
+*swp
