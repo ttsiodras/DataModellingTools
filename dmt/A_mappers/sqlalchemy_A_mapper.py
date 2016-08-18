@@ -544,6 +544,7 @@ def OnShutdown(badTypes: SetOfBadTypenames) -> None:
 
     g_sqlalchemyOutput.write('''
 #  SQLAlchemy models for types used in "{d}"
+from __future__ import absolute_import
 
 from sqlalchemy.ext.declarative import declarative_base
 Base = declarative_base()
@@ -552,11 +553,11 @@ from sqlalchemy import (Column, Integer, String, Boolean, Float,
                         ForeignKey, CheckConstraint, UniqueConstraint)
 from sqlalchemy.orm import relationship
 
-from {d_cleaned} import (
+from .{d_cleaned} import (
     {types}
 )
 
-import DV
+from . import DV
 
 '''.format(d=d, d_cleaned=CleanName(d),
            types=", ".join(
