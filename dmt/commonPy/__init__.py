@@ -15,9 +15,10 @@ from . import verify
 from . import recursiveMapper
 from . import cleanupNodes
 
+import pkg_resources  # pragma: no cover
+__version__ = pkg_resources.require("dmt")[0].version  # pragma: no cover
+
 def print_version() -> None:
-    import pkg_resources  # pragma: no cover
-    version = pkg_resources.require("dmt")[0].version  # pragma: no cover
     print("TASTE Data Modelling Tools version {}\n\n"
           "The following tools are available:\n"
           "   asn2aadlPlus    - Convert ASN.1 models to AADL\n"
@@ -25,4 +26,4 @@ def print_version() -> None:
           "   aadl2glueC      - TASTE B Mappers (from ASN.1+AADL to glue code)\n"
           "   msgPrinter      - Generate serializers of ASN.1 instances\n"
           "   msgPrinterASN1  - Generate serializers of ASN.1 instances (other encodings)\n"
-          "   smp2asn         - SMP2 to ASN.1 converter\n".format(version))
+          "   smp2asn         - SMP2 to ASN.1 converter\n".format(__version__))
