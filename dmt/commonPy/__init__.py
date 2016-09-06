@@ -15,7 +15,9 @@ from . import verify
 from . import recursiveMapper
 from . import cleanupNodes
 
-__version__ = "2.1.1"
+import pkg_resources  # pragma: no cover
+__version__ = pkg_resources.require("dmt")[0].version  # pragma: no cover
+
 
 def print_version() -> None:
     print("TASTE Data Modelling Tools version {}\n\n"
