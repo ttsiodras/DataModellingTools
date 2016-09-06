@@ -16,7 +16,10 @@ from . import recursiveMapper
 from . import cleanupNodes
 
 import pkg_resources  # pragma: no cover
-__version__ = pkg_resources.require("dmt")[0].version  # pragma: no cover
+try:
+    __version__ = pkg_resources.require("dmt")[0].version  # pragma: no cover
+except:
+    __version__ = "2.1.1"
 
 
 def print_version() -> None:
