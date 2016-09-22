@@ -424,7 +424,7 @@ end Stream_Element_Buffer;
             o.write('    -- Buffer to hold a marshalled data of type ' + cleanName + "\n")
             o.write('SUBCOMPONENTS\n')
             o.write('    Buffer : data ' + cleanName + '_Buffer_Max.impl;\n')
-            o.write('    Length : data Base_Types::%s;\n' % (bAADLv2 and "Unsigned_16" or "uint16"))
+            o.write('    Length : data Base_Types::%s;\n' % (bAADLv2 and "Unsigned_32" or "uint32"))
             o.write('PROPERTIES\n')
             o.write('    Data_Model::Data_Representation => Struct;\n')
             o.write('END ' + cleanName + '_Buffer.impl;\n\n')
