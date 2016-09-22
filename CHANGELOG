@@ -1,5 +1,9 @@
 # Change Log
 
+## 2.1.2
+
+- Use Unsigned_32 in Dataview.aadl to support large messages
+
 ## 2.1.1
 
 - Moved to statically imported (and verifiable by mypy) A and B mappers
