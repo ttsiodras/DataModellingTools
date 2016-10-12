@@ -489,9 +489,8 @@ static void ErrorHandler(
         ZestSC1OpenCard(CardIDs[0], &Handle);
         g_Handle = Handle;
         if (FPGATypes[0]==ZESTSC1_XC3S1000) {
-            ZestSC1ConfigureFromFile(g_Handle, "TASTE.bit");
+            ZestSC1ConfigureFromFile(g_Handle, "taste.bit");
         } else {
-            // ZestSC1ConfigureFromFile(Handle, "TASTE_400.bit");
             puts("Only for XC3S1000");
             exit(1);
         }
@@ -882,7 +881,6 @@ g_placeholders = {
     "writeoutputdata":'',
     "clearoutputs":'',
     "connectionsToSystemC":'',
-    "updateClockedPulses":'',
     "updatePulseHistories":''
 }
 
@@ -1007,7 +1005,8 @@ def OnFinal():
         AddToStr('circuits', '\n'.join(['        '+x for x in circuitLines]) + '\n')
         AddToStr('circuits', '        start_%s  : in  std_logic;\n' % c._spCleanName)
         AddToStr('circuits', '        finish_%s : out std_logic;\n' % c._spCleanName)
-        AddToStr('circuits', '        clock_%s  : in  std_logic\n' % c._spCleanName)
+        AddToStr('circuits', '        clock_%s : in std_logic;\n' % c._spCleanName)
+        AddToStr('circuits', '        reset_%s  : in  std_logic\n' % c._spCleanName)
         AddToStr('circuits', '    );\n')
         AddToStr('circuits', '    end component;\n\n')
 
@@ -1017,8 +1016,6 @@ def OnFinal():
 '''    signal %(pi)s_StartCalculationsInternalOld : std_logic;
     signal %(pi)s_StartCalculationsInternal : std_logic;
     signal %(pi)s_StartCalculationsPulse : std_logic;
-    signal %(pi)s_StartCalculationsPulseHistory  : std_logic_vector(3 downto 0); -- history of last values of %(pi)s_StartCalculationsPulse
-    signal %(pi)s_StartCalculationsClockedPulse : std_logic; -- the start signal for %(pi)s
     signal %(pi)s_CalculationsComplete : std_logic;          -- the finish signal for %(pi)s
 
 ''' % {'pi':c._spCleanName})
@@ -1035,22 +1032,11 @@ def OnFinal():
         AddToStr('connectionsToSystemC', '\n    Interface_%s : %s\n' % (c._spCleanName, c._spCleanName))
         AddToStr('connectionsToSystemC', '        port map (\n')
         AddToStr('connectionsToSystemC', ',\n'.join(['            '+x for x in connectionsToSystemCLines]) + ',\n')
-        AddToStr('connectionsToSystemC', '--            start_%s => %s_StartCalculationsPulse,\n' % (c._spCleanName, c._spCleanName))
-        AddToStr('connectionsToSystemC', '            start_%s => %s_StartCalculationsClockedPulse,\n' % (c._spCleanName, c._spCleanName))
+        AddToStr('connectionsToSystemC', '            start_%s => %s_StartCalculationsPulse,\n' % (c._spCleanName, c._spCleanName))
         AddToStr('connectionsToSystemC', '            finish_%s => %s_CalculationsComplete,\n' % (c._spCleanName, c._spCleanName))
-        AddToStr('connectionsToSystemC', '            clock_%s => MyCLK\n' % c._spCleanName)
+        AddToStr('connectionsToSystemC', '            clock_%s => CLK,\n' % c._spCleanName)
+        AddToStr('connectionsToSystemC', '            reset_%s => RST\n' % c._spCleanName)
         AddToStr('connectionsToSystemC', '        );\n')
-
-        AddToStr('updateClockedPulses', '    process (%s_StartCalculationsPulseHistory, CLK)\n' % c._spCleanName)
-        AddToStr('updateClockedPulses', '    begin\n')
-        AddToStr('updateClockedPulses', '        if (%s_StartCalculationsPulseHistory /= "0000") then\n' % c._spCleanName)
-        AddToStr('updateClockedPulses', "            %s_StartCalculationsClockedPulse <= '1';\n" % c._spCleanName)
-        AddToStr('updateClockedPulses', '        else\n')
-        AddToStr('updateClockedPulses', "            %s_StartCalculationsClockedPulse <= '0';\n" % c._spCleanName)
-        AddToStr('updateClockedPulses', '        end if;\n')
-        AddToStr('updateClockedPulses', '    end process;\n\n')
-
-        AddToStr('updatePulseHistories','            %(pi)s_StartCalculationsPulseHistory <= %(pi)s_StartCalculationsPulseHistory(2 downto 0) & compute_StartCalculationsPulse;\n' % {'pi':c._spCleanName})
 
 #         systemcHeader.write('class ' + c._spCleanName + ' : public sc_module\n')
 #         systemcHeader.write('{\n')

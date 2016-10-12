@@ -169,6 +169,7 @@ architecture arch of TASTE is
     signal LEDs : std_logic_vector(7 downto 0);
     signal LEDVal : std_logic_vector(7 downto 0);
     signal Count : std_logic_vector(21 downto 0);
+    signal Dir : std_logic := '0';
 
     -- Register interface
     signal Addr : std_logic_vector(15 downto 0);
@@ -179,12 +180,9 @@ architecture arch of TASTE is
 
     -- Registers for I/O
 %(ioregisters)s
-    signal Sig : std_logic_vector(3 downto 0);
 
     -- Signals for start/finish
 %(startStopSignals)s
-    -- Possible clock divider that drops frequency to 1/2, 1/4, 1/8, etc
-    signal MyCLK : std_logic;
 
 begin
     -- Tie unused signals
@@ -194,45 +192,42 @@ begin
     IO <= (0=>LEDs(0), 1=>LEDs(1), 41=>LEDs(2), 42=>LEDs(3), 43=>LEDs(4),
            44=>LEDs(5), 45=>LEDs(6), 46=>LEDs(7), others => 'Z');
 
-    -- Possible clock divider
-    process(CLK, RST)
-        variable InnerCount: Natural range 0 to 3;
-    begin
-        if (RST='1') then
-            InnerCount := 0;
-            MyCLK <= '0';
-        elsif (CLK'event and CLK='1') then
-            if InnerCount = 3 then
-                InnerCount := 0;
-            else
-                InnerCount := InnerCount + 1;
-            end if;
-            if InnerCount >= 2 then
-                MyCLK <= '0';
-            else
-                MyCLK <= '1';
-            end if;
-%(updatePulseHistories)s
-        end if;
-    end process;
-
-    process (MyCLK, RST)
-    begin
-        if (RST='1') then
-            LEDVal <= "00000001";
-            Count <= (others=>'0');
-        elsif (MyCLK'event and MyCLK='1') then
-            Count <= Count + 1;
-            if (Count="0000000000000000000000") then
-                -- Update LEDs to show circuit is running...
-                LEDVal <= LEDVal(6 downto 0) & LEDVal(7);
-            end if;
-        end if;
-    end process;
-
     LEDs <= not LEDVal;
 
-%(updateClockedPulses)s
+    ---------------------------------------------------
+    -- Indicate that FPGA is alive, by KIT-ing the LEDs
+    ---------------------------------------------------
+
+    process (CLK, RST)
+    begin
+        if (RST='1') then
+            Count <= (others=>'0');
+        elsif (CLK'event and CLK='1') then
+            Count <= Count + 1;
+        end if;
+    end process;
+
+    process (CLK, RST)
+    begin
+        if (RST='1') then
+            Dir <= '0';
+            LEDVal <= "00000001";
+        elsif (CLK'event and CLK='1') then
+            if (Count="0000000000000000000000") then
+                if (Dir='0') then
+                    LEDVal <= LEDVal(6 downto 0) & "0";
+                    if (LEDVal="01000000") then
+                        Dir <= '1';
+                    end if;
+                else
+                    LEDVal <= "0" & LEDVal(7 downto 1);
+                    if (LEDVal="00000010") then
+                        Dir <= '0';
+                    end if;
+                end if;
+            end if;
+        end if;
+    end process;
 
     -- Implement register write
     -- Note that for compatibility with FX2LP devices only addresses
@@ -268,15 +263,6 @@ begin
         else
             -- avoid latches
             DataOut <= X"00";
-        end if;
-    end process;
-
-    -- Loop back signals
-    Sig <=  User_Signals(3 downto 0);
-    process (CLK)
-    begin
-        if (CLK'event and CLK='1') then
-            User_Signals(7 downto 4) <= Sig;
         end if;
     end process;
 
@@ -347,7 +333,7 @@ begin
             User_SRAM_DR => open
         );
 
-    -- Connections to the SystemC circuits
+    -- Connections to the VHDL circuits
 %(connectionsToSystemC)s
 
 end arch;'''
