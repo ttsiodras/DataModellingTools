@@ -1048,7 +1048,7 @@ def OnFinal() -> None:
     from . import vhdlTemplateZestSC1
     ZestSC1_tarball = os.getenv("ZESTSC1")
     assert ZestSC1_tarball is not None
-    if 0 != os.system("tar -C \"" + vhdlBackend.dir + "/\" -jxf '" + ZestSC1_tarball + "'"):
+    if os.system("tar -C \"" + vhdlBackend.dir + "/\" -jxf '" + ZestSC1_tarball + "'") != 0:
         panic("Failed to un-tar ZESTSC1 tarball...")
 
     for c in VHDL_Circuit.allCircuits:
