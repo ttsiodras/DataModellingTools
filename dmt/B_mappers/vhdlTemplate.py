@@ -4,38 +4,38 @@
 # Data Modelling Tools (DMT) in the following dual-license mode:
 #
 # Commercial Developer License:
-#	The DMT Commercial Developer License is the appropriate version 
-# to use for the development of proprietary and/or commercial software. 
-# This version is for developers/companies who do not want to share 
-# the source code they develop with others or otherwise comply with the 
+#       The DMT Commercial Developer License is the appropriate version
+# to use for the development of proprietary and/or commercial software.
+# This version is for developers/companies who do not want to share
+# the source code they develop with others or otherwise comply with the
 # terms of the GNU General Public License version 2.1.
 #
 # GNU GPL v. 2.1:
-#	This version of DMT is the one to use for the development of 
-# non-commercial applications, when you are willing to comply 
+#       This version of DMT is the one to use for the development of
+# non-commercial applications, when you are willing to comply
 # with the terms of the GNU General Public License version 2.1.
 #
 # The features of the two licenses are summarized below:
 #
-#			Commercial 		
-#			Developer		GPL
-#			License
+#                       Commercial
+#                       Developer               GPL
+#                       License
 #
-# License cost		License fee charged	No license fee
+# License cost          License fee charged     No license fee
 #
-# Must provide source 
-# code changes to DMT	No, modifications can	Yes, all source code 
-#			be closed		must be provided back
+# Must provide source
+# code changes to DMT   No, modifications can   Yes, all source code
+#                       be closed               must be provided back
 #
-# Can create		Yes, that is,		No, applications are subject 
-# proprietary		no source code needs	to the GPL and all source code 
-# applications      	to be disclosed		must be made available 
+# Can create            Yes, that is,           No, applications are subject
+# proprietary           no source code needs    to the GPL and all source code
+# applications          to be disclosed         must be made available
 #
-# Support		Yes, 12 months of	No, but available separately 
-#			premium technical	for purchase
-#			support	
+# Support               Yes, 12 months of       No, but available separately
+#                       premium technical       for purchase
+#                       support
 #
-# Charge for Runtimes	None			None
+# Charge for Runtimes   None                    None
 #
 vhd = '''library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
@@ -338,7 +338,7 @@ begin
 
 end arch;'''
 
-makefile='''SYSTEMC_SRC=                    \\
+makefile = r'''SYSTEMC_SRC=                    \\
     circuit.h                   \\
     circuit.cpp
 
@@ -353,49 +353,106 @@ SRCS=\\
 all:    taste.bit
 
 taste.bit:      $(SRCS)
-	#-git commit -m "`date`" -a
-	mkdir -p "xst/projnav.tmp" || exit 1
-	xst -ise TASTE.ise -intstyle ise -ifn TASTE.xst -ofn TASTE.syr || exit 1
-	ngdbuild.exe -ise TASTE.ise -intstyle ise -dd _ngo -aul -nt timestamp -uc ZestSC1.ucf -p xc3s1000-ft256-5 TASTE.ngc TASTE.ngd|| exit 1
-	map -ise "TASTE.ise" -intstyle ise -p xc3s1000-ft256-5 -cm area -ir off -pr b -c 100 -o TASTE_map.ncd TASTE.ngd TASTE.pcf || exit 1
-	par -ise "TASTE.ise" -w -intstyle ise -ol std -t 1 TASTE_map.ncd TASTE.ncd TASTE.pcf || exit 1
-	trce -ise TASTE.ise -intstyle ise -e 3 -s 5 -xml TASTE.twx TASTE.ncd -o TASTE.twr TASTE.pcf || exit 1
-	bitgen -ise "TASTE.ise" -intstyle ise -f TASTE.ut TASTE.ncd || exit 1
-	cp "$@" ../TASTE.bit || exit 1
+%(tab)s#-git commit -m "`date`" -a
+%(tab)smkdir -p "xst/projnav.tmp" || exit 1
+%(tab)sxst -ise TASTE.ise -intstyle ise -ifn TASTE.xst -ofn TASTE.syr || exit 1
+%(tab)sngdbuild.exe -ise TASTE.ise -intstyle ise -dd _ngo -aul -nt timestamp -uc ZestSC1.ucf -p xc3s1000-ft256-5 TASTE.ngc TASTE.ngd|| exit 1
+%(tab)smap -ise "TASTE.ise" -intstyle ise -p xc3s1000-ft256-5 -cm area -ir off -pr b -c 100 -o TASTE_map.ncd TASTE.ngd TASTE.pcf || exit 1
+%(tab)spar -ise "TASTE.ise" -w -intstyle ise -ol std -t 1 TASTE_map.ncd TASTE.ncd TASTE.pcf || exit 1
+%(tab)strce -ise TASTE.ise -intstyle ise -e 3 -s 5 -xml TASTE.twx TASTE.ncd -o TASTE.twr TASTE.pcf || exit 1
+%(tab)sbitgen -ise "TASTE.ise" -intstyle ise -f TASTE.ut TASTE.ncd || exit 1
+%(tab)scp "$@" ../TASTE.bit || exit 1
 
 $(SYSTEMC_GENERATED):   $(SYSTEMC_SRC)
-	for i in $^ ; do if [ "`basename "$$i" | sed 's,^.*\.,,'`" = "cpp" ] ; then /c/Program\ Files/SystemCrafter/SystemCrafter\ SC/bin/craft.exe /vhdl $$i || exit 1; fi ; done
+%(tab)sfor i in $^ ; do if [ "`basename "$$i" | sed 's,^.*\.,,'`" = "cpp" ] ; then /c/Program\ Files/SystemCrafter/SystemCrafter\ SC/bin/craft.exe /vhdl $$i || exit 1; fi ; done
 
 test:
-	cd .. ;  ./TASTE.exe
+%(tab)scd .. ;  ./TASTE.exe
 
 %%.clean:
-	-rm -f $*.stx $*.ucf.untf $*.mrp $*.nc1 $*.ngm $*.prm $*.lfp
-	-rm -f $*.placed_ncd_tracker $*.routed_ncd_tracker
-	-rm -f $*.pad_txt $*.twx *.log *.vhd~ $*.dhp $*.jhd $*.cel
-	-rm -f $*.ngr $*.ngc $*.ngd $*.syr $*.bld $*.pcf
-	-rm -f $*_map.map $*_map.mrp $*_map.ncd $*_map.ngm $*.ncd $*.pad
-	-rm -f $*.par $*.xpi $*_pad.csv $*_pad.txt $*.drc $*.bgn
-	-rm -f $*.xml $*_build.xml $*.rpt $*.gyd $*.mfd $*.pnx $*.ise
-	-rm -f $*.vm6 $*.jed $*.err $*.ER result.txt tmperr.err *.bak *.vhd~
-	-rm -f impactcmd.txt
-	-rm -f $*.twr $*_usage.xml
-	-rm -f $*.bit $*.svf $*.exo $*.mcs $*.ptwx $*.unroutes
-	-rm -f *_log *stx *summary.html *summary.xml
-	-rm -f $*_map.xrpt $*_ngdbuild.xrpt $*_par.xrpt $*_xst.xrpt
-	-rm -f *fdo *.xmsgs *.bld *.ngc *.ngd *.ncd
-	-rm -f *.bit *.mcs *.exo *.pcf *.twr
-	-rm -rf _ngo xst $*_xdb
-	-rm -f $(SYSTEMC_GENERATED)
-	-rm -f ../TASTE.bit
+%(tab)s-rm -f $*.stx $*.ucf.untf $*.mrp $*.nc1 $*.ngm $*.prm $*.lfp
+%(tab)s-rm -f $*.placed_ncd_tracker $*.routed_ncd_tracker
+%(tab)s-rm -f $*.pad_txt $*.twx *.log *.vhd~ $*.dhp $*.jhd $*.cel
+%(tab)s-rm -f $*.ngr $*.ngc $*.ngd $*.syr $*.bld $*.pcf
+%(tab)s-rm -f $*_map.map $*_map.mrp $*_map.ncd $*_map.ngm $*.ncd $*.pad
+%(tab)s-rm -f $*.par $*.xpi $*_pad.csv $*_pad.txt $*.drc $*.bgn
+%(tab)s-rm -f $*.xml $*_build.xml $*.rpt $*.gyd $*.mfd $*.pnx $*.ise
+%(tab)s-rm -f $*.vm6 $*.jed $*.err $*.ER result.txt tmperr.err *.bak *.vhd~
+%(tab)s-rm -f impactcmd.txt
+%(tab)s-rm -f $*.twr $*_usage.xml
+%(tab)s-rm -f $*.bit $*.svf $*.exo $*.mcs $*.ptwx $*.unroutes
+%(tab)s-rm -f *_log *stx *summary.html *summary.xml
+%(tab)s-rm -f $*_map.xrpt $*_ngdbuild.xrpt $*_par.xrpt $*_xst.xrpt
+%(tab)s-rm -f *fdo *.xmsgs *.bld *.ngc *.ngd *.ncd
+%(tab)s-rm -f *.bit *.mcs *.exo *.pcf *.twr
+%(tab)s-rm -rf _ngo xst $*_xdb
+%(tab)s-rm -f $(SYSTEMC_GENERATED)
+%(tab)s-rm -f ../TASTE.bit
 
 clean:  TASTE.clean
 '''
 
-prj='''vhdl work "craft_gatelibrary.vhd"
+prj = '''vhdl work "craft_gatelibrary.vhd"
 vhdl work "ZestSC1_SRAM.vhd"
 vhdl work "ZestSC1_Host.vhd"
 vhdl work "ZestSC1_Interfaces.vhd"
 %(circuits)s
 vhdl work "TASTE.vhd"
 '''
+
+per_circuit_vhd = """
+
+--  Uncomment the following lines to use the declarations that are
+--  provided for instantiating Xilinx primitive components.
+--library UNISIM;
+--use UNISIM.VComponents.all;
+
+%(declaration)s
+
+architecture arch of %(pi)s is
+
+    -- Declare signals
+    signal CLK : std_logic;
+    signal RST : std_logic;
+
+    type state_type is (
+        wait_for_start_signal,
+        signal_received,
+        work_done
+    );
+    signal state : state_type := wait_for_start_signal;
+begin
+
+    CLK <= clock_%(pi)s;
+    RST <= reset_%(pi)s;
+
+    -- Possible clock divider
+    process(CLK, RST)
+    begin
+        if (RST='1') then
+            finish_%(pi)s <= '1';
+        elsif (CLK'event and CLK='1') then
+            case state is
+                when wait_for_start_signal =>
+                    if start_%(pi)s = '1' then
+                        state <= signal_received;
+                        finish_%(pi)s <= '0';
+                    else
+                        state <= wait_for_start_signal;
+                    end if;
+                when signal_received =>
+
+                    -----------------------------
+                    -- Do your processing here --
+                    -----------------------------
+
+                    state <= work_done;
+                when work_done =>
+                    finish_%(pi)s <= '1';
+                    state <= wait_for_start_signal;
+            end case;
+        end if;
+    end process;
+
+end arch;
+"""
