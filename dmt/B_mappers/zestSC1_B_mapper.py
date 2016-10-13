@@ -33,6 +33,7 @@ parameters, which have C callable interfaces. The necessary
 stubs (to allow calling from the VM side) are also generated.
 '''
 
+import os
 import re
 import math
 
@@ -1045,6 +1046,10 @@ def OnFinal() -> None:
     # systemcBody.write('#include "circuit.h"\n\n')
 
     from . import vhdlTemplateZestSC1
+    ZestSC1_tarball = os.getenv("ZESTSC1")
+    assert ZestSC1_tarball is not None
+    if 0 != os.system("tar -C \"" + vhdlBackend.dir + "/\" -jxf '" + ZestSC1_tarball + "'"):
+        panic("Failed to un-tar ZESTSC1 tarball...")
 
     for c in VHDL_Circuit.allCircuits:
         circuitLines = []
@@ -1115,7 +1120,7 @@ def OnFinal() -> None:
         skeleton.append('        reset_%s  : in  std_logic\n' % c._spCleanName)
         skeleton.append('    );\n')
         skeleton.append('    end %s;\n\n' % c._spCleanName)
-        vhdlSkeleton = open(vhdlBackend.dir + c._spCleanName + '.vhd', 'w')
+        vhdlSkeleton = open(vhdlBackend.dir + "/TASTE-VHDL-XISE/" + c._spCleanName + '.vhd', 'w')
         vhdlSkeleton.write(
             vhdlTemplateZestSC1.per_circuit_vhd % {
                 'pi': c._spCleanName,
@@ -1213,7 +1218,7 @@ def OnFinal() -> None:
         alternate_kickoffWriteAccess = "when others => %(pi)s_StartCalculationsInternal <= %(pi)s_StartCalculationsInternal xor '1';\n" % {'pi': VHDL_Circuit.allCircuits[-1]._spCleanName}
     AddToStr('readinputdata', ' ' * 22 + alternate_kickoffWriteAccess)
 
-    vhdlFile = open(vhdlBackend.dir + 'TASTE.vhd', 'w')
+    vhdlFile = open(vhdlBackend.dir + '/TASTE-VHDL-XISE/TASTE.vhd', 'w')
     vhdlFile.write(vhdlTemplateZestSC1.vhd % g_placeholders)
     vhdlFile.close()
 
@@ -1221,7 +1226,7 @@ def OnFinal() -> None:
     for c in VHDL_Circuit.allCircuits:
         msg += '    circuit_%s.vhd         \\\n' % c._spCleanName
         msg += '    circuit_%s_do_%s.vhd   \\\n' % (c._spCleanName, c._spCleanName)
-    makefile = open(vhdlBackend.dir + 'Makefile', 'w')
+    makefile = open(vhdlBackend.dir + '/TASTE-VHDL-XISE/Makefile', 'w')
     makefile.write(vhdlTemplateZestSC1.makefile % {'circuit_autofiles': msg, 'tab': '\t'})
     makefile.close()
 
@@ -1232,6 +1237,6 @@ def OnFinal() -> None:
     for c in VHDL_Circuit.allCircuits:
         msg += 'vhdl work "circuit_%s.vhd"\n' % c._spCleanName
         msg += 'vhdl work "circuit_%s_do_%s.vhd"\n' % (c._spCleanName, c._spCleanName)
-    prj = open(vhdlBackend.dir + 'TASTE.prj', 'w')
+    prj = open(vhdlBackend.dir + '/TASTE-VHDL-XISE/TASTE.prj', 'w')
     prj.write(vhdlTemplateZestSC1.prj % {'circuits': msg})
     prj.close()

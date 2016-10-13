@@ -1,0 +1,6 @@
+This folder contains datafiles needed by some of the mappers.
+
+- TASTE-VHDL-XISE.tar.bz2
+
+  This contains the Xilinx project files that form a skeleton for ZestSC1 targets
+  (see TASTE Demo_ZestSC1 project for example usage of this)
