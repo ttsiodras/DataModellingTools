@@ -1218,7 +1218,7 @@ def OnFinal() -> None:
         alternate_kickoffWriteAccess = "when others => %(pi)s_StartCalculationsInternal <= %(pi)s_StartCalculationsInternal xor '1';\n" % {'pi': VHDL_Circuit.allCircuits[-1]._spCleanName}
     AddToStr('readinputdata', ' ' * 22 + alternate_kickoffWriteAccess)
 
-    vhdlFile = open(vhdlBackend.dir + '/TASTE-VHDL-XISE/TASTE.vhd', 'w')
+    vhdlFile = open(vhdlBackend.dir + '/TASTE-VHDL-XISE/Example1.vhd', 'w')
     vhdlFile.write(vhdlTemplateZestSC1.vhd % g_placeholders)
     vhdlFile.close()
 
