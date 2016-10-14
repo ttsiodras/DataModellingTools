@@ -339,7 +339,7 @@ begin
 end arch;'''
 
 makefile = r'''
-SRCS=Example1.vhd %(pis)s
+SRCS=Example1.vhd %(pi)s
 TARGET=TASTE.bit
 
 all:    ${TARGET}
@@ -351,10 +351,9 @@ ${TARGET}:      ${SRCS}
 %(tab)spar -w -intstyle ise -ol high -t 1 TASTE_map.ncd TASTE.ncd TASTE.pcf || exit 1
 %(tab)strce -intstyle ise -e 3 -s 5 -n 3 -xml TASTE.twx TASTE.ncd -o TASTE.twr TASTE.pcf -ucf ZestSC1.ucf || exit 1
 %(tab)sbitgen -intstyle ise -f TASTE.ut TASTE.ncd || exit 1
-%(tab)echo "========================================"
-%(tab)echo "      ${TASTE} built successfully.      "
-%(tab)echo "========================================"
-
+%(tab)s@echo "========================================"
+%(tab)s@echo "      ${TARGET} built successfully.      "
+%(tab)s@echo "========================================"
 
 clean:
 %(tab)srm -f ${TARGET}

@@ -506,7 +506,7 @@ static void ErrorHandler(
         ZestSC1OpenCard(CardIDs[0], &Handle);
         g_Handle = Handle;
         if (FPGATypes[0]==ZESTSC1_XC3S1000) {
-            ZestSC1ConfigureFromFile(g_Handle, "taste.bit");
+            ZestSC1ConfigureFromFile(g_Handle, "TASTE.bit");
         } else {
             puts("Only for XC3S1000");
             exit(1);
@@ -1226,7 +1226,7 @@ def OnFinal() -> None:
     for c in VHDL_Circuit.allCircuits:
         msg += ' %s.vhd' % c._spCleanName
     makefile = open(vhdlBackend.dir + '/TASTE-VHDL-XISE/Makefile', 'w')
-    makefile.write(vhdlTemplateZestSC1.makefile % {'pis': msg, 'tab': '\t'})
+    makefile.write(vhdlTemplateZestSC1.makefile % {'pi': msg, 'tab': '\t'})
     makefile.close()
 
     # systemcHeader.write('\n#endif\n')
