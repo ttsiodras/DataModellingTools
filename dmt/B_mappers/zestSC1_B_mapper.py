@@ -1224,10 +1224,9 @@ def OnFinal() -> None:
 
     msg = ""
     for c in VHDL_Circuit.allCircuits:
-        msg += '    circuit_%s.vhd         \\\n' % c._spCleanName
-        msg += '    circuit_%s_do_%s.vhd   \\\n' % (c._spCleanName, c._spCleanName)
+        msg += ' %s.vhd' % c._spCleanName
     makefile = open(vhdlBackend.dir + '/TASTE-VHDL-XISE/Makefile', 'w')
-    makefile.write(vhdlTemplateZestSC1.makefile % {'circuit_autofiles': msg, 'tab': '\t'})
+    makefile.write(vhdlTemplateZestSC1.makefile % {'pis': msg, 'tab': '\t'})
     makefile.close()
 
     # systemcHeader.write('\n#endif\n')

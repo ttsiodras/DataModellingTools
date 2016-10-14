@@ -338,58 +338,26 @@ begin
 
 end arch;'''
 
-makefile = r'''SYSTEMC_SRC=                    \\
-    circuit.h                   \\
-    circuit.cpp
+makefile = r'''
+SRCS=Example1.vhd %(pis)s
+TARGET=TASTE.bit
 
-SYSTEMC_GENERATED=              \\
-%(circuit_autofiles)s
+all:    ${TARGET}
 
-SRCS=\\
-    TASTE.vhd           \\
-    craft_gatelibrary.vhd       \\
-    $(SYSTEMC_GENERATED)
+${TARGET}:      ${SRCS}
+%(tab)sxst -intstyle ise -ifn TASTE.xst -ofn TASTE.syr || exit 1
+%(tab)sngdbuild -intstyle ise -dd _ngo -aul -nt timestamp -uc ZestSC1.ucf -p xc3s1000-ft256-5 TASTE.ngc TASTE.ngd || exit 1
+%(tab)smap -intstyle ise -p xc3s1000-ft256-5 -cm area -ir off -pr b -c 100 -o TASTE_map.ncd TASTE.ngd TASTE.pcf || exit 1
+%(tab)spar -w -intstyle ise -ol high -t 1 TASTE_map.ncd TASTE.ncd TASTE.pcf || exit 1
+%(tab)strce -intstyle ise -e 3 -s 5 -n 3 -xml TASTE.twx TASTE.ncd -o TASTE.twr TASTE.pcf -ucf ZestSC1.ucf || exit 1
+%(tab)sbitgen -intstyle ise -f TASTE.ut TASTE.ncd || exit 1
+%(tab)echo "========================================"
+%(tab)echo "      ${TASTE} built successfully.      "
+%(tab)echo "========================================"
 
-all:    taste.bit
 
-taste.bit:      $(SRCS)
-%(tab)s#-git commit -m "`date`" -a
-%(tab)smkdir -p "xst/projnav.tmp" || exit 1
-%(tab)sxst -ise TASTE.ise -intstyle ise -ifn TASTE.xst -ofn TASTE.syr || exit 1
-%(tab)sngdbuild.exe -ise TASTE.ise -intstyle ise -dd _ngo -aul -nt timestamp -uc ZestSC1.ucf -p xc3s1000-ft256-5 TASTE.ngc TASTE.ngd|| exit 1
-%(tab)smap -ise "TASTE.ise" -intstyle ise -p xc3s1000-ft256-5 -cm area -ir off -pr b -c 100 -o TASTE_map.ncd TASTE.ngd TASTE.pcf || exit 1
-%(tab)spar -ise "TASTE.ise" -w -intstyle ise -ol std -t 1 TASTE_map.ncd TASTE.ncd TASTE.pcf || exit 1
-%(tab)strce -ise TASTE.ise -intstyle ise -e 3 -s 5 -xml TASTE.twx TASTE.ncd -o TASTE.twr TASTE.pcf || exit 1
-%(tab)sbitgen -ise "TASTE.ise" -intstyle ise -f TASTE.ut TASTE.ncd || exit 1
-%(tab)scp "$@" ../TASTE.bit || exit 1
-
-$(SYSTEMC_GENERATED):   $(SYSTEMC_SRC)
-%(tab)sfor i in $^ ; do if [ "`basename "$$i" | sed 's,^.*\.,,'`" = "cpp" ] ; then /c/Program\ Files/SystemCrafter/SystemCrafter\ SC/bin/craft.exe /vhdl $$i || exit 1; fi ; done
-
-test:
-%(tab)scd .. ;  ./TASTE.exe
-
-%%.clean:
-%(tab)s-rm -f $*.stx $*.ucf.untf $*.mrp $*.nc1 $*.ngm $*.prm $*.lfp
-%(tab)s-rm -f $*.placed_ncd_tracker $*.routed_ncd_tracker
-%(tab)s-rm -f $*.pad_txt $*.twx *.log *.vhd~ $*.dhp $*.jhd $*.cel
-%(tab)s-rm -f $*.ngr $*.ngc $*.ngd $*.syr $*.bld $*.pcf
-%(tab)s-rm -f $*_map.map $*_map.mrp $*_map.ncd $*_map.ngm $*.ncd $*.pad
-%(tab)s-rm -f $*.par $*.xpi $*_pad.csv $*_pad.txt $*.drc $*.bgn
-%(tab)s-rm -f $*.xml $*_build.xml $*.rpt $*.gyd $*.mfd $*.pnx $*.ise
-%(tab)s-rm -f $*.vm6 $*.jed $*.err $*.ER result.txt tmperr.err *.bak *.vhd~
-%(tab)s-rm -f impactcmd.txt
-%(tab)s-rm -f $*.twr $*_usage.xml
-%(tab)s-rm -f $*.bit $*.svf $*.exo $*.mcs $*.ptwx $*.unroutes
-%(tab)s-rm -f *_log *stx *summary.html *summary.xml
-%(tab)s-rm -f $*_map.xrpt $*_ngdbuild.xrpt $*_par.xrpt $*_xst.xrpt
-%(tab)s-rm -f *fdo *.xmsgs *.bld *.ngc *.ngd *.ncd
-%(tab)s-rm -f *.bit *.mcs *.exo *.pcf *.twr
-%(tab)s-rm -rf _ngo xst $*_xdb
-%(tab)s-rm -f $(SYSTEMC_GENERATED)
-%(tab)s-rm -f ../TASTE.bit
-
-clean:  TASTE.clean
+clean:
+%(tab)srm -f ${TARGET}
 '''
 
 prj = '''vhdl work "craft_gatelibrary.vhd"
