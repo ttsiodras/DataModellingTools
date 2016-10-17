@@ -427,3 +427,97 @@ begin
 
 end arch;
 """
+
+xise = """<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<project xmlns="http://www.xilinx.com/XMLSchema" xmlns:xil_pn="http://www.xilinx.com/XMLSchema">
+
+  <header>
+    <!-- ISE source project file created by Project Navigator.             -->
+    <!--                                                                   -->
+    <!-- This file contains project source information including a list of -->
+    <!-- project source files, project and process properties.  This file, -->
+    <!-- along with the project source files, is sufficient to open and    -->
+    <!-- implement in ISE Project Navigator.                               -->
+    <!--                                                                   -->
+    <!-- Copyright (c) 1995-2013 Xilinx, Inc.  All rights reserved. -->
+  </header>
+
+  <version xil_pn:ise_version="14.7" xil_pn:schema_version="2"/>
+
+  <files>
+    <file xil_pn:name="Example1.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="1"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="5"/>
+    </file>
+    <file xil_pn:name="ZestSC1_Host.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="2"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="2"/>
+    </file>
+    <file xil_pn:name="ZestSC1_SRAM.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="3"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="1"/>
+    </file>
+    <file xil_pn:name="ZestSC1_Interfaces.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="4"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="3"/>
+    </file>
+    <file xil_pn:name="ZestSC1.ucf" xil_pn:type="FILE_UCF">
+      <association xil_pn:name="Implementation" xil_pn:seqID="0"/>
+    </file>
+    <file xil_pn:name="%(pi)s.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="97"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="4"/>
+    </file>
+  </files>
+
+  <properties>
+    <property xil_pn:name="Allow Unmatched LOC Constraints" xil_pn:value="true" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="Device" xil_pn:value="xc3s1000" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="Device Family" xil_pn:value="Spartan3" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="Drive Done Pin High" xil_pn:value="true" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="Enable Enhanced Design Summary" xil_pn:value="false" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="Implementation Top" xil_pn:value="Architecture|TASTE|arch" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="Implementation Top File" xil_pn:value="Example1.vhd" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="Implementation Top Instance Path" xil_pn:value="/TASTE" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="Overwrite Compiled Libraries" xil_pn:value="true" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="Pack I/O Registers/Latches into IOBs" xil_pn:value="For Inputs and Outputs" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="Package" xil_pn:value="ft256" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="Preferred Language" xil_pn:value="Verilog" xil_pn:valueState="default"/>
+    <property xil_pn:name="Property Specification in Project File" xil_pn:value="Store non-default values only" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="Report Fastest Path(s) in Each Constraint" xil_pn:value="false" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="Report Fastest Path(s) in Each Constraint Post Trace" xil_pn:value="false" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="Report Type" xil_pn:value="Error Report" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="Report Type Post Trace" xil_pn:value="Error Report" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="Simulator" xil_pn:value="ISim (VHDL/Verilog)" xil_pn:valueState="default"/>
+    <property xil_pn:name="Speed Grade" xil_pn:value="-5" xil_pn:valueState="default"/>
+    <property xil_pn:name="Synthesis Tool" xil_pn:value="XST (VHDL/Verilog)" xil_pn:valueState="default"/>
+    <property xil_pn:name="Top-Level Source Type" xil_pn:value="HDL" xil_pn:valueState="default"/>
+    <property xil_pn:name="iMPACT Project File" xil_pn:value="" xil_pn:valueState="non-default"/>
+    <!--                                                                                  -->
+    <!-- The following properties are for internal use only. These should not be modified.-->
+    <!--                                                                                  -->
+    <property xil_pn:name="PROP_DesignName" xil_pn:value="Example1" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="PROP_DevFamilyPMName" xil_pn:value="spartan3" xil_pn:valueState="default"/>
+    <property xil_pn:name="PROP_intProjectCreationTimestamp" xil_pn:value="2016-09-25T12:57:19" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="PROP_intWbtProjectID" xil_pn:value="3745F6A05FDE9EEAF3D6AE162B4C5A8F" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="PROP_intWorkingDirLocWRTProjDir" xil_pn:value="Same" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="PROP_intWorkingDirUsed" xil_pn:value="No" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="PROP_mapSmartGuideFileName" xil_pn:value="" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="PROP_parSmartGuideFileName" xil_pn:value="" xil_pn:valueState="non-default"/>
+  </properties>
+
+  <bindings/>
+
+  <libraries/>
+
+  <autoManagedFiles>
+    <!-- The following files are identified by `include statements in verilog -->
+    <!-- source files and are automatically managed by Project Navigator.     -->
+    <!--                                                                      -->
+    <!-- Do not hand-edit this section, as it will be overwritten when the    -->
+    <!-- project is analyzed based on files automatically identified as       -->
+    <!-- include files.                                                       -->
+  </autoManagedFiles>
+
+</project>
+"""

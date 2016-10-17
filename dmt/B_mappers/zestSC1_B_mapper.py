@@ -1229,6 +1229,10 @@ def OnFinal() -> None:
     makefile.write(vhdlTemplateZestSC1.makefile % {'pi': msg, 'tab': '\t'})
     makefile.close()
 
+    xise = open(vhdlBackend.dir + '/TASTE-VHDL-XISE/Example1.xise', 'w')
+    xise.write(vhdlTemplateZestSC1.xise % {'pi': c._spCleanName, 'tab': '\t'})
+    xise.close()
+
     # systemcHeader.write('\n#endif\n')
     # systemcHeader.close()
 
