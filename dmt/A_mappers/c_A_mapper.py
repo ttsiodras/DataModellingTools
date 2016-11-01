@@ -50,7 +50,7 @@ def OnStartup(unused_modelingLanguage: str, asnFiles: List[str], outputDir: str,
         "\"{}\" -wordSize 8 -typePrefix asn1Scc -c -uPER -o \"".format(asn1SccPath) +
         outputDir + "\" \"" + "\" \"".join(asnFiles) + "\"")
     cmd = 'rm -f '
-    for i in ['real.c', 'asn1crt.c', 'acn.c', 'ber.c', 'xer.c']:
+    for i in ['real.c', 'asn1crt.c', 'acn.c']:
         cmd += ' "' + outputDir + '"/' + i
     os.system(cmd)
     for tmp in asnFiles:
