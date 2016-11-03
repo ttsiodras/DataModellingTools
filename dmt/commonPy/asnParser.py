@@ -366,7 +366,7 @@ def CheckForInvalidKeywords(node_or_str: Union[str, AsnNode]) -> None:
             if isinstance(child[1], AsnMetaMember) and child[1]._containedType.lower() == child[0].lower():
                 utility.panic(
                     "Ada mappers won't allow SEQUENCE/CHOICE fields with same names as their types.\n" +
-                    "Fix declaration at %s" % node.Location())
+                    "Fix declaration at %s ('%s')" % (node.Location(), child[1]._containedType.lower()))
     elif isinstance(node, (AsnSequenceOf, AsnSetOf)):
         if isinstance(node._containedType, str):
             if IsInvalidType(node._containedType):
