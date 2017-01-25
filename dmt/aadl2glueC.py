@@ -496,6 +496,9 @@ def main() -> None:
     SystemsAndImplementations.extend(commonPy.aadlAST.g_threadImplementations[:])
     SystemsAndImplementations.extend(commonPy.aadlAST.g_processImplementations[:])
 
+    # If some AST nodes must be skipped (for any reason), go learn about them
+    badTypes = DiscoverBadTypes()
+
     # Update ASN.1 nodes to carry size info (only for Signal params)
     for si in SystemsAndImplementations:
         spName, sp_impl, modelingLanguage = si[0], si[1], si[2]
@@ -505,12 +508,11 @@ def main() -> None:
             assert asnFile == param._signal._asnFilename
             nodeTypename = param._signal._asnNodename
             node = commonPy.asnParser.g_names[nodeTypename]
-            if node._leafType == "AsciiString":
-                panic("You cannot use IA5String as a parameter - use OCTET STRING instead\n(%s)" % node.Location())  # pragma: no cover
+            if node._leafType == "AsciiString" or nodeTypename in badTypes:
+                panic("For type %s:\n\tIA5String and types that depend on them cannot "
+                      "be used as a parameter.\n\tUse OCTET STRINGs instead!\n\t(%s)" % (
+                          nodeTypename, node.Location()))  # pragma: no cover
                 # (typo?) node._asnSize = param._signal._asnSize
-
-    # If some AST nodes must be skipped (for any reason), go learn about them
-    badTypes = DiscoverBadTypes()
 
     if {"ada", "qgenada"} & {y[2].lower() for y in SystemsAndImplementations}:
         SpecialCodes(asnFile)
