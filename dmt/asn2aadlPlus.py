@@ -325,20 +325,11 @@ def main():
     if bAADLv2:
         directiveTypes = [
             "Simulink_Tunable_Parameter", "Timer", "Taste_directive"]
-        typesUnusableAsInterfaceParameters = directiveTypes[:]
-        for line in os.popen("badTypes '" + "' '".join(asnFiles) + "'").readlines():
-            line = line.strip().replace('-', '_')
-            typesUnusableAsInterfaceParameters.append(line)
-        for typeName in typesUnusableAsInterfaceParameters:
-            if typeName in directiveTypes:
-                # sourceText = "\n   Source_Text => (" + pathToDirectives + '");'
-                sourceText = ""
-                adaPackageName = "TASTE_Directives"
-                moduleName = "TASTE-Directives"
-            elif typeName in asnParser.g_names:
-                sourceText = '\n   Source_Text => ("' + asnParser.g_names[typeName]._asnFilename + '");'
-                adaPackageName = g_AdaPackageNameOfType[typeName]
-                moduleName = g_AdaPackageNameOfType[typeName].replace('_', '-')
+        for typeName in directiveTypes:
+            # sourceText = "\n   Source_Text => (" + pathToDirectives + '");'
+            sourceText = ""
+            adaPackageName = "TASTE_Directives"
+            moduleName = "TASTE-Directives"
             o.write('''
 DATA {typeName}
 PROPERTIES
@@ -354,6 +345,11 @@ END {typeName};
            adaPackageName=adaPackageName,
            moduleName=moduleName))
 
+        typesUnusableAsInterfaceParameters = []
+        for line in os.popen("badTypes '" + "' '".join(asnFiles) + "'").readlines():
+            line = line.strip().replace('-', '_')
+            typesUnusableAsInterfaceParameters.append(line)
+
         o.write('''
 data Stream_Element_Buffer
     -- Root type for buffer elements
@@ -362,8 +358,6 @@ properties
 end Stream_Element_Buffer;
 ''')
     for asnTypename in list(asnParser.g_names.keys()):
-        if asnTypename in typesUnusableAsInterfaceParameters:
-            continue
         node = asnParser.g_names[asnTypename]
         if node._isArtificial:
             continue
@@ -417,6 +411,8 @@ end Stream_Element_Buffer;
             o.write('aSETOF;\n')
         else:
             panic("Unsupported ASN.1 type: %s" % node._leafType)
+        if asnTypename in typesUnusableAsInterfaceParameters:
+            o.write('    TASTE::Forbid_in_PI => true;\n')
         o.write('END ' + cleanName + ';\n\n')
         if os.getenv('UPD') is None:
             o.write('DATA ' + cleanName + '_Buffer_Max\n')
