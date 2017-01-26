@@ -282,7 +282,8 @@ def main():
     inputFiles = args[:-1]
 
     # Parse the ASN.1 files (skip the ACN ones)
-    asnParser.ParseAsnFileList([x for x in inputFiles if not x.lower().endswith('.acn')])
+    asnFiles = [x for x in inputFiles if not x.lower().endswith('.acn')]
+    asnParser.ParseAsnFileList(asnFiles)
     autosrc = tempfile.mkdtemp(".asn1c")
     inform("Created temporary directory (%s) for auto-generated files...", autosrc)
     absPathOfAADLfile = os.path.abspath(aadlFile)
@@ -314,32 +315,45 @@ def main():
         o.write('  with Taste;\n')
         o.write('  with Base_Types;\n')
         o.write('  with Deployment;\n')
-    o.write('-- No more private heap required (we use the space certified compiler)\n')
-    o.write('-- Memory_Required: 0\n\n')
+    # o.write('-- No more private heap required (we use the space certified compiler)\n')
+    # o.write('-- Memory_Required: 0\n\n')
+    try:
+        pathToDirectives = os.popen("taste-config --directives").readlines()[0].strip()
+    except:
+        panic("taste-config is not in the PATH. Aborting...")
+    typesUnusableAsInterfaceParameters = []
     if bAADLv2:
-        o.write('''
-DATA Simulink_Tunable_Parameter
+        directiveTypes = [
+            "Simulink_Tunable_Parameter", "Timer", "Taste_directive"]
+        typesUnusableAsInterfaceParameters = directiveTypes[:]
+        for line in os.popen("badTypes '" + "' '".join(asnFiles) + "'").readlines():
+            line = line.strip().replace('-', '_')
+            typesUnusableAsInterfaceParameters.append(line)
+        for typeName in typesUnusableAsInterfaceParameters:
+            if typeName in directiveTypes:
+                # sourceText = "\n   Source_Text => (" + pathToDirectives + '");'
+                sourceText = ""
+                adaPackageName = "TASTE_Directives"
+                moduleName = "TASTE-Directives"
+            elif typeName in asnParser.g_names:
+                sourceText = '\n   Source_Text => ("' + asnParser.g_names[typeName]._asnFilename + '");'
+                adaPackageName = g_AdaPackageNameOfType[typeName]
+                moduleName = g_AdaPackageNameOfType[typeName].replace('_', '-')
+            o.write('''
+DATA {typeName}
 PROPERTIES
-   TASTE::Ada_Package_Name => "TASTE-Directives";
-   Type_Source_Name => "Simulink-Tunable-Parameter";
-   Deployment::ASN1_Module_Name => "TASTE-Directives";
-END Simulink_Tunable_Parameter;
+   TASTE::Ada_Package_Name => "{adaPackageName}";
+   Type_Source_Name => "{typeNameASN}";
+   Deployment::ASN1_Module_Name => "{moduleName}";{sourceText}
+   TASTE::Forbid_in_PI => true;
+END {typeName};
+'''.format(pathToDirectives=pathToDirectives,
+           typeName=typeName,
+           typeNameASN=typeName.replace('_', '-'),
+           sourceText=sourceText,
+           adaPackageName=adaPackageName,
+           moduleName=moduleName))
 
-DATA Timer
-PROPERTIES
-   TASTE::Ada_Package_Name => "TASTE-Directives";
-   Type_Source_Name => "Timer";
-   Deployment::ASN1_Module_Name => "TASTE-Directives";
-END Timer;
-
-DATA TASTE_Directive
-PROPERTIES
-   TASTE::Ada_Package_Name => "TASTE-Directives";
-   Type_Source_Name => "Taste-directive";
-   Deployment::ASN1_Module_Name => "TASTE-Directives";
-END TASTE_Directive;
-
-''')
         o.write('''
 data Stream_Element_Buffer
     -- Root type for buffer elements
@@ -348,6 +362,8 @@ properties
 end Stream_Element_Buffer;
 ''')
     for asnTypename in list(asnParser.g_names.keys()):
+        if asnTypename in typesUnusableAsInterfaceParameters:
+            continue
         node = asnParser.g_names[asnTypename]
         if node._isArtificial:
             continue

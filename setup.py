@@ -41,6 +41,7 @@ setup(
             'asn2aadlPlus = dmt.asn2aadlPlus:main',
             'asn2dataModel = dmt.asn2dataModel:main',
             'aadl2glueC = dmt.aadl2glueC:main',
+            'badTypes = dmt.badTypes:main',
             'msgPrinter = dmt.msgPrinter:main',
             'msgPrinterASN1 = dmt.msgPrinterASN1:main',
             'smp2asn = dmt.smp2asn:main',
