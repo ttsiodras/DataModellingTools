@@ -326,7 +326,7 @@ def main():
         directiveTypes = [
             "Simulink_Tunable_Parameter", "Timer", "Taste_directive"]
         for typeName in directiveTypes:
-            # sourceText = "\n   Source_Text => (" + pathToDirectives + '");'
+            #sourceText = '\n   Source_Text => ("' + pathToDirectives + '");'
             sourceText = ""
             adaPackageName = "TASTE_Directives"
             moduleName = "TASTE-Directives"
