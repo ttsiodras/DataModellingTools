@@ -5,7 +5,7 @@ include common.mk
 #
 # To address this, we find where our pip-installed typing lives:
 TYPING_FOLDER:=$(shell pip3 show typing | grep ^Location | sed 's,^.*: ,,')
-export PYTHONPATH:=${TYPING_FOLDER}:..
+export PYTHONPATH:=..:${TYPING_FOLDER}
 
 all:
 	make clean

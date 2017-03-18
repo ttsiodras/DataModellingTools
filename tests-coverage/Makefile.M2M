@@ -10,7 +10,7 @@ PYSRC_A_COVER := $(PYSRC_A:%.py=___dmt_A_mappers_%.py,cover)
 #
 # To address this, we find where our pip-installed typing lives:
 TYPING_FOLDER:=$(shell pip3 show typing | grep ^Location | sed 's,^.*: ,,')
-export PYTHONPATH:=${TYPING_FOLDER}:..
+export PYTHONPATH:=..:${TYPING_FOLDER}
 
 .PHONY:	check
 
