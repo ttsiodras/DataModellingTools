@@ -71,9 +71,10 @@ def OnStartup(modelingLanguage: str,
     global g_PythonFile
     if g_PythonFile is None:
         g_PythonFile = open(outputDir + "python/PythonController.py", "w")
+        g_headerPython.append("from __future__ import absolute_import\n\n")
         g_headerPython.append("import threading, time, sys, os, ctypes\n")
         # g_headerPython.append("from PythonAccess import *")
-        g_headerPython.append("import DV")
+        g_headerPython.append("from . import DV")
         g_headerPython.append('PythonAccess = ctypes.cdll.LoadLibrary("./PythonAccess.so")')
         g_headerPython.append('OpenMsgQueueForReading = PythonAccess.OpenMsgQueueForReading')
         g_headerPython.append('OpenMsgQueueForReading.restype = ctypes.c_int')
