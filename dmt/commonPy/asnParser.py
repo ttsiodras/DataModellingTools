@@ -815,7 +815,7 @@ def VisitAsn1Module(xmlAsn1File: Element, xmlModule: Element, modules: List[Modu
 
 
 def ParseASN1SCC_AST(filename: str) -> None:
-    parser = xml.sax.make_parser()
+    parser = xml.sax.make_parser([])
     handler = InputFormatXMLHandler()
     parser.setContentHandler(handler)
     # parser.setFeature("http://xml.org/sax/features/validation", True)

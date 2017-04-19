@@ -30,7 +30,7 @@ setup(
         'flake8>=2.6.0',
         'mypy-lang>=0.4.2',
         'pyflakes>=1.2.3',
-        'pylint>=1.5.6',
+        'pylint==1.5.6',
         'pytest>=2.6.3',
         'astroid>=1.4.6',
         'pycodestyle>=2.0.0',
