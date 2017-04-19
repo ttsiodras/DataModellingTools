@@ -176,6 +176,7 @@ void TeleCmds::CreateControls()
 
 ''')
 
+
 enumFieldNames = {}  # type: Dict[str, int]
 
 
@@ -971,6 +972,7 @@ def WriteCodeForAction(nodeTypename: str,
     g_MyAction.write("        }\n")
     g_MyAction.write("    }\n")
     g_MyAction.write("}\n")
+
 
 g_SPs = []  # type: List[str]
 g_bBraceOpen = False

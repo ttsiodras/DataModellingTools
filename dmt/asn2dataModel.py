@@ -236,6 +236,7 @@ def main() -> None:
             if 'OnShutdown' in dir(backend):
                 backend.OnShutdown(badTypes)
 
+
 if __name__ == "__main__":
     if "-pdb" in sys.argv:
         sys.argv.remove("-pdb")  # pragma: no cover

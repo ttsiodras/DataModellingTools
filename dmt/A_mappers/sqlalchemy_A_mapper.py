@@ -522,6 +522,7 @@ class {cleanTypename}_SQL(Base):
 def CreateChoice(nodeTypename: str, node: AsnChoice, _: AST_Leaftypes) -> None:
     CommonSeqSetChoice(nodeTypename, node, _, isChoice=True)
 
+
 g_bShutdownRun = False
 
 

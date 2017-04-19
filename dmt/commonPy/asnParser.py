@@ -986,6 +986,7 @@ def test_xml() -> None:
     print("\nRe-created grammar:\n\n")
     PrintGrammarFromASTtoStdOut()
 
+
 if __name__ == "__main__":
     if "-testXML" in sys.argv:
         sys.argv.remove("-testXML")
