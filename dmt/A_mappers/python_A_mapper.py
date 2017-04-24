@@ -142,9 +142,9 @@ def OnStartup(unused_modelingLanguage: str, asnFile: str, outputDir: str, badTyp
     # and used during comparisons of incoming TMs (For MSCs)
 
     # mono_exe = "mono " if sys.argv[0].endswith('.py') and sys.platform.startswith('linux') else ""
-    mono_exe = ""
+    mono_exe = "mono"
     makefile_text = '''\
-ASN1SCC:=asn1.exe
+ASN1SCC:=$(shell which asn1.exe)
 ASN2DATAMODEL:=asn2dataModel
 GRAMMAR := %(origGrammarBase)s
 BASEGRAMMAR := %(base)s
@@ -158,8 +158,8 @@ $(BDIR)/$(GRAMMAR)_getset.c:       $(GRAMMAR).asn
 %(tab)s$(ASN2DATAMODEL) -toPython -o $(BDIR) $<
 
 $(BDIR)/asn1crt.c $(BDIR)/$(GRAMMAR).c $(BDIR)/real.c $(BDIR)/acn.c $(BDIR)/$(GRAMMAR).h $(BDIR)/asn1crt.h:       $(GRAMMAR).asn
-%(tab)sif [ ! -f "$(GRAMMAR).acn" ] ; then %(mono)s$(ASN1SCC) -ACND -o $(BDIR) $< ; fi
-%(tab)s%(mono)s$(ASN1SCC) -ACN -c -uPER -equal -wordSize 8 -o $(BDIR) $< $(GRAMMAR).acn
+%(tab)sif [ ! -f "$(GRAMMAR).acn" ] ; then %(mono)s $(ASN1SCC) -ACND -o $(BDIR) $< ; fi
+%(tab)s%(mono)s $(ASN1SCC) -ACN -c -uPER -equal -wordSize 8 -o $(BDIR) $< $(GRAMMAR).acn
 
 $(BDIR)/DV.py:       $(GRAMMAR).asn
 %(tab)sgrep 'REQUIRED_BYTES_FOR_.*ENCODING' $(BDIR)/$(GRAMMAR).h | awk '{print $$2 " = " $$3}' > $@
