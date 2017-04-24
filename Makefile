@@ -29,7 +29,7 @@ coverage:
 
 testDB:
 	@echo Installing DMT for local user...
-	@pip3 install --user --upgrade .
+	@pip3 install .
 	@echo Performing database tests...
 	@$(MAKE) -C tests-sqlalchemy  || exit 1
 
