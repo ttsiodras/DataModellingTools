@@ -8,7 +8,7 @@ dependencies:
   pre:
     - sudo rm -rf /var/cache/apt/archives && sudo ln -s ~/.apt-cache /var/cache/apt/archives && mkdir -p ~/.apt-cache/partial
     # - sudo apt-get update
-    - sudo apt-get install libxslt-dev libxml2-dev
+    - sudo apt-get install libxslt-dev libxml2-dev python-psycopg2
     - wget -O - -q https://github.com/ttsiodras/asn1scc/releases/download/3.3.9/asn1scc-bin-3.3.9.tar.bz2 | tar jxvf -
     - wget -O - -q https://github.com/ttsiodras/DataModellingTools/files/335591/antlr-2.7.7.tar.gz | tar zxvf - ; cd antlr-2.7.7/lib/python ; sudo pip2 install .
     - sudo apt-get install mono-complete
