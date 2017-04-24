@@ -8,7 +8,8 @@ PY_SRC:=$(filter-out dmt/B_mappers/antlr.main.py dmt/A_mappers/Stubs.py, ${PY_SR
 TYPING_FOLDER:=$(shell pip3 show typing | grep ^Location | sed 's,^.*: ,,')
 export PYTHONPATH=${TYPING_FOLDER}
 
-all:	flake8 pylint mypy coverage testDB
+# all:	flake8 pylint mypy coverage testDB
+all:	testDB
 
 flake8:
 	@echo Performing syntax checks via flake8...
@@ -27,6 +28,8 @@ coverage:
 	@$(MAKE) -C tests-coverage  || exit 1
 
 testDB:
+	@echo Installing DMT for local user...
+	@pip3 install --user --upgrade .
 	@echo Performing database tests...
 	@$(MAKE) -C tests-sqlalchemy  || exit 1
 
