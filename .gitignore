@@ -9,3 +9,7 @@ tests-coverage/Simulink_DataView_asn.m
 *swp
 antlr-2.7.7
 asn1scc
+tests-sqlalchemy/sql.log
+tests-sqlalchemy/test.db
+tests-sqlalchemy/verifier/LotsOfDataTypes.asn
+tests-sqlalchemy/verifier/asn2dataModel/
