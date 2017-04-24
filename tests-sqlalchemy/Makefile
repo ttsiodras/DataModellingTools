@@ -25,7 +25,7 @@ debug:	|build
 	ipdb -m verifier.testSQLengines.py 
 
 test:	|build
-	python -m verifier.testSQLengines
+	python2 -m verifier.testSQLengines
 
 print:
 	@for i in MyInt My2ndInt MySeq MyChoice TypeEnumerated MySuperSeq T_ARR T_ARR_indexes T_ARR_elm ; do \

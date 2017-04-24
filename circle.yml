@@ -18,5 +18,5 @@ dependencies:
 
 test:
   override:
-    - pip install SQLAlchemy psycopg2
+    - pip2 install SQLAlchemy psycopg2
     - PATH=$PATH:$(pwd)/asn1scc make
