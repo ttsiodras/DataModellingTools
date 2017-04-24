@@ -274,7 +274,7 @@ An example for SetLength:
             bridgeFunc = getattr(JMP, Clean(self._nodeTypeName) + "_" + self._Caccessor + "_Set" + args.get("postfix", ""))
             if isinstance(value, float):
                 ctypesValue = c_double(value)
-            elif isinstance(value, int):
+            elif isinstance(value, (int, long)):
                 ctypesValue = c_longlong(value)
             else:
                 ctypesValue = value
