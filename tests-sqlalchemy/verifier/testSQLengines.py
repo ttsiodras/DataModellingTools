@@ -28,7 +28,7 @@ class CompleteTestingOfSQLMapperWithSQLite(AllTests, unittest.TestCase):
 class CompleteTestingOfSQLMapperWithPostgreSQL(AllTests, unittest.TestCase):
     #engine = create_engine('sqlite:///:memory:', echo=True)
     engine = create_engine(
-        'postgresql+psycopg2://taste:tastedb@localhost/test', echo=False)
+        'postgresql+psycopg2://ubuntu:@localhost/circle_test', echo=False)
     Base.metadata.create_all(engine)
     from sqlalchemy.orm import sessionmaker
 
