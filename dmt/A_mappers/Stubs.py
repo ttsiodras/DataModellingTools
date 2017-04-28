@@ -23,7 +23,7 @@ from __future__ import absolute_import
 import os
 import re
 import copy
-from . import DV_Types  # pylint: disable=import-error
+import DV_Types  # pylint: disable=import-error
 from ctypes import (
     cdll, c_void_p, c_ubyte, c_double, c_uint,
     c_longlong, c_bool, c_int, c_long

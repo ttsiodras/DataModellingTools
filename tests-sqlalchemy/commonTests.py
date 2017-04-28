@@ -3,12 +3,12 @@ import math
 
 from sqlalchemy import exc
 
-# sys.path.append("asn2dataModel")
-from .asn2dataModel import DV
-from .asn2dataModel.lotsofdatatypes_model import (
+sys.path.append("asn2dataModel")
+import DV
+from lotsofdatatypes_model import (
     MyInt_SQL, My2ndInt_SQL, MySeq_SQL, TypeEnumerated_SQL, T_ARR_SQL,
     MySuperSeq_SQL, MyChoice_SQL, TypeNested_SQL)
-from .asn2dataModel.LotsOfDataTypes_asn import (
+from LotsOfDataTypes_asn import (
     MyInt, My2ndInt, MySeq, TypeEnumerated, T_ARR, MySuperSeq, MyChoice,
     TypeNested
 )

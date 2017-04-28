@@ -74,7 +74,7 @@ def OnStartup(modelingLanguage: str,
         g_headerPython.append("from __future__ import absolute_import\n\n")
         g_headerPython.append("import threading, time, sys, os, ctypes\n")
         # g_headerPython.append("from PythonAccess import *")
-        g_headerPython.append("from . import DV")
+        g_headerPython.append("import DV")
         g_headerPython.append('try:')
         g_headerPython.append('    PythonAccess = ctypes.cdll.LoadLibrary("./PythonAccess.so")')
         g_headerPython.append('except OSError:')

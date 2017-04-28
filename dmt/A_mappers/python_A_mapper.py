@@ -75,10 +75,9 @@ def OnStartup(unused_modelingLanguage: str, asnFile: str, outputDir: str, badTyp
     inform("Python_A_mapper: Creating file '%s'...", outputFilename)
     global g_outputFile
     g_outputFile = open(outputDir + outputFilename, 'w')
-    g_outputFile.write("from __future__ import absolute_import\n\n")
     g_outputFile.write("from functools import partial\n\n")
-    g_outputFile.write("from . import DV\n\n")
-    g_outputFile.write("from .Stubs import (\n")
+    g_outputFile.write("import DV\n\n")
+    g_outputFile.write("from Stubs import (\n")
     g_outputFile.write(
         "    myassert, Clean, DataStream, COMMON)\n\n")
     global g_outputGetSetH

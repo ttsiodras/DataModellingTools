@@ -1,15 +1,18 @@
+#!/usr/bin/env python2
+import os
 import sys
+sys.path.append("asn2dataModel")
+
 import logging
 import unittest
 
 from sqlalchemy import create_engine
 
-from .commonTests import AllTests
-from .asn2dataModel.lotsofdatatypes_model import Base
+from commonTests import AllTests
+from lotsofdatatypes_model import Base
 
-sys.path.append("asn2dataModel")
-from .asn2dataModel.lotsofdatatypes_model import My2ndInt_SQL
-from .asn2dataModel.LotsOfDataTypes_asn import My2ndInt
+from lotsofdatatypes_model import My2ndInt_SQL
+from LotsOfDataTypes_asn import My2ndInt
 
 logging.basicConfig(filename="sql.log")
 logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
@@ -27,8 +30,11 @@ class CompleteTestingOfSQLMapperWithSQLite(AllTests, unittest.TestCase):
 
 class CompleteTestingOfSQLMapperWithPostgreSQL(AllTests, unittest.TestCase):
     #engine = create_engine('sqlite:///:memory:', echo=True)
-    engine = create_engine(
-        'postgresql+psycopg2://ubuntu:@localhost/circle_test', echo=False)
+    if os.getenv('CIRCLECI') is None:
+        dburi = 'postgresql+psycopg2://ubuntu:tastedb@localhost/circle_test'
+    else:
+        dburi = 'postgresql+psycopg2://ubuntu:@localhost/circle_test'
+    engine = create_engine(dburi, echo=False)
     Base.metadata.create_all(engine)
     from sqlalchemy.orm import sessionmaker
 

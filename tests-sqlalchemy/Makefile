@@ -12,20 +12,19 @@ cleanDB:
 	rm -f test.db
 
 clean:
-	rm -rf verifier/asn2dataModel verifier/lotsofdatatypes_model.* */*.pyc verifier/LotsOfDataTypes.asn .coverage
+	rm -rf asn2dataModel lotsofdatatypes_model.* */*.pyc .coverage
 	$(MAKE) cleanDB
 
 build:
-	cd verifier/ ; if [ ! -d asn2dataModel ] ; then mkdir -p asn2dataModel ; [ ! -h LotsOfDataTypes.asn ] && ln -s ../LotsOfDataTypes.asn ; LC_ALL=C asn2dataModel -o asn2dataModel -toPython LotsOfDataTypes.asn ; fi
-	cd verifier/asn2dataModel || exit 1 && make -f Makefile.python
-	cd verifier ; LC_ALL=C asn2dataModel -toSqlalchemy -o asn2dataModel/ LotsOfDataTypes.asn
-	touch verifier/asn2dataModel/__init__.py
+	if [ ! -d asn2dataModel ] ; then mkdir -p asn2dataModel ; LC_ALL=C asn2dataModel -o asn2dataModel -toPython LotsOfDataTypes.asn ; fi
+	cd asn2dataModel || exit 1 && make -f Makefile.python
+	LC_ALL=C asn2dataModel -toSqlalchemy -o asn2dataModel/ LotsOfDataTypes.asn
 
 debug:	|build
-	ipdb -m verifier.testSQLengines.py 
+	ipdb -m ./testSQLengines.py
 
 test:	|build
-	python2 -m verifier.testSQLengines
+	./testSQLengines.py
 
 print:
 	@for i in MyInt My2ndInt MySeq MyChoice TypeEnumerated MySuperSeq T_ARR T_ARR_indexes T_ARR_elm ; do \
