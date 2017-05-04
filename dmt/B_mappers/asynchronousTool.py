@@ -100,11 +100,13 @@ class ASynchronousToolGlueGenerator:
         ID = re.sub(r'[^A-Za-z0-9_]', '_', ID).upper()
         self.C_HeaderFile.write("#ifndef __%s_H__\n" % ID)
         self.C_HeaderFile.write("#define __%s_H__\n\n" % ID)
+        self.C_HeaderFile.write("#ifdef __unix__\n")
         self.C_HeaderFile.write("#include <stdlib.h> /* for size_t */\n")
         self.C_HeaderFile.write("\n")
         self.C_SourceFile.write("#include <stdio.h>\n")
         self.C_SourceFile.write("#include <string.h>\n\n")
         self.C_SourceFile.write("#include <assert.h>\n\n")
+        self.C_SourceFile.write("#endif\n\n")
         self.C_SourceFile.write("#include \"%s\"\n\n" % outputCheaderFilename)
 
         self.HeadersOnStartup(asnFile, outputDir, maybeFVname)

@@ -172,9 +172,11 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
             self.C_HeaderFile.write("#include <stdlib.h> /* for size_t */\n")
             self.C_HeaderFile.write("\n")
 
+            self.C_SourceFile.write("#ifdef __unix__\n")
             self.C_SourceFile.write("#include <stdio.h>\n")
             self.C_SourceFile.write("#include <string.h>\n\n")
             self.C_SourceFile.write("#include <assert.h>\n\n")
+            self.C_SourceFile.write("#endif\n")
 
             self.C_SourceFile.write("#include \"%s\"\n" % outputCheaderFilename)
 
