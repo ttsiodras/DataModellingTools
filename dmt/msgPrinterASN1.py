@@ -226,7 +226,7 @@ def main():
     C_HeaderFile.write('#endif\n\n')
 
     C_SourceFile = open(configMT.outputDir + os.sep + "PrintTypesAsASN1.c", "w")
-    C_SourceFile.write('#ifdef ___unix__\n\n')
+    C_SourceFile.write('#ifdef __unix__\n\n')
     C_SourceFile.write('#include <stdio.h>\n\n')
     C_SourceFile.write('#include "PrintTypesAsASN1.h"\n\n')
     C_SourceFile.write('#ifdef __linux__\n')
