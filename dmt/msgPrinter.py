@@ -207,8 +207,9 @@ def main():
     C_HeaderFile.write('#endif\n\n')
 
     C_SourceFile = open(configMT.outputDir + os.sep + "PrintTypes.c", "w")
-    C_SourceFile.write('#ifdef __unix__\n\n')
-    C_SourceFile.write('#include <stdio.h>\n\n')
+    C_SourceFile.write('#ifdef __unix__\n')
+    C_SourceFile.write('#include <stdio.h>\n')
+    C_SourceFile.write('#endif\n')
     C_SourceFile.write('#include "PrintTypes.h"\n\n')
     C_SourceFile.write('#ifdef __linux__\n')
     C_SourceFile.write('#include <pthread.h>\n\n')
@@ -244,6 +245,7 @@ def main():
             C_SourceFile.write('#ifdef __linux__\n')
             C_SourceFile.write('    pthread_mutex_lock(&g_printing_mutex);\n')
             C_SourceFile.write('#endif\n')
+            C_SourceFile.write('#ifdef __unix__\n')
             lines = ["    " + x
                      for x in printer.Map(
                          '(*pData)',
@@ -252,7 +254,8 @@ def main():
                          leafTypeDict,
                          asnParser.g_names)]
             C_SourceFile.write("\n".join(lines))
-            C_SourceFile.write('\n#ifdef __linux__\n')
+            C_SourceFile.write('\n#endif\n')
+            C_SourceFile.write('#ifdef __linux__\n')
             C_SourceFile.write('    pthread_mutex_unlock(&g_printing_mutex);\n')
             C_SourceFile.write('#endif\n')
             C_SourceFile.write('}\n\n')
