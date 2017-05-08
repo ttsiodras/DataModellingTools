@@ -260,7 +260,6 @@ def main():
             C_SourceFile.write('#endif\n')
             C_SourceFile.write('}\n\n')
 
-    C_SourceFile.write('\n#endif\n')
     C_HeaderFile.write('\n#ifdef __cplusplus\n')
     C_HeaderFile.write('}\n')
     C_HeaderFile.write('#endif\n')
