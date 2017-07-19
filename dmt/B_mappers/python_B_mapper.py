@@ -71,10 +71,16 @@ def OnStartup(modelingLanguage: str,
     global g_PythonFile
     if g_PythonFile is None:
         g_PythonFile = open(outputDir + "python/PythonController.py", "w")
+        g_headerPython.append("from __future__ import absolute_import\n\n")
         g_headerPython.append("import threading, time, sys, os, ctypes\n")
         # g_headerPython.append("from PythonAccess import *")
         g_headerPython.append("import DV")
-        g_headerPython.append('PythonAccess = ctypes.cdll.LoadLibrary("./PythonAccess.so")')
+        g_headerPython.append('try:')
+        g_headerPython.append('    PythonAccess = ctypes.cdll.LoadLibrary("./PythonAccess.so")')
+        g_headerPython.append('except OSError:')
+        g_headerPython.append('    folder = os.path.dirname(os.path.abspath(__file__))')
+        g_headerPython.append('    PythonAccess = ctypes.cdll.LoadLibrary(folder + "/PythonAccess.so")')
+        g_headerPython.append('    sys.path.append(folder)')
         g_headerPython.append('OpenMsgQueueForReading = PythonAccess.OpenMsgQueueForReading')
         g_headerPython.append('OpenMsgQueueForReading.restype = ctypes.c_int')
         g_headerPython.append('CloseMsgQueue =  PythonAccess.CloseMsgQueue')
@@ -138,7 +144,7 @@ def OnStartup(modelingLanguage: str,
         if modelingLanguage.lower() == "gui_pi":
             # We have telemetry, we need a thread polling the /xyz_PI_queue (xyz: g_maybeFVname)
 
-            g_headerPython.append("import " + g_asn_name + "_asn")
+            g_headerPython.append("from . import " + g_asn_name + "_asn")
             g_bodyPython.append("class Poll_" + cleanFVname + "(threading.Thread):")
             g_bodyPython.append("    def run(self):")
             g_bodyPython.append('        self._bDie = False')

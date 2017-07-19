@@ -142,6 +142,7 @@ def FixupAstForSQL() -> None:
         if not neededToAddPseudoType():
             break
 
+
 g_bStartupRun = False
 
 
@@ -288,6 +289,7 @@ def CreateSequenceOf(nodeTypename: str, node: AsnSequenceOrSetOf, unused_leafTyp
 
 def CreateChoice(nodeTypename: str, node: AsnChoice, leafTypeDict: AST_Leaftypes) -> None:
     CommonSeqSetChoice(nodeTypename, node, leafTypeDict, True)
+
 
 g_bShutdownRun = False
 

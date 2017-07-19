@@ -26,15 +26,15 @@ setup(
         'Programming Language :: Python :: 3.5'
     ],
     install_requires=[
-        'coverage==3.7.1',
-        'flake8==2.6.0',
-        'mypy-lang==0.4.2',
-        'pyflakes==1.2.3',
-        'pylint==1.5.6',
-        'pytest==2.6.3',
-        'astroid==1.4.6',
-        'pycodestyle==2.0.0',
-        'typing==3.5.2.2',
+        'coverage>=3.7.1',
+        'flake8>=2.6.0',
+        'mypy-lang>=0.4.2',
+        'pyflakes>=1.2.3',
+        'pylint>=1.7.0',
+        'pytest>=2.6.3',
+        'astroid>=1.4.6',
+        'pycodestyle>=2.0.0',
+        'typing>=3.5.2.2',
     ],
     entry_points={
         'console_scripts': [

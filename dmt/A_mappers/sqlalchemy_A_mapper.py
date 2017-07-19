@@ -500,7 +500,7 @@ class {cleanTypename}_SQL(Base):
     def __init__(self, pyObj):
         self._children = []
         state = pyObj.GetState()
-        for i in xrange(pyObj.GetLength()):
+        for i in range(pyObj.GetLength()):
             pyObj.Reset(state)
             newIndex = {cleanTypename}_indexes_SQL()
             newIndex.idx = i
@@ -521,6 +521,7 @@ class {cleanTypename}_SQL(Base):
 
 def CreateChoice(nodeTypename: str, node: AsnChoice, _: AST_Leaftypes) -> None:
     CommonSeqSetChoice(nodeTypename, node, _, isChoice=True)
+
 
 g_bShutdownRun = False
 
