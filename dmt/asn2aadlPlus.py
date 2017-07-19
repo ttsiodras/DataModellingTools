@@ -284,7 +284,7 @@ def main():
             panic("'%s' is not a file!\n" % x)
 
     aadlFile = args[-1]
-    inputFiles = args[:-1]
+    inputFiles = [os.path.abspath(x) for x in args[:-1]]
 
     # Parse the ASN.1 files (skip the ACN ones)
     asnFiles = [x for x in inputFiles if not x.lower().endswith('.acn')]
