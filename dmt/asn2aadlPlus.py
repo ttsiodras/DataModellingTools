@@ -212,6 +212,11 @@ Where <files> is a list of ASN.1 and ACN files, and options can be:
 
 
 def main():
+    if "-pdb" in sys.argv:
+        sys.argv.remove("-pdb")  # pragma: no cover
+        import pdb  # pragma: no cover pylint: disable=wrong-import-position,wrong-import-order
+        pdb.set_trace()  # pragma: no cover
+
     if "-v" in sys.argv:
         import pkg_resources  # pragma: no cover
         version = pkg_resources.require("dmt")[0].version  # pragma: no cover
@@ -468,11 +473,6 @@ end Stream_Element_Buffer;
     # os.chdir(pwd)
 
 if __name__ == "__main__":
-    if "-pdb" in sys.argv:
-        sys.argv.remove("-pdb")  # pragma: no cover
-        import pdb  # pragma: no cover pylint: disable=wrong-import-position,wrong-import-order
-        pdb.run('main()')  # pragma: no cover
-    else:
-        main()
+    main()
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
