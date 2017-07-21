@@ -144,7 +144,7 @@ def OnStartup(modelingLanguage: str,
         if modelingLanguage.lower() == "gui_pi":
             # We have telemetry, we need a thread polling the /xyz_PI_queue (xyz: g_maybeFVname)
 
-            g_headerPython.append("from . import " + g_asn_name + "_asn")
+            g_headerPython.append("import " + g_asn_name + "_asn")
             g_bodyPython.append("class Poll_" + cleanFVname + "(threading.Thread):")
             g_bodyPython.append("    def run(self):")
             g_bodyPython.append('        self._bDie = False')
