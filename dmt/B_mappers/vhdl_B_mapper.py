@@ -1192,8 +1192,9 @@ def OnFinal() -> None:
 
     from . import vhdlTemplate
 
-    os.mkdir(vhdlBackend.dir + "/VHDL")
-    os.system("tar -C \"" + vhdlBackend.dir + "/\" -jxf $DMT/aadl2glueC/VHDL-templates.tar.bz2")
+    if not os.path.isdir(vhdlBackend.dir + "/VHDL"):
+        os.mkdir(vhdlBackend.dir + "/VHDL")
+    os.system("tar -C \"" + vhdlBackend.dir + "/\" -jxf " + os.path.dirname(__file__) + "/VHDL-templates.tar.bz2")
 
     # vhdlFile = open(vhdlBackend.dir + 'TASTE.vhd', 'w')
     # vhdlFile.write( vhdlTemplate.vhd % g_placeholders )
