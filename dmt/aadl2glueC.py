@@ -97,6 +97,7 @@ from .B_mappers import qgenc_B_mapper
 from .B_mappers import rtds_B_mapper
 from .B_mappers import scade6_B_mapper
 from .B_mappers import simulink_B_mapper
+from .B_mappers import micropython_async_B_mapper
 from .B_mappers import vhdl_B_mapper
 
 from .B_mappers.module_protos import Sync_B_Mapper, Async_B_Mapper
@@ -120,6 +121,7 @@ sys.modules['commonPy2'] = commonPy2
 
 g_async_mappers = {
     'C': c_B_mapper,
+    'MicroPython': micropython_async_B_mapper,
     'Ada': ada_B_mapper,
     'SDL': sdl_B_mapper,
     'OG': og_B_mapper,
