@@ -48,46 +48,145 @@ from ..commonPy.recursiveMapper import RecursiveMapper
 from .asynchronousTool import ASynchronousToolGlueGenerator
 from .c_B_mapper import C_GlueGenerator
 
-mpyBackend = None
+backend_C = None
+backend_uPy = None
+backends = None
 
 
-class MicroPython_GlueGenerator(C_GlueGenerator):
-    pass
+# temporary string used instead of py/obj.h
+header_str = """
+#include <stdbool.h>
+#include "C_ASN1_Types.h"
+
+typedef void *mp_obj_t;
+typedef int mp_int_t;
+typedef unsigned int mp_uint_t;
+typedef double mp_float_t;
+
+#define MP_OBJ_FROM_PTR(p) ((mp_obj_t)p)
+
+// Constant objects, globally accessible
+// The macros are for convenience only
+#define mp_const_none (MP_OBJ_FROM_PTR(&mp_const_none_obj))
+#define mp_const_false (MP_OBJ_FROM_PTR(&mp_const_false_obj))
+#define mp_const_true (MP_OBJ_FROM_PTR(&mp_const_true_obj))
+#define mp_const_empty_bytes (MP_OBJ_FROM_PTR(&mp_const_empty_bytes_obj))
+#define mp_const_empty_tuple (MP_OBJ_FROM_PTR(&mp_const_empty_tuple_obj))
+#define mp_const_notimplemented (MP_OBJ_FROM_PTR(&mp_const_notimplemented_obj))
+extern const struct _mp_obj_none_t mp_const_none_obj;
+extern const struct _mp_obj_bool_t mp_const_false_obj;
+extern const struct _mp_obj_bool_t mp_const_true_obj;
+extern const struct _mp_obj_str_t mp_const_empty_bytes_obj;
+extern const struct _mp_obj_tuple_t mp_const_empty_tuple_obj;
+extern const struct _mp_obj_singleton_t mp_const_ellipsis_obj;
+extern const struct _mp_obj_singleton_t mp_const_notimplemented_obj;
+extern const struct _mp_obj_exception_t mp_const_MemoryError_obj;
+extern const struct _mp_obj_exception_t mp_const_GeneratorExit_obj;
+
+// General API for objects
+
+mp_obj_t mp_obj_new_none(void);
+static inline mp_obj_t mp_obj_new_bool(mp_int_t x) { return x ? mp_const_true : mp_const_false; }
+mp_obj_t mp_obj_new_cell(mp_obj_t obj);
+mp_obj_t mp_obj_new_int(mp_int_t value);
+mp_obj_t mp_obj_new_int_from_uint(mp_uint_t value);
+mp_obj_t mp_obj_new_int_from_str_len(const char **str, size_t len, bool neg, unsigned int base);
+mp_obj_t mp_obj_new_int_from_ll(long long val); // this must return a multi-precision integer object (or raise an overflow exception)
+mp_obj_t mp_obj_new_int_from_ull(unsigned long long val); // this must return a multi-precision integer object (or raise an overflow exception)
+mp_obj_t mp_obj_new_str(const char* data, size_t len, bool make_qstr_if_not_already);
+mp_obj_t mp_obj_new_bytes(const byte* data, size_t len);
+mp_obj_t mp_obj_new_bytearray(size_t n, void *items);
+mp_obj_t mp_obj_new_bytearray_by_ref(size_t n, void *items);
+mp_obj_t mp_obj_new_int_from_float(mp_float_t val);
+mp_obj_t mp_obj_new_complex(mp_float_t real, mp_float_t imag);
+"""
+
+class MicroPython_GlueGenerator(ASynchronousToolGlueGenerator):
+    def Version(self) -> None:  # pylint: disable=no-self-use
+        print("Code generator: " + "$Id: micropython_async_B_mapper.py 2390 2017-08-00 12:00:00Z dpgeorge $") # pragma: no cover
+
+    def HeadersOnStartup(self,  # pylint: disable=no-self-use
+                         asnFile: str,
+                         outputDir: str,
+                         maybeFVname: str) -> None:
+        #print('headers', asnFile, outputDir, maybeFVname)
+        #self.C_HeaderFile.write('#include "py/obj.h"\n')
+        self.C_HeaderFile.write('#include "C_ASN1_Types.h"\n')
+        self.C_SourceFile.write(header_str)
+        #self.C_SourceFile.write('#include ""\n')
+
+    def Encoder(self,  # pylint: disable=no-self-use
+                nodeTypename: str,
+                node: AsnNode,
+                leafTypeDict: AST_Leaftypes,
+                names: AST_Lookup,
+                encoding: str) -> None:
+        # we get called for each nodeTypename, and each encoding (uper, acn, native)
+        #print('encoder', nodeTypename, encoding)
+        if encoding == 'native':
+            toolsTypename = self.CleanNameAsToolWants(nodeTypename)
+            # TODO void * should be mp_obj_t
+            self.C_HeaderFile.write('void *mp_obj_new_asn1Scc%s(const asn1Scc%s* pVal);\n' % (toolsTypename, toolsTypename))
+            if nodeTypename == 'MyBool':
+                self.C_SourceFile.write(
+                    'mp_obj_t mp_obj_new_asn1Scc%s(const asn1Scc%s* pVal) {\n'
+                    '    return mp_obj_new_bool(*pVal);\n}\n' % (toolsTypename, toolsTypename))
+
+    def Decoder(self,  # pylint: disable=no-self-use
+                nodeTypename: str,
+                node: AsnNode,
+                leafTypeDict: AST_Leaftypes,
+                names: AST_Lookup,
+                encoding: str) -> None:
+        # we get called for each nodeTypename, and each encoding (uper, acn, native)
+        #print('decoder', nodeTypename, encoding)
+        pass
 
 
 def OnStartup(modelingLanguage: str, asnFile: str, outputDir: str, maybeFVname: str, useOSS: bool) -> None:
-    global mpyBackend
-    mpyBackend = MicroPython_GlueGenerator()
-    mpyBackend.OnStartup("C", asnFile, outputDir, maybeFVname, useOSS)
+    global backend_C, backend_uPy, backends
+    backend_C = C_GlueGenerator()
+    backend_uPy = MicroPython_GlueGenerator()
+    backends = [backend_C, backend_uPy]
+    backend_C.OnStartup("C", asnFile, outputDir, maybeFVname, useOSS)
+    backend_uPy.OnStartup("MicroPython", asnFile, outputDir, maybeFVname, useOSS)
 
 
 def OnBasic(nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
-    mpyBackend.OnBasic(nodeTypename, node, leafTypeDict, names)
+    for b in backends:
+        b.OnBasic(nodeTypename, node, leafTypeDict, names)
 
 
 def OnSequence(nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
-    mpyBackend.OnSequence(nodeTypename, node, leafTypeDict, names)
+    for b in backends:
+        b.OnSequence(nodeTypename, node, leafTypeDict, names)
 
 
 def OnSet(nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
-    mpyBackend.OnSet(nodeTypename, node, leafTypeDict, names)
+    for b in backends:
+        b.OnSet(nodeTypename, node, leafTypeDict, names)
 
 
 def OnEnumerated(nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
-    mpyBackend.OnEnumerated(nodeTypename, node, leafTypeDict, names)
+    for b in backends:
+        b.OnEnumerated(nodeTypename, node, leafTypeDict, names)
 
 
 def OnSequenceOf(nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
-    mpyBackend.OnSequenceOf(nodeTypename, node, leafTypeDict, names)
+    for b in backends:
+        b.OnSequenceOf(nodeTypename, node, leafTypeDict, names)
 
 
 def OnSetOf(nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
-    mpyBackend.OnSetOf(nodeTypename, node, leafTypeDict, names)
+    for b in backends:
+        b.OnSetOf(nodeTypename, node, leafTypeDict, names)
 
 
 def OnChoice(nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
-    mpyBackend.OnChoice(nodeTypename, node, leafTypeDict, names)
+    for b in backends:
+        b.OnChoice(nodeTypename, node, leafTypeDict, names)
 
 
 def OnShutdown(modelingLanguage: str, asnFile: str, maybeFVname: str) -> None:
-    mpyBackend.OnShutdown(modelingLanguage, asnFile, maybeFVname)
+    for b in backends:
+        b.OnShutdown(modelingLanguage, asnFile, maybeFVname)
