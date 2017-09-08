@@ -36,15 +36,15 @@ To that end, this backend creates "glue" functions for input and
 output parameters, which have C callable interfaces.
 '''
 
-from typing import List
+from typing import Tuple, List
 
-from ..commonPy.utility import panic
+from ..commonPy.utility import inform, panic
 from ..commonPy.asnAST import (
-    sourceSequenceLimit, isSequenceVariable, targetSequenceLimit,
-    AsnInt, AsnReal, AsnBool, AsnSequenceOrSet, AsnSequenceOrSetOf,
-    AsnChoice, AsnOctetString, AsnEnumerated, AsnNode)
+    sourceSequenceLimit, isSequenceVariable,
+    AsnSequence, AsnSet, AsnChoice, AsnSequenceOf, AsnSetOf, AsnEnumerated,
+    AsnMetaMember, AsnNode, AsnInt, AsnReal, AsnBool, AsnOctetString)
 from ..commonPy.asnParser import AST_Lookup, AST_Leaftypes
-from ..commonPy.recursiveMapper import RecursiveMapper
+from ..commonPy.recursiveMapper import RecursiveMapperGeneric
 from .asynchronousTool import ASynchronousToolGlueGenerator
 from .c_B_mapper import C_GlueGenerator
 
@@ -53,16 +53,53 @@ backend_uPy = None
 backends = None
 
 
-# temporary string used instead of py/obj.h
-header_str = """
+# TODO replace most of the typedefs with an include of py/obj.h
+h_header_str = """
 #include <stdbool.h>
 #include "C_ASN1_Types.h"
+
+#ifdef MICROPY_INCLUDED_PY_OBJ_H
+
+#include "py/objarray.h"
+
+#else
 
 typedef void *mp_obj_t;
 typedef int mp_int_t;
 typedef unsigned int mp_uint_t;
 typedef double mp_float_t;
 
+typedef struct _mp_obj_type_t mp_obj_type_t;
+
+typedef struct _mp_obj_base_t {
+    const mp_obj_type_t *type;
+} mp_obj_base_t;
+
+typedef struct _mp_obj_tuple_t {
+    mp_obj_base_t base;
+    size_t len;
+    mp_obj_t items[];
+} mp_obj_tuple_t;
+
+typedef struct _mp_obj_list_t {
+    mp_obj_base_t base;
+    size_t alloc;
+    size_t len;
+    mp_obj_t *items;
+} mp_obj_list_t;
+
+#define BYTEARRAY_TYPECODE 1
+typedef struct _mp_obj_array_t {
+    mp_obj_base_t base;
+    size_t typecode : 8;
+    // free is number of unused elements after len used elements
+    // alloc size = len + free
+    size_t free : (8 * sizeof(size_t) - 8);
+    size_t len; // in elements
+    void *items;
+} mp_obj_array_t;
+
+#define MP_OBJ_TO_PTR(o) ((void*)o)
 #define MP_OBJ_FROM_PTR(p) ((mp_obj_t)p)
 
 // Constant objects, globally accessible
@@ -83,6 +120,12 @@ extern const struct _mp_obj_singleton_t mp_const_notimplemented_obj;
 extern const struct _mp_obj_exception_t mp_const_MemoryError_obj;
 extern const struct _mp_obj_exception_t mp_const_GeneratorExit_obj;
 
+// Types
+extern const struct _mp_obj_type_t mp_type_float;
+extern const struct _mp_obj_type_t mp_type_list;
+extern const struct _mp_obj_type_t mp_type_bytearray;
+extern const struct _mp_obj_type_t mp_type_mutable_attrtuple;
+
 // General API for objects
 
 mp_obj_t mp_obj_new_none(void);
@@ -98,10 +141,365 @@ mp_obj_t mp_obj_new_bytes(const byte* data, size_t len);
 mp_obj_t mp_obj_new_bytearray(size_t n, void *items);
 mp_obj_t mp_obj_new_bytearray_by_ref(size_t n, void *items);
 mp_obj_t mp_obj_new_int_from_float(mp_float_t val);
+mp_obj_t mp_obj_new_float(mp_float_t real);
 mp_obj_t mp_obj_new_complex(mp_float_t real, mp_float_t imag);
+mp_obj_t mp_obj_new_list(size_t len, mp_obj_t *items);
+
+#endif
+
+// Runtime functions
+
+void mp_raise_NotImplementedError(const char *msg);
+
+void mp_taste_types_init(void);
+
 """
 
+c_header_str = """
+typedef size_t qstr;
+qstr qstr_from_str(const char *str);
+
+bool mp_obj_is_true(mp_obj_t arg);
+mp_int_t mp_obj_get_int(mp_obj_t arg);
+mp_float_t mp_obj_get_float(mp_obj_t self_in);
+
+"""
+
+
+class MapUPyObjData(RecursiveMapperGeneric[str, str]):
+    def __init__(self) -> None:
+        pass
+
+    def MapInteger(self, srcVar: str, destVar: str, _: AsnInt, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
+        # No extra storage needed for this type
+        # TODO handle big integers
+        return []
+
+    def MapReal(self, srcVar: str, destVar: str, _: AsnReal, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
+        # TODO if NaN boxing then we don't need any data
+        return [
+            'struct {',
+            '    mp_obj_base_t base;',
+            '    mp_float_t value;',
+            '}',
+        ]
+
+    def MapBoolean(self, srcVar: str, destVar: str, _: AsnBool, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
+        # No extra storage needed for this type
+        return []
+
+    def MapOctetString(self, srcVar: str, destVar: str, node: AsnOctetString, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
+        return [
+            'struct {',
+            '   mp_obj_array_t array;',
+            '   byte data[%u];' % node._range[-1],
+            '}',
+        ]
+
+    def MapEnumerated(self, srcVar: str, destVar: str, _: AsnEnumerated, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
+        # No extra storage needed for this type
+        return []
+
+    def MapSequence(self, srcVar: str, destVar: str, node: AsnSequence, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
+        num_items = len(node._members)
+        lines = [
+            'struct {',
+            '    mp_obj_tuple_t tuple;',
+            '    mp_obj_t items[%u];' % (num_items + 1),
+        ]
+        for child in node._members:
+            contained = self.Map(srcVar, destVar, child[1], leafTypeDict, names)
+            if contained:
+                lines.extend('    ' + l for l in contained[:-1])
+                lines.append('    %s data_%u;' % (contained[-1], self.CleanName(child[0])))
+        lines.append('}')
+        return lines
+
+    def MapSet(self, srcVar: str, destVar: str, node: AsnSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
+        return self.MapSequence(srcVar, destVar, node, leafTypeDict, names)
+
+    def MapChoice(self, srcVar: str, destVar: str, node: AsnChoice, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
+        lines = [
+            'struct {',
+            '    mp_obj_tuple_t tuple;',
+            '    mp_obj_t items[2];',
+            '    union {',
+        ]
+        for child in node._members:
+            contained = self.Map(srcVar, destVar, child[1], leafTypeDict, names)
+            if contained:
+                lines.extend('        ' + l for l in contained[:-1])
+                lines.append('        %s %s;' % (contained[-1], self.CleanName(child[0])))
+        lines.append('    } data;')
+        lines.append('}')
+        return lines
+
+    def MapSequenceOf(self, srcVar: str, destVar: str, node: AsnSequenceOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
+        num_items = node._range[-1]
+        lines = [
+            'struct {',
+            '    mp_obj_list_t list;',
+            '    mp_obj_t items[%u];' % num_items,
+        ]
+        contained = self.Map(srcVar, destVar, node._containedType, leafTypeDict, names)
+        if contained:
+            lines.extend('    ' + l for l in contained[:-1])
+            lines.append('    %s data[%u];' % (contained[-1], num_items))
+        lines.append('}')
+        return lines
+
+    def MapSetOf(self, srcVar: str, destVar: str, node: AsnSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
+        return self.MapSequenceOf(srcVar, destVar, node, leafTypeDict, names)
+
+
+class MapUPyObjEncode(RecursiveMapperGeneric[str, Tuple[str, str]]):
+    def __init__(self, parent) -> None:
+        self.parent = parent
+        self.uniqueID = 0
+
+    def UniqueID(self) -> int:
+        self.uniqueID += 1
+        return self.uniqueID
+
+    def MapInteger(self, srcVar: str, destVar: str, _: AsnInt, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
+        # TODO check range of integer
+        dest, _ = destVar
+        return ['%s = mp_obj_new_int(%s);' % (dest, srcVar)]
+
+    def MapReal(self, srcVar: str, destVar: str, _: AsnReal, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
+        # TODO check range of real
+        # TODO if NaN boxing then we should just use mp_obj_new_float()
+        dest, data = destVar
+        return [
+            '(%s)->base.type = &mp_type_float;' % data,
+            '(%s)->value = %s;' % (data, srcVar),
+            '%s = MP_OBJ_FROM_PTR(%s);' % (dest, data),
+        ]
+
+    def MapBoolean(self, srcVar: str, destVar: str, _: AsnBool, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
+        dest, _ = destVar
+        return ['%s = mp_obj_new_bool(%s);' % (dest, srcVar)]
+
+    def MapOctetString(self, srcVar: str, destVar: str, node: AsnOctetString, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
+        # OctetString maps to a MicroPython bytearray
+        # TODO bytearray can be appended to, so perhaps make this a memoryview
+        dest, data = destVar
+        limit = sourceSequenceLimit(node, srcVar)
+        return [
+            '(%s)->array.base.type = &mp_type_bytearray;' % data,
+            '(%s)->array.typecode = BYTEARRAY_TYPECODE;' % data,
+            '(%s)->array.free = 0;' % data,
+            '(%s)->array.len = %s;' % (data, limit),
+            '(%s)->array.items = &(%s)->data[0];' % (data, data),
+            'memcpy(&(%s)->data[0], &(%s).arr[0], %s);' % (data, srcVar, limit),
+            '%s = MP_OBJ_FROM_PTR(%s);' % (dest, data),
+        ]
+
+    def MapEnumerated(self, srcVar: str, destVar: str, _: AsnEnumerated, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
+        # TODO check the enum value fits in a small int and use MP_OBJ_NEW_SMALL_INT
+        dest, _ = destVar
+        return ['%s = mp_obj_new_int(%s);' % (dest, srcVar)]
+
+    def MapSequence(self, srcVar: str, destVar: str, node: AsnSequence, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
+        # Sequence maps to a MicroPython mutable-attrtuple
+        dest, data = destVar
+        limit = len(node._members)
+        qstrs = tuple(self.CleanName(child[0]) for child in node._members)
+        fields_name = self.parent.AddQstrFields(qstrs)
+        lines = [
+            'extern qstr %s[%u];' % (fields_name, limit),
+            '(%s)->tuple.base.type = &mp_type_mutable_attrtuple;' % data,
+            '(%s)->tuple.len = %s;' % (data, limit),
+        ]
+        for it, child in enumerate(node._members):
+            lines.extend(
+                self.Map(
+                    "(%s).%s" % (srcVar, self.CleanName(child[0])),
+                    ('(%s)->items[%s]' % (data, it), '&(%s)->data_%s' % (data, self.CleanName(child[0]))),
+                    child[1],
+                    leafTypeDict,
+                    names))
+        lines.append('(%s)->items[%u] = MP_OBJ_FROM_PTR(%s);' % (data, limit, fields_name))
+        lines.append('%s = MP_OBJ_FROM_PTR(%s);' % (dest, data));
+        return lines
+
+    def MapSet(self, srcVar: str, destVar: str, node: AsnSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
+        return self.MapSequence(srcVar, destVar, node, leafTypeDict, names)
+
+    def MapChoice(self, srcVar: str, destVar: str, node: AsnChoice, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
+        # Choice maps to a MicroPython mutable-attrtuple with a single member
+        # The choice itself is indicated by the array of qstrs that items[1] points to
+        dest, data = destVar
+        lines = []
+        fields_names = []
+        for child in node._members:
+            qstrs = (self.CleanName(child[0]),)
+            fields_names.append(self.parent.AddQstrFields(qstrs))
+            lines.append('extern qstr %s[1];' % fields_names[-1])
+        self.parent.AddChoiceFields(node, fields_names)
+        lines.extend([
+            '(%s)->tuple.base.type = &mp_type_mutable_attrtuple;' % data,
+            '(%s)->tuple.len = 1;' % data,
+        ])
+        for it, child in enumerate(node._members):
+            lines.append('%sif ((%s).kind == %s) {' % ('else ' if it else '', srcVar, self.CleanName(child[2])))
+            lines.extend('    ' + l
+                for l in self.Map(
+                    "(%s).u.%s" % (srcVar, self.CleanName(child[0])),
+                    ('(%s)->items[0]' % data, '&(%s)->data.%s' % (data, self.CleanName(child[0]))),
+                    child[1],
+                    leafTypeDict,
+                    names))
+            lines.append('    (%s)->items[1] = MP_OBJ_FROM_PTR(%s);' % (data, fields_names[it]))
+            lines.append('}')
+        lines.append('%s = MP_OBJ_FROM_PTR(%s);' % (dest, data));
+        return lines
+
+    def MapSequenceOf(self, srcVar: str, destVar: str, node: AsnSequenceOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
+        # SequenceOf maps to a MicroPython list
+        dest, data = destVar
+        it = 'i%u' % self.UniqueID()
+        limit = sourceSequenceLimit(node, srcVar)
+        lines = [
+            '(%s)->list.base.type = &mp_type_list;' % data,
+            '(%s)->list.alloc = %s;' % (data, limit),
+            '(%s)->list.len = %s;' % (data, limit),
+            '(%s)->list.items = &(%s)->items[0];' % (data, data),
+            'for (size_t %s = 0; %s < %s; ++%s) {' % (it, it, limit, it),
+        ]
+        lines.extend('    ' + l
+            for l in self.Map(
+                '(%s).arr[%s]' % (srcVar, it),
+                ('(%s)->items[%s]' % (data, it), '&(%s)->data[%s]' % (data, it)),
+                node._containedType, leafTypeDict, names))
+        lines.append('}')
+        lines.append('%s = MP_OBJ_FROM_PTR(%s);' % (dest, data));
+        return lines
+
+    def MapSetOf(self, srcVar: str, destVar: str, node: AsnSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
+        return self.MapSequenceOf(srcVar, destVar, node, leafTypeDict, names)
+
+
+class MapUPyObjDecode(RecursiveMapperGeneric[str, Tuple[str, str]]):
+    def __init__(self, parent) -> None:
+        self.parent = parent
+        self.uniqueID = 0
+
+    def UniqueID(self) -> int:
+        self.uniqueID += 1
+        return self.uniqueID
+
+    def MapInteger(self, srcVar: str, destVar: str, _: AsnInt, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
+        # TODO check range of integer
+        return ['%s = mp_obj_get_int(%s);' % (destVar, srcVar)]
+
+    def MapReal(self, srcVar: str, destVar: str, _: AsnReal, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
+        # TODO check range of real
+        return ['%s = mp_obj_get_float(%s);' % (destVar, srcVar)]
+
+    def MapBoolean(self, srcVar: str, destVar: str, _: AsnBool, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
+        return ['%s = mp_obj_is_true(%s);' % (destVar, srcVar)]
+
+    def MapOctetString(self, srcVar: str, destVar: str, node: AsnOctetString, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
+        # OctetString maps to a MicroPython bytearray
+        limit = sourceSequenceLimit(node, srcVar)
+        lines = [
+            'memcpy(&(%s).arr[0], ((mp_obj_array_t*)MP_OBJ_TO_PTR(%s))->items, %s);' % (destVar, srcVar, limit),
+        ]
+        if isSequenceVariable(node):
+            lines.append('(%s).nCount = %s\n' % (destVar, limit))
+        return lines
+
+    def MapEnumerated(self, srcVar: str, destVar: str, _: AsnEnumerated, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
+        # TODO check the enum value fits in a small int and use MP_OBJ_SMALL_INT_VALUE
+        return ['%s = mp_obj_get_int(%s);' % (destVar, srcVar)]
+
+    def MapSequence(self, srcVar: str, destVar: str, node: AsnSequence, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
+        # Sequence maps to a MicroPython mutable-attrtuple
+        lines = []
+        # TODO verify incoming object has correct type and length (and qstr fields?)
+        #limit = len(node._members)
+        #'%s->tuple.base.type == &mp_type_mutable_attrtuple;' % data,
+        #'%s->tuple.len == %s;' % (data, limit),
+        for it, child in enumerate(node._members):
+            lines.extend(
+                self.Map(
+                    '((mp_obj_tuple_t*)MP_OBJ_TO_PTR(%s))->items[%u]' % (srcVar, it),
+                    '(%s).%s' % (destVar, self.CleanName(child[0])),
+                    child[1],
+                    leafTypeDict,
+                    names))
+        return lines
+
+    def MapSet(self, srcVar: str, destVar: str, node: AsnSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
+        return self.MapSequence(srcVar, destVar, node, leafTypeDict, names)
+
+    def MapChoice(self, srcVar: str, destVar: str, node: AsnChoice, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
+        # Choice maps to a MicroPython mutable-attrtuple with a single member
+        lines = []
+        # TODO verify incoming object has correct type and length (and qstr fields?)
+        fields_names = self.parent.LookupChoiceFields(node)
+        for f in fields_names:
+            lines.append('extern qstr %s[1];' % f)
+        for it, child in enumerate(node._members):
+            lines.append('%sif (MP_OBJ_TO_PTR(((mp_obj_tuple_t*)MP_OBJ_TO_PTR(%s))->items[1]) == %s) {' % ('else ' if it else '', srcVar, fields_names[it]))
+            lines.extend('    ' + l
+                for l in self.Map(
+                    '((mp_obj_tuple_t*)MP_OBJ_TO_PTR(%s))->items[0]' % srcVar,
+                    '(%s).u.%s' % (destVar, self.CleanName(child[0])),
+                    child[1],
+                    leafTypeDict,
+                    names))
+            lines.append('    (%s).kind = %s;' % (destVar, self.CleanName(child[2])))
+            lines.append('}')
+        return lines
+
+    def MapSequenceOf(self, srcVar: str, destVar: str, node: AsnSequenceOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
+        # SequenceOf maps to a MicroPython list
+        it = 'i%u' % self.UniqueID()
+        limit = sourceSequenceLimit(node, srcVar)
+        lines = [
+        # TODO verify incoming object has correct type and length
+        #    '%s->list.base.type = &mp_type_list;' % data,
+        #    '%s->list.len = %s;' % (data, limit),
+            'for (size_t %s = 0; %s < %s; ++%s) {' % (it, it, limit, it),
+        ]
+        lines.extend('    ' + l
+            for l in self.Map(
+                '((mp_obj_list_t*)MP_OBJ_TO_PTR(%s))->items[%s]' % (srcVar, it),
+                '%s.arr[%s]' % (destVar, it),
+                node._containedType, leafTypeDict, names))
+        lines.append('}')
+        return lines
+
+    def MapSetOf(self, srcVar: str, destVar: str, node: AsnSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
+        return self.MapSequenceOf(srcVar, destVar, node, leafTypeDict, names)
+
+
 class MicroPython_GlueGenerator(ASynchronousToolGlueGenerator):
+    def __init__(self) -> None:
+        ASynchronousToolGlueGenerator.__init__(self)
+        self.neededQstrFields = {}
+        self.choiceNodes = {}
+        self.allAsnTypes = []
+        self.MapUPyObjData = MapUPyObjData()
+        self.MapUPyObjEncode = MapUPyObjEncode(self)
+        self.MapUPyObjDecode = MapUPyObjDecode(self)
+
+    def AddQstrFields(self, fields):
+        try:
+            return self.neededQstrFields[fields][0]
+        except KeyError:
+            id = 'upython_qstr_fields%u' % len(self.neededQstrFields)
+            self.neededQstrFields[fields] = (id, fields)
+            return id
+
+    def AddChoiceFields(self, choiceNode, fields):
+        self.choiceNodes[choiceNode] = fields
+
+    def LookupChoiceFields(self, choiceNode):
+        return self.choiceNodes[choiceNode]
+
     def Version(self) -> None:  # pylint: disable=no-self-use
         print("Code generator: " + "$Id: micropython_async_B_mapper.py 2390 2017-08-00 12:00:00Z dpgeorge $") # pragma: no cover
 
@@ -110,10 +508,8 @@ class MicroPython_GlueGenerator(ASynchronousToolGlueGenerator):
                          outputDir: str,
                          maybeFVname: str) -> None:
         #print('headers', asnFile, outputDir, maybeFVname)
-        #self.C_HeaderFile.write('#include "py/obj.h"\n')
-        self.C_HeaderFile.write('#include "C_ASN1_Types.h"\n')
-        self.C_SourceFile.write(header_str)
-        #self.C_SourceFile.write('#include ""\n')
+        self.C_HeaderFile.write(h_header_str)
+        self.C_SourceFile.write(c_header_str)
 
     def Encoder(self,  # pylint: disable=no-self-use
                 nodeTypename: str,
@@ -124,13 +520,38 @@ class MicroPython_GlueGenerator(ASynchronousToolGlueGenerator):
         # we get called for each nodeTypename, and each encoding (uper, acn, native)
         #print('encoder', nodeTypename, encoding)
         if encoding == 'native':
-            toolsTypename = self.CleanNameAsToolWants(nodeTypename)
-            # TODO void * should be mp_obj_t
-            self.C_HeaderFile.write('void *mp_obj_new_asn1Scc%s(const asn1Scc%s* pVal);\n' % (toolsTypename, toolsTypename))
-            if nodeTypename == 'MyBool':
-                self.C_SourceFile.write(
-                    'mp_obj_t mp_obj_new_asn1Scc%s(const asn1Scc%s* pVal) {\n'
-                    '    return mp_obj_new_bool(*pVal);\n}\n' % (toolsTypename, toolsTypename))
+            tname = self.CleanNameAsToolWants(nodeTypename)
+
+            # Generate the MicroPython typedef for the ASN type, and the encode declaration
+            lines = []
+            data = self.MapUPyObjData.Map('', '', node, leafTypeDict, names)
+            if data:
+                dataType = 'mp_obj_asn1Scc%s_t' % tname
+                lines.append('#define MICROPY_TASTE_NEED_DATA_FOR_%s (1)' % tname)
+                if len(data) == 1:
+                    lines.append('typedef %s %s;' % (data[0], dataType))
+                else:
+                    lines.append('typedef %s' % data[0])
+                    lines.extend(data[1:-1])
+                    lines.append('%s %s;' % (data[-1], dataType))
+            else:
+                dataType = 'void'
+            lines.append('mp_obj_t mp_obj_encode_asn1Scc%s(const asn1Scc%s *pVal, %s *pData);' % (tname, tname, dataType))
+            self.C_HeaderFile.write('\n'.join(lines) + '\n\n')
+
+            # Generate the encode function definition
+            lines = []
+            lines.append('mp_obj_t mp_obj_encode_asn1Scc%s(const asn1Scc%s *pVal, %s *pData) {' % (tname, tname, dataType))
+            if dataType == 'void':
+                lines.append('    (void)pData;') # suppress C compiler warning
+            lines.append('    mp_obj_t o;')
+            lines.extend('    ' + l for l in self.MapUPyObjEncode.Map('*pVal', ('o', 'pData'), node, leafTypeDict, names))
+            lines.append('    return o;')
+            lines.append('}')
+            self.C_SourceFile.write('\n'.join(lines) + '\n\n')
+
+            # Append to the list of all ASN types
+            self.allAsnTypes.append((tname, dataType))
 
     def Decoder(self,  # pylint: disable=no-self-use
                 nodeTypename: str,
@@ -140,8 +561,78 @@ class MicroPython_GlueGenerator(ASynchronousToolGlueGenerator):
                 encoding: str) -> None:
         # we get called for each nodeTypename, and each encoding (uper, acn, native)
         #print('decoder', nodeTypename, encoding)
-        pass
+        if encoding == 'native':
+            tname = self.CleanNameAsToolWants(nodeTypename)
 
+            lines = []
+            lines.append('void mp_obj_decode_asn1Scc%s(mp_obj_t obj, asn1Scc%s *pVal);' % (tname, tname))
+            self.C_HeaderFile.write('\n'.join(lines) + '\n\n')
+
+            lines = []
+            lines.append('void mp_obj_decode_asn1Scc%s(mp_obj_t obj, asn1Scc%s *pVal) {' % (tname, tname))
+            lines.extend('    ' + l for l in self.MapUPyObjDecode.Map('obj', '(*pVal)', node, leafTypeDict, names))
+            lines.append('}')
+            self.C_SourceFile.write('\n'.join(lines) + '\n\n')
+
+    # We completely override this method so we can add some code at the end of the C file
+    def OnShutdown(self, modelingLanguage, asnFile, maybeFVname) -> None:
+        # This is what ASynchronousToolGlueGenerator would do
+        for nodeTypename, value in self.typesToWorkOn.items():
+            inform(str(self.__class__) + "Really working on " + nodeTypename)
+            (node, leafTypeDict, names) = value
+            self.Common(nodeTypename, node, leafTypeDict, names)
+
+        # Generate the MicroPython ASN types that will go in the MicroPython "taste" module
+        lines = []
+        lines.append('#define MICROPY_TASTE_ASN_CONSTRUCTORS \\')
+        for tname, dataType in self.allAsnTypes:
+            asn = 'asn1Scc%s' % tname
+            lines.extend([
+                'mp_obj_t mp_obj_new_%s(size_t n_args, const mp_obj_t *args) { \\' % asn,
+                '    %s val; \\' % asn,
+                '    if (n_args == 0) { \\',
+                '        %s_Initialize(&val); \\' % asn,
+                '    } else { \\',
+                '        mp_obj_decode_%s(args[0], &val); \\' % asn,
+                '    } \\',
+            ])
+            if dataType == 'void':
+                lines.append('    return mp_obj_encode_%s(&val, NULL); \\' % asn)
+            else:
+                # Note: mp_obj_encode_XXX must return a pointer to "data" for the following
+                # code to be safe and the GC not reclaim the object.
+                lines.append('    %s *data = m_new_obj(%s); \\' % (dataType, dataType))
+                lines.append('    return mp_obj_encode_%s(&val, data); \\' % asn)
+            lines.append('} \\')
+            lines.append('MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mp_obj_new_%s_obj, 0, 1, mp_obj_new_%s); \\' % (asn, asn))
+        lines.append('')
+        lines.append('#define MICROPY_TASTE_ASN_MAP_ENTRIES \\')
+        for tname, dataType in self.allAsnTypes:
+            lines.append('    { MP_ROM_QSTR(MP_QSTR_asn1Scc%s), MP_ROM_PTR(&mp_obj_new_asn1Scc%s_obj) }, \\' % (tname, tname))
+        lines.append('')
+        self.C_HeaderFile.write('\n'.join(lines) + '\n\n')
+
+        # Generate the init function
+        lines = []
+        for id, fields in self.neededQstrFields.values():
+            lines.append('qstr %s[%u];' % (id, len(fields)))
+        lines.append('')
+        lines.append('void mp_taste_types_init(void) {')
+        lines.append('    static int inited = 0;')
+        lines.append('    if (inited) {')
+        lines.append('        return;')
+        lines.append('    }')
+        lines.append('    inited = 1;')
+        for id, fields in self.neededQstrFields.values():
+            for i, f in enumerate(fields):
+                lines.append('    %s[%u] = qstr_from_str("%s");' % (id, i, f))
+        lines.append('}')
+        self.C_SourceFile.write('\n'.join(lines) + '\n\n')
+
+        # Finish and close files
+        self.C_HeaderFile.write("\n#endif\n")
+        self.C_HeaderFile.close()
+        self.C_SourceFile.close()
 
 def OnStartup(modelingLanguage: str, asnFile: str, outputDir: str, maybeFVname: str, useOSS: bool) -> None:
     global backend_C, backend_uPy, backends
