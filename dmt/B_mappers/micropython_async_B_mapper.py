@@ -56,6 +56,7 @@ backends = None
 # TODO replace most of the typedefs with an include of py/obj.h
 h_header_str = """
 #include <stdbool.h>
+#include <stdint.h>
 #include "C_ASN1_Types.h"
 
 #ifdef MICROPY_INCLUDED_PY_OBJ_H
@@ -65,8 +66,8 @@ h_header_str = """
 #else
 
 typedef void *mp_obj_t;
-typedef int mp_int_t;
-typedef unsigned int mp_uint_t;
+typedef intptr_t mp_int_t;
+typedef uintptr_t mp_uint_t;
 typedef double mp_float_t;
 
 typedef struct _mp_obj_type_t mp_obj_type_t;
