@@ -99,6 +99,7 @@ from .B_mappers import scade6_B_mapper
 from .B_mappers import simulink_B_mapper
 from .B_mappers import micropython_async_B_mapper
 from .B_mappers import vhdl_B_mapper
+from .B_mappers import zestSC1_B_mapper
 
 from .B_mappers.module_protos import Sync_B_Mapper, Async_B_Mapper
 
@@ -213,6 +214,8 @@ types). This used to cover Dumpable C/Ada Types and OG headers.'''
 def getSyncBackend(modelingLanguage: str) -> Sync_B_Mapper:
     if modelingLanguage not in g_sync_mappers:
         panic("Synchronous modeling language '%s' not supported" % modelingLanguage)
+    if os.getenv("ZESTSC1") is not None and modelingLanguage == 'vhdl':
+        return cast(Sync_B_Mapper, zestSC1_B_mapper)
     return cast(Sync_B_Mapper, g_sync_mappers[modelingLanguage])
 
 
@@ -374,7 +377,10 @@ def ProcessCustomBackends(
         if lang.lower() in ["gui_pi", "gui_ri"]:
             return [cast(Sync_B_Mapper, x) for x in [python_B_mapper, pyside_B_mapper]]  # pragma: no cover
         elif lang.lower() == "vhdl":  # pragma: no cover
-            return [cast(Sync_B_Mapper, vhdl_B_mapper)]  # pragma: no cover
+            if os.getenv("ZESTSC1") is not None:
+                return [cast(Sync_B_Mapper, zestSC1_B_mapper)]  # pragma: no cover
+            else:
+                return [cast(Sync_B_Mapper, vhdl_B_mapper)]  # pragma: no cover
 
     for si in [x for x in SystemsAndImplementations if x[2] is not None and x[2].lower() in ["gui_ri", "gui_pi", "vhdl"]]:
         # We do, start the work
