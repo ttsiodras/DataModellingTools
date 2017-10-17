@@ -24,7 +24,7 @@
 import re
 import os
 
-from typing import Set, IO, Union, Any  # NOQA pylint: disable=unused-import
+from typing import Set, IO, Union, Any, List, Dict  # NOQA pylint: disable=unused-import
 
 from ..commonPy.asnAST import (
     AsnBasicNode, AsnEnumerated, AsnSequence, AsnSet, AsnChoice,

@@ -44,6 +44,7 @@ import platform
 import traceback
 
 from typing import Dict, Union, Match, Any  # NOQA pylint: disable=unused-import
+from mypy_extensions import NoReturn  # NOQA pylint: disable=unused-import
 
 from . import configMT
 
@@ -58,7 +59,7 @@ def warn(fmt: str, *args: Any) -> None:
     sys.stderr.write("\n")
 
 
-def panic(x: str) -> None:
+def panic(x: str) -> NoReturn:
     if not x.endswith("\n"):
         x += "\n"
     sys.stderr.write("\n" + chr(27) + "[32m" + x + chr(27) + "[0m\n")

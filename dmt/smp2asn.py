@@ -32,7 +32,7 @@ import os
 import sys
 import getopt
 
-from typing import Dict
+from typing import Dict, List
 
 from .commonPy import asnParser
 from .commonPy.createInternalTypes import ScanChildren

@@ -41,7 +41,7 @@ import re
 import os
 import math
 
-from typing import cast, Union, List, Tuple, IO, Any  # NOQA pylint: disable=unused-import
+from typing import cast, Union, List, Tuple, IO, Any, Dict  # NOQA pylint: disable=unused-import
 
 from ..commonPy.utility import panic, panicWithCallStack
 from ..commonPy.asnAST import (

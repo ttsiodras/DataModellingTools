@@ -38,7 +38,7 @@ import os
 import sys
 import copy
 
-from typing import cast, Dict, Tuple, Any  # NOQA pylint: disable=unused-import
+from typing import cast, Dict, Tuple, Any, List  # NOQA pylint: disable=unused-import
 
 from .commonPy import configMT, asnParser, cleanupNodes, verify
 from .commonPy.utility import inform, panic

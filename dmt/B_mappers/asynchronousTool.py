@@ -25,7 +25,7 @@ Base class for all asynchronous tools
 import re
 import os
 
-from typing import Tuple, IO, Any  # NOQA pylint: disable=unused-import
+from typing import Tuple, IO, Any, Dict  # NOQA pylint: disable=unused-import
 
 from ..commonPy.utility import inform, panicWithCallStack
 from ..commonPy.asnParser import Typename, AsnNode, AST_Lookup, AST_Leaftypes  # NOQA pylint: disable=unused-import

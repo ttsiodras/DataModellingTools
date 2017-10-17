@@ -24,7 +24,7 @@ code generator A.'''
 import os
 import re
 
-from typing import List, Union, Set, IO, Any  # NOQA pylint: disable=unused-import
+from typing import List, Union, Set, IO, Any, Dict  # NOQA pylint: disable=unused-import
 
 from ..commonPy.asnAST import (
     AsnMetaMember, AsnChoice, AsnSet, AsnSequence, AsnSequenceOf, AsnSetOf,

@@ -41,7 +41,7 @@
 Rules to gather the list of types that must be skipped
 '''
 
-from typing import Set, Union
+from typing import Set, Union, Dict
 
 from . import asnParser
 from .asnAST import (
