@@ -95,7 +95,7 @@ class AsnNode(object):
     def Location(self) -> str:
         return "file %s, line %d" % (self._asnFilename, int(self._lineno))  # pragma: no cover
 
-    def IdenticalPerSMP2(self, _: AsnNode, __: Lookup, ___: Lookup) -> bool:  # pylint: disable=no-self-use
+    def IdenticalPerSMP2(self, other: 'AsnNode', mynames: Lookup, othernames: Lookup) -> bool:  # pylint: disable=no-self-use
         utility.panic("internal error: Must be defined in derived class...")
 
     def AsASN1(self, _: Lookup) -> str:  # pylint: disable=no-self-use
@@ -105,6 +105,7 @@ class AsnNode(object):
 class AsnBasicNode(AsnNode):
     def __init__(self, asnFilename: str) -> None:
         AsnNode.__init__(self, asnFilename)
+
 
 class AsnComplexNode(AsnNode):
     def __init__(self, asnFilename: str) -> None:
@@ -153,7 +154,7 @@ Members:
             result += ", default value " + self._bDefaultValue  # pragma: no cover
         return result
 
-    def IdenticalPerSMP2(self, other: AsnNode, _: Lookup, __: Lookup) -> bool:
+    def IdenticalPerSMP2(self, other: AsnNode, mynames: Lookup, othernames: Lookup) -> bool:  # pylint: disable=no-self-use
         return isinstance(other, AsnBool)
 
     def AsASN1(self, _: Lookup) -> str:
@@ -188,7 +189,7 @@ Members:
             result += " with default value of %s" % self._iDefaultValue  # pragma: no cover
         return result
 
-    def IdenticalPerSMP2(self, other: AsnNode, _: Lookup, __: Lookup) -> bool:
+    def IdenticalPerSMP2(self, other: AsnNode, mynames: Lookup, othernames: Lookup) -> bool:  # pylint: disable=no-self-use
         return isinstance(other, AsnInt) and CommonIdenticalRangePerSMP2(self._range, other._range)
 
     def AsASN1(self, _: Lookup) -> str:
@@ -245,7 +246,7 @@ Members:
             result += " within [%s,%s]" % (self._range[0], self._range[1])
         return result
 
-    def IdenticalPerSMP2(self, other: AsnNode, _: Lookup, __: Lookup) -> bool:
+    def IdenticalPerSMP2(self, other: AsnNode, mynames: Lookup, othernames: Lookup) -> bool:  # pylint: disable=no-self-use
         return isinstance(other, AsnReal) and CommonIdenticalRangePerSMP2(self._range, other._range)
 
     def AsASN1(self, _: Lookup) -> str:
@@ -283,7 +284,7 @@ Members:
             result += str(self._range)
         return result
 
-    def IdenticalPerSMP2(self, other: AsnNode, _: Lookup, __: Lookup) -> bool:
+    def IdenticalPerSMP2(self, other: AsnNode, mynames: Lookup, othernames: Lookup) -> bool:  # pylint: disable=no-self-use
         return isinstance(other, AsnString) and CommonIdenticalRangePerSMP2(self._range, other._range)
 
     def AsASN1(self, _: Lookup) -> str:
@@ -406,7 +407,7 @@ Members:
             result += str(member)
         return result
 
-    def IdenticalPerSMP2(self, other: AsnNode, _: Lookup, __: Lookup) -> bool:
+    def IdenticalPerSMP2(self, other: AsnNode, mynames: Lookup, othernames: Lookup) -> bool:  # pylint: disable=no-self-use
         return isinstance(other, AsnEnumerated) and sorted(self._members) == sorted(other._members)
 
     def AsASN1(self, _: Lookup) -> str:

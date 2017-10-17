@@ -30,7 +30,7 @@ import sys
 import re
 
 import distutils.spawn as spawn
-from typing import List, Union, Set
+from typing import List, Union, Set  # NOQA
 
 from ..commonPy import asnParser
 from ..commonPy.utility import panic, inform
