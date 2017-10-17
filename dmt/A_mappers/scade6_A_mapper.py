@@ -27,8 +27,8 @@ import re
 import os
 import random
 
-from xml.dom.minidom import Document, Node, Dict  # type: ignore  # NOQA  pylint: disable=unused-import
-from typing import Union, Set  # NOQA pylint: disable=unused-import
+from xml.dom.minidom import Document, Node  # type: ignore  # NOQA  pylint: disable=unused-import
+from typing import Union, Set, Dict  # NOQA pylint: disable=unused-import
 
 from ..commonPy.utility import inform, panic
 from ..commonPy.asnAST import (

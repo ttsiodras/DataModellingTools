@@ -52,7 +52,7 @@ import tempfile
 import re
 import distutils.spawn as spawn
 
-import xml.sax.ContentHandler  # type: ignore
+import xml.sax  # type: ignore
 from typing import IO, TypeVar, Type, Optional, Callable, Union, List, Dict, Tuple, Any  # NOQA pylint: disable=W0611
 
 from . import configMT
