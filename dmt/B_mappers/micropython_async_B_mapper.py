@@ -38,11 +38,11 @@ output parameters, which have C callable interfaces.
 
 from typing import Tuple, List
 
-from ..commonPy.utility import inform, panic
+from ..commonPy.utility import inform
 from ..commonPy.asnAST import (
     sourceSequenceLimit, isSequenceVariable,
     AsnSequence, AsnSet, AsnChoice, AsnSequenceOf, AsnSetOf, AsnEnumerated,
-    AsnMetaMember, AsnNode, AsnInt, AsnReal, AsnBool, AsnOctetString)
+    AsnNode, AsnInt, AsnReal, AsnBool, AsnOctetString)
 from ..commonPy.asnParser import AST_Lookup, AST_Leaftypes
 from ..commonPy.recursiveMapper import RecursiveMapperGeneric
 from .asynchronousTool import ASynchronousToolGlueGenerator
@@ -321,7 +321,7 @@ class MapUPyObjEncode(RecursiveMapperGeneric[str, Tuple[str, str]]):
                     leafTypeDict,
                     names))
         lines.append('(%s)->items[%u] = MP_OBJ_FROM_PTR(%s);' % (data, limit, fields_name))
-        lines.append('%s = MP_OBJ_FROM_PTR(%s);' % (dest, data));
+        lines.append('%s = MP_OBJ_FROM_PTR(%s);' % (dest, data))
         return lines
 
     def MapSet(self, srcVar: str, destVar: str, node: AsnSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
@@ -345,15 +345,15 @@ class MapUPyObjEncode(RecursiveMapperGeneric[str, Tuple[str, str]]):
         for it, child in enumerate(node._members):
             lines.append('%sif ((%s).kind == %s) {' % ('else ' if it else '', srcVar, self.CleanName(child[2])))
             lines.extend('    ' + l
-                for l in self.Map(
-                    "(%s).u.%s" % (srcVar, self.CleanName(child[0])),
-                    ('(%s)->items[0]' % data, '&(%s)->data.%s' % (data, self.CleanName(child[0]))),
-                    child[1],
-                    leafTypeDict,
-                    names))
+                         for l in self.Map(
+                             "(%s).u.%s" % (srcVar, self.CleanName(child[0])),
+                             ('(%s)->items[0]' % data, '&(%s)->data.%s' % (data, self.CleanName(child[0]))),
+                             child[1],
+                             leafTypeDict,
+                             names))
             lines.append('    (%s)->items[1] = MP_OBJ_FROM_PTR(%s);' % (data, fields_names[it]))
             lines.append('}')
-        lines.append('%s = MP_OBJ_FROM_PTR(%s);' % (dest, data));
+        lines.append('%s = MP_OBJ_FROM_PTR(%s);' % (dest, data))
         return lines
 
     def MapSequenceOf(self, srcVar: str, destVar: str, node: AsnSequenceOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
@@ -369,12 +369,12 @@ class MapUPyObjEncode(RecursiveMapperGeneric[str, Tuple[str, str]]):
             'for (size_t %s = 0; %s < %s; ++%s) {' % (it, it, limit, it),
         ]
         lines.extend('    ' + l
-            for l in self.Map(
-                '(%s).arr[%s]' % (srcVar, it),
-                ('(%s)->items[%s]' % (data, it), '&(%s)->data[%s]' % (data, it)),
-                node._containedType, leafTypeDict, names))
+                     for l in self.Map(
+                         '(%s).arr[%s]' % (srcVar, it),
+                         ('(%s)->items[%s]' % (data, it), '&(%s)->data[%s]' % (data, it)),
+                         node._containedType, leafTypeDict, names))
         lines.append('}')
-        lines.append('%s = MP_OBJ_FROM_PTR(%s);' % (dest, data));
+        lines.append('%s = MP_OBJ_FROM_PTR(%s);' % (dest, data))
         return lines
 
     def MapSetOf(self, srcVar: str, destVar: str, node: AsnSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
@@ -419,9 +419,9 @@ class MapUPyObjDecode(RecursiveMapperGeneric[str, Tuple[str, str]]):
         # Sequence maps to a MicroPython mutable-attrtuple
         lines = []
         # TODO verify incoming object has correct type and length (and qstr fields?)
-        #limit = len(node._members)
-        #'%s->tuple.base.type == &mp_type_mutable_attrtuple;' % data,
-        #'%s->tuple.len == %s;' % (data, limit),
+        # limit = len(node._members)
+        # '%s->tuple.base.type == &mp_type_mutable_attrtuple;' % data,
+        # '%s->tuple.len == %s;' % (data, limit),
         for it, child in enumerate(node._members):
             lines.extend(
                 self.Map(
@@ -445,12 +445,12 @@ class MapUPyObjDecode(RecursiveMapperGeneric[str, Tuple[str, str]]):
         for it, child in enumerate(node._members):
             lines.append('%sif (MP_OBJ_TO_PTR(((mp_obj_tuple_t*)MP_OBJ_TO_PTR(%s))->items[1]) == %s) {' % ('else ' if it else '', srcVar, fields_names[it]))
             lines.extend('    ' + l
-                for l in self.Map(
-                    '((mp_obj_tuple_t*)MP_OBJ_TO_PTR(%s))->items[0]' % srcVar,
-                    '(%s).u.%s' % (destVar, self.CleanName(child[0])),
-                    child[1],
-                    leafTypeDict,
-                    names))
+                         for l in self.Map(
+                             '((mp_obj_tuple_t*)MP_OBJ_TO_PTR(%s))->items[0]' % srcVar,
+                             '(%s).u.%s' % (destVar, self.CleanName(child[0])),
+                             child[1],
+                             leafTypeDict,
+                             names))
             lines.append('    (%s).kind = %s;' % (destVar, self.CleanName(child[2])))
             lines.append('}')
         return lines
@@ -459,17 +459,17 @@ class MapUPyObjDecode(RecursiveMapperGeneric[str, Tuple[str, str]]):
         # SequenceOf maps to a MicroPython list
         it = 'i%u' % self.UniqueID()
         limit = sourceSequenceLimit(node, srcVar)
-        lines = [
         # TODO verify incoming object has correct type and length
         #    '%s->list.base.type = &mp_type_list;' % data,
         #    '%s->list.len = %s;' % (data, limit),
+        lines = [
             'for (size_t %s = 0; %s < %s; ++%s) {' % (it, it, limit, it),
         ]
         lines.extend('    ' + l
-            for l in self.Map(
-                '((mp_obj_list_t*)MP_OBJ_TO_PTR(%s))->items[%s]' % (srcVar, it),
-                '%s.arr[%s]' % (destVar, it),
-                node._containedType, leafTypeDict, names))
+                     for l in self.Map(
+                         '((mp_obj_list_t*)MP_OBJ_TO_PTR(%s))->items[%s]' % (srcVar, it),
+                         '%s.arr[%s]' % (destVar, it),
+                         node._containedType, leafTypeDict, names))
         lines.append('}')
         return lines
 
@@ -502,13 +502,13 @@ class MicroPython_GlueGenerator(ASynchronousToolGlueGenerator):
         return self.choiceNodes[choiceNode]
 
     def Version(self) -> None:  # pylint: disable=no-self-use
-        print("Code generator: " + "$Id: micropython_async_B_mapper.py 2390 2017-08-00 12:00:00Z dpgeorge $") # pragma: no cover
+        print("Code generator: " + "$Id: micropython_async_B_mapper.py 2390 2017-08-00 12:00:00Z dpgeorge $")  # pragma: no cover
 
     def HeadersOnStartup(self,  # pylint: disable=no-self-use
                          asnFile: str,
                          outputDir: str,
                          maybeFVname: str) -> None:
-        #print('headers', asnFile, outputDir, maybeFVname)
+        # print('headers', asnFile, outputDir, maybeFVname)
         self.C_HeaderFile.write(h_header_str)
         self.C_SourceFile.write(c_header_str)
 
@@ -519,7 +519,7 @@ class MicroPython_GlueGenerator(ASynchronousToolGlueGenerator):
                 names: AST_Lookup,
                 encoding: str) -> None:
         # we get called for each nodeTypename, and each encoding (uper, acn, native)
-        #print('encoder', nodeTypename, encoding)
+        # print('encoder', nodeTypename, encoding)
         if encoding == 'native':
             tname = self.CleanNameAsToolWants(nodeTypename)
 
@@ -544,7 +544,7 @@ class MicroPython_GlueGenerator(ASynchronousToolGlueGenerator):
             lines = []
             lines.append('mp_obj_t mp_obj_encode_asn1Scc%s(const asn1Scc%s *pVal, %s *pData) {' % (tname, tname, dataType))
             if dataType == 'void':
-                lines.append('    (void)pData;') # suppress C compiler warning
+                lines.append('    (void)pData;')  # suppress C compiler warning
             lines.append('    mp_obj_t o;')
             lines.extend('    ' + l for l in self.MapUPyObjEncode.Map('*pVal', ('o', 'pData'), node, leafTypeDict, names))
             lines.append('    return o;')
@@ -561,7 +561,7 @@ class MicroPython_GlueGenerator(ASynchronousToolGlueGenerator):
                 names: AST_Lookup,
                 encoding: str) -> None:
         # we get called for each nodeTypename, and each encoding (uper, acn, native)
-        #print('decoder', nodeTypename, encoding)
+        # print('decoder', nodeTypename, encoding)
         if encoding == 'native':
             tname = self.CleanNameAsToolWants(nodeTypename)
 
@@ -634,6 +634,7 @@ class MicroPython_GlueGenerator(ASynchronousToolGlueGenerator):
         self.C_HeaderFile.write("\n#endif\n")
         self.C_HeaderFile.close()
         self.C_SourceFile.close()
+
 
 def OnStartup(modelingLanguage: str, asnFile: str, outputDir: str, maybeFVname: str, useOSS: bool) -> None:
     global backend_C, backend_uPy, backends
