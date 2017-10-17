@@ -71,6 +71,7 @@ def panicWithCallStack(msg: str) -> NoReturn:
         sys.stderr.write("\n" + chr(27) + "[32m" + msg + chr(27) + "[0m\n")
         sys.stderr.write(
             "\nCall stack was:\n%s\n" % "".join(traceback.format_stack()))
+        sys.exit(1)
     else:
         panic(msg)
 

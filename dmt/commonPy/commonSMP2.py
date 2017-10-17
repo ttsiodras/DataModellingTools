@@ -3,7 +3,7 @@ import sys
 
 from lxml import etree
 
-from typing import List, Union, Optional, Any, Tuple, Dict  # NOQA pylint: disable=unused-import
+from typing import List, Union, Optional, Any, Tuple, Dict, NoReturn  # NOQA pylint: disable=unused-import
 
 from .asnAST import (
     AsnBool, AsnInt, AsnReal, AsnEnumerated, AsnOctetString, AsnSequenceOf,
@@ -38,7 +38,8 @@ class MagicSmp2SimpleTypesDict(dict):
     # ---------------------------------------------------------------------------
     def has_key(self, name: str) -> bool:
         name = re.sub(r'/\d{4}/\d{2}/', '/', name)
-        return name in super(MagicSmp2SimpleTypesDict, self)  # type: ignore  pylint: disable=unsupported-membership-test
+        # return name in super(MagicSmp2SimpleTypesDict, self)  # pylint: disable=unsupported-membership-test
+        return super(MagicSmp2SimpleTypesDict, self).__contains__(name)
 
 
 simpleTypesTable = MagicSmp2SimpleTypesDict({
@@ -85,7 +86,7 @@ def info(level: int, *args: Any) -> None:
                 return
 
 
-def panic(x: str, coloredBanner: str="") -> None:
+def panic(x: str, coloredBanner: str="") -> NoReturn:
     """Notifies the user that something fatal happened and aborts. """
     info(0, yellow + coloredBanner + white + '\n' + x)
     sys.exit(1)

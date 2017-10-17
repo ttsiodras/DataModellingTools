@@ -82,7 +82,7 @@ import os
 import sys
 import distutils.spawn as spawn
 
-from typing import cast, Optional, Dict, List, Tuple, Any  # NOQA pylint: disable=unused-import
+from typing import cast, Optional, Dict, List, Tuple, Set, Any  # NOQA pylint: disable=unused-import
 
 # from importlib import import_module
 from .B_mappers import ada_B_mapper
@@ -381,6 +381,8 @@ def ProcessCustomBackends(
                 return [cast(Sync_B_Mapper, zestSC1_B_mapper)]  # pragma: no cover
             else:
                 return [cast(Sync_B_Mapper, vhdl_B_mapper)]  # pragma: no cover
+        else:
+            panic("Unexpected call of getCustomBackends...")  # pragma: no cover
 
     for si in [x for x in SystemsAndImplementations if x[2] is not None and x[2].lower() in ["gui_ri", "gui_pi", "vhdl"]]:
         # We do, start the work

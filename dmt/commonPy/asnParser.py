@@ -52,7 +52,7 @@ import tempfile
 import re
 import distutils.spawn as spawn
 
-import xml.sax  # type: ignore
+import xml.sax.ContentHandler  # type: ignore
 from typing import IO, TypeVar, Type, Optional, Callable, Union, List, Dict, Tuple, Any  # NOQA pylint: disable=W0611
 
 from . import configMT
@@ -458,9 +458,9 @@ class Element:
         self._children = []  # type: List[Element]
 
 
-class InputFormatXMLHandler(xml.sax.ContentHandler):
+class InputFormatXMLHandler(xml.sax.ContentHandler):  # type: ignore
     def __init__(self, debug: bool=False) -> None:
-        xml.sax.ContentHandler.__init__(self)
+        xml.sax.ContentHandler.__init__(self)  # type: ignore
         self._debug = False
         if debug:
             self._debug = True  # pragma: no cover
