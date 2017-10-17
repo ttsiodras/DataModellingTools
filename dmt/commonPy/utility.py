@@ -66,7 +66,7 @@ def panic(x: str) -> NoReturn:
     sys.exit(1)
 
 
-def panicWithCallStack(msg: str) -> None:
+def panicWithCallStack(msg: str) -> NoReturn:
     if configMT.verbose:
         sys.stderr.write("\n" + chr(27) + "[32m" + msg + chr(27) + "[0m\n")
         sys.stderr.write(
