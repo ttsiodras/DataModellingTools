@@ -30,6 +30,7 @@ setup(
         'pytest>=2.6.3',
         'pycodestyle>=2.0.0',
         'typing>=3.5.2.2',
+        'mypy-extensions>=0.3.0',
     ],
     entry_points={
         'console_scripts': [

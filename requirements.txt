@@ -8,4 +8,4 @@ lxml>=3.6.0
 astroid>=1.4.6
 pycodestyle>=2.0.0
 typing>=3.5.2.2
-ypy-extensions>=0.3.0
+mypy-extensions>=0.3.0
