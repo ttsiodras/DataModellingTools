@@ -36,12 +36,13 @@ To that end, this backend creates "glue" functions for input and
 output parameters, which have C callable interfaces.
 '''
 
-from typing import Tuple, List
+from typing import Tuple, List, Dict, Sequence
 
 from ..commonPy.utility import inform
 from ..commonPy.asnAST import (
     sourceSequenceLimit, isSequenceVariable,
-    AsnSequence, AsnSet, AsnChoice, AsnSequenceOf, AsnSetOf, AsnEnumerated,
+    AsnSequence, AsnSet, AsnSequenceOrSet, AsnChoice, AsnSequenceOf,
+    AsnSetOf, AsnSequenceOrSetOf, AsnEnumerated,
     AsnNode, AsnInt, AsnReal, AsnBool, AsnOctetString)
 from ..commonPy.asnParser import AST_Lookup, AST_Leaftypes
 from ..commonPy.recursiveMapper import RecursiveMapperGeneric
@@ -201,7 +202,7 @@ class MapUPyObjData(RecursiveMapperGeneric[str, str]):
         # No extra storage needed for this type
         return []
 
-    def MapSequence(self, srcVar: str, destVar: str, node: AsnSequence, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
+    def MapSequence(self, srcVar: str, destVar: str, node: AsnSequenceOrSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
         num_items = len(node._members)
         lines = [
             'struct {',
@@ -216,7 +217,7 @@ class MapUPyObjData(RecursiveMapperGeneric[str, str]):
         lines.append('}')
         return lines
 
-    def MapSet(self, srcVar: str, destVar: str, node: AsnSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
+    def MapSet(self, srcVar: str, destVar: str, node: AsnSequenceOrSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
         return self.MapSequence(srcVar, destVar, node, leafTypeDict, names)
 
     def MapChoice(self, srcVar: str, destVar: str, node: AsnChoice, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
@@ -235,7 +236,7 @@ class MapUPyObjData(RecursiveMapperGeneric[str, str]):
         lines.append('}')
         return lines
 
-    def MapSequenceOf(self, srcVar: str, destVar: str, node: AsnSequenceOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
+    def MapSequenceOf(self, srcVar: str, destVar: str, node: AsnSequenceOrSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
         num_items = node._range[-1]
         lines = [
             'struct {',
@@ -249,7 +250,7 @@ class MapUPyObjData(RecursiveMapperGeneric[str, str]):
         lines.append('}')
         return lines
 
-    def MapSetOf(self, srcVar: str, destVar: str, node: AsnSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
+    def MapSetOf(self, srcVar: str, destVar: str, node: AsnSequenceOrSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
         return self.MapSequenceOf(srcVar, destVar, node, leafTypeDict, names)
 
 
@@ -262,12 +263,12 @@ class MapUPyObjEncode(RecursiveMapperGeneric[str, Tuple[str, str]]):
         self.uniqueID += 1
         return self.uniqueID
 
-    def MapInteger(self, srcVar: str, destVar: str, _: AsnInt, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
+    def MapInteger(self, srcVar: str, destVar: Tuple[str, str], _: AsnInt, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
         # TODO check range of integer
-        dest, _ = destVar
+        dest, data = destVar
         return ['%s = mp_obj_new_int(%s);' % (dest, srcVar)]
 
-    def MapReal(self, srcVar: str, destVar: str, _: AsnReal, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
+    def MapReal(self, srcVar: str, destVar: Tuple[str, str], _: AsnReal, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
         # TODO check range of real
         # TODO if NaN boxing then we should just use mp_obj_new_float()
         dest, data = destVar
@@ -277,11 +278,11 @@ class MapUPyObjEncode(RecursiveMapperGeneric[str, Tuple[str, str]]):
             '%s = MP_OBJ_FROM_PTR(%s);' % (dest, data),
         ]
 
-    def MapBoolean(self, srcVar: str, destVar: str, _: AsnBool, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
-        dest, _ = destVar
+    def MapBoolean(self, srcVar: str, destVar: Tuple[str, str], _: AsnBool, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
+        dest, data = destVar
         return ['%s = mp_obj_new_bool(%s);' % (dest, srcVar)]
 
-    def MapOctetString(self, srcVar: str, destVar: str, node: AsnOctetString, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
+    def MapOctetString(self, srcVar: str, destVar: Tuple[str, str], node: AsnOctetString, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
         # OctetString maps to a MicroPython bytearray
         # TODO bytearray can be appended to, so perhaps make this a memoryview
         dest, data = destVar
@@ -296,12 +297,12 @@ class MapUPyObjEncode(RecursiveMapperGeneric[str, Tuple[str, str]]):
             '%s = MP_OBJ_FROM_PTR(%s);' % (dest, data),
         ]
 
-    def MapEnumerated(self, srcVar: str, destVar: str, _: AsnEnumerated, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
+    def MapEnumerated(self, srcVar: str, destVar: Tuple[str, str], _: AsnEnumerated, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
         # TODO check the enum value fits in a small int and use MP_OBJ_NEW_SMALL_INT
-        dest, _ = destVar
+        dest, data = destVar
         return ['%s = mp_obj_new_int(%s);' % (dest, srcVar)]
 
-    def MapSequence(self, srcVar: str, destVar: str, node: AsnSequence, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
+    def MapSequence(self, srcVar: str, destVar: Tuple[str, str], node: AsnSequenceOrSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
         # Sequence maps to a MicroPython mutable-attrtuple
         dest, data = destVar
         limit = len(node._members)
@@ -324,10 +325,10 @@ class MapUPyObjEncode(RecursiveMapperGeneric[str, Tuple[str, str]]):
         lines.append('%s = MP_OBJ_FROM_PTR(%s);' % (dest, data))
         return lines
 
-    def MapSet(self, srcVar: str, destVar: str, node: AsnSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
+    def MapSet(self, srcVar: str, destVar: Tuple[str, str], node: AsnSequenceOrSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
         return self.MapSequence(srcVar, destVar, node, leafTypeDict, names)
 
-    def MapChoice(self, srcVar: str, destVar: str, node: AsnChoice, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
+    def MapChoice(self, srcVar: str, destVar: Tuple[str, str], node: AsnChoice, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
         # Choice maps to a MicroPython mutable-attrtuple with a single member
         # The choice itself is indicated by the array of qstrs that items[1] points to
         dest, data = destVar
@@ -356,7 +357,7 @@ class MapUPyObjEncode(RecursiveMapperGeneric[str, Tuple[str, str]]):
         lines.append('%s = MP_OBJ_FROM_PTR(%s);' % (dest, data))
         return lines
 
-    def MapSequenceOf(self, srcVar: str, destVar: str, node: AsnSequenceOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
+    def MapSequenceOf(self, srcVar: str, destVar: Tuple[str, str], node: AsnSequenceOrSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
         # SequenceOf maps to a MicroPython list
         dest, data = destVar
         it = 'i%u' % self.UniqueID()
@@ -377,11 +378,11 @@ class MapUPyObjEncode(RecursiveMapperGeneric[str, Tuple[str, str]]):
         lines.append('%s = MP_OBJ_FROM_PTR(%s);' % (dest, data))
         return lines
 
-    def MapSetOf(self, srcVar: str, destVar: str, node: AsnSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
+    def MapSetOf(self, srcVar: str, destVar: Tuple[str, str], node: AsnSequenceOrSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
         return self.MapSequenceOf(srcVar, destVar, node, leafTypeDict, names)
 
 
-class MapUPyObjDecode(RecursiveMapperGeneric[str, Tuple[str, str]]):
+class MapUPyObjDecode(RecursiveMapperGeneric[str, str]):
     def __init__(self, parent) -> None:
         self.parent = parent
         self.uniqueID = 0
@@ -415,7 +416,7 @@ class MapUPyObjDecode(RecursiveMapperGeneric[str, Tuple[str, str]]):
         # TODO check the enum value fits in a small int and use MP_OBJ_SMALL_INT_VALUE
         return ['%s = mp_obj_get_int(%s);' % (destVar, srcVar)]
 
-    def MapSequence(self, srcVar: str, destVar: str, node: AsnSequence, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
+    def MapSequence(self, srcVar: str, destVar: str, node: AsnSequenceOrSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
         # Sequence maps to a MicroPython mutable-attrtuple
         lines = []
         # TODO verify incoming object has correct type and length (and qstr fields?)
@@ -432,7 +433,7 @@ class MapUPyObjDecode(RecursiveMapperGeneric[str, Tuple[str, str]]):
                     names))
         return lines
 
-    def MapSet(self, srcVar: str, destVar: str, node: AsnSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
+    def MapSet(self, srcVar: str, destVar: str, node: AsnSequenceOrSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
         return self.MapSequence(srcVar, destVar, node, leafTypeDict, names)
 
     def MapChoice(self, srcVar: str, destVar: str, node: AsnChoice, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
@@ -455,7 +456,7 @@ class MapUPyObjDecode(RecursiveMapperGeneric[str, Tuple[str, str]]):
             lines.append('}')
         return lines
 
-    def MapSequenceOf(self, srcVar: str, destVar: str, node: AsnSequenceOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
+    def MapSequenceOf(self, srcVar: str, destVar: str, node: AsnSequenceOrSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
         # SequenceOf maps to a MicroPython list
         it = 'i%u' % self.UniqueID()
         limit = sourceSequenceLimit(node, srcVar)
@@ -473,21 +474,21 @@ class MapUPyObjDecode(RecursiveMapperGeneric[str, Tuple[str, str]]):
         lines.append('}')
         return lines
 
-    def MapSetOf(self, srcVar: str, destVar: str, node: AsnSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
+    def MapSetOf(self, srcVar: str, destVar: str, node: AsnSequenceOrSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
         return self.MapSequenceOf(srcVar, destVar, node, leafTypeDict, names)
 
 
 class MicroPython_GlueGenerator(ASynchronousToolGlueGenerator):
     def __init__(self) -> None:
         ASynchronousToolGlueGenerator.__init__(self)
-        self.neededQstrFields = {}
-        self.choiceNodes = {}
-        self.allAsnTypes = []
+        self.neededQstrFields = {} # type: Dict[Sequence[str], Tuple[str, Sequence[str]]]
+        self.choiceNodes = {} # type: Dict[str, str]
+        self.allAsnTypes = [] # type: List[Tuple[str, str]]
         self.MapUPyObjData = MapUPyObjData()
         self.MapUPyObjEncode = MapUPyObjEncode(self)
         self.MapUPyObjDecode = MapUPyObjDecode(self)
 
-    def AddQstrFields(self, fields):
+    def AddQstrFields(self, fields: Sequence[str]):
         try:
             return self.neededQstrFields[fields][0]
         except KeyError:
