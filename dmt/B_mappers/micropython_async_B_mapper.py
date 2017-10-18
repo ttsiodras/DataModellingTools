@@ -36,13 +36,12 @@ To that end, this backend creates "glue" functions for input and
 output parameters, which have C callable interfaces.
 '''
 
-from typing import Tuple, List, Dict, Sequence
+from typing import Tuple, List, Dict, Sequence  # noqa
 
 from ..commonPy.utility import inform
 from ..commonPy.asnAST import (
     sourceSequenceLimit, isSequenceVariable,
-    AsnSequence, AsnSet, AsnSequenceOrSet, AsnChoice, AsnSequenceOf,
-    AsnSetOf, AsnSequenceOrSetOf, AsnEnumerated,
+    AsnSequenceOrSet, AsnChoice, AsnSequenceOrSetOf, AsnEnumerated,
     AsnNode, AsnInt, AsnReal, AsnBool, AsnOctetString)
 from ..commonPy.asnParser import AST_Lookup, AST_Leaftypes
 from ..commonPy.recursiveMapper import RecursiveMapperGeneric
@@ -52,7 +51,6 @@ from .c_B_mapper import C_GlueGenerator
 backend_C = None
 backend_uPy = None
 backends = None
-
 
 # TODO replace most of the typedefs with an include of py/obj.h
 h_header_str = """
@@ -213,7 +211,7 @@ class MapUPyObjData(RecursiveMapperGeneric[str, str]):
             contained = self.Map(srcVar, destVar, child[1], leafTypeDict, names)
             if contained:
                 lines.extend('    ' + l for l in contained[:-1])
-                lines.append('    %s data_%u;' % (contained[-1], self.CleanName(child[0])))
+                lines.append('    %s data_%s;' % (contained[-1], self.CleanName(child[0])))
         lines.append('}')
         return lines
 
@@ -255,7 +253,7 @@ class MapUPyObjData(RecursiveMapperGeneric[str, str]):
 
 
 class MapUPyObjEncode(RecursiveMapperGeneric[str, Tuple[str, str]]):
-    def __init__(self, parent) -> None:
+    def __init__(self, parent: 'MicroPython_GlueGenerator') -> None:
         self.parent = parent
         self.uniqueID = 0
 
@@ -383,7 +381,7 @@ class MapUPyObjEncode(RecursiveMapperGeneric[str, Tuple[str, str]]):
 
 
 class MapUPyObjDecode(RecursiveMapperGeneric[str, str]):
-    def __init__(self, parent) -> None:
+    def __init__(self, parent: 'MicroPython_GlueGenerator') -> None:
         self.parent = parent
         self.uniqueID = 0
 
@@ -481,14 +479,14 @@ class MapUPyObjDecode(RecursiveMapperGeneric[str, str]):
 class MicroPython_GlueGenerator(ASynchronousToolGlueGenerator):
     def __init__(self) -> None:
         ASynchronousToolGlueGenerator.__init__(self)
-        self.neededQstrFields = {} # type: Dict[Sequence[str], Tuple[str, Sequence[str]]]
-        self.choiceNodes = {} # type: Dict[str, str]
-        self.allAsnTypes = [] # type: List[Tuple[str, str]]
+        self.neededQstrFields = {}  # type: Dict[Sequence[str], Tuple[str, Sequence[str]]]
+        self.choiceNodes = {}  # type: Dict[AsnChoice, List[str]]
+        self.allAsnTypes = []  # type: List[Tuple[str, str]]
         self.MapUPyObjData = MapUPyObjData()
         self.MapUPyObjEncode = MapUPyObjEncode(self)
         self.MapUPyObjDecode = MapUPyObjDecode(self)
 
-    def AddQstrFields(self, fields: Sequence[str]):
+    def AddQstrFields(self, fields: Sequence[str]) -> str:
         try:
             return self.neededQstrFields[fields][0]
         except KeyError:
@@ -496,10 +494,10 @@ class MicroPython_GlueGenerator(ASynchronousToolGlueGenerator):
             self.neededQstrFields[fields] = (id, fields)
             return id
 
-    def AddChoiceFields(self, choiceNode, fields):
+    def AddChoiceFields(self, choiceNode: AsnChoice, fields: List[str]) -> None:
         self.choiceNodes[choiceNode] = fields
 
-    def LookupChoiceFields(self, choiceNode):
+    def LookupChoiceFields(self, choiceNode: AsnChoice) -> List[str]:
         return self.choiceNodes[choiceNode]
 
     def Version(self) -> None:  # pylint: disable=no-self-use
@@ -577,7 +575,7 @@ class MicroPython_GlueGenerator(ASynchronousToolGlueGenerator):
             self.C_SourceFile.write('\n'.join(lines) + '\n\n')
 
     # We completely override this method so we can add some code at the end of the C file
-    def OnShutdown(self, modelingLanguage, asnFile, maybeFVname) -> None:
+    def OnShutdown(self, modelingLanguage: str, asnFile: str, maybeFVname: str) -> None:
         # This is what ASynchronousToolGlueGenerator would do
         for nodeTypename, value in self.typesToWorkOn.items():
             inform(str(self.__class__) + "Really working on " + nodeTypename)
