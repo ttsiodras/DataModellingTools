@@ -296,17 +296,24 @@ def main():
         return hash_md5.hexdigest()
 
     def checkIfNoWorkIsNeeded(asnfiles, aadlfile):
-        bCachedFileDirectiveExists = False
+        oldMD5s = {}
         for line in open(aadlfile):
             if 'InputASN1FileChecksum' in line:
-                bCachedFileDirectiveExists = True
                 md5sum, asnfile = line.split(':')[1:3]
-                if not os.path.exists(asnfile):
-                    break
-                if md5(asnfile) != md5sum:
-                    break
-        else:
-            if not bCachedFileDirectiveExists:
+                oldMD5s[asnfile] = md5sum
+        # if the output AADL file contained MD5 checksums of the input ASN.1 files
+        if oldMD5s:
+            def ok(f):
+                return os.path.exists(f) and md5(f) == oldMD5s[f]
+            # ...and all the current input ASN.1 files exist in the 'burned' list 
+            # that was built inside the previous version of the output AADL file,
+            # AND
+            # all the current input ASN.1 files exist and their MD5 checksum
+            # has remained identical to that burned in the previous version of
+            # the output AADL file...
+            if all(f in oldMD5s for f in asnfiles) and \
+                    all(ok(x) for x in asnfiles):
+                # ...then there's no need to redo anything.
                 inform("No AADL dataview generation is necessary.")
                 sys.exit(0)
 
