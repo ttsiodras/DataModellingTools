@@ -2,7 +2,7 @@ all:	cleanDB test
 
 cleanDB:
 	# PostgreSQL
-	echo 'drop database circle_test; create database circle_test;' | psql -h 127.0.0.1 -U ubuntu postgres || exit 1
+	echo 'drop database if exists circle_test; create database circle_test;' | psql -h 127.0.0.1 -U ubuntu postgres || exit 1
 	rm -f sql.log
 	#
 	# MySQL (is a toy - disabled related tests)
