@@ -32,7 +32,7 @@ def OnStartup(unused_modelingLanguage: str, asnFile: Union[str, List[str]], outp
     if not asn1SccPath:
         panic("ASN1SCC seems to be missing from your system (asn1.exe not found in PATH).\n")  # pragma: no cover
     asn1SccFolder = os.path.dirname(asn1SccPath)
-    cmd = ("mono " if sys.argv[0].endswith('.py') and sys.platform.startswith('linux') else "")
+    cmd = ("mono " if sys.platform.startswith('linux') else "")
     cmd += "\"{}\" -customStg \"{}\"/vdm.stg:\"{}\"/out.vdm \"".format(
         asn1SccPath, asn1SccFolder, outputDir)
     if isinstance(asnFile, str):

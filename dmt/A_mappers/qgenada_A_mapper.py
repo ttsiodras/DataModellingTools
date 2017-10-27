@@ -71,7 +71,7 @@ def OnStartup(unused_modelingLanguage: str, asnFiles: List[str], outputDir: str,
     if not asn1SccPath:
         panic("ASN1SCC seems to be missing from your system (asn1.exe not found in PATH).\n")  # pragma: no cover
     os.system(
-        ("mono " if sys.argv[0].endswith('.py') and sys.platform.startswith('linux') else "") +
+        ("mono " if sys.platform.startswith('linux') else "") +
         "\"{}\" -wordSize 8 -typePrefix asn1Scc -c -uPER -o \"".format(asn1SccPath) +
         outputDir + "\" \"" + "\" \"".join(asnFiles) + "\"")
     os.system("rm -f \"" + outputDir + "\"/*.adb")

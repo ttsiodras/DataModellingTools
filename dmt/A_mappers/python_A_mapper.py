@@ -140,7 +140,7 @@ def OnStartup(unused_modelingLanguage: str, asnFile: str, outputDir: str, badTyp
     # where "-equal" is passed - the _Equal functions will be generated
     # and used during comparisons of incoming TMs (For MSCs)
 
-    # mono_exe = "mono " if sys.argv[0].endswith('.py') and sys.platform.startswith('linux') else ""
+    # mono_exe = "mono " if sys.platform.startswith('linux') else ""
     mono_exe = "mono"
     makefile_text = '''\
 ASN1SCC:=$(shell which asn1.exe)
