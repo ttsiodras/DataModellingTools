@@ -431,6 +431,12 @@ def DumpTypeDumper(
             codeIndent + 'lines.append("%s"+str(%s.Get()))' % (outputIndent, variableName))
         if variableName.startswith("path[i]"):
             lines.append(codeIndent + 'self.Reset(state)')
+    elif isinstance(node, AsnAsciiString):
+        lines.append(
+            codeIndent +
+            'lines.append("%s\\\""+str(%s.GetPyStringFromIA5String()) + "\\\"")' % (outputIndent, variableName))
+        if variableName.startswith("path[i]"):
+            lines.append(codeIndent + 'self.Reset(state)')
     elif isinstance(node, AsnString):
         lines.append(
             codeIndent +
