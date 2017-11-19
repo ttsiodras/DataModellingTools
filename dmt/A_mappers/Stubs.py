@@ -372,3 +372,34 @@ grep for the errorcode value inside ASN1SCC generated headers."""
             self._params.pop()
         self.Reset()
         return retval
+
+# IA5String
+    def SetIA5StringFromPyString(self, src):
+        strLength = len(src)
+        self._Caccessor += "_iDx"
+        accessPath = self._accessPath
+        self._accessPath = accessPath + "[" + str(strLength) + "]"
+        #self.Set(0, reset=False)   # set null-terminator
+        for idx in range(0, strLength):
+            self._params.append(idx)
+            self._accessPath = accessPath + "[" + str(idx) + "]"
+            self.Set(ord(src[idx]), reset=False)
+            self._params.pop()
+        self.Reset()
+
+    def GetPyStringFromIA5String(self):
+        retval = ""
+        self._Caccessor += "_iDx"
+        accessPath = self._accessPath
+        idx = 0
+        nextChar = -1
+        while nextChar != 0:
+            self._params.append(idx)
+            self._accessPath = accessPath + "[" + str(idx) + "]"
+            nextChar = self.Get(reset=False)
+            if nextChar != 0:
+                retval += chr(nextChar)
+            idx += 1
+            self._params.pop()
+        self.Reset()
+        return retval
