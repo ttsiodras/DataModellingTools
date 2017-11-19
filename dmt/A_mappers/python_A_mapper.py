@@ -344,16 +344,23 @@ def CommonBaseImplIA5String(comment: str,
                             path: str,
                             params: Params,
                             accessPathInC: str,
-                            postfix: str="Length") -> None:
-    g_outputGetSetH.write("\n/* %s */\n%s %s_Get%s(%s);\n" % (comment, ctype, path, postfix, params.GetDecl()))
-    g_outputGetSetC.write("\n/* %s */\n%s %s_Get%s(%s)\n" % (comment, ctype, path, postfix, params.GetDecl()))
+                            node: AsnAsciiString) -> None:
+    g_outputGetSetH.write("\n/* %s */\n%s %s_GetLength(%s);\n" % (comment, ctype, path, params.GetDecl()))
+    g_outputGetSetC.write("\n/* %s */\n%s %s_GetLength(%s)\n" % (comment, ctype, path, params.GetDecl()))
     g_outputGetSetC.write("{\n")
-    g_outputGetSetC.write("    return strlen((*root)" + accessPathInC + ");\n")
+    if not isSequenceVariable(node):
+        g_outputGetSetC.write("    return " + str(node._range[-1]) + ";\n")
+    else:
+        g_outputGetSetC.write("    return strlen((*root)" + accessPathInC + ");\n")
     g_outputGetSetC.write("}\n")
-    g_outputGetSetH.write("\n/* %s */\nvoid %s_Set%s(%s, %s value);\n" % (comment, path, postfix, params.GetDecl(), ctype))
-    g_outputGetSetC.write("\n/* %s */\nvoid %s_Set%s(%s, %s value)\n" % (comment, path, postfix, params.GetDecl(), ctype))
+    g_outputGetSetH.write("\n/* %s */\nvoid %s_SetLength(%s, %s value);\n" % (comment, path, params.GetDecl(), ctype))
+    g_outputGetSetC.write("\n/* %s */\nvoid %s_SetLength(%s, %s value)\n" % (comment, path, params.GetDecl(), ctype))
     g_outputGetSetC.write("{\n")
-    g_outputGetSetC.write("    (*root)" + accessPathInC + "[value] = 0;\n")
+    if not isSequenceVariable(node):
+        g_outputGetSetC.write("    assert(value == " + str(node._range[-1]) + ");\n")
+        g_outputGetSetC.write("    fprintf(stderr, \"WARNING: setting length of fixed-length string\\n\");\n")
+    else:
+        g_outputGetSetC.write("    (*root)" + accessPathInC + "[value] = 0;\n")
     g_outputGetSetC.write("}\n")
 
 
@@ -379,7 +386,7 @@ def CreateGettersAndSetters(
     elif isinstance(node, AsnAsciiString):
         if not node._range:
             panic("Python_A_mapper: IA5String (in %s) must have a SIZE constraint!\n" % node.Location())  # pragma: no cover
-        CommonBaseImplIA5String("IA5String", "long", path, params, accessPathInC, "Length")
+        CommonBaseImplIA5String("IA5String", "long", path, params, accessPathInC, node)
         params.AddParam('int', "iDx", leafTypeDict)
         CommonBaseImpl("IA5String_bytes", "char", path + "_iDx", params, accessPathInC + ("[" + params._vars[-1] + "]"), "")
         params.Pop()
