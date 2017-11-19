@@ -1,23 +1,10 @@
 #
-# (C) Semantix Information Technologies.
+# (C) Semantix Information Technologies,
+#     Neuropublic,
+#     European Space Agency
 #
-# Semantix Information Technologies is licensing the code of the
-# Data Modelling Tools (DMT) in the following dual-license mode:
-#
-# Commercial Developer License:
-#       The DMT Commercial Developer License is the suggested version
-# to use for the development of proprietary and/or commercial software.
-# This version is for developers/companies who do not want to comply
-# with the terms of the GNU Lesser General Public License version 2.1.
-#
-# GNU LGPL v. 2.1:
-#       This version of DMT is the one to use for the development of
-# applications, when you are willing to comply with the terms of the
-# GNU Lesser General Public License version 2.1.
-#
-# Note that in both cases, there are no charges (royalties) for the
-# generated code.
-#
+# The license of the Data Modelling Tools (DMT) is GPL with Runtime Exception
+
 import re
 import os
 
@@ -44,7 +31,7 @@ g_bHasStartupRunOnce = False
 
 def Version() -> None:
     print("Code generator: " +
-          "$Id: python_A_mapper.py 2400 2012-09-04 10:40:19Z ttsiodras $")  # pragma: no cover
+          "$Id: python_A_mapper.py $")  # pragma: no cover
 
 
 def CleanNameAsPythonWants(name: str) -> str:
@@ -251,6 +238,10 @@ def OnSetOf(unused_nodeTypename: str, unused_node: AsnSequenceOrSetOf, unused_le
 
 
 def OnChoice(unused_nodeTypename: str, unused_node: AsnChoice, unused_leafTypeDict: AST_Leaftypes) -> None:
+    pass
+
+
+def OnIA5String(unused_nodeTypename: str, unused_node: AsnString, unused_leafTypeDict: AST_Leaftypes) -> None:
     pass
 
 
@@ -539,7 +530,7 @@ def CreateDeclarationForType(nodeTypename: str, names: AST_Lookup, leafTypeDict:
         g_outputFile.write("        print(self.GSER() + '\\n')\n\n\n")
 
     else:  # pragma: no cover
-        panic("Unexpected ASN.1 type... Send this grammar to Semantix")  # pragma: no cover
+        panic("Unexpected ASN.1 type... Send this grammar to ESA")  # pragma: no cover
 
 
 def CreateDeclarationsForAllTypes(names: AST_Lookup, leafTypeDict: AST_Leaftypes, badTypes: SetOfBadTypenames) -> None:

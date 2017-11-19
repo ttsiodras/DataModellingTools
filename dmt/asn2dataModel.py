@@ -211,7 +211,8 @@ def main() -> None:
             names = uniqueASNfiles[asnFile][0]
             for nodeTypename in sorted(names):
                 # Check if this type must be skipped
-                if nodeTypename in badTypes:
+                if nodeTypename in badTypes and modelingLanguage.lower() != 'python':
+                    # all languages but python discard IA5Strings
                     continue
                 node = names[nodeTypename]
                 inform("Processing %s (%s)...", nodeTypename, modelingLanguage)
@@ -234,6 +235,8 @@ def main() -> None:
                     processor = backend.OnSetOf  # pragma: no cover
                 elif leafType == 'ENUMERATED':
                     processor = backend.OnEnumerated
+                elif leafType == 'AsciiString':
+                    processor = backend.OnIA5String
                 else:  # pragma: no cover
                     panic("Unexpected type of element: %s" % leafType)  # pragma: no cover
                 processor(nodeTypename, node, leafTypeDict)
