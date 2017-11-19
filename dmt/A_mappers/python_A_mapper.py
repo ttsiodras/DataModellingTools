@@ -358,7 +358,7 @@ def CommonBaseImplIA5String(comment: str,
     g_outputGetSetC.write("{\n")
     if not isSequenceVariable(node):
         g_outputGetSetC.write("    assert(value == " + str(node._range[-1]) + ");\n")
-        g_outputGetSetC.write("    fprintf(stderr, \"WARNING: setting length of fixed-length string\\n\");\n")
+        #g_outputGetSetC.write("    fprintf(stderr, \"WARNING: setting length of fixed-length string\\n\");\n")
     else:
         g_outputGetSetC.write("    (*root)" + accessPathInC + "[value] = 0;\n")
     g_outputGetSetC.write("}\n")
