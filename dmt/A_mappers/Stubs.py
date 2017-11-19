@@ -253,7 +253,7 @@ An example for SetLength:
                     'flag': c_bool,
                     'int': c_int,
                     'long': c_long,
-                    'char': c_char
+                    'char': c_ubyte # char
                 }.get(resType, None)
                 if cTypesResultType is None:
                     raise AsnCoderError("Result type of %s not yet supported in the Python mapper - contact support." % resType)
@@ -370,37 +370,6 @@ grep for the errorcode value inside ASN1SCC generated headers."""
             self._params.append(idx)
             self._accessPath = accessPath + "[" + str(idx) + "]"
             retval += chr(self.Get(reset=False))
-            self._params.pop()
-        self.Reset()
-        return retval
-
-# IA5String
-    def SetIA5StringFromPyString(self, src):
-        strLength = len(src)
-        self._Caccessor += "_iDx"
-        accessPath = self._accessPath
-        self._accessPath = accessPath + "[" + str(strLength) + "]"
-        self.Set(0, reset=False)   # set null-terminator
-        for idx in range(0, strLength):
-            self._params.append(idx)
-            self._accessPath = accessPath + "[" + str(idx) + "]"
-            self.Set(ord(src[idx]), reset=False)
-            self._params.pop()
-        self.Reset()
-
-    def GetPyStringFromIA5String(self):
-        retval = ""
-        self._Caccessor += "_iDx"
-        accessPath = self._accessPath
-        idx = 0
-        nextChar = '-'
-        while ord(nextChar) != 0:
-            self._params.append(idx)
-            self._accessPath = accessPath + "[" + str(idx) + "]"
-            nextChar = self.Get(reset=False)
-            if ord(nextChar) != 0:
-                retval += nextChar
-            idx += 1
             self._params.pop()
         self.Reset()
         return retval

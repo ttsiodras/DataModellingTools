@@ -321,7 +321,6 @@ def CommonBaseImpl(comment: str,
         g_outputGetSetC.write("}\n")
 
 
-# def CommonBaseImplSequenceFixed(comment, ctype, path, params, accessPathInC, node, postfix = ""):
 def CommonBaseImplSequenceFixed(comment: str,
                                 ctype: str,
                                 path: str,
@@ -339,6 +338,24 @@ def CommonBaseImplSequenceFixed(comment: str,
     g_outputGetSetC.write("{\n")
     g_outputGetSetC.write("    fprintf(stderr, \"WARNING: setting length of fixed-length sequence\\n\");\n")
     g_outputGetSetC.write("}\n")
+
+def CommonBaseImplIA5String(comment: str,
+                            ctype: str,
+                            path: str,
+                            params: Params,
+                            accessPathInC: str,
+                            postfix: str="Length") -> None:
+    g_outputGetSetH.write("\n/* %s */\n%s %s_Get%s(%s);\n" % (comment, ctype, path, postfix, params.GetDecl()))
+    g_outputGetSetC.write("\n/* %s */\n%s %s_Get%s(%s)\n" % (comment, ctype, path, postfix, params.GetDecl()))
+    g_outputGetSetC.write("{\n")
+    g_outputGetSetC.write("    return strlen((*root)" + accessPathInC + ");\n")
+    g_outputGetSetC.write("}\n")
+    g_outputGetSetH.write("\n/* %s */\nvoid %s_Set%s(%s, %s value);\n" % (comment, path, postfix, params.GetDecl(), ctype))
+    g_outputGetSetC.write("\n/* %s */\nvoid %s_Set%s(%s, %s value)\n" % (comment, path, postfix, params.GetDecl(), ctype))
+    g_outputGetSetC.write("{\n")
+    g_outputGetSetC.write("    (*root)" + accessPathInC + "[value] = 0;\n")
+    g_outputGetSetC.write("}\n")
+
 
 
 def CreateGettersAndSetters(
@@ -362,6 +379,7 @@ def CreateGettersAndSetters(
     elif isinstance(node, AsnAsciiString):
         if not node._range:
             panic("Python_A_mapper: IA5String (in %s) must have a SIZE constraint!\n" % node.Location())  # pragma: no cover
+        CommonBaseImplIA5String("IA5String", "long", path, params, accessPathInC, "Length")
         params.AddParam('int', "iDx", leafTypeDict)
         CommonBaseImpl("IA5String_bytes", "char", path + "_iDx", params, accessPathInC + ("[" + params._vars[-1] + "]"), "")
         params.Pop()
@@ -429,12 +447,6 @@ def DumpTypeDumper(
     elif isinstance(node, AsnReal):
         lines.append(
             codeIndent + 'lines.append("%s"+str(%s.Get()))' % (outputIndent, variableName))
-        if variableName.startswith("path[i]"):
-            lines.append(codeIndent + 'self.Reset(state)')
-    elif isinstance(node, AsnAsciiString):
-        lines.append(
-            codeIndent +
-            'lines.append("%s\\\""+str(%s.GetPyStringFromIA5String()) + "\\\"")' % (outputIndent, variableName))
         if variableName.startswith("path[i]"):
             lines.append(codeIndent + 'self.Reset(state)')
     elif isinstance(node, AsnString):
