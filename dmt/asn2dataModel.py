@@ -205,7 +205,7 @@ def main() -> None:
                 assert nodeTypename in leafTypeDict
 
                 leafType = leafTypeDict[nodeTypename]
-                if leafType in ['BOOLEAN', 'INTEGER', 'REAL', 'OCTET STRING']:
+                if leafType in ['BOOLEAN', 'INTEGER', 'REAL', 'OCTET STRING', 'AsciiString']:
                     processor = backend.OnBasic
                 elif leafType == 'SEQUENCE':
                     processor = backend.OnSequence
@@ -219,8 +219,6 @@ def main() -> None:
                     processor = backend.OnSetOf  # pragma: no cover
                 elif leafType == 'ENUMERATED':
                     processor = backend.OnEnumerated
-                elif leafType == 'AsciiString':
-                    processor = backend.OnIA5String
                 else:  # pragma: no cover
                     panic("Unexpected type of element: %s" % leafType)  # pragma: no cover
                 processor(nodeTypename, node, leafTypeDict)

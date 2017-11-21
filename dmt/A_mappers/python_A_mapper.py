@@ -242,10 +242,6 @@ def OnChoice(unused_nodeTypename: str, unused_node: AsnChoice, unused_leafTypeDi
     pass
 
 
-def OnIA5String(unused_nodeTypename: str, unused_node: AsnAsciiString, unused_leafTypeDict: AST_Leaftypes) -> None:
-    pass
-
-
 def OnShutdown(unused_badTypes: SetOfBadTypenames) -> None:
     pass
 
@@ -339,6 +335,7 @@ def CommonBaseImplSequenceFixed(comment: str,
     g_outputGetSetC.write("    fprintf(stderr, \"WARNING: setting length of fixed-length sequence\\n\");\n")
     g_outputGetSetC.write("}\n")
 
+
 def CommonBaseImplIA5String(comment: str,
                             ctype: str,
                             path: str,
@@ -358,11 +355,10 @@ def CommonBaseImplIA5String(comment: str,
     g_outputGetSetC.write("{\n")
     if not isSequenceVariable(node):
         g_outputGetSetC.write("    assert(value == " + str(node._range[-1]) + ");\n")
-        #g_outputGetSetC.write("    fprintf(stderr, \"WARNING: setting length of fixed-length string\\n\");\n")
+        # g_outputGetSetC.write("    fprintf(stderr, \"WARNING: setting length of fixed-length string\\n\");\n")
     else:
         g_outputGetSetC.write("    (*root)" + accessPathInC + "[value] = 0;\n")
     g_outputGetSetC.write("}\n")
-
 
 
 def CreateGettersAndSetters(
@@ -568,7 +564,7 @@ def CreateDeclarationForType(nodeTypename: str, names: AST_Lookup, leafTypeDict:
 def CreateDeclarationsForAllTypes(names: AST_Lookup, leafTypeDict: AST_Leaftypes, badTypes: SetOfBadTypenames) -> None:
     for nodeTypename in names:
         # Do not ignore the so called "bad types". In python, IA5Strings are supported
-        if not names[nodeTypename]._isArtificial:  #  and nodeTypename not in badTypes:
+        if not names[nodeTypename]._isArtificial:  # and nodeTypename not in badTypes:
             CreateDeclarationForType(nodeTypename, names, leafTypeDict)
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
