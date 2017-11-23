@@ -107,9 +107,21 @@ myVar MyInt ::= 4
 ConfigString ::= IA5String (SIZE(1..20))
 myStrVar ConfigString ::= "This is a test"
 
-T-TypeThatMustNotBeMapped ::= SEQUENCE {
+FixedLenConfigString ::= IA5String (SIZE (5))
+myStrFixed FixedLenConfigString ::= "Hello"
+
+-- The following commented parts crash DMT and ASN1SCCV3 but work with V4.
+-- !!! UNCOMMENT THEM WHEN V4 IS USED IN TASTE !!!
+T-TypeThatMustNotBeMappedExceptInPython ::= SEQUENCE {
     config  ConfigString,
     param   INTEGER (0..10)
+--       fixstr  FixedLenConfigString DEFAULT "Hello"
 }
+--   TypeWithOptional ::= SEQUENCE {
+--       a BOOLEAN OPTIONAL,
+--       b INTEGER (0..255|1299)(5),
+--       c INTEGER (0..255)
+--   }
+-- SubTypeWithOptional ::= TypeWithOptional (WITH COMPONENTS {a ABSENT, c (42), b (1299)})
 
 END
