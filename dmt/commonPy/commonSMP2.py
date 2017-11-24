@@ -1,7 +1,7 @@
 import re
 import sys
 
-from lxml import etree
+from lxml import etree  # type: ignore
 
 from typing import List, Union, Optional, Any, Tuple, Dict, NoReturn  # NOQA pylint: disable=unused-import
 
