@@ -1,5 +1,5 @@
 coverage>=3.7.1
-flake8>=2.6.0
+flake8==3.4.1
 mypy>=0.530
 pyflakes>=1.2.3
 pylint>=1.7.0
