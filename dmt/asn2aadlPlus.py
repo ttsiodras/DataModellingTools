@@ -487,6 +487,22 @@ end Stream_Element_Buffer;
             o.write('    Data_Model::Data_Representation => Struct;\n')
             o.write('END ' + cleanName + '_Buffer.impl;\n\n')
 
+    # Generate a SYSTEM in the DataView, otherwise Ocarina cannot parse it
+    # standalone. This allows buildsupport to get the list of ASN.1 files
+    # and modules, which is otherwise not visible unless those for which
+    # at least one type is referenced in a provided interface.
+    o.write('SYSTEM Taste_DataView\n')
+    o.write('END    Taste_DataView;\n\n')
+    o.write('SYSTEM IMPLEMENTATION Taste_DataView.others\n')
+    o.write('SUBCOMPONENTS\n')
+    for asnTypename in list(asnParser.g_names.keys()):
+        node = asnParser.g_names[asnTypename]
+        if node._isArtificial:
+            continue
+        cleanName = cleanNameAsAADLWants(asnTypename)
+        o.write('   %s : DATA %s;\n' % (cleanName, cleanName))
+    o.write('END Taste_DataView.others;\n')
+
     listOfAsn1Files = {}
     for asnTypename in list(asnParser.g_names.keys()):
         listOfAsn1Files[asnParser.g_names[asnTypename]._asnFilename] = 1
