@@ -146,7 +146,7 @@ $(BDIR)/$(GRAMMAR)_getset.c:       $(GRAMMAR).asn
 
 $(BDIR)/asn1crt.c $(BDIR)/$(GRAMMAR).c $(BDIR)/real.c $(BDIR)/acn.c $(BDIR)/$(GRAMMAR).h $(BDIR)/asn1crt.h:       $(GRAMMAR).asn
 %(tab)sif [ ! -f "$(GRAMMAR).acn" ] ; then %(mono)s $(ASN1SCC) -ACND -o $(BDIR) $< ; fi
-%(tab)s%(mono)s $(ASN1SCC) -ACN -c -uPER -equal -wordSize 8 -o $(BDIR) $< $(GRAMMAR).acn
+%(tab)s%(mono)s $(ASN1SCC) -ACN -c -uPER -equal -o $(BDIR) $< $(GRAMMAR).acn
 
 $(BDIR)/DV.py:       $(GRAMMAR).asn
 %(tab)sgrep 'REQUIRED_BYTES_FOR_.*ENCODING' $(BDIR)/$(GRAMMAR).h | awk '{print $$2 " = " $$3}' > $@
