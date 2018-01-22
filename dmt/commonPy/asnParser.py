@@ -386,7 +386,7 @@ def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=inv
         (dummy, xmlAST) = tempfile.mkstemp()
         os.fdopen(dummy).close()
         asn1SccDir = os.path.dirname(os.path.abspath(asn1SccPath))
-        spawnResult = os.system("mono \"" + asn1SccPath + "\" -customStg \"" + asn1SccDir + "/xml.stg:" + xmlAST + "\" -customStgAstVerion 4 \"" + "\" \"".join(listOfFilenames) + "\"")
+        spawnResult = os.system("mono \"" + asn1SccPath + "\" -customStg \"" + asn1SccDir + "/xml.stg:" + xmlAST + "\" -customStgAstVersion 4 \"" + "\" \"".join(listOfFilenames) + "\"")
         if spawnResult != 0:
             errCode = spawnResult / 256
             if errCode == 1:
@@ -409,7 +409,7 @@ def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=inv
         # We also need to mark the artificial types -
         # So spawn the custom type output at level 1 (unfiltered)
         # and mark any types not inside it as artificial.
-        os.system("mono \"" + asn1SccPath + "\" -customStg \"" + asn1SccDir + "/xml.stg:" + xmlAST + "2\" -customStgAstVerion 1 \"" + "\" \"".join(listOfFilenames) + "\"")
+        os.system("mono \"" + asn1SccPath + "\" -customStg \"" + asn1SccDir + "/xml.stg:" + xmlAST + "2\" -customStgAstVersion 1 \"" + "\" \"".join(listOfFilenames) + "\"")
         realTypes = {}
         for line in os.popen("grep  'ExportedType\>' \"" + xmlAST + "2\"").readlines():  # pylint: disable=anomalous-backslash-in-string
             line = re.sub(r'^.*Name="', '', line.strip())
