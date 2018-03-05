@@ -119,8 +119,11 @@ E ::= INTEGER (0..255|1299)(5)
 TypeWithOptional ::= SEQUENCE {
    a BOOLEAN OPTIONAL,
    b INTEGER (0..255|1299),
-   c INTEGER (0..255)
+   c INTEGER (0..255),
+   d T-TypeThatMustNotBeMappedExceptInPython DEFAULT {config "Config", param 5, fixstr "World"}
 }
+
+push-it T-TypeThatMustNotBeMappedExceptInPython ::= {config "Config", param 5, fixstr "World"}
 
 SubTypeWithOptional ::= TypeWithOptional (WITH COMPONENTS {a ABSENT, c (42), b (1299)})
 
