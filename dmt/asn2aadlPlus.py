@@ -427,7 +427,7 @@ end Stream_Element_Buffer;
         if bAADLv2:
             o.write('    Deployment::ASN1_Module_Name => "%s";\n' % g_AdaPackageNameOfType[asnTypename].replace('_', '-'))
         if os.getenv('UPD') is None:
-            o.write('    Source_Language => ASN1;\n')
+            o.write('    Source_Language => (ASN1);\n')
         o.write('    -- Size of a buffer to cover all forms of message representation:\n')
         le_size = 0 if asnTypename not in messageSizes else messageSizes[asnTypename][0]
         o.write('    -- Real message size is %d; suggested aligned message buffer is...\n' % le_size)
@@ -519,7 +519,7 @@ end Stream_Element_Buffer;
                 o.write('DATA ACN_' + fname + '\n')
                 o.write('PROPERTIES\n')
                 o.write('    Source_Text => ("' + possibleACN + '");\n')
-                o.write('    Source_Language => ACN;\n')
+                o.write('    Source_Language => (ACN);\n')
                 o.write('END ACN_' + fname + ';\n\n')
 
     o.write('end DataView;\n')
