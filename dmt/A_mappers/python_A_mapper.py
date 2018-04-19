@@ -40,7 +40,7 @@ def CleanNameAsPythonWants(name: str) -> str:
 
 
 def OnStartup(unused_modelingLanguage: str, asnFile: str, outputDir: str, badTypes: SetOfBadTypenames) -> None:
-    os.system("bash -c '[ ! -f \"" + outputDir + "/" + asnFile + "\" ] && cp \"" + asnFile + "\" \"" + outputDir + "\"'")
+    os.system("cp -u \"" + asnFile + "\" \"" + outputDir + "\"")
     this_path = os.path.dirname(__file__)
     stubs = this_path + os.sep + 'Stubs.py'
     os.system('cp "{}" "{}"'.format(stubs, outputDir))
