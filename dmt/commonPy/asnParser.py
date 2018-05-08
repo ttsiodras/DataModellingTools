@@ -411,7 +411,7 @@ def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=inv
         # and mark any types not inside it as artificial.
         os.system("mono \"" + asn1SccPath + "\" -customStg \"" + asn1SccDir + "/xml.stg:" + xmlAST + "2\" -customStgAstVersion 1 \"" + "\" \"".join(listOfFilenames) + "\"")
         realTypes = {}
-        for line in os.popen("grep  'ExportedType>' \"" + xmlAST + "2\"").readlines():  # pylint: disable=anomalous-backslash-in-string
+        for line in os.popen("grep  'ExportedType\>' \"" + xmlAST + "2\"").readlines():  # flake8: noqa pylint: disable=anomalous-backslash-in-string
             line = re.sub(r'^.*Name="', '', line.strip())
             line = re.sub(r'" />$', '', line)
             realTypes[line] = 1

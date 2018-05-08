@@ -170,6 +170,7 @@ clean:
     g_outputGetSetC.write('\n/* Helper functions for NATIVE encodings */\n\n')
 
     def WorkOnType(nodeTypeName: str) -> None:
+        inform("Python_A_mapper: Working on type '%s'...", nodeTypeName)
         typ = CleanNameAsPythonWants(nodeTypeName)
         g_outputGetSetH.write('void SetDataFor_%s(void *dest, void *src);\n' % typ)
         g_outputGetSetH.write("byte* MovePtrBySizeOf_%s(byte *pData);\n" % typ)
