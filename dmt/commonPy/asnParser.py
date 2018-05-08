@@ -260,10 +260,11 @@ def VerifyAndFixAST() -> Dict[str, str]:
         # To cope with ReferenceTypes that redefine their
         # constraints (for now, ASN1SCC provides only INTEGERs)
         if isinstance(originalNode, AsnMetaType):
-            target = copy.copy(node)  # we need to keep the _asnFilename
+            target = copy.copy(node)  # type: ignore
+            # we need to keep the _asnFilename
             target._asnFilename = originalNode._asnFilename
             if isinstance(node, AsnInt) and Min is not None and Max is not None:
-                target._range = [Min, Max]
+                target._range = [Min, Max]  # type: ignore
         elif isinstance(node, AsnInt) and Min is not None and Max is not None:
             target = copy.copy(node)  # we need to keep the Min/Max
             target._range = [Min, Max]
