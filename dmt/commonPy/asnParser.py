@@ -262,6 +262,8 @@ def VerifyAndFixAST() -> Dict[str, str]:
         if isinstance(originalNode, AsnMetaType):
             target = copy.copy(node)  # we need to keep the _asnFilename
             target._asnFilename = originalNode._asnFilename
+            if isinstance(node, AsnInt) and Min is not None and Max is not None:
+                target._range = [Min, Max]
         elif isinstance(node, AsnInt) and Min is not None and Max is not None:
             target = copy.copy(node)  # we need to keep the Min/Max
             target._range = [Min, Max]
