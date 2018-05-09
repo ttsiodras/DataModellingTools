@@ -95,8 +95,8 @@ def calculateForNativeAndASN1SCC(absASN1SCCpath, autosrc, names, inputFiles):
     else:
         cmd = "mono %s -c -uPER -o \"%s\" %s %s" % (absASN1SCCpath, autosrc, acn, '"' + '" "'.join(inputFiles) + '"')
         res = mysystem(cmd)
-        if res != 0 and configMT.debugParser:
-            print("This command failed: %s\n" % cmd)
+        if res != 0:
+            panic("This command failed: %s\n" % cmd)
         for line in os.popen('mono  %s -AdaUses "%s"' % (absASN1SCCpath, '" "'.join(inputASN1files))):
             g_AdaPackageNameOfType[line.split(':')[0]] = line.split(':')[1].rstrip()
 
