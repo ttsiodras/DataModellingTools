@@ -166,7 +166,7 @@ of each SUBPROGRAM param.'''
                     for step in python2className.split('.')[1:]:
                         klass = getattr(klass, step)
                     o.__class__ = klass
-            except Exception as _:
+            except Exception:
                 pass
 
         patchMe(sp)
