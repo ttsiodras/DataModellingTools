@@ -388,7 +388,6 @@ def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=inv
     xmlAST = xmlAST2 = None
     someFilesHaveChanged = False
     if projectCache:
-        assert(projectCache)
         filehash = hashlib.md5()
         for each in sorted(listOfFilenames):
             filehash.update(open(each).read().encode('utf-8'))
