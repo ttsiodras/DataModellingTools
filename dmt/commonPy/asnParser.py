@@ -386,47 +386,53 @@ def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=inv
     # Add basic ASN.1 caching to avoid calling the ASN.1 compiler over and over
     projectCache = os.getenv ("PROJECT_CACHE")
     xmlAST = xmlAST2 = None
-    try:
+    someFilesHaveChanged = False
+    if projectCache:
         assert(projectCache)
-        someFilesHaveChanged = False
-        for each in listOfFilenames:
-            filehash = hashlib.md5()
+        filehash = hashlib.md5()
+        for each in sorted(listOfFilenames):
             filehash.update(open(each).read().encode('utf-8'))
-            newHash = filehash.hexdigest()
-            fileUniqName = each.replace(os.sep, '_')
-            try:
-                oldHash = open(projectCache + os.sep + fileUniqName).read()
-            except IOError:
-                # No existing hash file... creating one
-                with open(projectCache + os.sep + fileUniqName, "wt") as f:
-                    f.write(newHash)
-                    oldHash = None
-            if oldHash != newHash:
-                someFilesHaveChanged = True
-                break
-    except AssertionError:
+            # also hash the file path: it is used in the AST in XML, so it is
+            # not enough to hash the content of the ASN.1 files, as two sets
+            # of files may have the same hash, that would lead to different XML
+            # content.
+            filehash.update(each.encode('utf-8'))
+        newHash = filehash.hexdigest()
+        try:
+            oldHash = open(projectCache + os.sep + newHash + ".hash").read()
+        except IOError:
+            # No existing hash file... creating one
+            with open(projectCache + os.sep + newHash + ".hash", "wt") as f:
+                f.write(newHash)
+                oldHash = None
+        if oldHash != newHash:
+            someFilesHaveChanged = True
+        # set the name of the XML files containing the dumped ASTs
+        xmlAST  = projectCache + os.sep + newHash + "_ast_v4.xml"
+        xmlAST2 = projectCache + os.sep + newHash + "_ast_v1.xml"
+    else:
+        # no projectCache set, so xmlAST and xmlAST2 are set to None
         someFilesHaveChanged = True
         print("ASN.1 Data Model has changed since last invocation...")
     if not someFilesHaveChanged:
         print("ASN.1 Data Model has not been modified since last invocation")
-        xmlAST = projectCache + os.sep + "xml_ast_with_ast_version_4.xml"
-        xmlAST2 = projectCache + os.sep + "xml_ast_with_ast_version_1.xml"
         try:
             open(xmlAST, "r").close()
             open(xmlAST2, "r").close()
         except IOError:
             print("However no XML AST were found")
-            xmlAST = xmlAST2 = None
             someFilesHaveChanged = True
 
+    if not xmlAST:
+        (dummy, xmlAST) = tempfile.mkstemp()
+        os.fdopen(dummy).close()
+        xmlAST2 = xmlAST + "2"
 
     asn1SccPath = spawn.find_executable('asn1.exe')
     if asn1SccPath is None:
         utility.panic("ASN1SCC seems not installed on your system (asn1.exe not found in PATH).\n")
     else:
-        if not xmlAST:
-            (dummy, xmlAST) = tempfile.mkstemp()
-            os.fdopen(dummy).close()
+        if someFilesHaveChanged:
             asn1SccDir = os.path.dirname(os.path.abspath(asn1SccPath))
             spawnResult = os.system("mono \"" + asn1SccPath + "\" -customStg \"" + asn1SccDir + "/xml.stg:" + xmlAST + "\" -customStgAstVersion 4 \"" + "\" \"".join(listOfFilenames) + "\"")
             if spawnResult != 0:
@@ -442,9 +448,7 @@ def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=inv
                 else:
                     utility.panic("ASN1SCC generic error. Contact ESA with this input. Aborting...")
         ParseASN1SCC_AST(xmlAST)
-        if someFilesHaveChanged:
-            if projectCache:
-                os.system("cp " + xmlAST + " " + projectCache + os.sep + "xml_ast_with_ast_version_4.xml")
+        if someFilesHaveChanged and not projectCache:
             os.unlink(xmlAST)
         g_names.update(g_names)
         g_leafTypeDict.update(g_leafTypeDict)
@@ -454,17 +458,14 @@ def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=inv
         # We also need to mark the artificial types -
         # So spawn the custom type output at level 1 (unfiltered)
         # and mark any types not inside it as artificial.
-        if not xmlAST2:
-            xmlAST2 = xmlAST + "2"
+        if someFilesHaveChanged:
             os.system("mono \"" + asn1SccPath + "\" -customStg \"" + asn1SccDir + "/xml.stg:" + xmlAST2 + "\" -customStgAstVersion 1 \"" + "\" \"".join(listOfFilenames) + "\"")
         realTypes = {}
         for line in os.popen("grep  'ExportedType\>' \"" + xmlAST2 + "\"").readlines():  # flake8: noqa pylint: disable=anomalous-backslash-in-string
             line = re.sub(r'^.*Name="', '', line.strip())
             line = re.sub(r'" />$', '', line)
             realTypes[line] = 1
-        if someFilesHaveChanged:
-            if projectCache:
-                os.system("cp " + xmlAST2 + " " + projectCache + os.sep + "xml_ast_with_ast_version_1.xml")
+        if someFilesHaveChanged and not projectCache:
             os.unlink(xmlAST2)
         for nodeTypename in list(g_names.keys()):
             if nodeTypename not in realTypes:
