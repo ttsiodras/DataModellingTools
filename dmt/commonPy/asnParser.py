@@ -397,11 +397,11 @@ def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=inv
             elif errCode == 2:
                 utility.panic("ASN1SCC reported semantic errors (or mono failed). Aborting...")
             elif errCode == 3:
-                utility.panic("ASN1SCC reported internal error. Contact Semantix with this input. Aborting...")
+                utility.panic("ASN1SCC reported internal error. Contact ESA with this input. Aborting...")
             elif errCode == 4:
                 utility.panic("ASN1SCC reported usage error. Aborting...")
             else:
-                utility.panic("ASN1SCC generic error. Contact Semantix with this input. Aborting...")
+                utility.panic("ASN1SCC generic error. Contact ESA with this input. Aborting...")
         ParseASN1SCC_AST(xmlAST)
         os.unlink(xmlAST)
         g_names.update(g_names)
