@@ -387,7 +387,7 @@ def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=inv
     projectCache = os.getenv ("PROJECT_CACHE")
     xmlAST = xmlAST2 = None
     someFilesHaveChanged = False
-    if projectCache:
+    if projectCache is not None:
         filehash = hashlib.md5()
         for each in sorted(listOfFilenames):
             filehash.update(open(each).read().encode('utf-8'))
@@ -400,19 +400,14 @@ def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=inv
         # set the name of the XML files containing the dumped ASTs
         xmlAST  = projectCache + os.sep + newHash + "_ast_v4.xml"
         xmlAST2 = projectCache + os.sep + newHash + "_ast_v1.xml"
-        try:
-            # Check if both hash files already exist
-            open(xmlAST, "r").close()
-            open(xmlAST2, "r").close()
-        except IOError:
-            # No existing hash file
+        if not os.path.exists(xmlAST) or not os.path.exists(xmlAST2):
             someFilesHaveChanged = True
-            print("[DMT] Creating ASN.1 cache for DMT")
+            print("[DMT] ASN.1 model changed, re-processing...")
     else:
         # no projectCache set, so xmlAST and xmlAST2 are set to None
         someFilesHaveChanged = True
     if not someFilesHaveChanged:
-        print("[DMT] ASN.1 Model has not been modified since last invocation")
+        print("[DMT] No change in ASN.1 model.")
 
     if not xmlAST:
         (dummy, xmlAST) = tempfile.mkstemp()
@@ -439,7 +434,7 @@ def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=inv
                 else:
                     utility.panic("ASN1SCC generic error. Contact ESA with this input. Aborting...")
         ParseASN1SCC_AST(xmlAST)
-        if someFilesHaveChanged and not projectCache:
+        if projectCache is None:
             os.unlink(xmlAST)
         g_names.update(g_names)
         g_leafTypeDict.update(g_leafTypeDict)
@@ -456,7 +451,7 @@ def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=inv
             line = re.sub(r'^.*Name="', '', line.strip())
             line = re.sub(r'" />$', '', line)
             realTypes[line] = 1
-        if someFilesHaveChanged and not projectCache:
+        if projectCache is None:
             os.unlink(xmlAST2)
         for nodeTypename in list(g_names.keys()):
             if nodeTypename not in realTypes:
