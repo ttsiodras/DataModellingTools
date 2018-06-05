@@ -51,6 +51,7 @@ import copy
 import tempfile
 import re
 import distutils.spawn as spawn
+import hashlib
 
 import xml.sax  # type: ignore
 from typing import IO, TypeVar, Type, Optional, Callable, Union, List, Dict, Tuple, Any  # NOQA pylint: disable=W0611
@@ -382,28 +383,59 @@ def CheckForInvalidKeywords(node_or_str: Union[str, AsnNode]) -> None:
 
 
 def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=invalid-sequence-index
+    # Add basic ASN.1 caching to avoid calling the ASN.1 compiler over and over
+    projectCache = os.getenv ("PROJECT_CACHE")
+    xmlAST = xmlAST2 = None
+    someFilesHaveChanged = False
+    if projectCache is not None:
+        filehash = hashlib.md5()
+        for each in sorted(listOfFilenames):
+            filehash.update(open(each).read().encode('utf-8'))
+            # also hash the file path: it is used in the AST in XML, so it is
+            # not enough to hash the content of the ASN.1 files, as two sets
+            # of files may have the same hash, that would lead to different XML
+            # content.
+            filehash.update(each.encode('utf-8'))
+        newHash = filehash.hexdigest()
+        # set the name of the XML files containing the dumped ASTs
+        xmlAST  = projectCache + os.sep + newHash + "_ast_v4.xml"
+        xmlAST2 = projectCache + os.sep + newHash + "_ast_v1.xml"
+        if not os.path.exists(xmlAST) or not os.path.exists(xmlAST2):
+            someFilesHaveChanged = True
+            print("[DMT] ASN.1 model changed, re-processing...")
+    else:
+        # no projectCache set, so xmlAST and xmlAST2 are set to None
+        someFilesHaveChanged = True
+    if not someFilesHaveChanged:
+        print("[DMT] No change in ASN.1 model.")
+
+    if not xmlAST:
+        (dummy, xmlAST) = tempfile.mkstemp()
+        os.fdopen(dummy).close()
+        xmlAST2 = xmlAST + "2"
+
     asn1SccPath = spawn.find_executable('asn1.exe')
     if asn1SccPath is None:
         utility.panic("ASN1SCC seems not installed on your system (asn1.exe not found in PATH).\n")
     else:
-        (dummy, xmlAST) = tempfile.mkstemp()
-        os.fdopen(dummy).close()
-        asn1SccDir = os.path.dirname(os.path.abspath(asn1SccPath))
-        spawnResult = os.system("mono \"" + asn1SccPath + "\" -customStg \"" + asn1SccDir + "/xml.stg:" + xmlAST + "\" -customStgAstVersion 4 \"" + "\" \"".join(listOfFilenames) + "\"")
-        if spawnResult != 0:
-            errCode = spawnResult / 256
-            if errCode == 1:
-                utility.panic("ASN1SCC reported syntax errors. Aborting...")
-            elif errCode == 2:
-                utility.panic("ASN1SCC reported semantic errors (or mono failed). Aborting...")
-            elif errCode == 3:
-                utility.panic("ASN1SCC reported internal error. Contact ESA with this input. Aborting...")
-            elif errCode == 4:
-                utility.panic("ASN1SCC reported usage error. Aborting...")
-            else:
-                utility.panic("ASN1SCC generic error. Contact ESA with this input. Aborting...")
+        if someFilesHaveChanged:
+            asn1SccDir = os.path.dirname(os.path.abspath(asn1SccPath))
+            spawnResult = os.system("mono \"" + asn1SccPath + "\" -customStg \"" + asn1SccDir + "/xml.stg:" + xmlAST + "\" -customStgAstVersion 4 \"" + "\" \"".join(listOfFilenames) + "\"")
+            if spawnResult != 0:
+                errCode = spawnResult / 256
+                if errCode == 1:
+                    utility.panic("ASN1SCC reported syntax errors. Aborting...")
+                elif errCode == 2:
+                    utility.panic("ASN1SCC reported semantic errors (or mono failed). Aborting...")
+                elif errCode == 3:
+                    utility.panic("ASN1SCC reported internal error. Contact ESA with this input. Aborting...")
+                elif errCode == 4:
+                    utility.panic("ASN1SCC reported usage error. Aborting...")
+                else:
+                    utility.panic("ASN1SCC generic error. Contact ESA with this input. Aborting...")
         ParseASN1SCC_AST(xmlAST)
-        os.unlink(xmlAST)
+        if projectCache is None:
+            os.unlink(xmlAST)
         g_names.update(g_names)
         g_leafTypeDict.update(g_leafTypeDict)
         g_checkedSoFarForKeywords.update(g_checkedSoFarForKeywords)
@@ -412,13 +444,15 @@ def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=inv
         # We also need to mark the artificial types -
         # So spawn the custom type output at level 1 (unfiltered)
         # and mark any types not inside it as artificial.
-        os.system("mono \"" + asn1SccPath + "\" -customStg \"" + asn1SccDir + "/xml.stg:" + xmlAST + "2\" -customStgAstVersion 1 \"" + "\" \"".join(listOfFilenames) + "\"")
+        if someFilesHaveChanged:
+            os.system("mono \"" + asn1SccPath + "\" -customStg \"" + asn1SccDir + "/xml.stg:" + xmlAST2 + "\" -customStgAstVersion 1 \"" + "\" \"".join(listOfFilenames) + "\"")
         realTypes = {}
-        for line in os.popen("grep  'ExportedType\>' \"" + xmlAST + "2\"").readlines():  # flake8: noqa pylint: disable=anomalous-backslash-in-string
+        for line in os.popen("grep  'ExportedType\>' \"" + xmlAST2 + "\"").readlines():  # flake8: noqa pylint: disable=anomalous-backslash-in-string
             line = re.sub(r'^.*Name="', '', line.strip())
             line = re.sub(r'" />$', '', line)
             realTypes[line] = 1
-        os.unlink(xmlAST + "2")
+        if projectCache is None:
+            os.unlink(xmlAST2)
         for nodeTypename in list(g_names.keys()):
             if nodeTypename not in realTypes:
                 g_names[nodeTypename]._isArtificial = True
