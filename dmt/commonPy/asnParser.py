@@ -397,30 +397,22 @@ def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=inv
             # content.
             filehash.update(each.encode('utf-8'))
         newHash = filehash.hexdigest()
-        try:
-            oldHash = open(projectCache + os.sep + newHash + ".hash").read()
-        except IOError:
-            # No existing hash file... creating one
-            with open(projectCache + os.sep + newHash + ".hash", "wt") as f:
-                f.write(newHash)
-                oldHash = None
-        if oldHash != newHash:
-            someFilesHaveChanged = True
         # set the name of the XML files containing the dumped ASTs
         xmlAST  = projectCache + os.sep + newHash + "_ast_v4.xml"
         xmlAST2 = projectCache + os.sep + newHash + "_ast_v1.xml"
-    else:
-        # no projectCache set, so xmlAST and xmlAST2 are set to None
-        someFilesHaveChanged = True
-        print("ASN.1 Data Model has changed since last invocation...")
-    if not someFilesHaveChanged:
-        print("ASN.1 Data Model has not been modified since last invocation")
         try:
+            # Check if both hash files already exist
             open(xmlAST, "r").close()
             open(xmlAST2, "r").close()
         except IOError:
-            print("However no XML AST were found")
+            # No existing hash file
             someFilesHaveChanged = True
+            print("[DMT] Creating ASN.1 cache for DMT")
+    else:
+        # no projectCache set, so xmlAST and xmlAST2 are set to None
+        someFilesHaveChanged = True
+    if not someFilesHaveChanged:
+        print("[DMT] ASN.1 Model has not been modified since last invocation")
 
     if not xmlAST:
         (dummy, xmlAST) = tempfile.mkstemp()
