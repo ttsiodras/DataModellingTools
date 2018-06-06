@@ -265,13 +265,13 @@ class C_GlueGenerator(ASynchronousToolGlueGenerator):
             encoding.upper())
         self.C_HeaderFile.write(needDefine)
         self.C_HeaderFile.write(
-            "ssize_t %s(void *pBuffer, size_t iMaxBufferSize, %sasn1Scc%s *pSrc);\n" %
+            "int %s(void *pBuffer, size_t iMaxBufferSize, %sasn1Scc%s *pSrc);\n" %
             (tmpSpName, "" if encoding.lower() == "acn" else "const ",
              self.CleanNameAsToolWants(nodeTypename)))
         self.C_HeaderFile.write("#endif\n\n")
         self.C_SourceFile.write(needDefine)
         self.C_SourceFile.write(
-            "ssize_t %s(void *pBuffer, size_t iMaxBufferSize, %sasn1Scc%s *pSrc)\n{\n    (void)iMaxBufferSize;\n" %
+            "int %s(void *pBuffer, size_t iMaxBufferSize, %sasn1Scc%s *pSrc)\n{\n    (void)iMaxBufferSize;\n" %
             (tmpSpName, "" if encoding.lower() == "acn" else "const ",
              self.CleanNameAsToolWants(nodeTypename)))
 
