@@ -271,7 +271,7 @@ class C_GlueGenerator(ASynchronousToolGlueGenerator):
         self.C_HeaderFile.write("#endif\n\n")
         self.C_SourceFile.write(needDefine)
         self.C_SourceFile.write(
-            "size_t %s(void *pBuffer, size_t iMaxBufferSize, %sasn1Scc%s *pSrc)\n{\n    (void)iMaxBufferSize;\n" %
+            "ssize_t %s(void *pBuffer, size_t iMaxBufferSize, %sasn1Scc%s *pSrc)\n{\n    (void)iMaxBufferSize;\n" %
             (tmpSpName, "" if encoding.lower() == "acn" else "const ",
              self.CleanNameAsToolWants(nodeTypename)))
 
