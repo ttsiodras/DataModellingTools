@@ -463,6 +463,8 @@ end Stream_Element_Buffer;
         if asnTypename in typesUnusableAsInterfaceParameters:
             o.write('    TASTE::Forbid_in_PI => true;\n')
         o.write('END ' + cleanName + ';\n\n')
+        o.write('DATA IMPLEMENTATION ' + cleanName + '.impl\n')
+        o.write('END ' + cleanName + '.impl;\n\n')
         if os.getenv('UPD') is None:
             o.write('DATA ' + cleanName + '_Buffer_Max\n')
             o.write('END ' + cleanName + '_Buffer_Max;\n\n')
@@ -503,7 +505,7 @@ end Stream_Element_Buffer;
         if node._isArtificial:
             continue
         cleanName = cleanNameAsAADLWants(asnTypename)
-        o.write('   %s : DATA %s;\n' % (cleanName, cleanName))
+        o.write('   %s : DATA %s.impl;\n' % (cleanName, cleanName))
     o.write('END Taste_DataView.others;\n')
 
     listOfAsn1Files = {}
