@@ -257,7 +257,12 @@ def {tmName}(tm_ptr, size):
 
 
 # Callback function prototype - a void* param, and returning nothing
-func = ctypes.CFUNCTYPE(None, ctypes.c_void_p, ctypes.c_long)
+# Apparently c_void_p does not work on 64 bits machines... use a workaround:
+class ReturnPointer (ctypes.Structure):
+    pass
+ReturnHandle = ctypes.POINTER(ReturnPointer)
+func = ctypes.CFUNCTYPE(None, ReturnHandle, ctypes.c_long)
+#func = ctypes.CFUNCTYPE(None, ctypes.c_void_p, ctypes.c_long)
 cmp_func = func({tmName})
 
 def setSharedLib(dll=None):

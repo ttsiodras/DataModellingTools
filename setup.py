@@ -11,7 +11,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='dmt',
-    version="2.1.15",
+    version="2.1.16",
     packages=find_packages(),
     author='Thanassis Tsiodras',
     author_email='Thanassis.Tsiodras@esa.int',
