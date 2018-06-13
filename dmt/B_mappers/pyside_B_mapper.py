@@ -216,7 +216,7 @@ def setSharedLib(dll=None):
     global shared_lib
     global {tcName}_via_shared_lib
     shared_lib = True
-    {tcName}_via_shared_lib = dll.{fvName}_{tcName}
+    {tcName}_via_shared_lib = dll.{fvName}_PI_{tcName}
 
 '''.format(fvName=FVname, tcName=CleanSP))
         g_PyDataModel.write('\ntc["{tcName}"] = '.format(tcName=CleanSP))
