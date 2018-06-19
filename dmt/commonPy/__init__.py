@@ -19,7 +19,7 @@ import pkg_resources  # pragma: no cover
 try:
     __version__ = pkg_resources.require("dmt")[0].version  # pragma: no cover
 except:
-    __version__ = "2.1.2"
+    __version__ = "2.1.3"
 
 
 def print_version() -> None:
