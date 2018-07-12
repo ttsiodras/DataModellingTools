@@ -151,6 +151,7 @@ class ApLevelContainer:
         self._calls = []
         self._params = []
         self._connections = []
+        self._fpgaModes = ''
         self._language = None
 
     def AddCalledAPLC(self, idAPLC):
@@ -169,6 +170,8 @@ class ApLevelContainer:
     def SetLanguage(self, language):
         self._language = language
 
+    def SetFPGAModes(self, fpgaModes):
+        self._fpgaModes = fpgaModes
 
 class Param:
     def __init__(self, aplcID, id, signal, sourceElement):
