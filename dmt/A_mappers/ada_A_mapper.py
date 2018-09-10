@@ -46,9 +46,11 @@ def OnStartup(unused_modelingLanguage: str, asnFiles: List[str], outputDir: str,
     asn1SccPath = spawn.find_executable('asn1.exe')
     if not asn1SccPath:
         panic("ASN1SCC seems to be missing from your system (asn1.exe not found in PATH).\n")  # pragma: no cover
+    # allow externally-defined flags when calling the asn1 compiler (e.g. to set word size based on target)
+    extraFlags = os.getenv ("ASN1SCC_FLAGS") or ""
     os.system(
         ("mono " if sys.platform.startswith('linux') else "") +
-        "\"{}\" -typePrefix asn1Scc -Ada -uPER -o \"".format(asn1SccPath) +
+        "\"{}\" -typePrefix asn1Scc -Ada {} -uPER -o \"".format(asn1SccPath, extraFlags) +
         outputDir + "\" \"" + "\" \"".join(asnFiles) + "\"")
     os.system("rm -f \"" + outputDir + "\"/*.adb")
 

@@ -242,6 +242,8 @@ def main():
 
             C_HeaderFile.write('void Print%s(const char *paramName, const asn1Scc%s *pData);\n' % (cleanNodeTypename, cleanNodeTypename))
             C_SourceFile.write('void Print%s(const char *paramName, const asn1Scc%s *pData)\n{\n' % (cleanNodeTypename, cleanNodeTypename))
+            C_SourceFile.write('    (void)paramName;\n')
+            C_SourceFile.write('    (void)pData;\n')
             C_SourceFile.write('#ifdef __linux__\n')
             C_SourceFile.write('    pthread_mutex_lock(&g_printing_mutex);\n')
             C_SourceFile.write('#endif\n')
