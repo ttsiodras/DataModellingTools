@@ -386,9 +386,11 @@ def ProcessCustomBackends(
         else:
             panic("Unexpected call of getCustomBackends...")  # pragma: no cover
 
-    for si in [x for x in SystemsAndImplementations if x[2] is not None and x[2].lower() in ["gui_ri", "gui_pi", "vhdl"]]:
+    for si in [x for x in SystemsAndImplementations if x[2] is not None and x[4] is not None and (x[2].lower() in ["gui_ri", "gui_pi", "vhdl"] or (x[2].lower() == "c" and x[4] is not ''))]:
         # We do, start the work
         spName, sp_impl, lang, maybeFVname = si[0], si[1], si[2], si[3]
+        if si[2].lower() == "c" and si[4] is not '':
+            lang = "vhdl"
         sp = commonPy.aadlAST.g_apLevelContainers[spName]
         if len(sp._params) == 0:
             if lang.lower() == "gui_ri":  # pragma: no cover
