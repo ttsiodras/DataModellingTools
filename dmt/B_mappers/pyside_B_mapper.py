@@ -588,7 +588,7 @@ def WriteCodeForGUIControls(prefixes: List[str],  # pylint: disable=invalid-sequ
         elif isinstance(node, AsnReal):
             if g_onceOnly:
                 g_PyDataModel.write(
-                    '''{'nodeTypename': '%s', 'type': '%s', 'id': '%s', 'minR': %f, 'maxR': %f}''' % (
+                    '''{'nodeTypename': '%s', 'type': '%s', 'id': '%s', 'minR': %20.20f, 'maxR': %20.20f}''' % (
                         nodeTypename, node._name, txtPrefix,
                         node._range[0], node._range[1]))
 
