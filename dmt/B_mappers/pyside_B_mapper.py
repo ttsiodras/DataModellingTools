@@ -578,10 +578,17 @@ def WriteCodeForGUIControls(prefixes: List[str],  # pylint: disable=invalid-sequ
                 pyStr += '''["{prefixKey}"]'''.format(prefixKey=item)
 
     if isinstance(node, (AsnInt, AsnReal, AsnOctetString)):
-        if isinstance(node, (AsnInt, AsnReal)):
+        if isinstance(node, AsnInt):
             if g_onceOnly:
                 g_PyDataModel.write(
                     '''{'nodeTypename': '%s', 'type': '%s', 'id': '%s', 'minR': %d, 'maxR': %d}''' % (
+                        nodeTypename, node._name, txtPrefix,
+                        node._range[0], node._range[1]))
+
+        elif isinstance(node, AsnReal):
+            if g_onceOnly:
+                g_PyDataModel.write(
+                    '''{'nodeTypename': '%s', 'type': '%s', 'id': '%s', 'minR': %f, 'maxR': %f}''' % (
                         nodeTypename, node._name, txtPrefix,
                         node._range[0], node._range[1]))
 
