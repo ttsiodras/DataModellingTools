@@ -570,10 +570,15 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                 self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation + "_wrapper"))
 
         else:
+            # Check if Function Block will exist both as SW and HW. If yes append suffix to avoid multiple definition errors.
+            fpgaSuffix = ''
+            if subProgramImplementation.lower() == "c" and sp._fpgaConfigurations is not '':
+                fpgaSuffix = "_Fpga"
+            
             self.C_HeaderFile.write("void Execute_%s();\n" % self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation))
             if maybeFVname != "":
-                self.C_HeaderFile.write("void init_%s();\n" % (self.CleanNameAsADAWants(maybeFVname)))
-                self.C_HeaderFile.write("void %s_%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id)))
+                self.C_HeaderFile.write("void init_%s%s();\n" % (self.CleanNameAsADAWants(maybeFVname), fpgaSuffix))
+                self.C_HeaderFile.write("void %s_%s%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id), fpgaSuffix))
             else:  # pragma: no cover
                 self.C_HeaderFile.write("void %s_init();\n" % self.CleanNameAsADAWants(sp._id))  # pragma: no cover
                 self.C_HeaderFile.write("void %s(" % self.CleanNameAsADAWants(sp._id))  # pragma: no cover
@@ -592,7 +597,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
             self.C_SourceFile.write("}\n\n")
 
             if maybeFVname != "":
-                self.C_SourceFile.write("void init_%s()\n" % self.CleanNameAsADAWants(maybeFVname))
+                self.C_SourceFile.write("void init_%s%s()\n" % (self.CleanNameAsADAWants(maybeFVname), fpgaSuffix))
             else:  # pragma: no cover
                 self.C_SourceFile.write("void %s_init()\n" % self.CleanNameAsADAWants(sp._id))  # pragma: no cover
             self.C_SourceFile.write("{\n")
@@ -601,7 +606,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
             # self.C_SourceFile.write("    InitializeGlue();\n")
             self.C_SourceFile.write("}\n\n")
             if maybeFVname != "":
-                self.C_SourceFile.write("void %s_%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id)))
+                self.C_SourceFile.write("void %s_%s%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id), fpgaSuffix))
             else:  # pragma: no cover
                 self.C_SourceFile.write("void %s(" % self.CleanNameAsADAWants(sp._id))  # pragma: no cover
             for param in sp._params:
