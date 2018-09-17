@@ -442,30 +442,30 @@ def DumpTypeDumper(
             codeIndent +
             'lines.append("%s"+str(%s.Get()!=0).upper())' % (outputIndent, variableName))
         if variableName.startswith("path[i]"):
-            lines.append(codeIndent + 'self.Reset(state)')
+            lines.append(codeIndent + 'path.Reset(state)')
     elif isinstance(node, AsnInt):
         lines.append(
             codeIndent + 'lines.append("%s"+str(%s.Get()))' % (outputIndent, variableName))
         if variableName.startswith("path[i]"):
-            lines.append(codeIndent + 'self.Reset(state)')
+            lines.append(codeIndent + 'path.Reset(state)')
     elif isinstance(node, AsnReal):
         lines.append(
             codeIndent + 'lines.append("%s"+str(%s.Get()))' % (outputIndent, variableName))
         if variableName.startswith("path[i]"):
-            lines.append(codeIndent + 'self.Reset(state)')
+            lines.append(codeIndent + 'path.Reset(state)')
     elif isinstance(node, AsnString):
         lines.append(
             codeIndent +
             'lines.append("%s\\\""+str(%s.GetPyString()) + "\\\"")' % (outputIndent, variableName))
         if variableName.startswith("path[i]"):
-            lines.append(codeIndent + 'self.Reset(state)')
+            lines.append(codeIndent + 'path.Reset(state)')
     elif isinstance(node, AsnEnumerated):
         mapping = str({val: name for name, val in node._members})
         lines.append(
             codeIndent +
             'lines.append("%s"+%s[str(%s.Get())])' % (outputIndent, mapping, variableName))
         if variableName.startswith("path[i]"):
-            lines.append(codeIndent + 'self.Reset(state)')
+            lines.append(codeIndent + 'path.Reset(state)')
     elif isinstance(node, (AsnChoice, AsnSet, AsnSequence)):
         if not isinstance(node, AsnChoice):
             lines.append(codeIndent + 'lines.append("{")')
@@ -475,10 +475,14 @@ def DumpTypeDumper(
             extraIndent = " "
         for idx, child in enumerate(node._members):
             if isinstance(node, AsnChoice):
+                if variableName.startswith("path[i]"):
+                    lines.append(codeIndent + 'path.Reset(state)')
                 lines.append(
                     codeIndent + 'if %s.kind.Get() == DV.%s:' % (
                         variableName,
                         CleanNameAsPythonWants(child[2])))
+                if variableName.startswith("path[i]"):
+                    lines.append(codeIndent + ' path.Reset(state)')
                 sep = ": "
             elif idx > 0:
                 # Separate fields with comas:
@@ -497,13 +501,15 @@ def DumpTypeDumper(
                 variableName + "." + CleanNameAsPythonWants(child[0]), childNode, names)
         if not isinstance(node, AsnChoice):
             lines.append(codeIndent + 'lines.append("}")')
+        if variableName.startswith("path[i]"):
+            lines.append(codeIndent + 'path.Reset(state)')
     elif isinstance(node, (AsnSetOf, AsnSequenceOf)):
         lines.append(codeIndent + 'lines.append("{")')
         containedNode = node._containedType
         if isinstance(containedNode, str):
             containedNode = names[containedNode]
         lines.append(codeIndent + 'def emitElem(path, i):')
-        lines.append(codeIndent + '    state = self.GetState()')
+        lines.append(codeIndent + '    state = path.GetState()')
         lines.append(codeIndent + '    if i > 0:')
         lines.append(codeIndent + '        lines.append(",")')
         DumpTypeDumper(codeIndent + "    ",
