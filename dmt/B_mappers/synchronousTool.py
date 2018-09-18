@@ -170,6 +170,8 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
             self.C_HeaderFile.write("#ifndef __%s_H__\n" % ID)
             self.C_HeaderFile.write("#define __%s_H__\n\n" % ID)
             self.C_HeaderFile.write("#include <stdlib.h> /* for size_t */\n")
+            if subProgramImplementation.lower() == "c" and subProgram._fpgaConfigurations is not '':
+                self.C_HeaderFile.write("#include \"C_ASN1_Types.h\"\n")
             self.C_HeaderFile.write("\n")
 
             self.C_SourceFile.write("#ifdef __unix__\n")
@@ -572,16 +574,17 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
         else:
             # Check if Function Block will exist both as SW and HW. If yes append suffix to avoid multiple definition errors.
             fpgaSuffix = ''
+            dispatcherSuffix = "_Brave_Dispatch"
             if subProgramImplementation.lower() == "c" and sp._fpgaConfigurations is not '':
-                fpgaSuffix = "_Fpga"
+                fpgaSuffix = "_Brave_Fpga"
             
             self.C_HeaderFile.write("void Execute_%s();\n" % self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation))
             if maybeFVname != "":
                 self.C_HeaderFile.write("void init_%s%s();\n" % (self.CleanNameAsADAWants(maybeFVname), fpgaSuffix))
                 self.C_HeaderFile.write("void %s_%s%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id), fpgaSuffix))
             else:  # pragma: no cover
-                self.C_HeaderFile.write("void %s_init();\n" % self.CleanNameAsADAWants(sp._id))  # pragma: no cover
-                self.C_HeaderFile.write("void %s(" % self.CleanNameAsADAWants(sp._id))  # pragma: no cover
+                self.C_HeaderFile.write("void %s_init%s();\n" % (self.CleanNameAsADAWants(sp._id), fpgaSuffix))  # pragma: no cover
+                self.C_HeaderFile.write("void %s%s(" % (self.CleanNameAsADAWants(sp._id), fpgaSuffix))  # pragma: no cover
             for param in sp._params:
                 if param._id != sp._params[0]._id:
                     self.C_HeaderFile.write(', ')
@@ -590,6 +593,22 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                 else:
                     self.C_HeaderFile.write('void *p' + self.CleanNameAsToolWants(param._id) + ', size_t *pSize_' + self.CleanNameAsToolWants(param._id))
             self.C_HeaderFile.write(");\n")
+            
+            # Check if Function Block will exist both as SW and HW. If yes generate dispatcher function (to delegate to SW or HW).
+            if subProgramImplementation.lower() == "c" and sp._fpgaConfigurations is not '':
+                if maybeFVname != "":
+                    self.C_HeaderFile.write("asn1SccMyInteger %s_%s%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id), dispatcherSuffix))
+                else:  # pragma: no cover
+                    self.C_HeaderFile.write("asn1SccMyInteger %s%s(" % (self.CleanNameAsADAWants(sp._id), dispatcherSuffix))  # pragma: no cover                    
+                for param in sp._params:
+                    if param._id != sp._params[0]._id:
+                        self.C_HeaderFile.write(', ')
+                    if isinstance(param, InParam):
+                        self.C_HeaderFile.write('void *p' + self.CleanNameAsToolWants(param._id) + ', size_t size_' + self.CleanNameAsToolWants(param._id))
+                    else:
+                        self.C_HeaderFile.write('void *p' + self.CleanNameAsToolWants(param._id) + ', size_t *pSize_' + self.CleanNameAsToolWants(param._id))
+                self.C_HeaderFile.write(");\n")            
+            
             self.C_HeaderFile.write("\n#endif\n")
 
             self.C_SourceFile.write("void Execute_%s()\n{\n" % self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation))
@@ -657,6 +676,23 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                                              self.CleanNameAsToolWants(param._id),
                                              param._signal._asnSize))
             self.C_SourceFile.write("}\n\n")
+
+            # Check if Function Block will exist both as SW and HW. If yes generate dispatcher function (to delegate to SW or HW).
+            if subProgramImplementation.lower() == "c" and sp._fpgaConfigurations is not '':
+                if maybeFVname != "":
+                    self.C_SourceFile.write("asn1SccMyInteger %s_%s%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id), dispatcherSuffix))
+                else:  # pragma: no cover
+                    self.C_SourceFile.write("asn1SccMyInteger %s%s(" % (self.CleanNameAsADAWants(sp._id), dispatcherSuffix))  # pragma: no cover                    
+                for param in sp._params:
+                    if param._id != sp._params[0]._id:
+                        self.C_SourceFile.write(', ')
+                    if isinstance(param, InParam):
+                        self.C_SourceFile.write('void *p' + self.CleanNameAsToolWants(param._id) + ', size_t size_' + self.CleanNameAsToolWants(param._id))
+                    else:
+                        self.C_SourceFile.write('void *p' + self.CleanNameAsToolWants(param._id) + ', size_t *pSize_' + self.CleanNameAsToolWants(param._id))
+                self.C_SourceFile.write(")\n{\n")
+                self.C_SourceFile.write('    return 0;\n');
+                self.C_SourceFile.write("}\n\n")
 
             self.ADA_HeaderFile.write(
                 "procedure Ada_Execute_%s;\n" % self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation))

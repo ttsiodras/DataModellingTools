@@ -419,6 +419,8 @@ class VHDLGlueGenerator(SynchronousToolGlueGeneratorGeneric[List[int], List[int]
         self.C_SourceFile.write('''
 #include "ZestSC1.h"
 
+#include "C_ASN1_Types.h"
+
 #ifndef STATIC
 #define STATIC
 #endif
