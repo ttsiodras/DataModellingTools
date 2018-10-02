@@ -12,3 +12,6 @@ RUN pip2 install SQLAlchemy psycopg2
 COPY requirements.txt /tmp/
 RUN pip3 install -r /tmp/requirements.txt
 RUN apt-get install less
+RUN apt-get install -y postgresql
+COPY setup_testdb.sh /tmp/
+RUN /tmp/setup_testdb.sh
