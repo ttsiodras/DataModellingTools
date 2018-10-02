@@ -8,8 +8,7 @@ PY_SRC:=$(filter-out dmt/B_mappers/antlr.main.py dmt/A_mappers/Stubs.py, ${PY_SR
 TYPING_FOLDER:=$(shell pip3 show typing | grep ^Location | sed 's,^.*: ,,')
 export PYTHONPATH=${TYPING_FOLDER}
 
-# all:	flake8 pylint mypy coverage testDB
-all:	testDB
+all:	flake8 pylint mypy coverage testDB
 
 flake8:
 	@echo Performing syntax checks via flake8...
