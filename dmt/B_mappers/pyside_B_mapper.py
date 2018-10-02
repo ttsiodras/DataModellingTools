@@ -216,7 +216,7 @@ def setSharedLib(dll=None):
     global shared_lib
     global {tcName}_via_shared_lib
     shared_lib = True
-    {tcName}_via_shared_lib = dll.{fvName}_{tcName}
+    {tcName}_via_shared_lib = dll.{fvName}_PI_{tcName}
 
 '''.format(fvName=FVname, tcName=CleanSP))
         g_PyDataModel.write('\ntc["{tcName}"] = '.format(tcName=CleanSP))
@@ -257,7 +257,12 @@ def {tmName}(tm_ptr, size):
 
 
 # Callback function prototype - a void* param, and returning nothing
-func = ctypes.CFUNCTYPE(None, ctypes.c_void_p, ctypes.c_long)
+# Apparently c_void_p does not work on 64 bits machines... use a workaround:
+class ReturnPointer (ctypes.Structure):
+    pass
+ReturnHandle = ctypes.POINTER(ReturnPointer)
+func = ctypes.CFUNCTYPE(None, ReturnHandle, ctypes.c_long)
+#func = ctypes.CFUNCTYPE(None, ctypes.c_void_p, ctypes.c_long)
 cmp_func = func({tmName})
 
 def setSharedLib(dll=None):
@@ -573,10 +578,17 @@ def WriteCodeForGUIControls(prefixes: List[str],  # pylint: disable=invalid-sequ
                 pyStr += '''["{prefixKey}"]'''.format(prefixKey=item)
 
     if isinstance(node, (AsnInt, AsnReal, AsnOctetString)):
-        if isinstance(node, (AsnInt, AsnReal)):
+        if isinstance(node, AsnInt):
             if g_onceOnly:
                 g_PyDataModel.write(
                     '''{'nodeTypename': '%s', 'type': '%s', 'id': '%s', 'minR': %d, 'maxR': %d}''' % (
+                        nodeTypename, node._name, txtPrefix,
+                        node._range[0], node._range[1]))
+
+        elif isinstance(node, AsnReal):
+            if g_onceOnly:
+                g_PyDataModel.write(
+                    '''{'nodeTypename': '%s', 'type': '%s', 'id': '%s', 'minR': %20.20f, 'maxR': %20.20f}''' % (
                         nodeTypename, node._name, txtPrefix,
                         node._range[0], node._range[1]))
 

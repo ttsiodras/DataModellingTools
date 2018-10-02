@@ -275,6 +275,9 @@ subprogram_type
                if property._name[-15:].lower() == "source_language":
                    stripQuotes = property._propertyExpressionOrList.replace("\"", "")
                    sp.SetLanguage(stripQuotes)
+               elif property._name[-10:].lower() == "fpga_modes":
+                   stripQuotes = property._propertyExpressionOrList.replace("\"", "")
+                   sp.SetFPGAModes(stripQuotes)
     } )?
     ( annex_subclause )?
     END eid:IDENT SEMI 
