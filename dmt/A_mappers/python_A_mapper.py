@@ -476,13 +476,13 @@ def DumpTypeDumper(
         for idx, child in enumerate(node._members):
             if isinstance(node, AsnChoice):
                 if variableName.startswith("path[i]"):
-                    lines.append(codeIndent + 'path.Reset(state)')
+                    lines.append(codeIndent + 'path.Reset(state)')  # pragma: nocover
                 lines.append(
                     codeIndent + 'if %s.kind.Get() == DV.%s:' % (
                         variableName,
                         CleanNameAsPythonWants(child[2])))
                 if variableName.startswith("path[i]"):
-                    lines.append(codeIndent + ' path.Reset(state)')
+                    lines.append(codeIndent + ' path.Reset(state)')  # pragma: nocover
                 sep = ": "
             elif idx > 0:
                 # Separate fields with comas:

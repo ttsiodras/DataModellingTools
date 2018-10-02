@@ -205,7 +205,7 @@ types). This used to cover Dumpable C/Ada Types and OG headers.'''
     outputDir = commonPy.configMT.outputDir
     asn1SccPath = spawn.find_executable('asn1.exe')
     # allow externally-defined flags when calling the asn1 compiler (e.g. to set word size based on target)
-    extraFlags = os.getenv ("ASN1SCC_FLAGS") or ""
+    extraFlags = os.getenv("ASN1SCC_FLAGS") or ""
     if asnFile is not None:
         if not asn1SccPath:
             panic("ASN1SCC seems not installed on your system (asn1.exe not found in PATH).\n")  # pragma: no cover
