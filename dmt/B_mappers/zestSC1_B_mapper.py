@@ -459,7 +459,7 @@ static void ErrorHandler(
     ZESTSC1_STATUS Status,
     const char *Msg)
 {
-    printf("**** TASTE - Function %s returned an error\\n        \\"%%s\\"\\n\\n", Function, Msg);
+    printf("**** TASTE - Function %s returned an error\\n        \\"%s\\"\\n\\n", Function, Msg);
     exit(1);
 }
 

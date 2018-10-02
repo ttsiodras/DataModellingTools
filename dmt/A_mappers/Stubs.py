@@ -26,7 +26,7 @@ import copy
 import DV_Types  # pylint: disable=import-error
 from ctypes import (
     cdll, c_void_p, c_ubyte, c_double, c_uint,
-    c_longlong, c_bool, c_int, c_long
+    c_longlong, c_bool, c_int, c_long, c_char
 )
 
 # load the *getset.so in this folder
@@ -252,18 +252,19 @@ An example for SetLength:
                     'double': c_double,
                     'flag': c_bool,
                     'int': c_int,
-                    'long': c_long
+                    'long': c_long,
+                    'char': c_ubyte # char
                 }.get(resType, None)
                 if cTypesResultType is None:
                     raise AsnCoderError("Result type of %s not yet supported in the Python mapper - contact support." % resType)
             bridgeFunc = getattr(JMP, bridgeFuncName)
             bridgeFunc.restype = cTypesResultType
             retVal = bridgeFunc(self._ptr, *self._params)
-        except:
+        except Exception as e:
             oldAP = self._accessPath
             if args.get("reset", True):
                 self.Reset()
-            raise AsnCoderError("The access path you used (%s) is not valid." % oldAP)
+            raise AsnCoderError("The access path you used (%s) is not valid. (%s)" % (oldAP, str(e)))
         if args.get("reset", True):
             self.Reset()
         return retVal

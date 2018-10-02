@@ -166,7 +166,7 @@ of each SUBPROGRAM param.'''
                     for step in python2className.split('.')[1:]:
                         klass = getattr(klass, step)
                     o.__class__ = klass
-            except Exception as _:
+            except Exception:
                 pass
 
         patchMe(sp)
@@ -207,7 +207,7 @@ types). This used to cover Dumpable C/Ada Types and OG headers.'''
     if asnFile is not None:
         if not asn1SccPath:
             panic("ASN1SCC seems not installed on your system (asn1.exe not found in PATH).\n")  # pragma: no cover
-        os.system('mono "{}" -wordSize 8 -typePrefix asn1Scc -Ada -equal -o "{}" "{}"'
+        os.system('mono "{}" -typePrefix asn1Scc -Ada -equal -o "{}" "{}"'
                   .format(asn1SccPath, outputDir, '" "'.join([asnFile])))
 
 

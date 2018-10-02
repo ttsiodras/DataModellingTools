@@ -89,11 +89,14 @@ def calculateForNativeAndASN1SCC(absASN1SCCpath, autosrc, names, inputFiles):
 
     # Spawn ASN1SCC.exe compiler - for MacOS define a new sh file calling mono Asn1f2.exe
     if platform.system() == "Windows" or platform.system() == "Darwin":
-        mysystem("%s -wordSize 8 -c -uPER -o \"%s\" %s %s" % (absASN1SCCpath, autosrc, acn, '"' + '" "'.join(inputFiles) + '"'))
+        mysystem("%s -c -uPER -o \"%s\" %s %s" % (absASN1SCCpath, autosrc, acn, '"' + '" "'.join(inputFiles) + '"'))
         for line in os.popen("%s -AdaUses %s" % (absASN1SCCpath, '" "'.join(inputASN1files))):
             g_AdaPackageNameOfType[line.split(':')[0]] = line.split(':')[1].rstrip()
     else:
-        mysystem("mono %s -wordSize 8 -c -uPER -o \"%s\" %s %s" % (absASN1SCCpath, autosrc, acn, '"' + '" "'.join(inputFiles) + '"'))
+        cmd = "mono %s -c -uPER -o \"%s\" %s %s" % (absASN1SCCpath, autosrc, acn, '"' + '" "'.join(inputFiles) + '"')
+        res = mysystem(cmd)
+        if res != 0:
+            panic("This command failed: %s\n" % cmd)
         for line in os.popen('mono  %s -AdaUses "%s"' % (absASN1SCCpath, '" "'.join(inputASN1files))):
             g_AdaPackageNameOfType[line.split(':')[0]] = line.split(':')[1].rstrip()
 
@@ -424,7 +427,7 @@ end Stream_Element_Buffer;
         if bAADLv2:
             o.write('    Deployment::ASN1_Module_Name => "%s";\n' % g_AdaPackageNameOfType[asnTypename].replace('_', '-'))
         if os.getenv('UPD') is None:
-            o.write('    Source_Language => ASN1;\n')
+            o.write('    Source_Language => (ASN1);\n')
         o.write('    -- Size of a buffer to cover all forms of message representation:\n')
         le_size = 0 if asnTypename not in messageSizes else messageSizes[asnTypename][0]
         o.write('    -- Real message size is %d; suggested aligned message buffer is...\n' % le_size)
@@ -487,6 +490,22 @@ end Stream_Element_Buffer;
             o.write('    Data_Model::Data_Representation => Struct;\n')
             o.write('END ' + cleanName + '_Buffer.impl;\n\n')
 
+    # Generate a SYSTEM in the DataView, otherwise Ocarina cannot parse it
+    # standalone. This allows buildsupport to get the list of ASN.1 files
+    # and modules, which is otherwise not visible unless those for which
+    # at least one type is referenced in a provided interface.
+    o.write('SYSTEM Taste_DataView\n')
+    o.write('END    Taste_DataView;\n\n')
+    o.write('SYSTEM IMPLEMENTATION Taste_DataView.others\n')
+    o.write('SUBCOMPONENTS\n')
+    for asnTypename in list(asnParser.g_names.keys()):
+        node = asnParser.g_names[asnTypename]
+        if node._isArtificial:
+            continue
+        cleanName = cleanNameAsAADLWants(asnTypename)
+        o.write('   %s : DATA %s;\n' % (cleanName, cleanName))
+    o.write('END Taste_DataView.others;\n')
+
     listOfAsn1Files = {}
     for asnTypename in list(asnParser.g_names.keys()):
         listOfAsn1Files[asnParser.g_names[asnTypename]._asnFilename] = 1
@@ -500,7 +519,7 @@ end Stream_Element_Buffer;
                 o.write('DATA ACN_' + fname + '\n')
                 o.write('PROPERTIES\n')
                 o.write('    Source_Text => ("' + possibleACN + '");\n')
-                o.write('    Source_Language => ACN;\n')
+                o.write('    Source_Language => (ACN);\n')
                 o.write('END ACN_' + fname + ';\n\n')
 
     o.write('end DataView;\n')

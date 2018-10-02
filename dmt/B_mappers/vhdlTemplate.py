@@ -362,7 +362,7 @@ taste.bit:      $(SRCS)
 {tab}cp "$@" ../TASTE.bit || exit 1
 
 $(SYSTEMC_GENERATED):   $(SYSTEMC_SRC)
-{tab}for i in $^ ; do if [ "`basename "$$i" | sed 's,^.*\.,,'`" = "cpp" ] ; then /c/Program\ Files/SystemCrafter/SystemCrafter\ SC/bin/craft.exe /vhdl $$i || exit 1; fi ; done
+{tab}for i in $^ ; do if [ "`basename "$$i" | sed 's,^.*\\.,,'`" = "cpp" ] ; then /c/Program\\ Files/SystemCrafter/SystemCrafter\\ SC/bin/craft.exe /vhdl $$i || exit 1; fi ; done
 
 test:
 {tab}cd .. ;  ./TASTE.exe

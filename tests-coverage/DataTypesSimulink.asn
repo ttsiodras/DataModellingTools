@@ -107,9 +107,34 @@ myVar MyInt ::= 4
 ConfigString ::= IA5String (SIZE(1..20))
 myStrVar ConfigString ::= "This is a test"
 
-T-TypeThatMustNotBeMapped ::= SEQUENCE {
+FixedLenConfigString ::= IA5String (SIZE (5))
+myStrFixed FixedLenConfigString ::= "Hello"
+
+T-TypeThatMustNotBeMappedExceptInPython ::= SEQUENCE {
     config  ConfigString,
-    param   INTEGER (0..10)
+    param   INTEGER (0..10),
+   fixstr  FixedLenConfigString DEFAULT "Hello"
 }
+E ::= INTEGER (0..255|1299)(5)
+TypeWithOptional ::= SEQUENCE {
+   a BOOLEAN OPTIONAL,
+   b INTEGER (0..255|1299),
+   c INTEGER (0..255),
+   d T-TypeThatMustNotBeMappedExceptInPython DEFAULT {config "Config", param 5, fixstr "World"}
+}
+
+push-it T-TypeThatMustNotBeMappedExceptInPython ::= {config "Config", param 5, fixstr "World"}
+
+SubTypeWithOptional ::= TypeWithOptional (WITH COMPONENTS {a ABSENT, c (42), b (1299)})
+
+SuperChoice ::= CHOICE {
+   first-choice BOOLEAN,
+   second-choice INTEGER (0..255),
+   third-choice TypeWithOptional
+}
+
+-- Choice items can be removed in subtypes
+SuperRestrictedChoice ::= SuperChoice (WITH COMPONENTS {second-choice ABSENT})
+
 
 END

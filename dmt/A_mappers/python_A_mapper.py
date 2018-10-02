@@ -1,23 +1,10 @@
 #
-# (C) Semantix Information Technologies.
+# (C) Semantix Information Technologies,
+#     Neuropublic,
+#     European Space Agency
 #
-# Semantix Information Technologies is licensing the code of the
-# Data Modelling Tools (DMT) in the following dual-license mode:
-#
-# Commercial Developer License:
-#       The DMT Commercial Developer License is the suggested version
-# to use for the development of proprietary and/or commercial software.
-# This version is for developers/companies who do not want to comply
-# with the terms of the GNU Lesser General Public License version 2.1.
-#
-# GNU LGPL v. 2.1:
-#       This version of DMT is the one to use for the development of
-# applications, when you are willing to comply with the terms of the
-# GNU Lesser General Public License version 2.1.
-#
-# Note that in both cases, there are no charges (royalties) for the
-# generated code.
-#
+# The license of the Data Modelling Tools (DMT) is GPL with Runtime Exception
+
 import re
 import os
 
@@ -28,7 +15,8 @@ from ..commonPy.utility import panic, inform
 from ..commonPy.asnAST import (
     AsnBool, AsnInt, AsnReal, AsnString, isSequenceVariable, AsnEnumerated,
     AsnSequence, AsnSet, AsnChoice, AsnMetaMember, AsnSequenceOf, AsnSetOf,
-    AsnBasicNode, AsnNode, AsnSequenceOrSet, AsnSequenceOrSetOf)
+    AsnBasicNode, AsnNode, AsnSequenceOrSet, AsnSequenceOrSetOf,
+    AsnAsciiString)
 from ..commonPy.asnParser import AST_Lookup, AST_Leaftypes
 from ..commonPy.cleanupNodes import SetOfBadTypenames
 
@@ -44,7 +32,7 @@ g_bHasStartupRunOnce = False
 
 def Version() -> None:
     print("Code generator: " +
-          "$Id: python_A_mapper.py 2400 2012-09-04 10:40:19Z ttsiodras $")  # pragma: no cover
+          "$Id: python_A_mapper.py $")  # pragma: no cover
 
 
 def CleanNameAsPythonWants(name: str) -> str:
@@ -52,7 +40,7 @@ def CleanNameAsPythonWants(name: str) -> str:
 
 
 def OnStartup(unused_modelingLanguage: str, asnFile: str, outputDir: str, badTypes: SetOfBadTypenames) -> None:
-    os.system("bash -c '[ ! -f \"" + outputDir + "/" + asnFile + "\" ] && cp \"" + asnFile + "\" \"" + outputDir + "\"'")
+    os.system("cp -u \"" + asnFile + "\" \"" + outputDir + "\"")
     this_path = os.path.dirname(__file__)
     stubs = this_path + os.sep + 'Stubs.py'
     os.system('cp "{}" "{}"'.format(stubs, outputDir))
@@ -158,7 +146,7 @@ $(BDIR)/$(GRAMMAR)_getset.c:       $(GRAMMAR).asn
 
 $(BDIR)/asn1crt.c $(BDIR)/$(GRAMMAR).c $(BDIR)/real.c $(BDIR)/acn.c $(BDIR)/$(GRAMMAR).h $(BDIR)/asn1crt.h:       $(GRAMMAR).asn
 %(tab)sif [ ! -f "$(GRAMMAR).acn" ] ; then %(mono)s $(ASN1SCC) -ACND -o $(BDIR) $< ; fi
-%(tab)s%(mono)s $(ASN1SCC) -ACN -c -uPER -equal -wordSize 8 -o $(BDIR) $< $(GRAMMAR).acn
+%(tab)s%(mono)s $(ASN1SCC) -ACN -c -uPER -equal -o $(BDIR) $< $(GRAMMAR).acn
 
 $(BDIR)/DV.py:       $(GRAMMAR).asn
 %(tab)sgrep 'REQUIRED_BYTES_FOR_.*ENCODING' $(BDIR)/$(GRAMMAR).h | awk '{print $$2 " = " $$3}' > $@
@@ -182,6 +170,7 @@ clean:
     g_outputGetSetC.write('\n/* Helper functions for NATIVE encodings */\n\n')
 
     def WorkOnType(nodeTypeName: str) -> None:
+        inform("Python_A_mapper: Working on type '%s'...", nodeTypeName)
         typ = CleanNameAsPythonWants(nodeTypeName)
         g_outputGetSetH.write('void SetDataFor_%s(void *dest, void *src);\n' % typ)
         g_outputGetSetH.write("byte* MovePtrBySizeOf_%s(byte *pData);\n" % typ)
@@ -329,7 +318,6 @@ def CommonBaseImpl(comment: str,
         g_outputGetSetC.write("}\n")
 
 
-# def CommonBaseImplSequenceFixed(comment, ctype, path, params, accessPathInC, node, postfix = ""):
 def CommonBaseImplSequenceFixed(comment: str,
                                 ctype: str,
                                 path: str,
@@ -346,6 +334,31 @@ def CommonBaseImplSequenceFixed(comment: str,
     g_outputGetSetC.write("\n/* %s */\nvoid %s_Set%s(%s, %s value)\n" % (comment, path, postfix, params.GetDecl(), ctype))
     g_outputGetSetC.write("{\n")
     g_outputGetSetC.write("    fprintf(stderr, \"WARNING: setting length of fixed-length sequence\\n\");\n")
+    g_outputGetSetC.write("}\n")
+
+
+def CommonBaseImplIA5String(comment: str,
+                            ctype: str,
+                            path: str,
+                            params: Params,
+                            accessPathInC: str,
+                            node: AsnAsciiString) -> None:
+    g_outputGetSetH.write("\n/* %s */\n%s %s_GetLength(%s);\n" % (comment, ctype, path, params.GetDecl()))
+    g_outputGetSetC.write("\n/* %s */\n%s %s_GetLength(%s)\n" % (comment, ctype, path, params.GetDecl()))
+    g_outputGetSetC.write("{\n")
+    if not isSequenceVariable(node):
+        g_outputGetSetC.write("    return " + str(node._range[-1]) + ";\n")
+    else:
+        g_outputGetSetC.write("    return strlen((*root)" + accessPathInC + ");\n")
+    g_outputGetSetC.write("}\n")
+    g_outputGetSetH.write("\n/* %s */\nvoid %s_SetLength(%s, %s value);\n" % (comment, path, params.GetDecl(), ctype))
+    g_outputGetSetC.write("\n/* %s */\nvoid %s_SetLength(%s, %s value)\n" % (comment, path, params.GetDecl(), ctype))
+    g_outputGetSetC.write("{\n")
+    if not isSequenceVariable(node):
+        g_outputGetSetC.write("    assert(value == " + str(node._range[-1]) + ");\n")
+        # g_outputGetSetC.write("    fprintf(stderr, \"WARNING: setting length of fixed-length string\\n\");\n")
+    else:
+        g_outputGetSetC.write("    (*root)" + accessPathInC + "[value] = 0;\n")
     g_outputGetSetC.write("}\n")
 
 
@@ -367,6 +380,13 @@ def CreateGettersAndSetters(
         CommonBaseImpl("INTEGER", "asn1SccSint", path, params, accessPathInC)
     elif isinstance(node, AsnReal):
         CommonBaseImpl("REAL", "double", path, params, accessPathInC)
+    elif isinstance(node, AsnAsciiString):
+        if not node._range:
+            panic("Python_A_mapper: IA5String (in %s) must have a SIZE constraint!\n" % node.Location())  # pragma: no cover
+        CommonBaseImplIA5String("IA5String", "long", path, params, accessPathInC, node)
+        params.AddParam('int', "iDx", leafTypeDict)
+        CommonBaseImpl("IA5String_bytes", "char", path + "_iDx", params, accessPathInC + ("[" + params._vars[-1] + "]"), "")
+        params.Pop()
     elif isinstance(node, AsnString):
         if not node._range:
             panic("Python_A_mapper: string (in %s) must have a SIZE constraint!\n" % node.Location())  # pragma: no cover
@@ -539,12 +559,13 @@ def CreateDeclarationForType(nodeTypename: str, names: AST_Lookup, leafTypeDict:
         g_outputFile.write("        print(self.GSER() + '\\n')\n\n\n")
 
     else:  # pragma: no cover
-        panic("Unexpected ASN.1 type... Send this grammar to Semantix")  # pragma: no cover
+        panic("Unexpected ASN.1 type... Send this grammar to ESA")  # pragma: no cover
 
 
 def CreateDeclarationsForAllTypes(names: AST_Lookup, leafTypeDict: AST_Leaftypes, badTypes: SetOfBadTypenames) -> None:
     for nodeTypename in names:
-        if not names[nodeTypename]._isArtificial and nodeTypename not in badTypes:
+        # Do not ignore the so called "bad types". In python, IA5Strings are supported
+        if not names[nodeTypename]._isArtificial:  # and nodeTypename not in badTypes:
             CreateDeclarationForType(nodeTypename, names, leafTypeDict)
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
