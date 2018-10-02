@@ -9,7 +9,7 @@ TYPING_FOLDER:=$(shell pip3 show typing | grep ^Location | sed 's,^.*: ,,')
 export PYTHONPATH=${TYPING_FOLDER}
 
 # all:	flake8 pylint mypy coverage testDB
-all:	flake8 mypy coverage testDB
+all:	flake8 mypy coverage
 
 flake8:
 	@echo Performing syntax checks via flake8...
