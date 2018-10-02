@@ -23,11 +23,15 @@ from __future__ import absolute_import
 import os
 import re
 import copy
+import sys
 import DV_Types  # pylint: disable=import-error
 from ctypes import (
     cdll, c_void_p, c_ubyte, c_double, c_uint,
     c_longlong, c_bool, c_int, c_long, c_char
 )
+
+if sys.version_info > (3,):
+    long = int
 
 # load the *getset.so in this folder
 script_path = os.path.dirname(os.path.realpath(__file__))
@@ -102,12 +106,20 @@ class DataStream(object):
 
     def GetPyString(self):
         # print "Reading",
-        msg = ""
-        pData = c_void_p(GetBitstreamBuffer(self._bs))
-        for i in range(0, GetStreamCurrentLength(self._bs)):
-            b = GetBufferByte(pData, i)
-            msg += chr(b)
-            # print b, ",",
+        if sys.version_info > (3,):
+            msg = b""
+            pData = c_void_p(GetBitstreamBuffer(self._bs))
+            for i in range(0, GetStreamCurrentLength(self._bs)):
+                b = GetBufferByte(pData, i)
+                msg += bytes([b])
+                # print b, ",",
+        else:
+            msg = ""
+            pData = c_void_p(GetBitstreamBuffer(self._bs))
+            for i in range(0, GetStreamCurrentLength(self._bs)):
+                b = GetBufferByte(pData, i)
+                msg += chr(b)
+                # print b, ",",
         # print "EOF"
         return msg
 
