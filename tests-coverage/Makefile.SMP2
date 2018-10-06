@@ -4,7 +4,7 @@ include common.mk
 # the one installed in $HOME/.local via setup.py.
 #
 # To address this, we find where our pip-installed typing lives:
-TYPING_FOLDER:=$(shell pip3 show typing | grep ^Location | sed 's,^.*: ,,')
+TYPING_FOLDER:=$(shell pip3 show typing 2>/dev/null | grep ^Location | sed 's,^.*: ,,')
 export PYTHONPATH:=..:${TYPING_FOLDER}
 
 all:
