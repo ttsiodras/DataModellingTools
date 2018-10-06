@@ -741,7 +741,7 @@ def CommonSeqSetChoice(
             if opti and opti == "True":
                 utility.warn("OPTIONAL attribute ignored (for field contained in %s,%s)" % (newModule._asnFilename, lineNo))
             enumID = GetAttr(x, "EnumID")
-            myMembers.append([GetAttr(x, "VarName"), GenericFactory(newModule, GetChild(x, "Type"))])
+            myMembers.append([GetAttr(x, "VarName"), GenericFactory(newModule, GetChild(x, "Type")), opti == "True"])
             myMembers[-1].append(enumID)
     for tup in myMembers:
         if isinstance(tup[1], AsnMetaType):

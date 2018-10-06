@@ -62,18 +62,18 @@
 #                   |                 |                |           |
 #                   |                 +----------------+           |
 #    +-----------------------------+           ^                   |
-#    |        AsnEnumerated        |           |      +------------------------+
-#    |-----------------------------|           |      | AsnSequenceOf/AsnSetOf |
-#    | _members list:(name, value) |           |      |------------------------|
-#    +-----------------------------+           |      | _containedType         |
-#                     +-----------------------------+ | value: string,         |
-#                     |     AsnSequence/AsnSet      | |        AsnBasicNode,   |
-#                     |-----------------------------| |        AsnEnumerated   |
-#                     | _members list:(name, value) | +------------------------+
-#                     | value: AsnBasicNode,        |
-#                     |        AsnEnumerated,       |
-#                     |        AsnMetaMember        |
-#                     +-----------------------------+
+#    |        AsnEnumerated        |           |             +------------------------+
+#    |-----------------------------|           |             | AsnSequenceOf/AsnSetOf |
+#    | _members list:(name, value) |           |             |------------------------|
+#    +-----------------------------+           |             | _containedType         |
+#                     +------------------------------------+ | value: string,         |
+#                     |     AsnSequence/AsnSet             | |        AsnBasicNode,   |
+#                     |-----------------------------       | |        AsnEnumerated   |
+#                     | _members list:(name, value, opt/al)| +------------------------+
+#                     | value: AsnBasicNode,               |
+#                     |        AsnEnumerated,              |
+#                     |        AsnMetaMember               |
+#                     +------------------------------------+
 
 from typing import List, Union, Dict, Any  # NOQA pylint: disable=unused-import
 
@@ -461,8 +461,9 @@ This class stores the semantic content of an ASN.1 SEQUENCE.
 Members:
     _name : the name of the type
     _members    : a tuple of all child elements. Each tuple contains
-                  two elements: the name of the variable and the
-                  type itself (as an AsnInt, AsnReal, ... or an AsnMetaMember).
+                  three elements: the name of the variable, the type itself
+                  (as an AsnInt, AsnReal, ... or an AsnMetaMember), and
+                  an optionality boolean (true mean OPTIONAL)
 '''
     validOptions = ['members', 'lineno', 'asnFilename']
 
