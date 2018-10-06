@@ -265,7 +265,7 @@ def CommonSeqSetChoice(nodeTypename: str,
         for c in node._members:
             cleanFieldname = CleanName(c[0])
             memberAssignments.append(
-                'if self.kind == DV.' + c[-1] + ':')
+                'if self.kind == DV.' + c[2] + ':')
             memberAssignments.append('    pyObj.Reset(state)')
             assert isinstance(c[1], AsnMetaMember)
             containedTypename = CleanName(c[1]._containedType)
@@ -346,7 +346,7 @@ class {cleanTypename}_SQL(Base):
         if isChoice:
             g_sqlalchemyOutput.write(
                 '        '
-                'if self.kind == DV.' + c[-1] + ':\n')
+                'if self.kind == DV.' + c[2] + ':\n')
             g_sqlalchemyOutput.write(
                 '            '
                 'self.{cleanFieldname} = '
