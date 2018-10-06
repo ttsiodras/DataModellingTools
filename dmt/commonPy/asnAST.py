@@ -67,12 +67,14 @@
 #    | _members list:(name, value) |           |             |------------------------|
 #    +-----------------------------+           |             | _containedType         |
 #                     +------------------------------------+ | value: string,         |
-#                     |     AsnSequence/AsnSet             | |        AsnBasicNode,   |
-#                     |-----------------------------       | |        AsnEnumerated   |
-#                     | _members list:(name, value, opt/al)| +------------------------+
+#                     |     AsnSequence/AsnSet/AsnChoice   | |        AsnBasicNode,   |
+#                     |------------------------------------| |        AsnEnumerated   |
+#                     | _members list:(name, value, en, op)| +------------------------+
 #                     | value: AsnBasicNode,               |
 #                     |        AsnEnumerated,              |
 #                     |        AsnMetaMember               |
+#                     | en: the EnumID from ASN1SCC        |
+#                     | op: the OPTIONAL-ity status        |
 #                     +------------------------------------+
 
 from typing import List, Union, Dict, Any  # NOQA pylint: disable=unused-import
