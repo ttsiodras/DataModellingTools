@@ -42,7 +42,7 @@ from .commonPy.commonSMP2 import (
     DashUnderscoreAgnosticDict, ConvertCatalogueToASN_AST)
 
 
-def usage(coloredMsg: str="") -> None:
+def usage(coloredMsg: str = "") -> None:
     '''Prints help message and aborts. '''
     usageMsg = 'Usage: smp2asn <options> <smp2Catalogues...>\n\n' \
         'Where options must include:\n' \

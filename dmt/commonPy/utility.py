@@ -77,14 +77,14 @@ def panicWithCallStack(msg: str) -> NoReturn:
 
 
 def lcfirst(word: str) -> str:
-    if len(word):
+    if word:
         return word[:1].lower() + word[1:]
     else:
         return word
 
 
 def ucfirst(word: str) -> str:
-    if len(word):
+    if word:
         return word[:1].upper() + word[1:]
     else:
         return word
@@ -110,7 +110,7 @@ def readContexts(tapNumbers: str) -> Dict[str, str]:
 
 
 class Matcher:
-    def __init__(self, pattern: str, flags: Any=0) -> None:
+    def __init__(self, pattern: str, flags: Any = 0) -> None:
         self._pattern = re.compile(pattern, flags)
         self._lastOne = None  # type: Union[str, None]
         self._match = None  # type: Union[Match, None]

@@ -228,9 +228,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    if "-pdb" in sys.argv:
-        sys.argv.remove("-pdb")  # pragma: no cover
-        import pdb  # pragma: no cover pylint: disable=wrong-import-position,wrong-import-order
-        pdb.run('main()')  # pragma: no cover
-    else:
-        main()
+    main()

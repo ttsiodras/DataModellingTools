@@ -80,7 +80,7 @@ but with an extra call to OnFinal at the end.
 
 import os
 import sys
-import distutils.spawn as spawn
+from distutils import spawn
 
 from typing import cast, Optional, Dict, List, Tuple, Set, Any  # NOQA pylint: disable=unused-import
 
@@ -301,7 +301,7 @@ def ProcessAsync(  # pylint: disable=dangerous-default-value
         maybeFVname: str,
         useOSS: bool,
         badTypes: SetOfBadTypenames,
-        loaded_languages_cache: List[str]=[]) -> Async_B_Mapper:  # pylint: disable=invalid-sequence-index
+        loaded_languages_cache: List[str] = []) -> Async_B_Mapper:  # pylint: disable=invalid-sequence-index
 
     backend = getAsyncBackend(modelingLanguage)
 
@@ -390,7 +390,7 @@ def ProcessCustomBackends(
         # We do, start the work
         spName, sp_impl, lang, maybeFVname = si[0], si[1], si[2], si[3]
         sp = commonPy.aadlAST.g_apLevelContainers[spName]
-        if len(sp._params) == 0:
+        if not sp._params:
             if lang.lower() == "gui_ri":  # pragma: no cover
                 if "gui_polling" not in sp._id:  # pragma: no cover
                     panic("Due to wxWidgets limitations, your TCs must have at least one parameter (fix %s)" % sp._id)  # pragma: no cover
@@ -500,7 +500,7 @@ def main() -> None:
     if len(asn1files) == 1:
         asnFile = asn1files[0]
         commonPy.asnParser.ParseAsnFileList(asn1files)
-    elif len(asn1files) != 0:
+    elif asn1files:
         panic("There appear to be more than one ASN.1 files referenced (%s)..." % str(asn1files))
 
     if asnFile is not None:
@@ -547,8 +547,8 @@ def main() -> None:
         sp = commonPy.aadlAST.g_apLevelContainers[spName]
         inform("Creating glue for parameters of %s.%s...", sp._id, sp_impl)
 
-        # Avoid generating empty glue - no parameters for this APLC
-        if len(sp._params) == 0:
+        if not sp._params:
+            # Avoid generating empty glue - no parameters for this APLC
             continue
 
         # All SCADE versions are handled by lustre_B_mapper
@@ -573,9 +573,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    if "-pdb" in sys.argv:
-        sys.argv.remove("-pdb")  # pragma: no cover
-        import pdb  # pragma: no cover pylint: disable=wrong-import-position,wrong-import-order
-        pdb.run('main()')  # pragma: no cover
-    else:
-        main()
+    main()

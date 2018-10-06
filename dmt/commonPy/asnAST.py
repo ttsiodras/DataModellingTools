@@ -145,7 +145,7 @@ Members:
         self._leafType = "BOOLEAN"
         self._lineno = args.get('lineno', None)
         self._bDefaultValue = args.get('bDefaultValue', None)
-        for i in args.keys():
+        for i in args:
             assert i in AsnBool.validOptions
 
     def __repr__(self) -> str:
@@ -178,7 +178,7 @@ Members:
         self._lineno = args.get('lineno', None)
         self._range = args.get('range', [])
         self._iDefaultValue = args.get('iDefaultValue', None)
-        for i in args.keys():
+        for i in args:
             assert i in AsnInt.validOptions
 
     def __repr__(self) -> str:
@@ -224,7 +224,7 @@ Members:
         self._baseRange = args.get('base', None)
         self._exponentRange = args.get('exponent', None)
         self._dbDefaultValue = args.get('defaultValue', None)
-        for i in args.keys():
+        for i in args:
             assert i in AsnReal.validOptions
 
     def __repr__(self) -> str:
@@ -274,7 +274,7 @@ Members:
         # nameless string types can't be used, so a unique pseudo-type name
         # is created from the fieldname + "_type"
         self._pseudoname = None  # type: Union[None, str]
-        for i in args.keys():
+        for i in args:
             assert i in AsnString.validOptions
 
     def __repr__(self) -> str:
@@ -387,7 +387,7 @@ Members:
         # nameless string types can't be used, so a unique pseudo-type name
         # is created from the fieldname + "_type"
         self._pseudoname = None  # type: Union[None, str]
-        for i in args.keys():
+        for i in args:
             assert i in AsnEnumerated.validOptions
         existing = {}  # type: Dict[str, int]
         for elem in self._members:
@@ -472,7 +472,7 @@ Members:
         self._leafType = "SEQUENCE"
         self._members = args.get('members', [])
         self._lineno = args.get('lineno', None)
-        for i in args.keys():
+        for i in args:
             assert i in AsnSequence.validOptions
         existing = {}  # type: Dict[str, int]
         for elem in self._members:
@@ -513,7 +513,7 @@ class AsnSet(AsnComplexNode):
         self._leafType = "SET"
         self._members = args.get('members', [])
         self._lineno = args.get('lineno', None)
-        for i in args.keys():
+        for i in args:
             assert i in AsnSequence.validOptions
         existing = {}  # type: Dict[str, int]
         for elem in self._members:
@@ -563,7 +563,7 @@ Members:
         self._leafType = "CHOICE"
         self._members = args.get('members', [])
         self._lineno = args.get('lineno', None)
-        for i in args.keys():
+        for i in args:
             assert i in AsnChoice.validOptions
         existing = {}  # type: Dict[str, int]
         for elem in self._members:
@@ -642,7 +642,7 @@ Members:
         self._lineno = args.get('lineno', None)
         self._name = "unnamed"  # default in case of SEQUENCE_OF SEQUENCE_OF
         self._leafType = "SEQUENCEOF"
-        for i in args.keys():
+        for i in args:
             assert i in AsnSequenceOf.validOptions
 
     def __repr__(self) -> str:
@@ -675,7 +675,7 @@ class AsnSetOf(AsnComplexNode):
         self._lineno = args.get('lineno', None)
         self._name = "unnamed"  # default in case of SEQUENCE_OF SEQUENCE_OF
         self._leafType = "SETOF"
-        for i in args.keys():
+        for i in args:
             assert i in AsnSequenceOf.validOptions
 
     def __repr__(self) -> str:
@@ -715,7 +715,7 @@ Members:
         self._lineno = args.get('lineno', None)
         self._Min = args.get('Min', None)
         self._Max = args.get('Max', None)
-        for i in args.keys():
+        for i in args:
             assert i in AsnMetaMember.validOptions
 
     def __repr__(self) -> str:
@@ -747,7 +747,7 @@ e.g.:
         self._lineno = args.get('lineno', None)
         self._Min = args.get('Min', None)
         self._Max = args.get('Max', None)
-        for i in args.keys():
+        for i in args:
             assert i in AsnMetaType.validOptions
 
     def __repr__(self) -> str:

@@ -213,7 +213,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
              self.CleanNameAsADAWants(subProgram._id + "_" + subProgramImplementation),
              self.CleanNameAsADAWants(param._id))
 
-        srcVar = self.SourceVar(nodeTypename, encoding, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
+        srcVar = self.SourceVar(nodeTypename, encoding, node, subProgram, subProgramImplementation, param, leafTypeDict, names)  # pylint: disable=assignment-from-no-return
 
         if subProgramImplementation == "QGenAda":
             self.ADA_HeaderFile.write(
@@ -224,7 +224,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                 (tmpSpName, self.CleanNameAsToolWants(nodeTypename), "asn1Scc" + self.CleanNameAsToolWants(nodeTypename)))
             self.ADA_SourceFile.write('begin\n')
 
-            toolToAsn1 = self.FromToolToASN1SCC()
+            toolToAsn1 = self.FromToolToASN1SCC()  # pylint: disable=assignment-from-no-return
             lines = toolToAsn1.Map(
                 "QGen_OUT",
                 "T_OUT",
@@ -276,9 +276,9 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
 
             # Write the mapping code for the message
             if self.useOSS and encoding.lower() == "uper":
-                toolToAsn1 = self.FromToolToOSS()
+                toolToAsn1 = self.FromToolToOSS()  # pylint: disable=assignment-from-no-return
             else:
-                toolToAsn1 = self.FromToolToASN1SCC()
+                toolToAsn1 = self.FromToolToASN1SCC()  # pylint: disable=assignment-from-no-return
             lines = toolToAsn1.Map(
                 srcVar,
                 "var_" + self.CleanNameAsToolWants(nodeTypename),
@@ -345,7 +345,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
              self.CleanNameAsADAWants(subProgram._id + "_" + subProgramImplementation),
              param._id)
 
-        targetVar = self.TargetVar(nodeTypename, encoding, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
+        targetVar = self.TargetVar(nodeTypename, encoding, node, subProgram, subProgramImplementation, param, leafTypeDict, names)  # pylint: disable=assignment-from-no-return
 
         if subProgramImplementation == "QGenAda":
             self.ADA_HeaderFile.write(
@@ -356,7 +356,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                 (tmpSpName, "asn1Scc" + self.CleanNameAsToolWants(nodeTypename), self.CleanNameAsToolWants(nodeTypename)))
             self.ADA_SourceFile.write('    begin\n')
 
-            asn1ToTool = self.FromASN1SCCtoTool()
+            asn1ToTool = self.FromASN1SCCtoTool()  # pylint: disable=assignment-from-no-return
             lines = asn1ToTool.Map(
                 "T_IN",
                 "QGen_IN",
@@ -422,7 +422,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                                              self.CleanNameAsToolWants(nodeTypename)))
 
             if self.useOSS and encoding.lower() == "uper":
-                asn1ToTool = self.FromOSStoTool()
+                asn1ToTool = self.FromOSStoTool()  # pylint: disable=assignment-from-no-return
                 lines = asn1ToTool.Map(
                     "(*pVar_" + self.CleanNameAsToolWants(nodeTypename) + ")",
                     targetVar,
@@ -430,7 +430,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                     leafTypeDict,
                     names) if asn1ToTool else []
             else:
-                asn1ToTool = self.FromASN1SCCtoTool()
+                asn1ToTool = self.FromASN1SCCtoTool()  # pylint: disable=assignment-from-no-return
                 lines = asn1ToTool.Map(
                     "var_" + self.CleanNameAsToolWants(nodeTypename),
                     targetVar,
@@ -555,7 +555,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                      encoding.lower(),
                      self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation),
                      param._id)
-                if isinstance(param, InOutParam) or isinstance(param, OutParam):
+                if isinstance(param, (InOutParam, OutParam)):  # pylint: disable=assignment-from-no-return
                     self.ADA_SourceFile.write(
                         '        %s(QGen_%s, %s.all);\n' % (
                             tmpSpName,
@@ -645,7 +645,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                      encoding.lower(),
                      self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation),
                      param._id)
-                if isinstance(param, InOutParam) or isinstance(param, OutParam):
+                if isinstance(param, (InOutParam, OutParam)):
                     self.C_SourceFile.write('    *pSize_%s = %s(p%s, %s);\n' %
                                             (self.CleanNameAsToolWants(param._id),
                                              tmpSpName,

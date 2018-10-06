@@ -326,7 +326,7 @@ def ConvertCatalogueToASN_AST(
     for inputSmp2File in inputSmp2Files:
         a = etree.parse(open(inputSmp2File))  # type: Any  # mypy bugs in ElementTree handling
         root = a.getroot()
-        if len(root) < 1 or not root.tag.endswith('Catalogue'):
+        if len(root) < 1 or not root.tag.endswith('Catalogue'):  # pylint: disable=len-as-condition
             panic('', "You must use an XML file that contains an SMP2 Catalogue")  # pragma: no cover
         for t in root.xpath("//Type"):
             a = Attributes(t)
@@ -342,7 +342,7 @@ def ConvertCatalogueToASN_AST(
     for inputSmp2File in inputSmp2Files:
         a = etree.parse(open(inputSmp2File))
         root = a.getroot()
-        if len(root) < 1 or not root.tag.endswith('Catalogue'):
+        if len(root) < 1 or not root.tag.endswith('Catalogue'):  # pylint: disable=len-as-condition
             panic('', "You must use an XML file that contains an SMP2 Catalogue")  # pragma: no cover
         for t in root.xpath("//Type"):
             # Find the enclosing Namespace element
