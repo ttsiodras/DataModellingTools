@@ -127,7 +127,7 @@ class VHDL_Circuit:
     allCircuits = []  # type: List[VHDL_Circuit]
     lookupSP = {}  # type: Dict[str, VHDL_Circuit]
     currentCircuit = None  # type: VHDL_Circuit
-    names = None  # type: asnParser.AST_Lookup
+    names = {}  # type: asnParser.AST_Lookup
     leafTypeDict = None  # type: asnParser.AST_Leaftypes
     currentOffset = 0x0  # type: int
 
@@ -1042,7 +1042,7 @@ def OnFinal() -> None:
 
     totalIn = 0
     for p in VHDL_Circuit.allCircuits[0]._sp._params:
-        if isinstance(p, InParam) or isinstance(p, InOutParam):
+        if isinstance(p, (InParam, InOutParam)):
             totalIn += RegistersAllocated(p._signal._asnNodename)
     AddToStr('numberOfInputRegisters', str(totalIn / 4))
 

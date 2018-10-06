@@ -499,7 +499,7 @@ Members:
             isinstance(other, (AsnSet, AsnSequence, AsnChoice)) and \
             CommonIdenticalCheck(self, other, mynames, othernames)
 
-    def AsASN1(self, typeDict: Lookup=None) -> str:
+    def AsASN1(self, typeDict: Lookup = None) -> str:
         if typeDict is None:
             typeDict = {}
         return CommonAsASN1('SEQUENCE', self, typeDict)
@@ -540,7 +540,7 @@ class AsnSet(AsnComplexNode):
             isinstance(other, (AsnSet, AsnSequence, AsnChoice)) and \
             CommonIdenticalCheck(self, other, mynames, othernames)
 
-    def AsASN1(self, typeDict: Lookup=None) -> str:
+    def AsASN1(self, typeDict: Lookup = None) -> str:
         if typeDict is None:
             typeDict = {}
         return CommonAsASN1('SET', self, typeDict)
@@ -586,7 +586,7 @@ Members:
     def IdenticalPerSMP2(self, other: AsnNode, mynames: Lookup, othernames: Lookup) -> bool:
         return isinstance(other, AsnChoice) and CommonIdenticalCheck(self, other, mynames, othernames)
 
-    def AsASN1(self, typeDict: Lookup=None) -> str:
+    def AsASN1(self, typeDict: Lookup = None) -> str:
         if typeDict is None:
             typeDict = {}
         return CommonAsASN1('CHOICE', self, typeDict)
@@ -660,7 +660,7 @@ Members:
             isinstance(other, (AsnSequenceOf, AsnSetOf)) and \
             CommonIdenticalArrayCheck(self, other, mynames, othernames)
 
-    def AsASN1(self, typeDict: Lookup=None) -> str:
+    def AsASN1(self, typeDict: Lookup = None) -> str:
         if typeDict is None:
             typeDict = {}
         return CommonAsASN1array('SEQUENCE', self, typeDict)
@@ -693,7 +693,7 @@ class AsnSetOf(AsnComplexNode):
             isinstance(other, (AsnSequenceOf, AsnSetOf)) and \
             CommonIdenticalArrayCheck(self, other, mynames, othernames)
 
-    def AsASN1(self, typeDict: Lookup=None) -> str:
+    def AsASN1(self, typeDict: Lookup = None) -> str:
         if typeDict is None:
             typeDict = {}
         return CommonAsASN1array('SET', self, typeDict)

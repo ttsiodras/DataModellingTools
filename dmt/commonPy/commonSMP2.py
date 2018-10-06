@@ -1,9 +1,9 @@
 import re
 import sys
 
-from lxml import etree
-
 from typing import List, Union, Optional, Any, Tuple, Dict, NoReturn  # NOQA pylint: disable=unused-import
+
+from lxml import etree
 
 from .asnAST import (
     AsnBool, AsnInt, AsnReal, AsnEnumerated, AsnOctetString, AsnSequenceOf,
@@ -86,7 +86,7 @@ def info(level: int, *args: Any) -> None:
                 return
 
 
-def panic(x: str, coloredBanner: str="") -> NoReturn:
+def panic(x: str, coloredBanner: str = "") -> NoReturn:
     """Notifies the user that something fatal happened and aborts. """
     info(0, yellow + coloredBanner + white + '\n' + x)
     sys.exit(1)

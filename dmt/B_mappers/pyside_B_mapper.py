@@ -546,7 +546,7 @@ def WriteCodeForGUIControls(prefixes: List[str],  # pylint: disable=invalid-sequ
                             param: Param,
                             leafTypeDict: AST_Leaftypes,
                             names: AST_Lookup,
-                            nodeTypename: str='') -> None:
+                            nodeTypename: str = '') -> None:
     global g_firstElem
     global g_onceOnly
     global g_asnId
@@ -627,7 +627,7 @@ def WriteCodeForGUIControls(prefixes: List[str],  # pylint: disable=invalid-sequ
                     nodeTypename, node._name, txtPrefix))
             if isinstance(node, AsnChoice):
                 g_PyDataModel.write('''"choices":[''')
-            elif isinstance(node, AsnSequence) or isinstance(node, AsnSet):
+            elif isinstance(node, (AsnSequence, AsnSet)):
                 g_PyDataModel.write('''"children":[''')
         # Recurse on children
         if node._members:
