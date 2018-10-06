@@ -55,7 +55,7 @@ def IsElementMappedToPrimitive(node: AsnSequenceOrSetOf, names: AST_Lookup) -> b
     contained = node._containedType
     while isinstance(contained, str):
         contained = names[contained]
-    return isinstance(contained, AsnInt) or isinstance(contained, AsnReal) or isinstance(contained, AsnBool) or isinstance(contained, AsnEnumerated)
+    return isinstance(contained, (AsnInt, AsnReal, AsnBool, AsnEnumerated))
 
 
 # pylint: disable=no-self-use

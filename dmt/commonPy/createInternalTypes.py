@@ -61,8 +61,8 @@ def ScanChildren(
         node: AsnNode,
         names: Dict[str, AsnNode],
         results: List[str],  # pylint: disable=invalid-sequence-index
-        isRoot: bool=False,
-        createInnerNodesInNames: bool=True) -> None:
+        isRoot: bool = False,
+        createInnerNodesInNames: bool = True) -> None:
     '''
     Find all the types that this one (nodeTypename, node) depends on.
     and return them in the 'results' list. Use 'names' to lookup

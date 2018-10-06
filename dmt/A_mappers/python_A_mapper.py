@@ -247,7 +247,7 @@ def OnShutdown(unused_badTypes: SetOfBadTypenames) -> None:
     pass
 
 
-class Params(object):
+class Params:
     cTypes = {
         "BOOLEAN": "flag",
         "INTEGER": "asn1SccSint",
@@ -302,8 +302,8 @@ def CommonBaseImpl(comment: str,
                    path: str,
                    params: Params,
                    accessPathInC: str,
-                   postfix: str="",
-                   returnPointer: bool=False) -> None:
+                   postfix: str = "",
+                   returnPointer: bool = False) -> None:
     takeAddr = '&' if returnPointer else ''
     g_outputGetSetH.write("\n/* %s */\n%s %s_Get%s(%s);\n" % (comment, ctype, path, postfix, params.GetDecl()))
     g_outputGetSetC.write("\n/* %s */\n%s %s_Get%s(%s)\n" % (comment, ctype, path, postfix, params.GetDecl()))
@@ -324,7 +324,7 @@ def CommonBaseImplSequenceFixed(comment: str,
                                 params: Params,
                                 _: str,
                                 node: Union[AsnSequenceOf, AsnSetOf, AsnString],
-                                postfix: str="") -> None:
+                                postfix: str = "") -> None:
     g_outputGetSetH.write("\n/* %s */\n%s %s_Get%s(%s);\n" % (comment, ctype, path, postfix, params.GetDecl()))
     g_outputGetSetC.write("\n/* %s */\n%s %s_Get%s(%s)\n" % (comment, ctype, path, postfix, params.GetDecl()))
     g_outputGetSetC.write("{\n")
@@ -568,7 +568,7 @@ def CreateDeclarationForType(nodeTypename: str, names: AST_Lookup, leafTypeDict:
         panic("Unexpected ASN.1 type... Send this grammar to ESA")  # pragma: no cover
 
 
-def CreateDeclarationsForAllTypes(names: AST_Lookup, leafTypeDict: AST_Leaftypes, badTypes: SetOfBadTypenames) -> None:
+def CreateDeclarationsForAllTypes(names: AST_Lookup, leafTypeDict: AST_Leaftypes, unused_badTypes: SetOfBadTypenames) -> None:
     for nodeTypename in names:
         # Do not ignore the so called "bad types". In python, IA5Strings are supported
         if not names[nodeTypename]._isArtificial:  # and nodeTypename not in badTypes:

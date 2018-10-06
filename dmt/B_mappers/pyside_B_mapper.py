@@ -574,7 +574,7 @@ def WriteCodeForGUIControls(prefixes: List[str],  # pylint: disable=invalid-sequ
         if len(parentControl) >= i:
             pyStr += "[{index}]".format(index=parentControl[i - 1])
         for item in prefixes[i][len(prefixes[i - 1]):].split('.'):
-            if len(item) > 0:
+            if item:
                 pyStr += '''["{prefixKey}"]'''.format(prefixKey=item)
 
     if isinstance(node, (AsnInt, AsnReal, AsnOctetString)):

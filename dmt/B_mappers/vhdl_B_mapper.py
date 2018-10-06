@@ -1187,7 +1187,7 @@ def OnFinal() -> None:
         systemcBody.write('    }\n')
         systemcBody.write('}\n\n')
 
-    AddToStr('outputs', ', '.join(outputs) + (', ' if len(outputs) else ''))
+    AddToStr('outputs', ', '.join(outputs) + (', ' if outputs else ''))
     AddToStr('completions', ', '.join(completions))
 
     from . import vhdlTemplate

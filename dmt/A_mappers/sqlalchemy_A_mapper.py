@@ -252,7 +252,7 @@ class {cleanTypename}_SQL(Base):
 def CommonSeqSetChoice(nodeTypename: str,
                        node: Union[AsnSet, AsnSequence, AsnChoice],
                        unused_leafTypeDict: AST_Leaftypes,
-                       isChoice: bool=False) -> None:
+                       isChoice: bool = False) -> None:
     cleanTypename = CleanName(nodeTypename)
     choiceField = ''
     if isChoice:

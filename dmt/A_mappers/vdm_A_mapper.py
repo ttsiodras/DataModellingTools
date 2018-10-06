@@ -9,7 +9,7 @@ file created by Maxime Perrotin.
 
 import os
 import sys
-import distutils.spawn as spawn
+from distutils import spawn
 
 from typing import List, Union
 from ..commonPy.utility import panic

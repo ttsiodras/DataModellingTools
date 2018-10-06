@@ -168,6 +168,7 @@ mp_float_t mp_obj_get_float(mp_obj_t self_in);
 # pylint: disable=unused-argument
 # pylint: disable=no-self-use
 
+
 class MapUPyObjData(RecursiveMapperGeneric[str, str]):
     def __init__(self) -> None:
         pass
@@ -265,7 +266,7 @@ class MapUPyObjEncode(RecursiveMapperGeneric[str, Tuple[str, str]]):
 
     def MapInteger(self, srcVar: str, destVar: Tuple[str, str], _: AsnInt, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
         # TODO check range of integer
-        dest, _ = destVar
+        dest, unused = destVar
         return ['%s = mp_obj_new_int(%s);' % (dest, srcVar)]
 
     def MapReal(self, srcVar: str, destVar: Tuple[str, str], _: AsnReal, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
@@ -279,7 +280,7 @@ class MapUPyObjEncode(RecursiveMapperGeneric[str, Tuple[str, str]]):
         ]
 
     def MapBoolean(self, srcVar: str, destVar: Tuple[str, str], _: AsnBool, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
-        dest, _ = destVar
+        dest, unused = destVar
         return ['%s = mp_obj_new_bool(%s);' % (dest, srcVar)]
 
     def MapOctetString(self, srcVar: str, destVar: Tuple[str, str], node: AsnOctetString, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
@@ -299,7 +300,7 @@ class MapUPyObjEncode(RecursiveMapperGeneric[str, Tuple[str, str]]):
 
     def MapEnumerated(self, srcVar: str, destVar: Tuple[str, str], _: AsnEnumerated, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
         # TODO check the enum value fits in a small int and use MP_OBJ_NEW_SMALL_INT
-        dest, _ = destVar
+        dest, unused = destVar
         return ['%s = mp_obj_new_int(%s);' % (dest, srcVar)]
 
     def MapSequence(self, srcVar: str, destVar: Tuple[str, str], node: AsnSequenceOrSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:

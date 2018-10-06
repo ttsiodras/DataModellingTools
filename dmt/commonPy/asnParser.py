@@ -45,6 +45,9 @@ ASN.1 Parser
 This module parses ASN.1 grammars and creates an abstract syntax tree (AST)
 inside configMT.inputCodeAST, for use with the code generators.
 '''
+
+# pylint: disable=too-many-lines
+
 import os
 import sys
 import copy
@@ -384,7 +387,7 @@ def CheckForInvalidKeywords(node_or_str: Union[str, AsnNode]) -> None:
 
 def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=invalid-sequence-index
     # Add basic ASN.1 caching to avoid calling the ASN.1 compiler over and over
-    projectCache = os.getenv ("PROJECT_CACHE")
+    projectCache = os.getenv("PROJECT_CACHE")
     if projectCache is not None and not os.path.isdir(projectCache):
         utility.panic(
             "The configured cache folder:\n\n\t" + projectCache + "\n\n...is not there!\n")

@@ -24,7 +24,7 @@ code generator A.'''
 
 import os
 import sys
-import distutils.spawn as spawn
+from distutils import spawn
 
 from typing import List
 from ..commonPy.utility import panic
