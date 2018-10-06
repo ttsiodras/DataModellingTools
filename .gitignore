@@ -14,3 +14,4 @@ tests-sqlalchemy/test.db
 tests-sqlalchemy/verifier/LotsOfDataTypes.asn
 tests-sqlalchemy/verifier/asn2dataModel/
 .mypy_cache
+env
