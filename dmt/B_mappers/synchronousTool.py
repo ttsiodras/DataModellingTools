@@ -703,7 +703,15 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                 self.C_SourceFile.write('       if(!strcmp(p_szGlobalState, fConfig)){\n')
                 self.C_SourceFile.write('           // delegate to HW\n')
                 self.C_SourceFile.write('           printf("[###### Dispatcher ######] Delegating to HW ... (to be implemented) \\n");\n')
-                self.C_SourceFile.write('           // called_compute_something_Brave_Fpga(pinp, size_inp, poutp, pSize_outp);\n')
+                self.C_SourceFile.write("           %s_%s%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id), fpgaSuffix))
+                for param in sp._params:
+                    if param._id != sp._params[0]._id:
+                        self.C_SourceFile.write(', ')
+                    if isinstance(param, InParam):
+                        self.C_SourceFile.write('p' + self.CleanNameAsToolWants(param._id) + ', size_' + self.CleanNameAsToolWants(param._id))
+                    else:
+                        self.C_SourceFile.write('p' + self.CleanNameAsToolWants(param._id) + ', pSize_' + self.CleanNameAsToolWants(param._id))
+                self.C_SourceFile.write(");\n")
                 self.C_SourceFile.write('           // delegated to HW, return 0\n')
                 self.C_SourceFile.write('           return 0;\n')
                 self.C_SourceFile.write('       }\n')

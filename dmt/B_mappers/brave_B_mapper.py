@@ -525,6 +525,7 @@ static void ErrorHandler(
         self.C_SourceFile.write("        // Wait for processing logic to complete\n")
         #self.C_SourceFile.write("        ZestSC1ReadRegister(g_Handle, BASE_ADDR + %s, &flag);\n" %
         #                        hex(int(VHDL_Circuit.lookupSP[sp._id]._offset)))
+        self.C_SourceFile.write("        flag = 1; // a dummy BRAVE always work\n")
         self.C_SourceFile.write("    }\n\n")
 
 
