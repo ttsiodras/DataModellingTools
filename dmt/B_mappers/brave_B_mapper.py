@@ -427,7 +427,10 @@ class VHDLGlueGenerator(SynchronousToolGlueGeneratorGeneric[List[int], List[int]
 
 #define BASE_ADDR  0x2000
 
-
+#define FPGA_READY              "ready"
+#define FPGA_RECONFIGURING      "reconfiguring"
+#define FPGA_ERROR              "error"
+#define FPGA_DISABLED           "disabled"
 
 #ifdef _WIN32
 
@@ -516,18 +519,30 @@ static void ErrorHandler(
         self.C_SourceFile.write("    }*/\n")
 
     # def ExecuteBlock(self, modelingLanguage, asnFile, sp, subProgramImplementation, maybeFVname):
-    def ExecuteBlock(self, unused_modelingLanguage: str, unused_asnFile: str, sp: ApLevelContainer, unused_subProgramImplementation: str, unused_maybeFVname: str) -> None:
+    def ExecuteBlock(self, unused_modelingLanguage: str, unused_asnFile: str, sp: ApLevelContainer, unused_subProgramImplementation: str, maybeFVname: str) -> None:
         self.C_SourceFile.write("    unsigned char flag = 0;\n\n")
         self.C_SourceFile.write("    // Now that the parameters are passed inside the FPGA, run the processing logic\n")
+        
+        self.C_SourceFile.write('    /*\n')
+        self.C_SourceFile.write('    Check if FPGA is ready.\n')
+        self.C_SourceFile.write('    */\n')
+        self.C_SourceFile.write('    extern const char globalFpgaStatus_%s[];\n' % (self.CleanNameAsADAWants(maybeFVname)))
+        self.C_SourceFile.write('    if(strcmp(globalFpgaStatus_%s, FPGA_READY)){\n' % (self.CleanNameAsADAWants(maybeFVname)))
+        self.C_SourceFile.write('       return -1;\n')
+        self.C_SourceFile.write('    }\n')
+
         #self.C_SourceFile.write("    ZestSC1WriteRegister(g_Handle, BASE_ADDR + %s, (unsigned char)1);\n" %
         #                        hex(int(VHDL_Circuit.lookupSP[sp._id]._offset)))
+
         self.C_SourceFile.write("    while (!flag) {\n")
         self.C_SourceFile.write("        // Wait for processing logic to complete\n")
+
         #self.C_SourceFile.write("        ZestSC1ReadRegister(g_Handle, BASE_ADDR + %s, &flag);\n" %
         #                        hex(int(VHDL_Circuit.lookupSP[sp._id]._offset)))
+
         self.C_SourceFile.write("        flag = 1; // a dummy BRAVE always work\n")
         self.C_SourceFile.write("    }\n\n")
-
+        self.C_SourceFile.write('    return 0;\n')
 
 # pylint: disable=no-self-use
 class MapASN1ToVHDLCircuit(RecursiveMapperGeneric[str, str]):
