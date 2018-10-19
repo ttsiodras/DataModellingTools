@@ -408,6 +408,13 @@ def CreateGettersAndSetters(
         for child in node._members:
             childNode = child[1]
             childVarname = CleanNameAsPythonWants(child[0])
+            if child[3]:  # OPTIONAL field in a sequence
+                CreateGettersAndSetters(path + "_exist_" + childVarname,
+                                        params,
+                                        accessPathInC + union + ".exist." + childVarname,
+                                        AsnInt(),  #  exist field is an int
+                                        names,     #  ignored
+                                        leafTypeDict)  #  ignored
             if isinstance(childNode, AsnMetaMember):
                 baseTypeOfChild = names[childNode._containedType]._leafType
                 baseTypeOfChild = leafTypeDict.get(baseTypeOfChild, baseTypeOfChild)
