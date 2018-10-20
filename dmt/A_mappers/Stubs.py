@@ -129,10 +129,16 @@ class DataStream(object):
         self._bs.count = strLength
         pData = c_void_p(GetBitstreamBuffer(self._bs))
         # print "Writing",
-        for i in range(0, strLength):
-            b = ord(data[i])
-            # print b, ",",
-            SetBufferByte(pData, i, b)
+        if sys.version_info > (3,):
+            for i in range(0, strLength):
+                b = data[i]
+                # print b, ",",
+                SetBufferByte(pData, i, b)
+        else:
+            for i in range(0, strLength):
+                b = ord(data[i])
+                # print b, ",",
+                SetBufferByte(pData, i, b)
         # print "EOF"
 
 
@@ -366,22 +372,42 @@ grep for the errorcode value inside ASN1SCC generated headers."""
         self.SetLength(strLength, False)
         self._Caccessor += "_iDx"
         accessPath = self._accessPath
-        for idx in range(0, strLength):
-            self._params.append(idx)
-            self._accessPath = accessPath + "[" + str(idx) + "]"
-            self.Set(ord(src[idx]), reset=False)
-            self._params.pop()
+        if sys.version_info > (3,):
+            for idx in range(0, strLength):
+                self._params.append(idx)
+                self._accessPath = accessPath + "[" + str(idx) + "]"
+                self.Set(src[idx], reset=False)
+                self._params.pop()
+        else:
+            for idx in range(0, strLength):
+                self._params.append(idx)
+                self._accessPath = accessPath + "[" + str(idx) + "]"
+                self.Set(ord(src[idx]), reset=False)
+                self._params.pop()
         self.Reset()
 
     def GetPyString(self):
-        retval = ""
-        strLength = self.GetLength(False)
-        self._Caccessor += "_iDx"
-        accessPath = self._accessPath
-        for idx in range(0, strLength):
-            self._params.append(idx)
-            self._accessPath = accessPath + "[" + str(idx) + "]"
-            retval += chr(self.Get(reset=False))
-            self._params.pop()
-        self.Reset()
-        return retval
+        if sys.version_info > (3,):
+            retval = b""
+            strLength = self.GetLength(False)
+            self._Caccessor += "_iDx"
+            accessPath = self._accessPath
+            for idx in range(0, strLength):
+                self._params.append(idx)
+                self._accessPath = accessPath + "[" + str(idx) + "]"
+                retval += bytes([self.Get(reset=False)])
+                self._params.pop()
+            self.Reset()
+            return retval
+        else:
+            retval = ""
+            strLength = self.GetLength(False)
+            self._Caccessor += "_iDx"
+            accessPath = self._accessPath
+            for idx in range(0, strLength):
+                self._params.append(idx)
+                self._accessPath = accessPath + "[" + str(idx) + "]"
+                retval += chr(self.Get(reset=False))
+                self._params.pop()
+            self.Reset()
+            return retval
