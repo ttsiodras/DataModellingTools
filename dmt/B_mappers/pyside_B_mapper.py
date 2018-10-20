@@ -364,7 +364,7 @@ def checkConstraints(asnVal):
 
 
 def encode_ACN(asnVal):
-    \'\'\' Encore the native Asn1Scc structure in ACN \'\'\'
+    \'\'\' Encode the native Asn1Scc structure in ACN \'\'\'
 
     # Check the ASN.1 constraints:
     if not checkConstraints(asnVal):
@@ -546,7 +546,8 @@ def WriteCodeForGUIControls(prefixes: List[str],  # pylint: disable=invalid-sequ
                             param: Param,
                             leafTypeDict: AST_Leaftypes,
                             names: AST_Lookup,
-                            nodeTypename: str = '') -> None:
+                            nodeTypename: str = '',
+                            isOptional: bool = False) -> None:
     global g_firstElem
     global g_onceOnly
     global g_asnId
@@ -581,36 +582,36 @@ def WriteCodeForGUIControls(prefixes: List[str],  # pylint: disable=invalid-sequ
         if isinstance(node, AsnInt):
             if g_onceOnly:
                 g_PyDataModel.write(
-                    '''{'nodeTypename': '%s', 'type': '%s', 'id': '%s', 'minR': %d, 'maxR': %d}''' % (
-                        nodeTypename, node._name, txtPrefix,
+                        '''{'nodeTypename': '%s', 'type': '%s', 'id': '%s', 'isOptional': %s, 'minR': %d, 'maxR': %d}''' % (
+                        nodeTypename, node._name, txtPrefix, isOptional,
                         node._range[0], node._range[1]))
 
         elif isinstance(node, AsnReal):
             if g_onceOnly:
                 g_PyDataModel.write(
-                    '''{'nodeTypename': '%s', 'type': '%s', 'id': '%s', 'minR': %20.20f, 'maxR': %20.20f}''' % (
-                        nodeTypename, node._name, txtPrefix,
+                    '''{'nodeTypename': '%s', 'type': '%s', 'id': '%s', 'isOptional': %s, 'minR': %20.20f, 'maxR': %20.20f}''' % (
+                        nodeTypename, node._name, txtPrefix, isOptional,
                         node._range[0], node._range[1]))
 
         elif isinstance(node, AsnOctetString):
             if g_onceOnly:
                 g_PyDataModel.write(
-                    '''{'nodeTypename': '%s', 'type': 'STRING', 'id': '%s', 'minSize': %d, 'maxSize': %d}''' % (
-                        nodeTypename, txtPrefix, node._range[0], node._range[1]))
+                    '''{'nodeTypename': '%s', 'type': 'STRING', 'id': '%s', 'isOptional': %s, 'minSize': %d, 'maxSize': %d}''' % (
+                        nodeTypename, txtPrefix, isOptional, node._range[0], node._range[1]))
 
     elif isinstance(node, AsnBool):
         if g_onceOnly:
             g_PyDataModel.write(
-                '''{'nodeTypename': '%s', 'type': '%s', 'id': '%s', 'default': 'False'}''' % (
-                    nodeTypename, node._name, txtPrefix))
+                '''{'nodeTypename': '%s', 'type': '%s', 'id': '%s', 'isOptional': %s, 'default': 'False'}''' % (
+                    nodeTypename, node._name, txtPrefix, isOptional))
 
     elif isinstance(node, AsnEnumerated):
         if g_onceOnly:
             global g_needsComa
             g_needsComa = False
             g_PyDataModel.write(
-                '''{'nodeTypename': '%s', 'type': '%s', 'id': '%s', 'values':[''' % (
-                    nodeTypename, node._name, txtPrefix))
+                '''{'nodeTypename': '%s', 'type': '%s', 'id': '%s', 'isOptional': %s, 'values':[''' % (
+                    nodeTypename, node._name, txtPrefix, isOptional))
             values = []
             valuesmap = []
             for enum_value in node._members:
@@ -623,8 +624,8 @@ def WriteCodeForGUIControls(prefixes: List[str],  # pylint: disable=invalid-sequ
     elif isinstance(node, (AsnSequence, AsnChoice, AsnSet)):
         if g_onceOnly:
             g_PyDataModel.write(
-                '''{'nodeTypename': '%s', 'type': '%s', 'id': '%s', ''' % (
-                    nodeTypename, node._name, txtPrefix))
+                '''{'nodeTypename': '%s', 'type': '%s', 'id': '%s', 'isOptional': %s, ''' % (
+                    nodeTypename, node._name, txtPrefix, isOptional))
             if isinstance(node, AsnChoice):
                 g_PyDataModel.write('''"choices":[''')
             elif isinstance(node, (AsnSequence, AsnSet)):
@@ -639,15 +640,18 @@ def WriteCodeForGUIControls(prefixes: List[str],  # pylint: disable=invalid-sequ
         for child in node._members:
             # child[0] is the name of the field
             # child[2] is the string "field_PRESENT" used for choice indexes
+            # child[3] is the field optionality status
             CleanChild = CleanName(child[0])
             childType = child[1]
+            isOptional = child[3]
             if isinstance(childType, AsnMetaMember):
                 childType = names[childType._containedType]
             seqPrefix = prefixes[-1]
             prefixes[-1] = prefixes[-1] + "." + CleanChild
             WriteCodeForGUIControls(prefixes, parentControl, childType,
                                     subProgram, subProgramImplementation,
-                                    param, leafTypeDict, names)
+                                    param, leafTypeDict, names,
+                                    isOptional=isOptional)
             prefixes[-1] = seqPrefix
         if g_onceOnly:
             if isinstance(node, AsnChoice):
@@ -664,8 +668,8 @@ def WriteCodeForGUIControls(prefixes: List[str],  # pylint: disable=invalid-sequ
     elif isinstance(node, (AsnSequenceOf, AsnSetOf)):
         if g_onceOnly:
             g_PyDataModel.write(
-                "{'nodeTypename': '%s', 'type': 'SEQOF', 'id': '%s', 'minSize': %d, 'maxSize': %d, 'seqoftype':" % (
-                    nodeTypename, txtPrefix, node._range[0], node._range[1]))
+                "{'nodeTypename': '%s', 'type': 'SEQOF', 'id': '%s', 'isOptional': %s, 'minSize': %d, 'maxSize': %d, 'seqoftype':" % (
+                    nodeTypename, txtPrefix, isOptional, node._range[0], node._range[1]))
         containedNode = node._containedType
         if isinstance(containedNode, str):
             containedNode = names[containedNode]
