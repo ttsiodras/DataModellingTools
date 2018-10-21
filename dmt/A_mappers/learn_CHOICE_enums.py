@@ -15,9 +15,12 @@ There is no name clash thanks to the rename policy of the ASN.1 compiler
 for line in open(sys.argv[1] + '.h', 'r'):
     if '_PRESENT' in line and not line.startswith('#define'):
         choices.append(line.strip().replace(",", ""))
+        bEnum = False
     elif line.strip().startswith('typedef enum {'):
         bEnum = True
     elif line.strip().startswith('}') and bEnum:
+        bEnum = False
+    elif '_NONE' in line or '_PRESENT' in line:
         bEnum = False
     elif bEnum:
         enums.append(line.strip().replace(",", "").split("="))
