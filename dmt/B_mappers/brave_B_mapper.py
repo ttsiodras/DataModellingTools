@@ -420,6 +420,16 @@ class VHDLGlueGenerator(SynchronousToolGlueGeneratorGeneric[List[int], List[int]
 
 
 #include "C_ASN1_Types.h"
+#include <stdint.h>
+
+#define GR740 	0
+#define X86   	1
+
+#if (GR740 == 1)
+#include <rtems/rtems/clock.h>
+#elif (X86 == 1)
+#include <time.h>
+#endif
 
 #ifndef STATIC
 #define STATIC
@@ -431,6 +441,9 @@ class VHDLGlueGenerator(SynchronousToolGlueGeneratorGeneric[List[int], List[int]
 #define FPGA_RECONFIGURING      "reconfiguring"
 #define FPGA_ERROR              "error"
 #define FPGA_DISABLED           "disabled"
+
+#define POLLING_PERIOD_NS  1000000
+#define RETRIES		   4000
 
 #ifdef _WIN32
 
@@ -466,6 +479,20 @@ static void ErrorHandler(
     exit(1);
 }
 
+uint64_t ObtainTimeStamp ()
+{
+  struct timespec TimeStamp;
+#if (GR740 == 1)
+  rtems_clock_get_uptime(&TimeStamp);
+  return (uint64_t)(((uint64_t)TimeStamp.tv_sec * 1000000000L) + TimeStamp.tv_nsec);
+#elif (X86 == 1)
+  clock_gettime(CLOCK_MONOTONIC, &TimeStamp);
+  return (uint64_t)(((uint64_t)TimeStamp.tv_sec * 1000000000L) + (uint64_t)TimeStamp.tv_nsec);
+#endif
+}
+
+uint64_t ts_now, ts_prev;
+uint32_t count;
 ''')
         # self.g_FVname = subProgram._id
 
@@ -523,9 +550,7 @@ static void ErrorHandler(
         self.C_SourceFile.write("    unsigned char flag = 0;\n\n")
         self.C_SourceFile.write("    // Now that the parameters are passed inside the FPGA, run the processing logic\n")
         
-        self.C_SourceFile.write('    /*\n')
-        self.C_SourceFile.write('    Check if FPGA is ready.\n')
-        self.C_SourceFile.write('    */\n')
+        self.C_SourceFile.write('    // Check if FPGA is ready.\n')
         self.C_SourceFile.write('    extern const char globalFpgaStatus_%s[];\n' % (self.CleanNameAsADAWants(maybeFVname)))
         self.C_SourceFile.write('    if(strcmp(globalFpgaStatus_%s, FPGA_READY)){\n' % (self.CleanNameAsADAWants(maybeFVname)))
         self.C_SourceFile.write('       return -1;\n')
@@ -534,14 +559,25 @@ static void ErrorHandler(
         #self.C_SourceFile.write("    ZestSC1WriteRegister(g_Handle, BASE_ADDR + %s, (unsigned char)1);\n" %
         #                        hex(int(VHDL_Circuit.lookupSP[sp._id]._offset)))
 
-        self.C_SourceFile.write("    while (!flag) {\n")
-        self.C_SourceFile.write("        // Wait for processing logic to complete\n")
-
-        #self.C_SourceFile.write("        ZestSC1ReadRegister(g_Handle, BASE_ADDR + %s, &flag);\n" %
-        #                        hex(int(VHDL_Circuit.lookupSP[sp._id]._offset)))
-
-        self.C_SourceFile.write("        flag = 1; // a dummy BRAVE always work\n")
-        self.C_SourceFile.write("    }\n\n")
+        self.C_SourceFile.write('    count = 0;\n')
+        self.C_SourceFile.write('    ts_prev = ObtainTimeStamp();\n')
+        self.C_SourceFile.write('    while(count < RETRIES){\n')
+        self.C_SourceFile.write("       // Wait for processing logic to complete\n")
+        self.C_SourceFile.write('       ts_now = ObtainTimeStamp();\n')
+        self.C_SourceFile.write('       if(ts_now >= ts_prev + POLLING_PERIOD_NS){\n')
+        self.C_SourceFile.write('           ts_prev = ObtainTimeStamp();\n')
+        self.C_SourceFile.write('           count++;\n')
+        self.C_SourceFile.write('           //actions\n')
+        #self.C_SourceFile.write("          ZestSC1ReadRegister(g_Handle, BASE_ADDR + %s, &flag);\n" %
+        #                                   hex(int(VHDL_Circuit.lookupSP[sp._id]._offset)))
+        self.C_SourceFile.write("           flag = 1; // a dummy BRAVE always work\n")
+        self.C_SourceFile.write("           if(flag) break;\n")
+        self.C_SourceFile.write('           // Recheck if FPGA is (still) ready.\n')
+        self.C_SourceFile.write('           if(strcmp(globalFpgaStatus_%s, FPGA_READY)){\n' % (self.CleanNameAsADAWants(maybeFVname)))
+        self.C_SourceFile.write('               return -1;\n')
+        self.C_SourceFile.write('           }\n')
+        self.C_SourceFile.write('       }\n')
+        self.C_SourceFile.write('    }\n')
         self.C_SourceFile.write('    return 0;\n')
 
 # pylint: disable=no-self-use
