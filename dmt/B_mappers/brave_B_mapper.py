@@ -160,7 +160,7 @@ class FromVHDLToASN1SCC(RecursiveMapperGeneric[List[int], str]):  # pylint: disa
         lines.append("    unsigned char tmp, i;\n")
         lines.append("    asn1SccSint val = 0;\n")
         lines.append("    for(i=0; i<sizeof(asn1SccSint); i++) {\n")
-        #lines.append("        ZestSC1ReadRegister(g_Handle, BASE_ADDR + %s + i, &tmp);\n" % hex(register))
+        #lines.append("        BraveReadRegister(g_Handle, BASE_ADDR + %s + i, &tmp);\n" % hex(register))
         lines.append("        val <<= 8; val |= tmp;\n")
         lines.append("    }\n")
         lines.append("#if WORD_SIZE == 8\n")
@@ -182,7 +182,7 @@ class FromVHDLToASN1SCC(RecursiveMapperGeneric[List[int], str]):  # pylint: disa
         lines = []  # type: List[str]
         lines.append("{\n")
         lines.append("    unsigned char tmp;\n")
-        #lines.append("    ZestSC1ReadRegister(g_Handle, BASE_ADDR + %s, &tmp);\n" % hex(register))
+        #lines.append("    BraveReadRegister(g_Handle, BASE_ADDR + %s, &tmp);\n" % hex(register))
         lines.append("    %s = (asn1SccUint) tmp;\n" % destVar)
         lines.append("}\n")
         srcVHDL[0] += 1
@@ -198,7 +198,7 @@ class FromVHDLToASN1SCC(RecursiveMapperGeneric[List[int], str]):  # pylint: disa
         for i in range(0, node._range[-1]):
             lines.append("{\n")
             lines.append("    unsigned char tmp;\n")
-            #lines.append("    ZestSC1ReadRegister(g_Handle, BASE_ADDR + %s, &tmp);\n" % hex(register + i))
+            #lines.append("    BraveReadRegister(g_Handle, BASE_ADDR + %s, &tmp);\n" % hex(register + i))
             lines.append("    %s.arr[%d] = tmp;\n" % (destVar, i))
             lines.append("}\n")
         if isSequenceVariable(node):
@@ -211,7 +211,7 @@ class FromVHDLToASN1SCC(RecursiveMapperGeneric[List[int], str]):  # pylint: disa
         lines = []  # type: List[str]
         lines.append("{\n")
         lines.append("    unsigned char tmp;\n")
-        #lines.append("    ZestSC1ReadRegister(g_Handle, BASE_ADDR + %s, &tmp);\n" % hex(register))
+        #lines.append("    BraveReadRegister(g_Handle, BASE_ADDR + %s, &tmp);\n" % hex(register))
         lines.append("    %s = tmp;\n" % destVar)
         lines.append("}\n")
         srcVHDL[0] += 1
@@ -238,7 +238,7 @@ class FromVHDLToASN1SCC(RecursiveMapperGeneric[List[int], str]):  # pylint: disa
         childNo = 0
         lines.append("{\n")
         lines.append("    unsigned char choiceIdx = 0;\n")
-        #lines.append("    ZestSC1ReadRegister(g_Handle, BASE_ADDR + %s, &choiceIdx);\n" % hex(register))
+        #lines.append("    BraveReadRegister(g_Handle, BASE_ADDR + %s, &choiceIdx);\n" % hex(register))
         if len(node._members) > 255:
             panic("Up to 255 different CHOICEs can be supported (%s)" % node.Location())  # pragma: no cover
         for child in node._members:
@@ -290,7 +290,7 @@ class FromASN1SCCtoVHDL(RecursiveMapperGeneric[str, List[int]]):  # pylint: disa
         lines.append("    asn1SccSint val = %s;\n" % srcVar)
         lines.append("    for(i=0; i<sizeof(asn1SccSint); i++) {\n")
         lines.append("        tmp = val & 0xFF;\n")
-        #lines.append("        ZestSC1WriteRegister(g_Handle, BASE_ADDR + %s + i, tmp);\n" % hex(register))
+        #lines.append("        BraveWriteRegister(g_Handle, BASE_ADDR + %s + i, tmp);\n" % hex(register))
         lines.append("        val >>= 8;\n")
         lines.append("    }\n")
         lines.append("}\n")
@@ -305,7 +305,7 @@ class FromASN1SCCtoVHDL(RecursiveMapperGeneric[str, List[int]]):  # pylint: disa
         lines = []  # type: List[str]
         lines.append("{\n")
         lines.append("    unsigned char tmp = %s;\n" % srcVar)
-        #lines.append("    ZestSC1WriteRegister(g_Handle, BASE_ADDR + %s, tmp);\n" % hex(register))
+        #lines.append("    BraveWriteRegister(g_Handle, BASE_ADDR + %s, tmp);\n" % hex(register))
         lines.append("}\n")
         dstVHDL[0] += 1
         return lines
@@ -328,7 +328,7 @@ class FromASN1SCCtoVHDL(RecursiveMapperGeneric[str, List[int]]):  # pylint: disa
                 lines.append("        tmp = 0;\n")
             else:
                 lines.append("    tmp = %s.arr[%d];\n" % (srcVar, i))
-            #lines.append("    ZestSC1WriteRegister(g_Handle, BASE_ADDR + %s + %d, tmp);\n" % (hex(register), i))
+            #lines.append("    BraveWriteRegister(g_Handle, BASE_ADDR + %s + %d, tmp);\n" % (hex(register), i))
             lines.append("}\n")
         dstVHDL[0] += node._range[-1]
         return lines
@@ -340,7 +340,7 @@ class FromASN1SCCtoVHDL(RecursiveMapperGeneric[str, List[int]]):  # pylint: disa
         lines = []  # type: List[str]
         lines.append("{\n")
         lines.append("    unsigned char tmp = %s;\n" % srcVar)
-        #lines.append("    ZestSC1WriteRegister(g_Handle, BASE_ADDR + %s, tmp);\n" % hex(register))
+        #lines.append("    BraveWriteRegister(g_Handle, BASE_ADDR + %s, tmp);\n" % hex(register))
         lines.append("}\n")
         dstVHDL[0] += 1
         return lines
@@ -370,7 +370,7 @@ class FromASN1SCCtoVHDL(RecursiveMapperGeneric[str, List[int]]):  # pylint: disa
             childNo += 1
             lines.append("%sif (%s.kind == %s) {\n" % (self.maybeElse(childNo), srcVar, self.CleanName(child[2])))
             lines.append("    unsigned char tmp = %d;\n" % childNo)
-            #lines.append("    ZestSC1WriteRegister(g_Handle, BASE_ADDR + %s, tmp);\n" % hex(register))
+            #lines.append("    BraveWriteRegister(g_Handle, BASE_ADDR + %s, tmp);\n" % hex(register))
             lines.extend(
                 ['    ' + x
                  for x in self.Map(
@@ -435,7 +435,7 @@ class VHDLGlueGenerator(SynchronousToolGlueGeneratorGeneric[List[int], List[int]
 #define STATIC
 #endif
 
-#define BASE_ADDR  0x2000
+#define BASE_ADDR  0x80000300
 
 #define FPGA_READY              "ready"
 #define FPGA_RECONFIGURING      "reconfiguring"
@@ -518,30 +518,30 @@ uint32_t count;
 
     # def InitializeBlock(self, modelingLanguage, asnFile, sp, subProgramImplementation, maybeFVname):
     def InitializeBlock(self, unused_modelingLanguage: str, unused_asnFile: str, unused_sp: ApLevelContainer, unused_subProgramImplementation: str, unused_maybeFVname: str) -> None:
-        self.C_SourceFile.write('''    /*ZESTSC1_HANDLE Handle = (ZESTSC1_HANDLE) NULL;
+        self.C_SourceFile.write('''    /*BRAVE_HANDLE Handle = (BRAVE_HANDLE) NULL;
 
-    ZestSC1RegisterErrorHandler(ErrorHandler);
+    BraveRegisterErrorHandler(ErrorHandler);
 
-    if (g_Handle == (ZESTSC1_HANDLE) NULL) {
+    if (g_Handle == (BRAVE_HANDLE) NULL) {
         static unsigned int Count;
         static unsigned int NumCards;
         static unsigned long CardIDs[256];
         static unsigned long SerialNumbers[256];
-        static ZESTSC1_FPGA_TYPE FPGATypes[256];
-        ZestSC1CountCards((unsigned long*)&NumCards, CardIDs, SerialNumbers, FPGATypes);
+        static BRAVE_FPGA_TYPE FPGATypes[256];
+        BraveCountCards((unsigned long*)&NumCards, CardIDs, SerialNumbers, FPGATypes);
         if (NumCards==0) {
             printf("No cards in the system\\n");
             exit(1);
         }
-        ZestSC1OpenCard(CardIDs[0], &Handle);
+        BraveOpenCard(CardIDs[0], &Handle);
         g_Handle = Handle;
-        if (FPGATypes[0]==ZESTSC1_XC3S1000) {
-            ZestSC1ConfigureFromFile(g_Handle, "TASTE.bit");
+        if (FPGATypes[0]==BRAVE_XC3S1000) {
+            BraveConfigureFromFile(g_Handle, "TASTE.bit");
         } else {
             puts("Only for XC3S1000");
             exit(1);
         }
-        ZestSC1SetSignalDirection(g_Handle, 0xf);
+        BraveSetSignalDirection(g_Handle, 0xf);
 ''')
         self.C_SourceFile.write("    }*/\n")
 
@@ -556,7 +556,7 @@ uint32_t count;
         self.C_SourceFile.write('       return -1;\n')
         self.C_SourceFile.write('    }\n')
 
-        #self.C_SourceFile.write("    ZestSC1WriteRegister(g_Handle, BASE_ADDR + %s, (unsigned char)1);\n" %
+        #self.C_SourceFile.write("    BraveWriteRegister(g_Handle, BASE_ADDR + %s, (unsigned char)1);\n" %
         #                        hex(int(VHDL_Circuit.lookupSP[sp._id]._offset)))
 
         self.C_SourceFile.write('    count = 0;\n')
@@ -568,7 +568,7 @@ uint32_t count;
         self.C_SourceFile.write('           ts_prev = ObtainTimeStamp();\n')
         self.C_SourceFile.write('           count++;\n')
         self.C_SourceFile.write('           //actions\n')
-        #self.C_SourceFile.write("          ZestSC1ReadRegister(g_Handle, BASE_ADDR + %s, &flag);\n" %
+        #self.C_SourceFile.write("          BraveReadRegister(g_Handle, BASE_ADDR + %s, &flag);\n" %
         #                                   hex(int(VHDL_Circuit.lookupSP[sp._id]._offset)))
         self.C_SourceFile.write("           flag = 1; // a dummy BRAVE always work\n")
         self.C_SourceFile.write("           if(flag) break;\n")
@@ -906,49 +906,6 @@ class MapASN1ToSystemCconnections(RecursiveMapperGeneric[str, str]):
         return self.MapSequenceOf(srcRegister, dstCircuitPort, node, leafTypeDict, names)
 
 
-# class MapASN1ToSystemCheader(RecursiveMapper):
-#     def MapInteger(self, state, systemCvar, _, __, ___):
-#         state.systemcHeader.write('    ' + state.directionPrefix + 'sc_uint<64> > ' + systemCvar + ';\n')
-#         return []
-#     def MapReal(self, _, __, node, ___, dummy):
-#         panic("The VHDL mapper can't work with REALs (synthesizeable circuits!) (%s)" % node.Location())  # pragma: no cover
-#     def MapBoolean(self, state, systemCvar, _, __, ___):
-#         state.systemcHeader.write('    ' + state.directionPrefix + 'bool> ' + systemCvar + ';\n')
-#         return []
-#     def MapOctetString(self, state, systemCvar, node, __, ___):
-#         if not node._range:
-#             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
-#         if len(node._range) > 1 and node._range[0] != node._range[1]:
-#             panicWithCallStack("VHDL OCTET STRING (in %s) must have a fixed SIZE constraint !" % node.Location())  # pragma: no cover
-#         maxlen = len(str(node._range[-1]))
-#         for i in range(node._range[-1]):
-#             state.systemcHeader.write('    ' + state.directionPrefix + 'sc_uint<8> > ' + ('%s_elem_%0*d'%(systemCvar, maxlen, i)) + ';\n' )
-#         return []
-#     def MapEnumerated(self, state, systemCvar, __, ___, dummy):
-#         state.systemcHeader.write('    ' + state.directionPrefix + 'sc_uint<8> > ' + systemCvar + ';\n')
-#         return []
-#     def MapSequence(self, state, systemCvar, node, leafTypeDict, names):
-#         for x in node._members:
-#             self.Map(state, systemCvar+"_"+CleanName(x[0]), x[1], leafTypeDict, names)
-#         return []
-#     def MapSet(self, state, systemCvar, node, leafTypeDict, names):
-#         return self.MapSequence(state, systemCvar, node, leafTypeDict, names)
-#     def MapChoice(self, state, systemCvar, node, leafTypeDict, names):
-#         state.systemcHeader.write('    ' + state.directionPrefix + 'sc_uint<8> >' + systemCvar + '_choiceIdx;\n')
-#         self.MapSequence(state, systemCvar, node, leafTypeDict, names)
-#         return []
-#     def MapSequenceOf(self, state, systemCvar, node, leafTypeDict, names):
-#         if not node._range:
-#             panicWithCallStack("For VHDL, a SIZE constraint is mandatory (%s)!\n" % node.Location())  # pragma: no cover
-#         if len(node._range) > 1 and node._range[0] != node._range[1]:
-#             panicWithCallStack("Must have a fixed SIZE constraint (in %s) for VHDL code!" % node.Location())  # pragma: no cover
-#         maxlen = len(str(node._range[-1]))
-#         for i in range(node._range[-1]):
-#             self.Map(state, systemCvar+('_elem_%0*d'%(maxlen, i)), node._containedType, leafTypeDict, names)
-#         return []
-#     def MapSetOf(self, state, systemCvar, node, leafTypeDict, names):
-#         return self.MapSequenceOf(state, systemCvar, node, leafTypeDict, names)
-
 class MapASN1ToOutputs(RecursiveMapperGeneric[str, int]):
     def MapInteger(self, paramName: str, _: int, dummy: AsnInt, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return [paramName]
@@ -1013,9 +970,7 @@ g_placeholders = {
     "outputs": '',
     "completions": '',
     "writeoutputdata": '',
-    "clearoutputs": '',
-    "connectionsToSystemC": '',
-    "updatePulseHistories": ''
+    "connectionsToSystemC": ''
 }
 
 
@@ -1081,27 +1036,16 @@ def OnFinal() -> None:
     readinputdataMapper = MapASN1ToVHDLreadinputdata()
     writeoutputdataMapper = MapASN1ToVHDLwriteoutputdata()
     connectionsToSystemCMapper = MapASN1ToSystemCconnections()
-    # systemCheaderMapper = MapASN1ToSystemCheader()
     outputsMapper = MapASN1ToOutputs()
 
     outputs = []
     completions = []
 
-    # systemcHeader = open(vhdlBackend.dir + 'circuit.h', 'w')
-    # systemcHeader.write('#ifndef CIRCUIT_H\n')
-    # systemcHeader.write('#define CIRCUIT_H\n\n')
-    # systemcHeader.write('#ifndef SC_SYNTHESIS\n')
-    # systemcHeader.write('#include "systemc.h"\n')
-    # systemcHeader.write('#endif\n\n')
-
-    # systemcBody = open(vhdlBackend.dir + 'circuit.cpp', 'w')
-    # systemcBody.write('#include "circuit.h"\n\n')
-
-    from . import vhdlTemplateZestSC1
-    ZestSC1_tarball = os.getenv("ZESTSC1")
-    assert ZestSC1_tarball is not None
-    if os.system("tar -C \"" + vhdlBackend.dir + "/\" -jxf '" + ZestSC1_tarball + "'") != 0:
-        panic("Failed to un-tar ZESTSC1 tarball...")
+    from . import vhdlTemplateBrave
+    Brave_tarball = os.getenv("BRAVE")
+    assert Brave_tarball is not None
+    if os.system("tar -C \"" + vhdlBackend.dir + "/\" -jxf '" + Brave_tarball + "'") != 0:
+        panic("Failed to un-tar BRAVE tarball...")
 
     for c in VHDL_Circuit.allCircuits:
         circuitLines = []
@@ -1110,12 +1054,12 @@ def OnFinal() -> None:
 
         readinputdataLines = []
         readinputdataLines.append("\n" + ' ' * 22 + '-- kickoff ' + c._spCleanName)
-        kickoffWriteAccess = "when X\"%(off)s\" => %(pi)s_StartCalculationsInternal <= %(pi)s_StartCalculationsInternal xor '1';\n" % {'pi': c._spCleanName, 'off': hex(0x2000 + c._offset)[2:]}
+        kickoffWriteAccess = "when X\"%(off)s\" => %(pi)s_StartCalculationsInternal <= %(pi)s_StartCalculationsInternal xor '1';\n" % {'pi': c._spCleanName, 'off': hex(0x0300 + c._offset)[2:]}
         readinputdataLines.append(kickoffWriteAccess)
 
         connectionsToSystemCLines = []
 
-        counter = cast(List[int], [0x2000 + c._offset + 1])  # type: List[int]  # pylint: disable=invalid-sequence-index
+        counter = cast(List[int], [0x0300 + c._offset + 1])  # type: List[int]  # pylint: disable=invalid-sequence-index
         for p in c._sp._params:
             node = VHDL_Circuit.names[p._signal._asnNodename]
             direction = "in " if isinstance(p, InParam) else "out "
@@ -1140,7 +1084,7 @@ def OnFinal() -> None:
         writeoutputdataLines = []
         writeoutputdataLines.append("\n" + ' ' * 16 + '-- result calculated flag ' + c._spCleanName)
         accessCompletionFlag = "when X\"%(off)s\" => DataOut <= \"0000000\" & %(pi)s_CalculationsComplete;\n" % \
-            {'pi': c._spCleanName, 'off': hex(0x2000 + c._offset)[2:]}
+            {'pi': c._spCleanName, 'off': hex(0x0300 + c._offset)[2:]}
         writeoutputdataLines.append(accessCompletionFlag)
 
         for p in c._sp._params:
@@ -1172,9 +1116,9 @@ def OnFinal() -> None:
         skeleton.append('        reset_%s  : in  std_logic\n' % c._spCleanName)
         skeleton.append('    );\n')
         skeleton.append('    end %s;\n\n' % c._spCleanName)
-        vhdlSkeleton = open(vhdlBackend.dir + "/TASTE-VHDL-XISE/" + c._spCleanName + '.vhd', 'w')
+        vhdlSkeleton = open(vhdlBackend.dir + "/TASTE-VHDL-DESIGN/" + c._spCleanName + '.vhd', 'w')
         vhdlSkeleton.write(
-            vhdlTemplateZestSC1.per_circuit_vhd % {
+            vhdlTemplateBrave.per_circuit_vhd % {
                 'pi': c._spCleanName,
                 'declaration': ''.join(skeleton)
             })
@@ -1204,63 +1148,10 @@ def OnFinal() -> None:
         AddToStr('connectionsToSystemC', ',\n'.join(['            ' + x for x in connectionsToSystemCLines]) + ',\n')
         AddToStr('connectionsToSystemC', '            start_%s => %s_StartCalculationsPulse,\n' % (c._spCleanName, c._spCleanName))
         AddToStr('connectionsToSystemC', '            finish_%s => %s_CalculationsComplete,\n' % (c._spCleanName, c._spCleanName))
-        AddToStr('connectionsToSystemC', '            clock_%s => CLK,\n' % c._spCleanName)
-        AddToStr('connectionsToSystemC', '            reset_%s => RST\n' % c._spCleanName)
+        AddToStr('connectionsToSystemC', '            clock_%s => clk_i,\n' % c._spCleanName)
+        AddToStr('connectionsToSystemC', '            reset_%s => reset_n\n' % c._spCleanName)
         AddToStr('connectionsToSystemC', '        );\n')
 
-#         systemcHeader.write('class ' + c._spCleanName + ' : public sc_module\n')
-#         systemcHeader.write('{\n')
-#         systemcHeader.write('public:\n')
-#         for p in c._sp._params:
-#             node = VHDL_Circuit.names[p._signal._asnNodename]
-#             prefix = 'sc_in<' if isinstance(p, InParam) else 'sc_out<'
-#             class State:
-#                 pass
-#             state = State()
-#             state.systemcHeader = systemcHeader
-#             state.directionPrefix = prefix
-#             systemCheaderMapper.Map(
-#                 state,
-#                 p._id,
-#                 node,
-#                 VHDL_Circuit.leafTypeDict,
-#                 VHDL_Circuit.names)
-#         systemcHeader.write('''
-#     sc_in<bool>          start_%(PI)s;
-#     sc_out<bool>         finish_%(PI)s;
-#     sc_in<bool>          clock_%(PI)s;
-#
-#     void do_%(PI)s ();
-#
-#     SC_CTOR (%(PI)s)
-#     {
-#         SC_THREAD(do_%(PI)s);
-#         sensitive_pos << clock_%(PI)s;
-#     }
-# ''' % {'PI':c._spCleanName})
-#         systemcHeader.write('};\n\n')
-#
-#         systemcBody.write('void %s::do_%s()\n' % (c._spCleanName, c._spCleanName))
-#         systemcBody.write('{\n')
-#         systemcBody.write('    // Declare your variables here\n')
-#         systemcBody.write('    finish_%s = 0;\n' % c._spCleanName)
-#         systemcBody.write('    while (1) {\n')
-#         systemcBody.write('        do {\n')
-#         systemcBody.write('            wait();\n')
-#         systemcBody.write('        } while (!start_%s.read());\n' % c._spCleanName)
-#         systemcBody.write('        finish_%s = 0;\n\n' % c._spCleanName)
-#         systemcBody.write('        // Write your processing logic here\n')
-#         for p in c._sp._params:
-#             if not isinstance(p, OutParam):
-#                 systemcBody.write('        // Read data from %s\n' % CleanName(p._id))
-#         systemcBody.write('        // ...\n\n')
-#         for p in c._sp._params:
-#             if isinstance(p, OutParam):
-#                 systemcBody.write('        // Write result for %s\n' % CleanName(p._id))
-#         systemcBody.write('        finish_%s = 1;\n' % c._spCleanName)
-#         systemcBody.write('        wait();\n')
-#         systemcBody.write('    }\n')
-#         systemcBody.write('}\n\n')
 
     AddToStr('outputs', ', '.join(outputs) + (', ' if len(outputs) else ''))
     AddToStr('completions', ', '.join(completions))
@@ -1270,28 +1161,17 @@ def OnFinal() -> None:
         alternate_kickoffWriteAccess = "when others => %(pi)s_StartCalculationsInternal <= %(pi)s_StartCalculationsInternal xor '1';\n" % {'pi': VHDL_Circuit.allCircuits[-1]._spCleanName}
     AddToStr('readinputdata', ' ' * 22 + alternate_kickoffWriteAccess)
 
-    vhdlFile = open(vhdlBackend.dir + '/TASTE-VHDL-XISE/Example1.vhd', 'w')
-    vhdlFile.write(vhdlTemplateZestSC1.vhd % g_placeholders)
+    vhdlFile = open(vhdlBackend.dir + '/TASTE-VHDL-DESIGN/TASTE.vhd', 'w')
+    vhdlFile.write(vhdlTemplateBrave.vhd % g_placeholders)
     vhdlFile.close()
 
     msg = ""
     for c in VHDL_Circuit.allCircuits:
         msg += ' %s.vhd' % c._spCleanName
-    makefile = open(vhdlBackend.dir + '/TASTE-VHDL-XISE/Makefile', 'w')
-    makefile.write(vhdlTemplateZestSC1.makefile % {'pi': msg, 'tab': '\t'})
+    makefile = open(vhdlBackend.dir + '/TASTE-VHDL-DESIGN/Makefile', 'w')
+    makefile.write(vhdlTemplateBrave.makefile % {'pi': msg, 'tab': '\t'})
     makefile.close()
 
-    xise = open(vhdlBackend.dir + '/TASTE-VHDL-XISE/Example1.xise', 'w')
-    xise.write(vhdlTemplateZestSC1.xise % {'pi': c._spCleanName, 'tab': '\t'})
-    xise.close()
-
-    # systemcHeader.write('\n#endif\n')
-    # systemcHeader.close()
-
-    msg = ""
-    for c in VHDL_Circuit.allCircuits:
-        msg += 'vhdl work "circuit_%s.vhd"\n' % c._spCleanName
-        msg += 'vhdl work "circuit_%s_do_%s.vhd"\n' % (c._spCleanName, c._spCleanName)
-    prj = open(vhdlBackend.dir + '/TASTE-VHDL-XISE/TASTE.prj', 'w')
-    prj.write(vhdlTemplateZestSC1.prj % {'circuits': msg})
-    prj.close()
+    script = open(vhdlBackend.dir + '/TASTE-VHDL-DESIGN/script.py', 'w')
+    script.write(vhdlTemplateBrave.script % {'pi': c._spCleanName})
+    script.close()
