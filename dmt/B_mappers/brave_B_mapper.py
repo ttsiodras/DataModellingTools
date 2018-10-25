@@ -707,14 +707,14 @@ class MapASN1ToVHDLreadinputdata(RecursiveMapperGeneric[List[int], str]):  # pyl
             panicWithCallStack("INTEGERs need explicit ranges when generating VHDL code... (%s)" % node.Location())  # pragma: no cover
         # bits = math.log(max(map(abs, node._range)+1),2)+(1 if node._range[0] < 0 else 0)
         lines = []  # type: List[str]
-        lines.append('when X"%s" => %s( 7 downto  0) <= DataIn;' % (hex(reginfo[0] + 0)[2:], dstVHDL))
-        lines.append('when X"%s" => %s(15 downto  8) <= DataIn;' % (hex(reginfo[0] + 1)[2:], dstVHDL))
-        lines.append('when X"%s" => %s(23 downto 16) <= DataIn;' % (hex(reginfo[0] + 2)[2:], dstVHDL))
-        lines.append('when X"%s" => %s(31 downto 24) <= DataIn;' % (hex(reginfo[0] + 3)[2:], dstVHDL))
-        lines.append('when X"%s" => %s(39 downto 32) <= DataIn;' % (hex(reginfo[0] + 4)[2:], dstVHDL))
-        lines.append('when X"%s" => %s(47 downto 40) <= DataIn;' % (hex(reginfo[0] + 5)[2:], dstVHDL))
-        lines.append('when X"%s" => %s(55 downto 48) <= DataIn;' % (hex(reginfo[0] + 6)[2:], dstVHDL))
-        lines.append('when X"%s" => %s(63 downto 56) <= DataIn;' % (hex(reginfo[0] + 7)[2:], dstVHDL))
+        lines.append('when X"%s" => %s( 7 downto  0) <= apbi.pwdata(7 downto 0);' % (hex(reginfo[0] + 0)[2:], dstVHDL))
+        lines.append('when X"%s" => %s(15 downto  8) <= apbi.pwdata(7 downto 0);' % (hex(reginfo[0] + 1)[2:], dstVHDL))
+        lines.append('when X"%s" => %s(23 downto 16) <= apbi.pwdata(7 downto 0);' % (hex(reginfo[0] + 2)[2:], dstVHDL))
+        lines.append('when X"%s" => %s(31 downto 24) <= apbi.pwdata(7 downto 0);' % (hex(reginfo[0] + 3)[2:], dstVHDL))
+        lines.append('when X"%s" => %s(39 downto 32) <= apbi.pwdata(7 downto 0);' % (hex(reginfo[0] + 4)[2:], dstVHDL))
+        lines.append('when X"%s" => %s(47 downto 40) <= apbi.pwdata(7 downto 0);' % (hex(reginfo[0] + 5)[2:], dstVHDL))
+        lines.append('when X"%s" => %s(55 downto 48) <= apbi.pwdata(7 downto 0);' % (hex(reginfo[0] + 6)[2:], dstVHDL))
+        lines.append('when X"%s" => %s(63 downto 56) <= apbi.pwdata(7 downto 0);' % (hex(reginfo[0] + 7)[2:], dstVHDL))
         reginfo[0] += 8
         return lines
 
@@ -722,7 +722,7 @@ class MapASN1ToVHDLreadinputdata(RecursiveMapperGeneric[List[int], str]):  # pyl
         panic("The VHDL mapper can't work with REALs (synthesizeable circuits!) (%s)" % node.Location())  # pragma: no cover
 
     def MapBoolean(self, reginfo: List[int], dstVHDL: str, _: AsnBool, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
-        lines = ['when X"%s" => %s <= DataIn(0);' % (hex(reginfo[0])[2:], dstVHDL)]
+        lines = ['when X"%s" => %s <= apbi.pwdata(0);' % (hex(reginfo[0])[2:], dstVHDL)]
         reginfo[0] += 1
         return lines
 
@@ -734,13 +734,13 @@ class MapASN1ToVHDLreadinputdata(RecursiveMapperGeneric[List[int], str]):  # pyl
         maxlen = len(str(node._range[-1]))
         lines = []  # type: List[str]
         for i in range(node._range[-1]):
-            lines.append('when X"%s" => %s_elem_%0*d(7 downto 0) <= DataIn;' %
+            lines.append('when X"%s" => %s_elem_%0*d(7 downto 0) <= apbi.pwdata(7 downto 0);' %
                          (hex(reginfo[0])[2:], dstVHDL, maxlen, i))
             reginfo[0] += 1
         return lines
 
     def MapEnumerated(self, reginfo: List[int], dstVHDL: str, _: AsnEnumerated, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
-        lines = ['when X"%s" => %s(7 downto 0) <= DataIn;' % (hex(reginfo[0])[2:], dstVHDL)]
+        lines = ['when X"%s" => %s(7 downto 0) <= apbi.pwdata(7 downto 0);' % (hex(reginfo[0])[2:], dstVHDL)]
         reginfo[0] += 1
         return lines
 
@@ -754,7 +754,7 @@ class MapASN1ToVHDLreadinputdata(RecursiveMapperGeneric[List[int], str]):  # pyl
         return self.MapSequence(reginfo, dstVHDL, node, leafTypeDict, names)  # pragma: nocover
 
     def MapChoice(self, reginfo: List[int], dstVHDL: str, node: AsnChoice, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
-        lines = ['when X"%s" => %s_choiceIdx(7 downto 0) <= DataIn;' % (hex(reginfo[0])[2:], dstVHDL)]
+        lines = ['when X"%s" => %s_choiceIdx(7 downto 0) <= apbi.pwdata(7 downto 0);' % (hex(reginfo[0])[2:], dstVHDL)]
         reginfo[0] += 1
         lines.extend(self.MapSequence(reginfo, dstVHDL, node, leafTypeDict, names))
         return lines
@@ -782,14 +782,14 @@ class MapASN1ToVHDLwriteoutputdata(RecursiveMapperGeneric[List[int], str]):  # p
             panicWithCallStack("INTEGERs need explicit ranges when generating VHDL code... (%s)" % node.Location())  # pragma: no cover
         # bits = math.log(max(map(abs, node._range)+1),2)+(1 if node._range[0] < 0 else 0)
         lines = []  # type: List[str]
-        lines.append('when X"%s" => DataOut <= %s( 7 downto  0);' % (hex(reginfo[0] + 0)[2:], dstVHDL))
-        lines.append('when X"%s" => DataOut <= %s(15 downto  8);' % (hex(reginfo[0] + 1)[2:], dstVHDL))
-        lines.append('when X"%s" => DataOut <= %s(23 downto 16);' % (hex(reginfo[0] + 2)[2:], dstVHDL))
-        lines.append('when X"%s" => DataOut <= %s(31 downto 24);' % (hex(reginfo[0] + 3)[2:], dstVHDL))
-        lines.append('when X"%s" => DataOut <= %s(39 downto 32);' % (hex(reginfo[0] + 4)[2:], dstVHDL))
-        lines.append('when X"%s" => DataOut <= %s(47 downto 40);' % (hex(reginfo[0] + 5)[2:], dstVHDL))
-        lines.append('when X"%s" => DataOut <= %s(55 downto 48);' % (hex(reginfo[0] + 6)[2:], dstVHDL))
-        lines.append('when X"%s" => DataOut <= %s(63 downto 56);' % (hex(reginfo[0] + 7)[2:], dstVHDL))
+        lines.append('when X"%s" => apbo.prdata(7 downto 0) <= %s( 7 downto  0);' % (hex(reginfo[0] + 0)[2:], dstVHDL))
+        lines.append('when X"%s" => apbo.prdata(7 downto 0) <= %s(15 downto  8);' % (hex(reginfo[0] + 1)[2:], dstVHDL))
+        lines.append('when X"%s" => apbo.prdata(7 downto 0) <= %s(23 downto 16);' % (hex(reginfo[0] + 2)[2:], dstVHDL))
+        lines.append('when X"%s" => apbo.prdata(7 downto 0) <= %s(31 downto 24);' % (hex(reginfo[0] + 3)[2:], dstVHDL))
+        lines.append('when X"%s" => apbo.prdata(7 downto 0) <= %s(39 downto 32);' % (hex(reginfo[0] + 4)[2:], dstVHDL))
+        lines.append('when X"%s" => apbo.prdata(7 downto 0) <= %s(47 downto 40);' % (hex(reginfo[0] + 5)[2:], dstVHDL))
+        lines.append('when X"%s" => apbo.prdata(7 downto 0) <= %s(55 downto 48);' % (hex(reginfo[0] + 6)[2:], dstVHDL))
+        lines.append('when X"%s" => apbo.prdata(7 downto 0) <= %s(63 downto 56);' % (hex(reginfo[0] + 7)[2:], dstVHDL))
         reginfo[0] += 8
         return lines
 
@@ -797,7 +797,7 @@ class MapASN1ToVHDLwriteoutputdata(RecursiveMapperGeneric[List[int], str]):  # p
         panic("The VHDL mapper can't work with REALs (synthesizeable circuits!) (%s)" % node.Location())  # pragma: no cover
 
     def MapBoolean(self, reginfo: List[int], dstVHDL: str, _: AsnBool, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
-        lines = ['when X"%s" => DataOut(0) <= %s;' % (hex(reginfo[0])[2:], dstVHDL)]
+        lines = ['when X"%s" => apbo.prdata(0) <= %s;' % (hex(reginfo[0])[2:], dstVHDL)]
         reginfo[0] += 1
         return lines
 
@@ -809,13 +809,13 @@ class MapASN1ToVHDLwriteoutputdata(RecursiveMapperGeneric[List[int], str]):  # p
         maxlen = len(str(node._range[-1]))
         lines = []  # type: List[str]
         for i in range(node._range[-1]):
-            lines.append('when X"%s" => DataOut <= %s_elem_%0*d(7 downto 0);' %
+            lines.append('when X"%s" => apbo.prdata(7 downto 0) <= %s_elem_%0*d(7 downto 0);' %
                          (hex(reginfo[0])[2:], dstVHDL, maxlen, i))
             reginfo[0] += 1
         return lines
 
     def MapEnumerated(self, reginfo: List[int], dstVHDL: str, _: AsnEnumerated, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
-        lines = ['when X"%s" => DataOut <= %s(7 downto 0);' % (hex(reginfo[0])[2:], dstVHDL)]
+        lines = ['when X"%s" => apbo.prdata(7 downto 0) <= %s(7 downto 0);' % (hex(reginfo[0])[2:], dstVHDL)]
         reginfo[0] += 1
         return lines
 
@@ -829,7 +829,7 @@ class MapASN1ToVHDLwriteoutputdata(RecursiveMapperGeneric[List[int], str]):  # p
         return self.MapSequence(reginfo, dstVHDL, node, leafTypeDict, names)
 
     def MapChoice(self, reginfo: List[int], dstVHDL: str, node: AsnChoice, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
-        lines = ['when X"%s" => DataOut <= %s_choiceIdx(7 downto 0);' % (hex(reginfo[0])[2:], dstVHDL)]
+        lines = ['when X"%s" => apbo.prdata(7 downto 0) <= %s_choiceIdx(7 downto 0);' % (hex(reginfo[0])[2:], dstVHDL)]
         reginfo[0] += 1
         lines.extend(self.MapSequence(reginfo, dstVHDL, node, leafTypeDict, names))
         return lines
@@ -1083,7 +1083,7 @@ def OnFinal() -> None:
 
         writeoutputdataLines = []
         writeoutputdataLines.append("\n" + ' ' * 16 + '-- result calculated flag ' + c._spCleanName)
-        accessCompletionFlag = "when X\"%(off)s\" => DataOut <= \"0000000\" & %(pi)s_CalculationsComplete;\n" % \
+        accessCompletionFlag = "when X\"%(off)s\" => apbo.prdata(7 downto 0) <= \"0000000\" & %(pi)s_CalculationsComplete;\n" % \
             {'pi': c._spCleanName, 'off': hex(0x0300 + c._offset)[2:]}
         writeoutputdataLines.append(accessCompletionFlag)
 
@@ -1116,7 +1116,7 @@ def OnFinal() -> None:
         skeleton.append('        reset_%s  : in  std_logic\n' % c._spCleanName)
         skeleton.append('    );\n')
         skeleton.append('    end %s;\n\n' % c._spCleanName)
-        vhdlSkeleton = open(vhdlBackend.dir + "/TASTE-VHDL-DESIGN/" + c._spCleanName + '.vhd', 'w')
+        vhdlSkeleton = open(vhdlBackend.dir + "/TASTE-VHDL-DESIGN/design/" + c._spCleanName + '.vhd', 'w')
         vhdlSkeleton.write(
             vhdlTemplateBrave.per_circuit_vhd % {
                 'pi': c._spCleanName,
@@ -1161,17 +1161,17 @@ def OnFinal() -> None:
         alternate_kickoffWriteAccess = "when others => %(pi)s_StartCalculationsInternal <= %(pi)s_StartCalculationsInternal xor '1';\n" % {'pi': VHDL_Circuit.allCircuits[-1]._spCleanName}
     AddToStr('readinputdata', ' ' * 22 + alternate_kickoffWriteAccess)
 
-    vhdlFile = open(vhdlBackend.dir + '/TASTE-VHDL-DESIGN/TASTE.vhd', 'w')
+    vhdlFile = open(vhdlBackend.dir + '/TASTE-VHDL-DESIGN/design/TASTE.vhd', 'w')
     vhdlFile.write(vhdlTemplateBrave.vhd % g_placeholders)
     vhdlFile.close()
 
     msg = ""
     for c in VHDL_Circuit.allCircuits:
         msg += ' %s.vhd' % c._spCleanName
-    makefile = open(vhdlBackend.dir + '/TASTE-VHDL-DESIGN/Makefile', 'w')
+    makefile = open(vhdlBackend.dir + '/TASTE-VHDL-DESIGN/design/Makefile', 'w')
     makefile.write(vhdlTemplateBrave.makefile % {'pi': msg, 'tab': '\t'})
     makefile.close()
 
-    script = open(vhdlBackend.dir + '/TASTE-VHDL-DESIGN/script.py', 'w')
+    script = open(vhdlBackend.dir + '/TASTE-VHDL-DESIGN/design/script.py', 'w')
     script.write(vhdlTemplateBrave.script % {'pi': c._spCleanName})
     script.close()

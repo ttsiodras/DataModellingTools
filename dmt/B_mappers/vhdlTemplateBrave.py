@@ -58,17 +58,6 @@ architecture arch of TASTE is
 
     -- Circuits for the existing PIs
 %(circuits)s
-    -- Declare signals
-    -- signal CLK : std_logic;
-    -- signal RST : std_logic;
-
-    -- Register interface
-    -- signal Addr : std_logic_vector(15 downto 0);
-    -- signal DataIn : std_logic_vector(7 downto 0);
-    -- signal DataOut : std_logic_vector(7 downto 0);
-    -- signal WE : std_logic;
-    -- signal RE : std_logic;
-
     -- Registers for I/O
 %(ioregisters)s
 
@@ -118,7 +107,7 @@ end arch;'''
 
 makefile = r'''
 SRCS=TASTE.vhd %(pi)s
-TARGET=TASTE.bit
+TARGET=TASTE.nxb
 
 all:    ${TARGET}
 
