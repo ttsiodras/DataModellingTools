@@ -77,7 +77,7 @@ begin
             -- Update start-stop pulses
 %(updateStartStopPulses)s
             if (apbi.pwrite='1' and apbi.psel= '1' and apbi.penable = '1') then
-                case (apbi.paddr(15 downto 0)) is
+                case (apbi.paddr(11 downto 0)) is
                       -- Read data
 %(readinputdata)s
                  end case;
@@ -89,7 +89,7 @@ begin
     process (apbi.paddr, apbi.pwrite, %(outputs)s %(completions)s)
     begin
         if (apbi.pwrite='0' and apbi.psel= '1') then
-            case (apbi.paddr(15 downto 0)) is
+            case (apbi.paddr(11 downto 0)) is
                 -- Write data
 %(writeoutputdata)s
                 when others => apbo.prdata(7 downto 0) <= (others => '0');
@@ -112,6 +112,7 @@ TARGET=TASTE.nxb
 all:    ${TARGET}
 
 ${TARGET}:      ${SRCS}
+%(tab)sexport NANOXPLORE_BYPASS=x86_64_UBUNTU_16
 %(tab)snanoxpython script.py
 %(tab)s@echo "========================================"
 %(tab)s@echo "      ${TARGET} built successfully.      "
