@@ -83,17 +83,17 @@
 #     the complex interactions between OPTIONAL and WITH COMPONENTS.
 #     Maxime described it to me as follows:
 #
-#     "The use case is two-fold - for SEQUENCE : 
+#     "The use case is two-fold - for SEQUENCE :
 #
 #     MySeq ::= MyOtherSeq (WITH COMPONENTS {..., b ABSENT })
 #
-#     ...and for CHOICE: 
+#     ...and for CHOICE:
 #
 #     AllPossibleTC ::= CHOICE {
 #        tc-6-1 ..,
 #        tc-5-4 , .....}
 #     TC-Subset ::= AllPossibleTC (WITH COMPONENTS {tc-6-1 ABSENT})
-#     
+#
 #     So alwaysPresent is NOT the negative of alwaysPresent:
 #     a field can be optional, OR always present, OR always absent
 
