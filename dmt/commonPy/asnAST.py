@@ -69,13 +69,33 @@
 #                     +------------------------------------+ | value: string,         |
 #                     |     AsnSequence/AsnSet/AsnChoice   | |        AsnBasicNode,   |
 #                     |------------------------------------| |        AsnEnumerated   |
-#                     | _members list:(name, value, en, op)| +------------------------+
+#                     | _members list:(name, value, ...    | +------------------------+
 #                     | value: AsnBasicNode,               |
 #                     |        AsnEnumerated,              |
 #                     |        AsnMetaMember               |
 #                     | en: the EnumID from ASN1SCC        |
 #                     | op: the OPTIONAL-ity status        |
+#                     | alwaysPresent: bool [1]            |
+#                     | alwaysAbsent: bool  [1]            |
 #                     +------------------------------------+
+#
+# [1] The alwaysAbsent/Present are additions made in Oct/2018 to accomodate
+#     the complex interactions between OPTIONAL and WITH COMPONENTS.
+#     Maxime described it to me as follows:
+#
+#     "The use case is two-fold - for SEQUENCE : 
+#
+#     MySeq ::= MyOtherSeq (WITH COMPONENTS {..., b ABSENT })
+#
+#     ...and for CHOICE: 
+#
+#     AllPossibleTC ::= CHOICE {
+#        tc-6-1 ..,
+#        tc-5-4 , .....}
+#     TC-Subset ::= AllPossibleTC (WITH COMPONENTS {tc-6-1 ABSENT})
+#     
+#     So alwaysPresent is NOT the negative of alwaysPresent:
+#     a field can be optional, OR always present, OR always absent
 
 from typing import List, Union, Dict, Any  # NOQA pylint: disable=unused-import
 
@@ -463,9 +483,12 @@ This class stores the semantic content of an ASN.1 SEQUENCE.
 Members:
     _name : the name of the type
     _members    : a tuple of all child elements. Each tuple contains
-                  three elements: the name of the variable, the type itself
-                  (as an AsnInt, AsnReal, ... or an AsnMetaMember), and
-                  an optionality boolean (true mean OPTIONAL)
+                  many elements: the name of the variable, the type itself
+                  (as an AsnInt, AsnReal, ... or an AsnMetaMember),
+                  an optionality boolean (true mean OPTIONAL),
+                  and two more booleans to indicate alwaysAbsent
+                  and alwaysPresent semantics. See comment at the
+                  top diagram for more info.
 '''
     validOptions = ['members', 'lineno', 'asnFilename']
 

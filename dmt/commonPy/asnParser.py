@@ -738,12 +738,15 @@ def CommonSeqSetChoice(
     for x in xmlSequenceNode._children:
         if x._name == childTypeName:
             opti = GetAttr(x, "Optional")
+            bAlwaysPresent = GetAttr(x, "bAlwaysPresent")
+            bAlwaysAbsent = GetAttr(x, "bAlwaysAbsent")
             if opti and opti == "True":
-                utility.warn("OPTIONAL attribute ignored (for field contained in %s,%s)" % (newModule._asnFilename, lineNo))
+                utility.warn("OPTIONAL attribute ignored by A/B mappers (for field contained in %s,%s)" % (newModule._asnFilename, lineNo))
             enumID = GetAttr(x, "EnumID")
             myMembers.append([GetAttr(x, "VarName"), GenericFactory(newModule, GetChild(x, "Type"))])
             myMembers[-1].append(enumID)
-            myMembers[-1].append(opti == "True")
+            for flag in [opti, bAlwaysPresent, bAlwaysAbsent]:
+                myMembers[-1].append(flag == "True")
     for tup in myMembers:
         if isinstance(tup[1], AsnMetaType):
             asnMetaMember = AsnMetaMember(
