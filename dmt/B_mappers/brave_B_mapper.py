@@ -435,15 +435,15 @@ class VHDLGlueGenerator(SynchronousToolGlueGeneratorGeneric[List[int], List[int]
 #define STATIC
 #endif
 
-#define BASE_ADDR  0x80000300
+#define BASE_ADDR               0x80000300
 
 #define FPGA_READY              "ready"
 #define FPGA_RECONFIGURING      "reconfiguring"
 #define FPGA_ERROR              "error"
 #define FPGA_DISABLED           "disabled"
 
-#define POLLING_PERIOD_NS  1000000
-#define RETRIES		   4000
+#define POLLING_PERIOD_NS       1000000
+#define RETRIES                 4000
 
 #ifdef _WIN32
 
@@ -470,14 +470,6 @@ static long long bswap64(long long x)
 #define __builtin_bswap64 bswap64
 
 #endif
-
-static void ErrorHandler(
-    const char *Function,
-    const char *Msg)
-{
-    printf("**** TASTE - Function %s returned an error\\n        \\"%s\\"\\n\\n", Function, Msg);
-    exit(1);
-}
 
 uint64_t ObtainTimeStamp ()
 {
