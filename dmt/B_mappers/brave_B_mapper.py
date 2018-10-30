@@ -418,7 +418,6 @@ class VHDLGlueGenerator(SynchronousToolGlueGeneratorGeneric[List[int], List[int]
         self.C_SourceFile.write("#include \"%s.h\" // Space certified compiler generated\n" % self.asn_name)
         self.C_SourceFile.write('''
 
-
 #include "C_ASN1_Types.h"
 #include <stdint.h>
 
@@ -434,8 +433,6 @@ class VHDLGlueGenerator(SynchronousToolGlueGeneratorGeneric[List[int], List[int]
 #ifndef STATIC
 #define STATIC
 #endif
-
-#define BASE_ADDR               0x80000300
 
 #define FPGA_READY              "ready"
 #define FPGA_RECONFIGURING      "reconfiguring"
@@ -485,6 +482,8 @@ uint64_t ObtainTimeStamp ()
 
 uint64_t ts_now, ts_prev;
 uint32_t count;
+
+#include "rmap123.h"
 ''')
         # self.g_FVname = subProgram._id
 
@@ -562,6 +561,13 @@ uint32_t count;
         self.C_SourceFile.write('           //actions\n')
         #self.C_SourceFile.write("          BraveReadRegister(g_Handle, BASE_ADDR + %s, &flag);\n" %
         #                                   hex(int(VHDL_Circuit.lookupSP[sp._id]._offset)))
+        
+        self.C_SourceFile.write('           if (rmap_tgt_read(remote_base_address, &flag, 1, remote_dst_address)) {\n')
+        self.C_SourceFile.write('               printf("Failed reading Target\\n");\n')
+        self.C_SourceFile.write('               exit(0);\n')
+        self.C_SourceFile.write('           }\n')
+        self.C_SourceFile.write('           printf(" - Read OK\\n");\n')
+    
         self.C_SourceFile.write("           flag = 1; // a dummy BRAVE always work\n")
         self.C_SourceFile.write("           if(flag) break;\n")
         self.C_SourceFile.write('           // Recheck if FPGA is (still) ready.\n')
