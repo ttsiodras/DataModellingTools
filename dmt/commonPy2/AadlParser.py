@@ -1333,6 +1333,7 @@ class Parser(antlr.LLkParser):
                    if assoc._name[-19:].lower() == "fpga_configurations":
                        stripQuotes = assoc._value.replace("\"", "")
                        g_subProgramImplementations[-1][4] = stripQuotes
+                       sp.SetFPGAConfigurations(stripQuotes)      
         self.match(END)
         id = self.LT(1)
         self.match(IDENT)

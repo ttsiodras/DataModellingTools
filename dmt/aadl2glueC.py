@@ -100,6 +100,7 @@ from .B_mappers import simulink_B_mapper
 from .B_mappers import micropython_async_B_mapper
 from .B_mappers import vhdl_B_mapper
 from .B_mappers import zestSC1_B_mapper
+from .B_mappers import brave_B_mapper
 
 from .B_mappers.module_protos import Sync_B_Mapper, Async_B_Mapper
 
@@ -216,6 +217,8 @@ types). This used to cover Dumpable C/Ada Types and OG headers.'''
 def getSyncBackend(modelingLanguage: str) -> Sync_B_Mapper:
     if modelingLanguage not in g_sync_mappers:
         panic("Synchronous modeling language '%s' not supported" % modelingLanguage)
+    if os.getenv("BRAVE") is not None and modelingLanguage == 'vhdl':
+        return cast(Sync_B_Mapper, brave_B_mapper)
     if os.getenv("ZESTSC1") is not None and modelingLanguage == 'vhdl':
         return cast(Sync_B_Mapper, zestSC1_B_mapper)
     return cast(Sync_B_Mapper, g_sync_mappers[modelingLanguage])
@@ -379,6 +382,8 @@ def ProcessCustomBackends(
         if lang.lower() in ["gui_pi", "gui_ri"]:
             return [cast(Sync_B_Mapper, x) for x in [python_B_mapper, pyside_B_mapper]]  # pragma: no cover
         elif lang.lower() == "vhdl":  # pragma: no cover
+            if os.getenv("BRAVE") is not None:
+                return [cast(Sync_B_Mapper, brave_B_mapper)]  # pragma: no cover
             if os.getenv("ZESTSC1") is not None:
                 return [cast(Sync_B_Mapper, zestSC1_B_mapper)]  # pragma: no cover
             else:
@@ -386,10 +391,10 @@ def ProcessCustomBackends(
         else:
             panic("Unexpected call of getCustomBackends...")  # pragma: no cover
 
-    for si in [x for x in SystemsAndImplementations if x[2] is not None and x[4] is not None and (x[2].lower() in ["gui_ri", "gui_pi", "vhdl"] or (x[2].lower() == "c" and x[4] is not ''))]:
+    for si in [x for x in SystemsAndImplementations if x[2] is not None and (x[2].lower() in ["gui_ri", "gui_pi", "vhdl"] or (x[2].lower() == "c" and len(x)>4 and x[4] is not ''))]:
         # We do, start the work
         spName, sp_impl, lang, maybeFVname = si[0], si[1], si[2], si[3]
-        if si[2].lower() == "c" and si[4] is not '':
+        if si[2].lower() == "c" and len(si)>4 and si[4] is not '':
             lang = "vhdl"
         sp = commonPy.aadlAST.g_apLevelContainers[spName]
         if len(sp._params) == 0:
