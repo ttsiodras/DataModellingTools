@@ -93,11 +93,11 @@ def calculateForNativeAndASN1SCC(absASN1SCCpath, autosrc, names, inputFiles):
         for line in os.popen("%s -AdaUses %s" % (absASN1SCCpath, '" "'.join(inputASN1files))):
             g_AdaPackageNameOfType[line.split(':')[0]] = line.split(':')[1].rstrip()
     else:
-        cmd = "mono %s -c -uPER -o \"%s\" %s %s" % (absASN1SCCpath, autosrc, acn, '"' + '" "'.join(inputFiles) + '"')
+        cmd = "mono %s -c -uPER -fp AUTO -typePrefix asn1Scc -o \"%s\" %s %s" % (absASN1SCCpath, autosrc, acn, '"' + '" "'.join(inputFiles) + '"')
         res = mysystem(cmd)
         if res != 0:
             panic("This command failed: %s\n" % cmd)
-        for line in os.popen('mono  %s -AdaUses "%s"' % (absASN1SCCpath, '" "'.join(inputASN1files))):
+        for line in os.popen('mono  %s -fp AUTO -typePrefix asn1Scc -AdaUses "%s"' % (absASN1SCCpath, '" "'.join(inputASN1files))):
             g_AdaPackageNameOfType[line.split(':')[0]] = line.split(':')[1].rstrip()
 
     msgEncoderFile = open(autosrc + os.sep + base + ".stats.c", 'w')
@@ -126,10 +126,10 @@ def calculateForNativeAndASN1SCC(absASN1SCCpath, autosrc, names, inputFiles):
         if node._isArtificial:
             continue
         cleaned = cleanNameAsAsn1cWants(asnTypename)
-        msgEncoderFile.write('static %s sizeof_%s;\n' % (cleaned, cleaned))
-        msgEncoderFile.write('char bytesEncoding_%s[%s_REQUIRED_BYTES_FOR_ENCODING];\n' % (cleaned, cleaned))
+        msgEncoderFile.write('static asn1Scc%s sizeof_%s;\n' % (cleaned, cleaned))
+        msgEncoderFile.write('char bytesEncoding_%s[asn1Scc%s_REQUIRED_BYTES_FOR_ENCODING];\n' % (cleaned, cleaned))
         if acn != "":
-            msgEncoderFile.write('char bytesAcnEncoding_%s[%s_REQUIRED_BYTES_FOR_ACN_ENCODING];\n' % (cleaned, cleaned))
+            msgEncoderFile.write('char bytesAcnEncoding_%s[asn1Scc%s_REQUIRED_BYTES_FOR_ACN_ENCODING];\n' % (cleaned, cleaned))
     msgEncoderFile.close()
 
     # Code generation - asn1c part
