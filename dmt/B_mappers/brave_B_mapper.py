@@ -509,7 +509,9 @@ uint32_t count;
 
     # def InitializeBlock(self, modelingLanguage, asnFile, sp, subProgramImplementation, maybeFVname):
     def InitializeBlock(self, unused_modelingLanguage: str, unused_asnFile: str, unused_sp: ApLevelContainer, unused_subProgramImplementation: str, unused_maybeFVname: str) -> None:
-        self.C_SourceFile.write('''    /*BRAVE_HANDLE Handle = (BRAVE_HANDLE) NULL;
+        self.C_SourceFile.write('''    printf("[ ********* %s Init ********* ] Device driver init ... (to be implemented) \\n");
+
+    /*BRAVE_HANDLE Handle = (BRAVE_HANDLE) NULL;
 
     BraveRegisterErrorHandler(ErrorHandler);
 
@@ -533,7 +535,7 @@ uint32_t count;
             exit(1);
         }
         BraveSetSignalDirection(g_Handle, 0xf);
-''')
+''' % (self.CleanNameAsADAWants(unused_maybeFVname)))
         self.C_SourceFile.write("    }*/\n")
 
     # def ExecuteBlock(self, modelingLanguage, asnFile, sp, subProgramImplementation, maybeFVname):
