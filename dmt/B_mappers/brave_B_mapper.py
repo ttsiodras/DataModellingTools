@@ -486,7 +486,7 @@ uint64_t ObtainTimeStamp ()
 uint64_t ts_now, ts_prev;
 uint32_t count;
 */
-//#include "rmap123.h"
+#include "rmap123.h"
 ''')
         # self.g_FVname = subProgram._id
 
