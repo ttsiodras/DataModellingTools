@@ -418,6 +418,9 @@ class VHDLGlueGenerator(SynchronousToolGlueGeneratorGeneric[List[int], List[int]
         self.C_SourceFile.write("#include \"%s.h\" // Space certified compiler generated\n" % self.asn_name)
         self.C_SourceFile.write('''
 
+#include <stdio.h>
+#include <string.h>
+
 #include "C_ASN1_Types.h"
 //#include <stdint.h>
 /*
