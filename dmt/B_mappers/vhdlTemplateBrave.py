@@ -37,12 +37,17 @@
 #
 # Charge for Runtimes   None                    None
 #
-vhd = '''library ieee;
+vhd = '''-- Company: GMV
+-- Copyright European Space Agency, 2018
+
+library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 library leon2ft;
 use leon2ft.amba.all;
+
+library tase;
 
 entity TASTE is
     port (
@@ -69,7 +74,7 @@ begin
     -- Implement register write
     process (reset_n, clk_i)
     begin
-        if (reset_n='1') then
+        if (reset_n='0') then
             -- Signals for reset
 %(reset)s
         elsif (clk_i'event and clk_i='1') then
@@ -86,17 +91,15 @@ begin
     end process;
 
     -- Implement register read
-    process (apbi.paddr, apbi.pwrite, %(outputs)s %(completions)s)
+    process (apbi.paddr, apbi.pwrite, apbi.psel, %(outputs)s %(completions)s)
     begin
+        apbo.prdata <= (others => '0');
         if (apbi.pwrite='0' and apbi.psel= '1') then
             case (apbi.paddr(11 downto 0)) is
                 -- Write data
 %(writeoutputdata)s
                 when others => apbo.prdata(7 downto 0) <= (others => '0');
             end case;
-        else
-            -- avoid latches
-            apbo.prdata(7 downto 0) <= (others => '0');
         end if;
     end process;
 
@@ -122,7 +125,9 @@ clean:
 %(tab)srm -rf logs *.nxm *.pyc *.nxb
 '''
 
-per_circuit_vhd = """
+per_circuit_vhd = """-- Company: GMV
+-- Copyright European Space Agency, 2018
+
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_ARITH.ALL;
@@ -150,8 +155,10 @@ begin
     -- Possible clock divider
     process(CLK, RST)
     begin
-        if (RST='1') then
-            finish_%(pi)s <= '1';
+        if (RST='0') then
+            finish_%(pi)s <= '0'; -- or 1?
+            state                    <= wait_for_start_signal;
+            -- outp                     <= (others => '0');
         elsif (CLK'event and CLK='1') then
             case state is
                 when wait_for_start_signal =>
