@@ -79,7 +79,7 @@ def RegistersAllocated(node_or_str: Union[str, AsnNode]) -> int:
         retValue = 0
         realLeafType = asnParser.g_leafTypeDict[node._leafType]
         if realLeafType == "INTEGER":
-            retValue = 32
+            retValue = 8
         elif realLeafType == "REAL":
             panic("The VHDL mapper can't work with REALs (non-synthesizeable circuits!) (%s)" % node.Location())  # pragma: no cover
         elif realLeafType == "BOOLEAN":
@@ -711,15 +711,9 @@ class MapASN1ToVHDLreadinputdata(RecursiveMapperGeneric[List[int], str]):  # pyl
             panicWithCallStack("INTEGERs need explicit ranges when generating VHDL code... (%s)" % node.Location())  # pragma: no cover
         # bits = math.log(max(map(abs, node._range)+1),2)+(1 if node._range[0] < 0 else 0)
         lines = []  # type: List[str]
-        lines.append('when X"%s" => %s( 7 downto  0) <= apbi.pwdata(7 downto 0);' % (hex(reginfo[0] +  0)[2:], dstVHDL))
-        lines.append('when X"%s" => %s(15 downto  8) <= apbi.pwdata(7 downto 0);' % (hex(reginfo[0] +  4)[2:], dstVHDL))
-        lines.append('when X"%s" => %s(23 downto 16) <= apbi.pwdata(7 downto 0);' % (hex(reginfo[0] +  8)[2:], dstVHDL))
-        lines.append('when X"%s" => %s(31 downto 24) <= apbi.pwdata(7 downto 0);' % (hex(reginfo[0] + 12)[2:], dstVHDL))
-        lines.append('when X"%s" => %s(39 downto 32) <= apbi.pwdata(7 downto 0);' % (hex(reginfo[0] + 16)[2:], dstVHDL))
-        lines.append('when X"%s" => %s(47 downto 40) <= apbi.pwdata(7 downto 0);' % (hex(reginfo[0] + 20)[2:], dstVHDL))
-        lines.append('when X"%s" => %s(55 downto 48) <= apbi.pwdata(7 downto 0);' % (hex(reginfo[0] + 24)[2:], dstVHDL))
-        lines.append('when X"%s" => %s(63 downto 56) <= apbi.pwdata(7 downto 0);' % (hex(reginfo[0] + 28)[2:], dstVHDL))
-        reginfo[0] += 32
+        lines.append('when X"%s" => %s(31 downto  0) <= apbi.pwdata(31 downto 0);' % (hex(reginfo[0] + 0)[2:] if len(hex(reginfo[0] + 0)[2:]) > 3 else ('0' + hex(reginfo[0] + 0)[2:]), dstVHDL))
+        lines.append('when X"%s" => %s(63 downto  32) <= apbi.pwdata(31 downto 0);' % (hex(reginfo[0] + 4)[2:] if len(hex(reginfo[0] + 4)[2:]) > 3 else ('0' + hex(reginfo[0] + 4)[2:]), dstVHDL))
+        reginfo[0] += 8
         return lines
 
     def MapReal(self, _: List[int], __: str, node: AsnReal, ___: AST_Leaftypes, dummy: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
@@ -786,15 +780,9 @@ class MapASN1ToVHDLwriteoutputdata(RecursiveMapperGeneric[List[int], str]):  # p
             panicWithCallStack("INTEGERs need explicit ranges when generating VHDL code... (%s)" % node.Location())  # pragma: no cover
         # bits = math.log(max(map(abs, node._range)+1),2)+(1 if node._range[0] < 0 else 0)
         lines = []  # type: List[str]
-        lines.append('when X"%s" => apbo.prdata(7 downto 0) <= %s( 7 downto  0);' % (hex(reginfo[0] +  0)[2:], dstVHDL))
-        lines.append('when X"%s" => apbo.prdata(7 downto 0) <= %s(15 downto  8);' % (hex(reginfo[0] +  4)[2:], dstVHDL))
-        lines.append('when X"%s" => apbo.prdata(7 downto 0) <= %s(23 downto 16);' % (hex(reginfo[0] +  8)[2:], dstVHDL))
-        lines.append('when X"%s" => apbo.prdata(7 downto 0) <= %s(31 downto 24);' % (hex(reginfo[0] + 12)[2:], dstVHDL))
-        lines.append('when X"%s" => apbo.prdata(7 downto 0) <= %s(39 downto 32);' % (hex(reginfo[0] + 16)[2:], dstVHDL))
-        lines.append('when X"%s" => apbo.prdata(7 downto 0) <= %s(47 downto 40);' % (hex(reginfo[0] + 20)[2:], dstVHDL))
-        lines.append('when X"%s" => apbo.prdata(7 downto 0) <= %s(55 downto 48);' % (hex(reginfo[0] + 24)[2:], dstVHDL))
-        lines.append('when X"%s" => apbo.prdata(7 downto 0) <= %s(63 downto 56);' % (hex(reginfo[0] + 28)[2:], dstVHDL))
-        reginfo[0] += 32
+        lines.append('when X"%s" => apbo.prdata(31 downto 0) <= %s(31 downto  0);' % (hex(reginfo[0] + 0)[2:] if len(hex(reginfo[0] + 0)[2:]) > 3 else ('0' + hex(reginfo[0] + 0)[2:]), dstVHDL))
+        lines.append('when X"%s" => apbo.prdata(31 downto 0) <= %s(63 downto  32);' % (hex(reginfo[0] + 4)[2:] if len(hex(reginfo[0] + 4)[2:]) > 3 else ('0' + hex(reginfo[0] + 4)[2:]), dstVHDL))
+        reginfo[0] += 8
         return lines
 
     def MapReal(self, _: List[int], __: str, node: AsnReal, ___: AST_Leaftypes, dummy: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
@@ -1058,12 +1046,12 @@ def OnFinal() -> None:
 
         readinputdataLines = []
         readinputdataLines.append("\n" + ' ' * 22 + '-- kickoff ' + c._spCleanName)
-        kickoffWriteAccess = "when X\"%(off)s\" => %(pi)s_StartCalculationsInternal <= %(pi)s_StartCalculationsInternal xor '1';\n" % {'pi': c._spCleanName, 'off': hex(0x300 + c._offset)[2:]}
+        kickoffWriteAccess = "when X\"%(off)s\" => %(pi)s_StartCalculationsInternal <= %(pi)s_StartCalculationsInternal xor '1';\n" % {'pi': c._spCleanName, 'off': hex(0x0300 + c._offset)[2:] if len(hex(0x0300 + c._offset)[2:]) > 3 else ('0' + hex(0x0300 + c._offset)[2:])}
         readinputdataLines.append(kickoffWriteAccess)
 
         connectionsToSystemCLines = []
 
-        counter = cast(List[int], [0x300 + c._offset + 4])  # type: List[int]  # pylint: disable=invalid-sequence-index
+        counter = cast(List[int], [0x0300 + c._offset + 4])  # type: List[int]  # pylint: disable=invalid-sequence-index
         for p in c._sp._params:
             node = VHDL_Circuit.names[p._signal._asnNodename]
             direction = "in " if isinstance(p, InParam) else "out "
@@ -1088,7 +1076,7 @@ def OnFinal() -> None:
         writeoutputdataLines = []
         writeoutputdataLines.append("\n" + ' ' * 16 + '-- result calculated flag ' + c._spCleanName)
         accessCompletionFlag = "when X\"%(off)s\" => apbo.prdata(7 downto 0) <= \"0000000\" & %(pi)s_CalculationsComplete;\n" % \
-            {'pi': c._spCleanName, 'off': hex(0x300 + c._offset)[2:]}
+            {'pi': c._spCleanName, 'off': hex(0x0300 + c._offset)[2:] if len(hex(0x0300 + c._offset)[2:]) > 3 else ('0' + hex(0x0300 + c._offset)[2:])}
         writeoutputdataLines.append(accessCompletionFlag)
 
         for p in c._sp._params:

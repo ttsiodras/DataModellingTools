@@ -47,8 +47,6 @@ use ieee.numeric_std.all;
 library leon2ft;
 use leon2ft.amba.all;
 
-library tase;
-
 entity TASTE is
     port (
       clk_i    : in  std_logic;         -- System clock
@@ -82,7 +80,7 @@ begin
             -- Update start-stop pulses
 %(updateStartStopPulses)s
             if (apbi.pwrite='1' and apbi.psel= '1' and apbi.penable = '1') then
-                case (apbi.paddr(11 downto 0)) is
+                case (apbi.paddr(15 downto 0)) is
                       -- Read data
 %(readinputdata)s
                  end case;
@@ -95,7 +93,7 @@ begin
     begin
         apbo.prdata <= (others => '0');
         if (apbi.pwrite='0' and apbi.psel= '1') then
-            case (apbi.paddr(11 downto 0)) is
+            case (apbi.paddr(15 downto 0)) is
                 -- Write data
 %(writeoutputdata)s
                 when others => apbo.prdata(7 downto 0) <= (others => '0');
