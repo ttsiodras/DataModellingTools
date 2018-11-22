@@ -160,7 +160,7 @@ class FromVHDLToASN1SCC(RecursiveMapperGeneric[List[int], str]):  # pylint: disa
         lines.append("    asn1SccT_Int32 tmp, i;\n")
         lines.append("    asn1SccSint val = 0;\n")
         lines.append("    for(i=0; i<sizeof(asn1SccSint)/4; i++) {\n")
-        lines.append("        rmap_tgt_read(remote_base_address + %s + i, &tmp, 4, remote_dst_address);\n" % hex(register))
+        lines.append("        rmap_tgt_read(remote_base_address + %s + (i*4), &tmp, 4, remote_dst_address);\n" % hex(register))
         lines.append("        val <<= 32; val |= tmp;\n")
         lines.append("    }\n")
         lines.append("#if WORD_SIZE == 8\n")
@@ -290,7 +290,7 @@ class FromASN1SCCtoVHDL(RecursiveMapperGeneric[str, List[int]]):  # pylint: disa
         lines.append("    asn1SccSint val = %s;\n" % srcVar)
         lines.append("    for(i=0; i<sizeof(asn1SccSint)/4; i++) {\n")
         lines.append("        tmp = val & 0xFFFFFFFF;\n")
-        lines.append("        rmap_tgt_write(remote_base_address + %s + i, &tmp, 4, remote_dst_address);\n" % hex(register))
+        lines.append("        rmap_tgt_write(remote_base_address + %s + (i*4), &tmp, 4, remote_dst_address);\n" % hex(register))
         lines.append("        val >>= 32;\n")
         lines.append("    }\n")
         lines.append("}\n")
@@ -512,34 +512,9 @@ uint32_t count;
 
     # def InitializeBlock(self, modelingLanguage, asnFile, sp, subProgramImplementation, maybeFVname):
     def InitializeBlock(self, unused_modelingLanguage: str, unused_asnFile: str, unused_sp: ApLevelContainer, unused_subProgramImplementation: str, unused_maybeFVname: str) -> None:
-        self.C_SourceFile.write('''    printf("[ ********* %s Init ********* ] Device driver init ... (to be implemented) \\n");
-
-    /*BRAVE_HANDLE Handle = (BRAVE_HANDLE) NULL;
-
-    BraveRegisterErrorHandler(ErrorHandler);
-
-    if (g_Handle == (BRAVE_HANDLE) NULL) {
-        static unsigned int Count;
-        static unsigned int NumCards;
-        static unsigned long CardIDs[256];
-        static unsigned long SerialNumbers[256];
-        static BRAVE_FPGA_TYPE FPGATypes[256];
-        BraveCountCards((unsigned long*)&NumCards, CardIDs, SerialNumbers, FPGATypes);
-        if (NumCards==0) {
-            printf("No cards in the system\\n");
-            exit(1);
-        }
-        BraveOpenCard(CardIDs[0], &Handle);
-        g_Handle = Handle;
-        if (FPGATypes[0]==BRAVE_XC3S1000) {
-            BraveConfigureFromFile(g_Handle, "TASTE.bit");
-        } else {
-            puts("Only for XC3S1000");
-            exit(1);
-        }
-        BraveSetSignalDirection(g_Handle, 0xf);
+        self.C_SourceFile.write('''    printf("[ ********* %s Init ********* ] Device driver init ... \\n");
+    rmap123_init();\n
 ''' % (self.CleanNameAsADAWants(unused_maybeFVname)))
-        self.C_SourceFile.write("    }*/\n")
 
     # def ExecuteBlock(self, modelingLanguage, asnFile, sp, subProgramImplementation, maybeFVname):
     def ExecuteBlock(self, unused_modelingLanguage: str, unused_asnFile: str, sp: ApLevelContainer, unused_subProgramImplementation: str, maybeFVname: str) -> None:
@@ -556,7 +531,7 @@ uint32_t count;
         self.C_SourceFile.write('    if (rmap_tgt_write(remote_base_address + %s, &okstart, 1, remote_dst_address)) {\n' %
                                 hex(int(VHDL_Circuit.lookupSP[sp._id]._offset)))
         self.C_SourceFile.write('       printf("Failed writing Target\\n");\n')
-        self.C_SourceFile.write('       exit(0);\n')
+        self.C_SourceFile.write('       return -1;\n')
         self.C_SourceFile.write('    }\n')
         self.C_SourceFile.write('    //printf(" - Write OK\\n");\n')
 
@@ -574,11 +549,10 @@ uint32_t count;
         self.C_SourceFile.write('           if (rmap_tgt_read(remote_base_address + %s, &flag, 1, remote_dst_address)) {\n' %
                                 hex(int(VHDL_Circuit.lookupSP[sp._id]._offset)))
         self.C_SourceFile.write('               printf("Failed reading Target\\n");\n')
-        self.C_SourceFile.write('               exit(0);\n')
+        self.C_SourceFile.write('               return -1;\n')
         self.C_SourceFile.write('           }\n')
         self.C_SourceFile.write('           //printf(" - Read OK\\n");\n')
     
-        self.C_SourceFile.write("           flag = 1; // a dummy BRAVE always work\n")
         self.C_SourceFile.write("           //if(flag) break;\n")
         self.C_SourceFile.write('           // Recheck if FPGA is (still) ready.\n')
         self.C_SourceFile.write('           //if(strcmp(globalFpgaStatus_%s, FPGA_READY)){\n' % (self.CleanNameAsADAWants(maybeFVname)))

@@ -719,7 +719,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                 self.C_SourceFile.write('    while( fConfig != NULL ) {\n')
                 self.C_SourceFile.write('       if(!strcmp(p_szGlobalState, fConfig)){\n')
                 self.C_SourceFile.write('           // delegate to HW\n')
-                self.C_SourceFile.write('           printf("[ <-?-> <-?-> <-?-> %s Dispatcher <-?-> <-?-> <-?-> ] Delegating to HW ... (to be implemented) \\n");\n' % (self.CleanNameAsADAWants(maybeFVname)))
+                self.C_SourceFile.write('           printf("[ <-?-> <-?-> <-?-> %s Dispatcher <-?-> <-?-> <-?-> ] Delegating to HW ... \\n");\n' % (self.CleanNameAsADAWants(maybeFVname)))
                 self.C_SourceFile.write("           if(%s_%s%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id), fpgaSuffix))
                 for param in sp._params:
                     if param._id != sp._params[0]._id:
