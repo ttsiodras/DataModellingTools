@@ -157,11 +157,11 @@ class FromVHDLToASN1SCC(RecursiveMapperGeneric[List[int], str]):  # pylint: disa
         register = srcVHDL[0] + srcVHDL[1]
         lines = []  # type: List[str]
         lines.append("{\n")
-        lines.append("    unsigned char tmp, i;\n")
+        lines.append("    asn1SccT_Int32 tmp, i;\n")
         lines.append("    asn1SccSint val = 0;\n")
-        lines.append("    for(i=0; i<sizeof(asn1SccSint); i++) {\n")
-        #lines.append("        BraveReadRegister(g_Handle, BASE_ADDR + %s + i, &tmp);\n" % hex(register))
-        lines.append("        val <<= 8; val |= tmp;\n")
+        lines.append("    for(i=0; i<sizeof(asn1SccSint)/4; i++) {\n")
+        lines.append("        rmap_tgt_read(remote_base_address + %s + i, &tmp, 4, remote_dst_address);\n" % hex(register))
+        lines.append("        val <<= 32; val |= tmp;\n")
         lines.append("    }\n")
         lines.append("#if WORD_SIZE == 8\n")
         lines.append("    val = __builtin_bswap64(val);\n")
@@ -286,12 +286,12 @@ class FromASN1SCCtoVHDL(RecursiveMapperGeneric[str, List[int]]):  # pylint: disa
         register = dstVHDL[0] + dstVHDL[1]
         lines = []  # type: List[str]
         lines.append("{\n")
-        lines.append("    unsigned char tmp, i;\n")
+        lines.append("    asn1SccT_Int32 tmp, i;\n")
         lines.append("    asn1SccSint val = %s;\n" % srcVar)
-        lines.append("    for(i=0; i<sizeof(asn1SccSint); i++) {\n")
-        lines.append("        tmp = val & 0xFF;\n")
-        #lines.append("        BraveWriteRegister(g_Handle, BASE_ADDR + %s + i, tmp);\n" % hex(register))
-        lines.append("        val >>= 8;\n")
+        lines.append("    for(i=0; i<sizeof(asn1SccSint)/4; i++) {\n")
+        lines.append("        tmp = val & 0xFFFFFFFF;\n")
+        lines.append("        rmap_tgt_write(remote_base_address + %s + i, &tmp, 4, remote_dst_address);\n" % hex(register))
+        lines.append("        val >>= 32;\n")
         lines.append("    }\n")
         lines.append("}\n")
         dstVHDL[0] += 8
@@ -552,8 +552,13 @@ uint32_t count;
         self.C_SourceFile.write('       return -1;\n')
         self.C_SourceFile.write('    }\n')
 
-        #self.C_SourceFile.write("    BraveWriteRegister(g_Handle, BASE_ADDR + %s, (unsigned char)1);\n" %
-        #                        hex(int(VHDL_Circuit.lookupSP[sp._id]._offset)))
+        self.C_SourceFile.write('    unsigned char okstart = 1;\n')                                    
+        self.C_SourceFile.write('    if (rmap_tgt_write(remote_base_address + %s, &okstart, 1, remote_dst_address)) {\n' %
+                                hex(int(VHDL_Circuit.lookupSP[sp._id]._offset)))
+        self.C_SourceFile.write('       printf("Failed writing Target\\n");\n')
+        self.C_SourceFile.write('       exit(0);\n')
+        self.C_SourceFile.write('    }\n')
+        self.C_SourceFile.write('    //printf(" - Write OK\\n");\n')
 
         self.C_SourceFile.write('    //count = 0;\n')
         self.C_SourceFile.write('    //ts_prev = ObtainTimeStamp();\n')
@@ -565,13 +570,12 @@ uint32_t count;
         self.C_SourceFile.write('           //ts_prev = ObtainTimeStamp();\n')
         self.C_SourceFile.write('           //count++;\n')
         self.C_SourceFile.write('           //actions\n')
-        #self.C_SourceFile.write("          //BraveReadRegister(g_Handle, BASE_ADDR + %s, &flag);\n" %
-        #                                   hex(int(VHDL_Circuit.lookupSP[sp._id]._offset)))
-        
-        self.C_SourceFile.write('           //if (rmap_tgt_read(remote_base_address, &flag, 1, remote_dst_address)) {\n')
-        self.C_SourceFile.write('           //    printf("Failed reading Target\\n");\n')
-        self.C_SourceFile.write('           //    exit(0);\n')
-        self.C_SourceFile.write('           //}\n')
+
+        self.C_SourceFile.write('           if (rmap_tgt_read(remote_base_address + %s, &flag, 1, remote_dst_address)) {\n' %
+                                hex(int(VHDL_Circuit.lookupSP[sp._id]._offset)))
+        self.C_SourceFile.write('               printf("Failed reading Target\\n");\n')
+        self.C_SourceFile.write('               exit(0);\n')
+        self.C_SourceFile.write('           }\n')
         self.C_SourceFile.write('           //printf(" - Read OK\\n");\n')
     
         self.C_SourceFile.write("           flag = 1; // a dummy BRAVE always work\n")
