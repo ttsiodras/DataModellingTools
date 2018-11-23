@@ -160,7 +160,7 @@ class FromVHDLToASN1SCC(RecursiveMapperGeneric[List[int], str]):  # pylint: disa
         lines.append("    asn1SccT_Int32 tmp, i;\n")
         lines.append("    asn1SccSint val = 0;\n")
         lines.append("    for(i=0; i<sizeof(asn1SccSint)/4; i++) {\n")
-        lines.append("        rmap_tgt_read(remote_base_address + %s + (i*4), &tmp, 4, remote_dst_address);\n" % hex(register))
+        lines.append("        rmap_tgt_read(apb_base_address + %s + (i*4), &tmp, 4, rmap_dst_address);\n" % hex(register))
         lines.append("        val <<= 32; val |= tmp;\n")
         lines.append("    }\n")
         lines.append("#if WORD_SIZE == 8\n")
@@ -290,7 +290,7 @@ class FromASN1SCCtoVHDL(RecursiveMapperGeneric[str, List[int]]):  # pylint: disa
         lines.append("    asn1SccSint val = %s;\n" % srcVar)
         lines.append("    for(i=0; i<sizeof(asn1SccSint)/4; i++) {\n")
         lines.append("        tmp = val & 0xFFFFFFFF;\n")
-        lines.append("        rmap_tgt_write(remote_base_address + %s + (i*4), &tmp, 4, remote_dst_address);\n" % hex(register))
+        lines.append("        rmap_tgt_write(apb_base_address + %s + (i*4), &tmp, 4, rmap_dst_address);\n" % hex(register))
         lines.append("        val >>= 32;\n")
         lines.append("    }\n")
         lines.append("}\n")
@@ -487,6 +487,12 @@ uint64_t ts_now, ts_prev;
 uint32_t count;
 */
 #include "rmap123.h"
+
+#define R_RMAP_DSTADR 0xfe
+#define R_RMAP_BASEADR 0x80000300
+unsigned int apb_base_address = R_RMAP_BASEADR; /* Base address on Remote. This is the address to which the data is copied. */
+unsigned int rmap_dst_address = R_RMAP_DSTADR; /* SpW Destination address. */
+
 ''')
         # self.g_FVname = subProgram._id
 
@@ -528,7 +534,7 @@ uint32_t count;
         self.C_SourceFile.write('    }\n')
 
         self.C_SourceFile.write('    unsigned char okstart = 1;\n')                                    
-        self.C_SourceFile.write('    if (rmap_tgt_write(remote_base_address + %s, &okstart, 1, remote_dst_address)) {\n' %
+        self.C_SourceFile.write('    if (rmap_tgt_write(apb_base_address + %s, &okstart, 1, rmap_dst_address)) {\n' %
                                 hex(int(VHDL_Circuit.lookupSP[sp._id]._offset)))
         self.C_SourceFile.write('       printf("Failed writing Target\\n");\n')
         self.C_SourceFile.write('       return -1;\n')
@@ -546,7 +552,7 @@ uint32_t count;
         self.C_SourceFile.write('           //count++;\n')
         self.C_SourceFile.write('           //actions\n')
 
-        self.C_SourceFile.write('           if (rmap_tgt_read(remote_base_address + %s, &flag, 1, remote_dst_address)) {\n' %
+        self.C_SourceFile.write('           if (rmap_tgt_read(apb_base_address + %s, &flag, 1, rmap_dst_address)) {\n' %
                                 hex(int(VHDL_Circuit.lookupSP[sp._id]._offset)))
         self.C_SourceFile.write('               printf("Failed reading Target\\n");\n')
         self.C_SourceFile.write('               return -1;\n')
