@@ -437,6 +437,32 @@ class VHDLGlueGenerator(SynchronousToolGlueGeneratorGeneric[List[int], List[int]
 #define STATIC
 #endif
 
+#define LOGERROR 	1
+#define LOGWARNING 	1
+#define LOGINFO 	1
+#define LOGDEBUG 	0
+
+#ifdef LOGERROR
+#define LOGERROR(x...) printf(x)
+#else
+#define LOGERROR(x...)
+#endif
+#ifdef LOGWARNING
+#define LOGWARNING(x...) printf(x)
+#else
+#define LOGWARNING(x...)
+#endif
+#ifdef LOGINFO
+#define LOGINFO(x...) printf(x)
+#else
+#define LOGINFO(x...)
+#endif
+#ifdef LOGDEBUG
+#define LOGDEBUG(x...) printf(x)
+#else
+#define LOGDEBUG(x...)
+#endif
+
 #define FPGA_READY              "ready"
 #define FPGA_RECONFIGURING      "reconfiguring"
 #define FPGA_ERROR              "error"
@@ -518,7 +544,7 @@ unsigned int rmap_dst_address = R_RMAP_DSTADR; /* SpW Destination address. */
 
     # def InitializeBlock(self, modelingLanguage, asnFile, sp, subProgramImplementation, maybeFVname):
     def InitializeBlock(self, unused_modelingLanguage: str, unused_asnFile: str, unused_sp: ApLevelContainer, unused_subProgramImplementation: str, unused_maybeFVname: str) -> None:
-        self.C_SourceFile.write('''    printf("[ ********* %s Init ********* ] Device driver init ... \\n");
+        self.C_SourceFile.write('''    LOGINFO("[ ********* %s Init ********* ] Device driver init ... \\n");
     rmap123_init();\n
 ''' % (self.CleanNameAsADAWants(unused_maybeFVname)))
 
@@ -536,10 +562,10 @@ unsigned int rmap_dst_address = R_RMAP_DSTADR; /* SpW Destination address. */
         self.C_SourceFile.write('    unsigned char okstart = 1;\n')                                    
         self.C_SourceFile.write('    if (rmap_tgt_write(apb_base_address + %s, &okstart, 1, rmap_dst_address)) {\n' %
                                 hex(int(VHDL_Circuit.lookupSP[sp._id]._offset)))
-        self.C_SourceFile.write('       printf("Failed writing Target\\n");\n')
+        self.C_SourceFile.write('       LOGERROR("Failed writing Target\\n");\n')
         self.C_SourceFile.write('       return -1;\n')
         self.C_SourceFile.write('    }\n')
-        self.C_SourceFile.write('    //printf(" - Write OK\\n");\n')
+        self.C_SourceFile.write('    LOGDEBUG(" - Write OK\\n");\n')
 
         self.C_SourceFile.write('    //count = 0;\n')
         self.C_SourceFile.write('    //ts_prev = ObtainTimeStamp();\n')
@@ -554,10 +580,10 @@ unsigned int rmap_dst_address = R_RMAP_DSTADR; /* SpW Destination address. */
 
         self.C_SourceFile.write('           if (rmap_tgt_read(apb_base_address + %s, &flag, 1, rmap_dst_address)) {\n' %
                                 hex(int(VHDL_Circuit.lookupSP[sp._id]._offset)))
-        self.C_SourceFile.write('               printf("Failed reading Target\\n");\n')
+        self.C_SourceFile.write('               LOGERROR("Failed reading Target\\n");\n')
         self.C_SourceFile.write('               return -1;\n')
         self.C_SourceFile.write('           }\n')
-        self.C_SourceFile.write('           //printf(" - Read OK\\n");\n')
+        self.C_SourceFile.write('           LOGDEBUG(" - Read OK\\n");\n')
     
         self.C_SourceFile.write("           //if(flag) break;\n")
         self.C_SourceFile.write('           // Recheck if FPGA is (still) ready.\n')

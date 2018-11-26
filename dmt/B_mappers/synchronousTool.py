@@ -719,7 +719,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                 self.C_SourceFile.write('    while( fConfig != NULL ) {\n')
                 self.C_SourceFile.write('       if(!strcmp(p_szGlobalState, fConfig)){\n')
                 self.C_SourceFile.write('           // delegate to HW\n')
-                self.C_SourceFile.write('           printf("[ <-?-> <-?-> <-?-> %s Dispatcher <-?-> <-?-> <-?-> ] Delegating to HW ... \\n");\n' % (self.CleanNameAsADAWants(maybeFVname)))
+                self.C_SourceFile.write('           LOGDEBUG("[ <-?-> <-?-> <-?-> %s Dispatcher <-?-> <-?-> <-?-> ] Delegating to HW ... \\n");\n' % (self.CleanNameAsADAWants(maybeFVname)))
                 self.C_SourceFile.write("           if(%s_%s%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id), fpgaSuffix))
                 for param in sp._params:
                     if param._id != sp._params[0]._id:
@@ -730,7 +730,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                         self.C_SourceFile.write('p' + self.CleanNameAsToolWants(param._id) + ', pSize_' + self.CleanNameAsToolWants(param._id))
                 self.C_SourceFile.write(")){\n")
                 self.C_SourceFile.write('               // HW error, return 2\n')
-                self.C_SourceFile.write('               printf("[ <-?-> <-?-> <-?-> %s Dispatcher <-?-> <-?-> <-?-> ] HW error!\\n");\n' % (self.CleanNameAsADAWants(maybeFVname)))
+                self.C_SourceFile.write('               LOGERROR("[ <-?-> <-?-> <-?-> %s Dispatcher <-?-> <-?-> <-?-> ] HW error!\\n");\n' % (self.CleanNameAsADAWants(maybeFVname)))
                 self.C_SourceFile.write('               return 2;\n')
                 self.C_SourceFile.write('           }\n')
                 self.C_SourceFile.write('           // delegated to HW, return 0\n')
@@ -738,7 +738,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                 self.C_SourceFile.write('       }\n')
                 self.C_SourceFile.write('       fConfig = strtok(NULL, ",");\n')
                 self.C_SourceFile.write('    }\n')
-                self.C_SourceFile.write('    printf("[ <-?-> <-?-> <-?-> %s Dispatcher <-?-> <-?-> <-?-> ] Delegating to SW ...\\n");\n' % (self.CleanNameAsADAWants(maybeFVname)))
+                self.C_SourceFile.write('    LOGDEBUG("[ <-?-> <-?-> <-?-> %s Dispatcher <-?-> <-?-> <-?-> ] Delegating to SW ...\\n");\n' % (self.CleanNameAsADAWants(maybeFVname)))
                 self.C_SourceFile.write('    // delegate to SW, return 1\n')
                 self.C_SourceFile.write('    return 1;\n')
                 self.C_SourceFile.write("}\n\n")
