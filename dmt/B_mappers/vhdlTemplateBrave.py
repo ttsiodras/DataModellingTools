@@ -332,7 +332,7 @@ project.setOptions({'UseNxLibrary': 'Yes',
                     'AdderToDSPMapThreshold': '0',
                     'DefaultRAMMapping': 'RAM',
                     'MappingEffort': 'High', 'ManageAsynchronousReadPort': 'Yes',
-		    'TimingDriven': 'Yes'})
+		    'TimingDriven': 'No'})
 project.addMappingDirective('getModels(.*regfile_3p.*)', 'RAM', 'RF')
 #=======================================================================================================
 # Assigning timing constraints
@@ -340,17 +340,14 @@ project.addMappingDirective('getModels(.*regfile_3p.*)', 'RAM', 'RF')
 # Defining the clock periods
 project.createClock('getClockNet(clk25)', 'clk25', 40000, 0, 20000) # Period = 40000 ps, # first rising edge at 20000 ps -- 25 MHz
 project.createClock('getClockNet(txclk)', 'txclk', 20000, 0, 10000) # Period = 20000 ps, # first rising edge at 10000 ps -- 50 MHz
+project.createClock('getClockNet(spw.swloop[0].spw|rmap_codec_ip_1|spwrlinkwrap_1|spwrlink_1|RX_CLK)', 'rxclk', 20000, 0, 10000) # Period = 20000 ps, # first rising edge at 10000 ps -- 50 MHz
 
-project.developCKGs()
-
-project.createClock('getClockNet(spw.swloop[0].spw|rmap_codec_ip_1|spwrlinkwrap_1|spwrlink_1|RX_CLK)', 'rxclk', 20000, 0, 10000) # Period = 12500 ps, # first rising edge at 6250 ps -- 50 MHz
-project.createClock('getClockNet(spw.swloop[0].spw|rmap_codec_ip_1|Txbitclk)', 'tx_bit_clk', 20000, 0, 10000) # Period = 12500 ps, # first rising edge at 6250 ps -- 50 MHz
-
-project.setClockGroup('getClock(clk25)',        'getClocks(txclk, rxclk, tx_bit_clk)', 'asynchronous')
-project.setClockGroup('getClock(rxclk)',        'getClocks(txclk, clk25, tx_bit_clk)', 'asynchronous')
-project.setClockGroup('getClock(txclk)',        'getClocks(rxclk, clk25, tx_bit_clk)', 'asynchronous')
-project.setClockGroup('getClock(tx_bit_clk)',   'getClocks(rxclk, clk25, txclk)',      'asynchronous')
-
+project.setClockGroup('getClock(clk25)', 'getClock(txclk)', 'asynchronous')
+project.setClockGroup('getClock(txclk)', 'getClock(clk25)', 'asynchronous')
+project.setClockGroup('getClock(rxclk)', 'getClock(txclk)', 'asynchronous')
+project.setClockGroup('getClock(txclk)', 'getClock(rxclk)', 'asynchronous')
+project.setClockGroup('getClock(clk25)', 'getClock(rxclk)', 'asynchronous')
+project.setClockGroup('getClock(rxclk)', 'getClock(clk25)', 'asynchronous')
 #=======================================================================================================
 
 if path.exists(dir + '/pads.py'):
