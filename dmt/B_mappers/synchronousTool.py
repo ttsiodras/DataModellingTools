@@ -649,6 +649,13 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                     self.C_SourceFile.write('void *p' + self.CleanNameAsToolWants(param._id) + ', size_t *pSize_' + self.CleanNameAsToolWants(param._id))
             self.C_SourceFile.write(")\n{\n")
 
+            if subProgramImplementation.lower() == "c" and sp._fpgaConfigurations is not '':
+                self.C_SourceFile.write('    // Check if FPGA is ready.\n')
+                self.C_SourceFile.write('    extern const char globalFpgaStatus_%s[];\n' % (self.CleanNameAsADAWants(maybeFVname)))
+                self.C_SourceFile.write('    if(strcmp(globalFpgaStatus_%s, FPGA_READY)){\n' % (self.CleanNameAsADAWants(maybeFVname)))
+                self.C_SourceFile.write('       return -1;\n')
+                self.C_SourceFile.write('    }\n\n')
+
             # Decode inputs
             for param in sp._params:
                 nodeTypename = param._signal._asnNodename
