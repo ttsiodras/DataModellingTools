@@ -36,6 +36,7 @@ from ..commonPy.asnParser import AST_Lookup, AST_Leaftypes
 TSource = TypeVar('TSource')
 TDestin = TypeVar('TDestin')
 
+brave_seen = {}
 
 class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
 
@@ -577,13 +578,18 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
             dispatcherSuffix = "_Brave_Dispatch"
             if subProgramImplementation.lower() == "c" and sp._fpgaConfigurations is not '':
                 fpgaSuffix = "_Brave_Fpga"
+                if maybeFVname not in brave_seen:
+                    brave_seen[maybeFVname] = 'no_init_yet';
+                else:
+                    brave_seen[maybeFVname] = 'with_init_already'
             
             if subProgramImplementation.lower() == "c" and sp._fpgaConfigurations is not '':
                 self.C_HeaderFile.write("int Execute_%s();\n" % self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation))
             else:    
                 self.C_HeaderFile.write("void Execute_%s();\n" % self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation))
             if maybeFVname != "":
-                self.C_HeaderFile.write("void init_%s%s();\n" % (self.CleanNameAsADAWants(maybeFVname), fpgaSuffix))
+                if not (subProgramImplementation.lower() == "c" and sp._fpgaConfigurations is not '' and maybeFVname in brave_seen and brave_seen[maybeFVname] is 'with_init_already'):
+                    self.C_HeaderFile.write("void init_%s%s();\n" % (self.CleanNameAsADAWants(maybeFVname), fpgaSuffix))
                 if subProgramImplementation.lower() == "c" and sp._fpgaConfigurations is not '':
                     self.C_HeaderFile.write("int %s_%s%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id), fpgaSuffix))
                 else:
@@ -625,14 +631,17 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
             self.C_SourceFile.write("}\n\n")
 
             if maybeFVname != "":
-                self.C_SourceFile.write("void init_%s%s()\n" % (self.CleanNameAsADAWants(maybeFVname), fpgaSuffix))
+                if not (subProgramImplementation.lower() == "c" and sp._fpgaConfigurations is not '' and maybeFVname in brave_seen and brave_seen[maybeFVname] is 'with_init_already'):
+                    self.C_SourceFile.write("void init_%s%s()\n" % (self.CleanNameAsADAWants(maybeFVname), fpgaSuffix))
             else:  # pragma: no cover
                 self.C_SourceFile.write("void %s_init()\n" % self.CleanNameAsADAWants(sp._id))  # pragma: no cover
-            self.C_SourceFile.write("{\n")
-            self.InitializeBlock(modelingLanguage, asnFile, sp, subProgramImplementation, maybeFVname)
-            # self.C_SourceFile.write("    extern void InitializeGlue();\n")
-            # self.C_SourceFile.write("    InitializeGlue();\n")
-            self.C_SourceFile.write("}\n\n")
+            if not (subProgramImplementation.lower() == "c" and sp._fpgaConfigurations is not '' and maybeFVname in brave_seen and brave_seen[maybeFVname] is 'with_init_already'):
+                self.C_SourceFile.write("{\n")
+                self.InitializeBlock(modelingLanguage, asnFile, sp, subProgramImplementation, maybeFVname)
+                # self.C_SourceFile.write("    extern void InitializeGlue();\n")
+                # self.C_SourceFile.write("    InitializeGlue();\n")
+                self.C_SourceFile.write("}\n\n")
+
             if maybeFVname != "":
                 if subProgramImplementation.lower() == "c" and sp._fpgaConfigurations is not '':
                     self.C_SourceFile.write("int %s_%s%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id), fpgaSuffix))

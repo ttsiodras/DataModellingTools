@@ -134,7 +134,7 @@ class VHDL_Circuit:
         self._params = []  # type: List[Tuple[Param, asnParser.Typename, AsnNode]]
         self._spCleanName = CleanName(sp._id)
         self._offset = VHDL_Circuit.currentOffset
-        VHDL_Circuit.currentOffset += 1  # reserve one register for "start" signal
+        VHDL_Circuit.currentOffset += 4  # reserve one register for "start" signal
         self._paramOffset = {}  # type: Dict[str, int]
         for p in sp._params:
             self._paramOffset[p._id] = VHDL_Circuit.currentOffset
@@ -161,7 +161,7 @@ class FromVHDLToASN1SCC(RecursiveMapperGeneric[List[int], str]):  # pylint: disa
         lines.append("    unsigned int i;\n")
         lines.append("    asn1SccSint val = 0;\n")
         lines.append("    for(i=0; i<sizeof(asn1SccSint)/4; i++) {\n")
-        lines.append("        rmap_tgt_read(apb_base_address + %s - 1 + ((i+1)*4), &tmp, 4, rmap_dst_address);\n" % hex(register))
+        lines.append("        rmap_tgt_read(R_RMAP_BASEADR + %s - 1 + ((i+1)*4), &tmp, 4, R_RMAP_DSTADR);\n" % hex(register))
         lines.append("        tmp >>= 32; // ?\n")
         lines.append("        val |= (tmp << (32*i));\n")
         lines.append("    }\n")
@@ -287,7 +287,7 @@ class FromASN1SCCtoVHDL(RecursiveMapperGeneric[str, List[int]]):  # pylint: disa
         lines.append("    asn1SccSint val = %s;\n" % srcVar)
         lines.append("    for(i=0; i<sizeof(asn1SccSint)/4; i++) {\n")
         lines.append("        tmp = val & 0xFFFFFFFF;\n")
-        lines.append("        rmap_tgt_write(apb_base_address + %s - 1 + ((i+1)*4), &tmp, 4, rmap_dst_address);\n" % hex(register))
+        lines.append("        rmap_tgt_write(R_RMAP_BASEADR + %s - 1 + ((i+1)*4), &tmp, 4, R_RMAP_DSTADR);\n" % hex(register))
         lines.append("        val >>= 32;\n")
         lines.append("    }\n")
         lines.append("}\n")
@@ -488,8 +488,8 @@ uint32_t count;
 
 #define R_RMAP_DSTADR 0xfe
 #define R_RMAP_BASEADR 0x80000300
-unsigned int apb_base_address = R_RMAP_BASEADR; /* Base address on Remote. This is the address to which the data is copied. */
-unsigned int rmap_dst_address = R_RMAP_DSTADR; /* SpW Destination address. */
+//unsigned int apb_base_address = R_RMAP_BASEADR; /* Base address on Remote. This is the address to which the data is copied. */
+//unsigned int rmap_dst_address = R_RMAP_DSTADR; /* SpW Destination address. */
 
 ''')
         # self.g_FVname = subProgram._id
@@ -526,7 +526,7 @@ unsigned int rmap_dst_address = R_RMAP_DSTADR; /* SpW Destination address. */
         self.C_SourceFile.write("    // Now that the parameters are passed inside the FPGA, run the processing logic\n")
         
         self.C_SourceFile.write('    unsigned int okstart = 1;\n')
-        self.C_SourceFile.write('    if (rmap_tgt_write(apb_base_address + %s, &okstart, 4, rmap_dst_address)) {\n' %
+        self.C_SourceFile.write('    if (rmap_tgt_write(R_RMAP_BASEADR + %s, &okstart, 4, R_RMAP_DSTADR)) {\n' %
                                 hex(int(VHDL_Circuit.lookupSP[sp._id]._offset)))
         self.C_SourceFile.write('       LOGERROR("Failed writing Target\\n");\n')
         self.C_SourceFile.write('       return -1;\n')
@@ -537,7 +537,7 @@ unsigned int rmap_dst_address = R_RMAP_DSTADR; /* SpW Destination address. */
         self.C_SourceFile.write('    while (!flag && count < RETRIES){\n')
         self.C_SourceFile.write("      // Wait for processing logic to complete\n")
         self.C_SourceFile.write('      count++;\n')
-        self.C_SourceFile.write('      if (rmap_tgt_read(apb_base_address + %s, &flag, 4, rmap_dst_address)) {\n' %
+        self.C_SourceFile.write('      if (rmap_tgt_read(R_RMAP_BASEADR + %s, &flag, 4, R_RMAP_DSTADR)) {\n' %
                                 hex(int(VHDL_Circuit.lookupSP[sp._id]._offset)))
         self.C_SourceFile.write('        LOGERROR("Failed reading Target\\n");\n')
         self.C_SourceFile.write('        return -1;\n')
