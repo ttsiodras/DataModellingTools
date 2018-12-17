@@ -1129,6 +1129,9 @@ def OnFinal() -> None:
     makefile.write(vhdlTemplateBrave.makefile % {'pi': msg, 'tab': '\t'})
     makefile.close()
 
+    msg = ""
+    for c in VHDL_Circuit.allCircuits:
+        msg += '\n\'%s.vhd\',' % c._spCleanName
     script = open(vhdlBackend.dir + '/TASTE-VHDL-DESIGN/design/script.py', 'w')
-    script.write(vhdlTemplateBrave.script % {'pi': c._spCleanName})
+    script.write(vhdlTemplateBrave.script % {'pi': msg})
     script.close()

@@ -205,8 +205,7 @@ project.addFiles('leon2ft', [
 '../src/leon2ft_2015.3_nomeiko/leon/amba.vhd',
 '../src/leon2ft_2015.3_nomeiko/leon/target.vhd',
 'device.vhd',
-'TASTE.vhd',
-'%(pi)s.vhd',
+'TASTE.vhd',%(pi)s
 '../src/leon2ft_2015.3_nomeiko/leon/config.vhd',
 '../src/leon2ft_2015.3_nomeiko/leon/ftlib.vhd',
 '../src/leon2ft_2015.3_nomeiko/leon/ftcell.vhd',
