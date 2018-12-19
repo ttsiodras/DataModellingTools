@@ -673,6 +673,21 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                     self.C_SourceFile.write('void *p' + self.CleanNameAsToolWants(param._id) + ', size_t *pSize_' + self.CleanNameAsToolWants(param._id))
             self.C_SourceFile.write(")\n{\n")
 
+            if sp._fpgaConfigurations is not '' and subProgramImplementation.lower() == "simulink" and modelingLanguage != "vhdl":
+                self.C_SourceFile.write('    // Calling Brave VHDL dispatcher function\n')
+                self.C_SourceFile.write('    if (0 == %s_%s%s (' % \
+                                                    (self.CleanNameAsADAWants(maybeFVname),
+                                                     self.CleanNameAsADAWants(sp._id),
+                                                     dispatcherSuffix))
+                for param in sp._params:
+                    if param._id != sp._params[0]._id:
+                        self.C_SourceFile.write(', ')
+                    if isinstance(param, InParam):
+                        self.C_SourceFile.write('p' + self.CleanNameAsToolWants(param._id) + ', size_' + self.CleanNameAsToolWants(param._id))
+                    else:
+                        self.C_SourceFile.write('p' + self.CleanNameAsToolWants(param._id) + ', pSize_' + self.CleanNameAsToolWants(param._id))                                                
+                self.C_SourceFile.write(")) return;\n")
+                
             if genHwDevDrv:
                 self.C_SourceFile.write('    // Check if FPGA is ready.\n')
                 self.C_SourceFile.write('    extern const char globalFpgaStatus_%s[];\n' % (self.CleanNameAsADAWants(maybeFVname)))

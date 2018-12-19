@@ -446,11 +446,13 @@ class SimulinkGlueGenerator(SynchronousToolGlueGenerator):
             panicWithCallStack("%s not supported (yet?)\n" % str(param._sourceElement))  # pragma: no cover
         return dstSimulink
 
-    def InitializeBlock(self, unused_modelingLanguage: str, unused_asnFile: str, unused_sp: ApLevelContainer, unused_subProgramImplementation: str, unused_maybeFVname: str) -> None:
+    def InitializeBlock(self, unused_modelingLanguage: str, unused_asnFile: str, sp: ApLevelContainer, unused_subProgramImplementation: str, maybeFVname: str) -> None:
         self.C_SourceFile.write("    static int initialized = 0;\n")
         self.C_SourceFile.write("    if (!initialized) {\n")
         self.C_SourceFile.write("        initialized = 1;\n")
         self.C_SourceFile.write("        %s_initialize(1);\n" % self.g_FVname)
+        if sp._fpgaConfigurations is not '':
+            self.C_SourceFile.write("        init_%s_Brave_Fpga();\n" % maybeFVname)
         self.C_SourceFile.write("    }\n")
 
     def ExecuteBlock(self, unused_modelingLanguage: str, unused_asnFile: str, unused_sp: ApLevelContainer, unused_subProgramImplementation: str, unused_maybeFVname: str) -> None:
