@@ -139,12 +139,7 @@ architecture arch of %(pi)s is
     signal CLK : std_logic;
     signal RST : std_logic;
 
-    type state_type is (
-        wait_for_start_signal,
-        signal_received,
-        work_done
-    );
-    signal state : state_type := wait_for_start_signal;
+    signal state : unsigned(1 downto 0);
 begin
 
     CLK <= clock_%(pi)s;
@@ -155,27 +150,27 @@ begin
     begin
         if (RST='0') then
             finish_%(pi)s <= '0'; -- or 1?
-            state                    <= wait_for_start_signal;
+            state                    <= "00";
             -- outp                     <= (others => '0');
         elsif (CLK'event and CLK='1') then
             case state is
-                when wait_for_start_signal =>
+                when "00" =>
                     if start_%(pi)s = '1' then
-                        state <= signal_received;
+                        state <= "01";
                         finish_%(pi)s <= '0';
-                    else
-                        state <= wait_for_start_signal;
                     end if;
-                when signal_received =>
+                when "01" =>
 
                     -----------------------------
                     -- Do your processing here --
                     -----------------------------
 
-                    state <= work_done;
-                when work_done =>
+                    state <= "10";
+                when "10" =>
                     finish_%(pi)s <= '1';
-                    state <= wait_for_start_signal;
+                    state <= "00";
+                when others =>
+                  state <= "00";
             end case;
         end if;
     end process;
