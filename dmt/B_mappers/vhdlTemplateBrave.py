@@ -108,16 +108,10 @@ end arch;'''
 
 makefile = r'''
 SRCS=TASTE.vhd %(pi)s
-TARGET=TASTE.nxb
 
-all:    ${TARGET}
-
-${TARGET}:      ${SRCS}
-%(tab)sexport NANOXPLORE_BYPASS=x86_64_UBUNTU_16
+all:   ${SRCS}
 %(tab)snanoxpython script.py
-%(tab)s@echo "========================================"
-%(tab)s@echo "      ${TARGET} built successfully.      "
-%(tab)s@echo "========================================"
+%(tab)spython swap.py bitfile.nxb bitfile-swapped.nxb
 
 clean:
 %(tab)srm -rf logs *.nxm *.pyc *.nxb
