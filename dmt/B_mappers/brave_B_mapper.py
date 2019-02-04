@@ -418,8 +418,6 @@ class VHDLGlueGenerator(SynchronousToolGlueGeneratorGeneric[List[int], List[int]
 #include <stdio.h>
 #include <string.h>
 
-#include "C_ASN1_Types.h"
-//#include <stdint.h>
 #ifndef STATIC
 #define STATIC
 #endif
