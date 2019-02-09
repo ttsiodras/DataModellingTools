@@ -42,7 +42,7 @@ from ..commonPy.asnAST import (
     AsnInt, AsnReal, AsnBool, AsnEnumerated, isSequenceVariable, sourceSequenceLimit,
     AsnOctetString, AsnSequenceOrSet, AsnSequenceOrSetOf, AsnChoice, AsnNode,
     AsnSequenceOf, AsnSetOf, AsnSequence, AsnSet, AsnMetaMember)
-from ..commonPy.aadlAST import AadlPort, AadlParameter, ApLevelContainer, Param, InParam, OutParam
+from ..commonPy.aadlAST import AadlPort, AadlParameter, ApLevelContainer, Param, OutParam
 from ..commonPy.asnParser import AST_Lookup, AST_Leaftypes
 
 from ..commonPy.recursiveMapper import RecursiveMapper
@@ -526,7 +526,6 @@ def computeBambuDeclarations(node: AsnNode, asnTypename: str, prefix: str, names
     elif isinstance(node, (AsnSequenceOf, AsnSetOf)):
         if not node._range:
             panicWithCallStack("need a SIZE constraint or else we can't generate C code (%s)!\n" % node.Location())  # pragma: no cover
-        isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
         lines = []  # type: List[str]
         for i in range(0, node._range[-1]):
             lines.extend(
@@ -569,4 +568,3 @@ def EmitBambuBridge(sp: ApLevelContainer):
     simulinkBackend.C_SourceFile.write(') {\n')
     simulinkBackend.C_SourceFile.write('}\n\n')
     simulinkBackend.C_SourceFile.write("#endif\n\n")
-    import pdb ; pdb.set_trace()
