@@ -40,12 +40,14 @@ from typing import List
 from ..commonPy.utility import panicWithCallStack
 from ..commonPy.asnAST import (
     AsnInt, AsnReal, AsnBool, AsnEnumerated, isSequenceVariable, sourceSequenceLimit,
-    AsnOctetString, AsnSequenceOrSet, AsnSequenceOrSetOf, AsnChoice, AsnNode)
-from ..commonPy.aadlAST import AadlPort, AadlParameter, ApLevelContainer, Param
+    AsnOctetString, AsnSequenceOrSet, AsnSequenceOrSetOf, AsnChoice, AsnNode,
+    AsnSequenceOf, AsnSetOf, AsnSequence, AsnSet, AsnMetaMember)
+from ..commonPy.aadlAST import AadlPort, AadlParameter, ApLevelContainer, Param, InParam, OutParam
 from ..commonPy.asnParser import AST_Lookup, AST_Leaftypes
 
 from ..commonPy.recursiveMapper import RecursiveMapper
 from .synchronousTool import SynchronousToolGlueGenerator
+from ..commonPy.asnParser import g_names, g_leafTypeDict
 
 isAsynchronous = False
 simulinkBackend = None
@@ -503,3 +505,68 @@ def OnChoice(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, sub
 
 def OnShutdown(modelingLanguage: str, asnFile: str, sp: ApLevelContainer, subProgramImplementation: str, maybeFVname: str) -> None:
     simulinkBackend.OnShutdown(modelingLanguage, asnFile, sp, subProgramImplementation, maybeFVname)
+    EmitBambuBridge(sp)
+
+
+def getTypeAndVarsAsBambuWantsThem(param: Param, names: AST_Lookup, leafTypeDict: AST_Leaftypes):
+    prefix = "*" if isinstance(param, OutParam) else ""
+    prefix += param._id
+    asnTypename = param._signal._asnNodename
+    node = names[asnTypename]
+    return computeBambuDeclarations(node, asnTypename, prefix, names, leafTypeDict)
+
+def computeBambuDeclarations(node: AsnNode, asnTypename: str, prefix: str, names: AST_Lookup, leafTypeDict: AST_Leaftypes) -> List[str]:
+    clean = simulinkBackend.CleanNameAsToolWants
+    while isinstance(node, AsnMetaMember):
+        node = names[node._containedType]
+    while isinstance(node, str):
+        node = names[node]
+    if isinstance(node, AsnInt):
+        return ["asn1Scc" + clean(asnTypename) + " " + prefix]
+    elif isinstance(node, (AsnSequenceOf, AsnSetOf)):
+        if not node._range:
+            panicWithCallStack("need a SIZE constraint or else we can't generate C code (%s)!\n" % node.Location())  # pragma: no cover
+        isMappedToPrimitive = IsElementMappedToPrimitive(node, names)
+        lines = []  # type: List[str]
+        for i in range(0, node._range[-1]):
+            lines.extend(
+                computeBambuDeclarations(
+                    node._containedType,
+                    node._containedType,
+                    prefix + "_elem_%d" % i,
+                    names,
+                    leafTypeDict))
+        return lines
+    elif isinstance(node, (AsnSequence, AsnSet)):
+        lines = []  # type: List[str]
+        for child in node._members:
+            lines.extend(
+                computeBambuDeclarations(
+                    child[1],
+                    child[1],
+                    prefix + "_%s" % clean(child[0]),
+                    names,
+                    leafTypeDict))
+        return lines
+    else:
+        panicWithCallStack("Unsupported type: " + str(node.__class__))
+
+
+def EmitBambuBridge(sp: ApLevelContainer):
+    # Parameter access is much faster in Python - cache these two globals
+    names = g_names
+    leafTypeDict = g_leafTypeDict
+
+    simulinkBackend.C_SourceFile.write("#ifdef __BAMBU__\n\n")
+    simulinkBackend.C_SourceFile.write('void bambu_opt_%s(\n    ' %  sp._id)
+    lines = []
+    for param in sp._params:
+        lines.extend(
+            getTypeAndVarsAsBambuWantsThem(param, names, leafTypeDict))
+    for idx, line in enumerate(lines):
+        simulinkBackend.C_SourceFile.write(
+            '%s%s' % (",\n    " if idx != 0 else "", line))
+    simulinkBackend.C_SourceFile.write(') {\n')
+    simulinkBackend.C_SourceFile.write('}\n\n')
+    simulinkBackend.C_SourceFile.write("#endif\n\n")
+    import pdb ; pdb.set_trace()
