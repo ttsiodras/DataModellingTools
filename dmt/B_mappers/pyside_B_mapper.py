@@ -628,7 +628,7 @@ def WriteCodeForGUIControls(prefixes: List[str],  # pylint: disable=invalid-sequ
         if g_onceOnly:
             g_PyDataModel.write(
                 '''{'nodeTypename': '%s', 'type': '%s', 'id': '%s', 'isOptional': %s, 'alwaysPresent': %s, 'alwaysAbsent': %s, ''' % (
-                    nodeTypename, node._name, txtPrefix, isOptional, alwaysPresent,alwaysAbsent))
+                    nodeTypename, node._name, txtPrefix, isOptional, alwaysPresent, alwaysAbsent))
             if isinstance(node, AsnChoice):
                 g_PyDataModel.write('''"choices":[''')
             elif isinstance(node, (AsnSequence, AsnSet)):
