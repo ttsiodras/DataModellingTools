@@ -223,7 +223,8 @@ def setSharedLib(dll=None):
         buttons = ([["sendButton", "Send TC"], ["loadButton", "Load TC"],
                     ["saveButton", "Save TC"]])
         classType = "asn1Editor"
-    elif modelingLanguage.lower() == 'gui_pi':
+    else:
+        assert ('gui_pi' == modelingLanguage.lower())
         g_BackendFile.write('''
 
 tmId = -1
