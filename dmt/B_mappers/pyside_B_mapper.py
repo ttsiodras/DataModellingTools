@@ -175,7 +175,9 @@ editor = None
 
     global g_firstElem
     g_firstElem = True
-    buttons = []  # type: List[List[str]]
+    # buttons = []  # type: List[List[str]]
+    buttons = ([["plotButton", "Plot"], ["meterButton", "Meter"],
+                ["unusedButton", "Unused"]])
     # RI = TC (Telecommand), PI = TM (Telemetry)
     if modelingLanguage.lower() == 'gui_ri':
         g_BackendFile.write('''
@@ -224,7 +226,7 @@ def setSharedLib(dll=None):
                     ["saveButton", "Save TC"]])
         classType = "asn1Editor"
     else:
-        assert ('gui_pi' == modelingLanguage.lower())
+        assert modelingLanguage.lower() == 'gui_pi'
         g_BackendFile.write('''
 
 tmId = -1
