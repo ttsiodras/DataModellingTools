@@ -655,7 +655,7 @@ def EmitBambuBridge(sp: ApLevelContainer, subProgramImplementation: str):
     
     bambuFile = open(os.path.dirname(simulinkBackend.C_SourceFile.name) + '/' +  outputCsourceFilename, 'w')
     
-    bambuFile.write("#include \"%s.h\"\n" % (simulinkBackend.CleanNameAsToolWants(sp._id + "_" + subProgramImplementation) + "." + simulinkBackend.CleanNameAsToolWants(subProgramImplementation)))
+    #bambuFile.write("#include \"%s.h\"\n" % (simulinkBackend.CleanNameAsToolWants(sp._id + "_" + subProgramImplementation) + "." + simulinkBackend.CleanNameAsToolWants(subProgramImplementation)))
     bambuFile.write("#include \"%s.h\" // Space certified compiler generated\n" % simulinkBackend.asn_name)
     bambuFile.write("#include \"%s.h\"\n" % simulinkBackend.CleanNameAsToolWants(sp._id))
     bambuFile.write("#include \"%s_types.h\"\n\n" % simulinkBackend.CleanNameAsToolWants(sp._id))   
@@ -679,7 +679,19 @@ def EmitBambuBridge(sp: ApLevelContainer, subProgramImplementation: str):
         bambuFile.write(
             '%s%s;' % ("\n    ", line))
         
-    bambuFile.write("\n\n    Execute_%s();\n" % simulinkBackend.CleanNameAsToolWants(sp._id + "_" + subProgramImplementation))
+    #bambuFile.write("\n\n    Execute_%s();\n" % simulinkBackend.CleanNameAsToolWants(sp._id + "_" + subProgramImplementation))
+    stepStr = """
+
+#ifndef rtmGetStopRequested
+    do_something_step();
+#else
+    if (!rtmGetStopRequested(do_something_M)) {
+        do_something_step();
+        if (rtmGetStopRequested(do_something_M)) { do_something_terminate(); }
+    }
+#endif
+"""
+    bambuFile.write(stepStr)
     
     lines = []
     for param in sp._params:

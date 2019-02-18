@@ -161,7 +161,7 @@ class FromVHDLToASN1SCC(RecursiveMapperGeneric[List[int], str]):  # pylint: disa
         lines.append("    unsigned int i;\n")
         lines.append("    asn1SccSint val = 0;\n")
         lines.append("    for(i=0; i<sizeof(asn1SccSint)/4; i++) {\n")
-        lines.append("        rmap_tgt_read(R_RMAP_BASEADR + %s - 1 + ((i+1)*4), &tmp, 4, R_RMAP_DSTADR);\n" % hex(register))
+        lines.append("        rmap_tgt_read(R_RMAP_BASEADR + %s + (i*4), &tmp, 4, R_RMAP_DSTADR);\n" % hex(register))
         lines.append("        tmp >>= 32; // ?\n")
         lines.append("        val |= (tmp << (32*i));\n")
         lines.append("    }\n")
@@ -287,7 +287,7 @@ class FromASN1SCCtoVHDL(RecursiveMapperGeneric[str, List[int]]):  # pylint: disa
         lines.append("    asn1SccSint val = %s;\n" % srcVar)
         lines.append("    for(i=0; i<sizeof(asn1SccSint)/4; i++) {\n")
         lines.append("        tmp = val & 0xFFFFFFFF;\n")
-        lines.append("        rmap_tgt_write(R_RMAP_BASEADR + %s - 1 + ((i+1)*4), &tmp, 4, R_RMAP_DSTADR);\n" % hex(register))
+        lines.append("        rmap_tgt_write(R_RMAP_BASEADR + %s + (i*4), &tmp, 4, R_RMAP_DSTADR);\n" % hex(register))
         lines.append("        val >>= 32;\n")
         lines.append("    }\n")
         lines.append("}\n")
@@ -1048,7 +1048,7 @@ def OnFinal() -> None:
 
         completions.append(c._spCleanName + '_CalculationsComplete')
 
-        AddToStr('circuits', '    component %s is\n' % c._spCleanName)
+        AddToStr('circuits', '    component bambu_%s is\n' % c._spCleanName)
         AddToStr('circuits', '    port (\n')
         AddToStr('circuits', '\n'.join(['        ' + x for x in circuitLines]) + '\n')
         AddToStr('circuits', '        start_%s  : in  std_logic;\n' % c._spCleanName)
@@ -1057,7 +1057,8 @@ def OnFinal() -> None:
         AddToStr('circuits', '        reset_%s  : in  std_logic\n' % c._spCleanName)
         AddToStr('circuits', '    );\n')
         AddToStr('circuits', '    end component;\n\n')
-
+        
+        '''
         skeleton = []
         skeleton.append('    entity %s is\n' % c._spCleanName)
         skeleton.append('    port (\n')
@@ -1075,6 +1076,7 @@ def OnFinal() -> None:
                 'declaration': ''.join(skeleton)
             })
         vhdlSkeleton.close()
+        '''
 
         AddToStr('ioregisters', '\n'.join(['    ' + x for x in ioregisterLines]) + '\n\n')
 
@@ -1098,7 +1100,7 @@ def OnFinal() -> None:
         AddToStr('readinputdata', '\n'.join([' ' * 22 + x for x in readinputdataLines]) + '\n')
         AddToStr('writeoutputdata', '\n'.join([' ' * 16 + x for x in writeoutputdataLines]) + '\n')
 
-        AddToStr('connectionsToSystemC', '\n    Interface_%s : %s\n' % (c._spCleanName, c._spCleanName))
+        AddToStr('connectionsToSystemC', '\n    Interface_%s : bambu_%s\n' % (c._spCleanName, c._spCleanName))
         AddToStr('connectionsToSystemC', '        port map (\n')
         AddToStr('connectionsToSystemC', ',\n'.join(['            ' + x for x in connectionsToSystemCLines]) + ',\n')
         AddToStr('connectionsToSystemC', '            start_%s => %s_StartCalculationsPulse,\n' % (c._spCleanName, c._spCleanName))
@@ -1122,14 +1124,14 @@ def OnFinal() -> None:
 
     msg = ""
     for c in VHDL_Circuit.allCircuits:
-        msg += ' %s.vhd' % c._spCleanName
+        msg += ' bambu_%s.vhd' % c._spCleanName
     makefile = open(vhdlBackend.dir + '/TASTE-VHDL-DESIGN/design/Makefile', 'w')
     makefile.write(vhdlTemplateBrave.makefile % {'pi': msg, 'tab': '\t'})
     makefile.close()
 
     msg = ""
     for c in VHDL_Circuit.allCircuits:
-        msg += '\n\'%s.vhd\',' % c._spCleanName
+        msg += '\n\'bambu_%s.vhd\',' % c._spCleanName
     script = open(vhdlBackend.dir + '/TASTE-VHDL-DESIGN/design/script.py', 'w')
     script.write(vhdlTemplateBrave.script % {'pi': msg})
     script.close()
