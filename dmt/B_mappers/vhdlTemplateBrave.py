@@ -127,7 +127,7 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
 %(declaration)s
 
-architecture arch of %(pi)s is
+architecture arch of bambu_%(pi)s is
 
     -- Declare signals
     signal CLK : std_logic;

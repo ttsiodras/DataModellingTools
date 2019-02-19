@@ -1058,9 +1058,8 @@ def OnFinal() -> None:
         AddToStr('circuits', '    );\n')
         AddToStr('circuits', '    end component;\n\n')
         
-        '''
         skeleton = []
-        skeleton.append('    entity %s is\n' % c._spCleanName)
+        skeleton.append('    entity bambu_%s is\n' % c._spCleanName)
         skeleton.append('    port (\n')
         skeleton.append('\n'.join(['        ' + x for x in circuitLines]) + '\n')
         skeleton.append('        start_%s  : in  std_logic;\n' % c._spCleanName)
@@ -1068,15 +1067,14 @@ def OnFinal() -> None:
         skeleton.append('        clock_%s : in std_logic;\n' % c._spCleanName)
         skeleton.append('        reset_%s  : in  std_logic\n' % c._spCleanName)
         skeleton.append('    );\n')
-        skeleton.append('    end %s;\n\n' % c._spCleanName)
-        vhdlSkeleton = open(vhdlBackend.dir + "/TASTE-VHDL-DESIGN/design/" + c._spCleanName + '.vhd', 'w')
+        skeleton.append('    end bambu_%s;\n\n' % c._spCleanName)
+        vhdlSkeleton = open(vhdlBackend.dir + "/TASTE-VHDL-DESIGN/design/bambu_" + c._spCleanName + '.vhd', 'w')
         vhdlSkeleton.write(
             vhdlTemplateBrave.per_circuit_vhd % {
                 'pi': c._spCleanName,
                 'declaration': ''.join(skeleton)
             })
         vhdlSkeleton.close()
-        '''
 
         AddToStr('ioregisters', '\n'.join(['    ' + x for x in ioregisterLines]) + '\n\n')
 
