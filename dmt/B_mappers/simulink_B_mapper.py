@@ -683,14 +683,14 @@ def EmitBambuBridge(sp: ApLevelContainer, subProgramImplementation: str):
     stepStr = """
 
 #ifndef rtmGetStopRequested
-    do_something_step();
+    %s_step();
 #else
-    if (!rtmGetStopRequested(do_something_M)) {
-        do_something_step();
-        if (rtmGetStopRequested(do_something_M)) { do_something_terminate(); }
+    if (!rtmGetStopRequested(%s_M)) {
+        %s_step();
+        if (rtmGetStopRequested(%s_M)) { %s_terminate(); }
     }
 #endif
-"""
+""" % (sp._id, sp._id, sp._id, sp._id, sp._id)
     bambuFile.write(stepStr)
     
     lines = []
