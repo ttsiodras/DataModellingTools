@@ -47,7 +47,7 @@ from ..commonPy.asnAST import (
     AsnSequenceOrSetOf, AsnSequenceOrSet, AsnBool)
 from ..commonPy.asnParser import AST_Lookup, AST_Leaftypes
 from ..commonPy.aadlAST import (
-    InParam, AadlPort, AadlParameter,
+    InParam, OutParam, AadlPort, AadlParameter,
 )
 from ..commonPy.aadlAST import Param, ApLevelContainer  # NOQA pylint: disable=unused-import
 from ..commonPy import asnParser
@@ -976,6 +976,10 @@ def OnChoice(nodeTypename: str, node: AsnChoice, subProgram: ApLevelContainer, s
 
 def OnShutdown(modelingLanguage: str, asnFile: str, sp: ApLevelContainer, subProgramImplementation: str, maybeFVname: str) -> None:
     vhdlBackend.OnShutdown(modelingLanguage, asnFile, sp, subProgramImplementation, maybeFVname)
+    if subProgramImplementation.lower() == "simulink":
+        EmitBambuSimulinkBridge(sp, subProgramImplementation)
+    elif subProgramImplementation.lower() == "c":
+        pass #("BambuCBridge to be supported")
 
 
 def AddToStr(s: str, d: str) -> None:
@@ -1133,3 +1137,195 @@ def OnFinal() -> None:
     script = open(vhdlBackend.dir + '/TASTE-VHDL-DESIGN/design/script.py', 'w')
     script.write(vhdlTemplateBrave.script % {'pi': msg})
     script.close()
+
+
+def getTypeAndVarsAsBambuWantsThem(param: Param, names: AST_Lookup, leafTypeDict: AST_Leaftypes):
+    prefix = "*" if isinstance(param, OutParam) else ""
+    prefix += param._id
+    asnTypename = param._signal._asnNodename
+    node = names[asnTypename]
+    return computeBambuDeclarations(node, asnTypename, prefix, names, leafTypeDict)
+
+def computeBambuDeclarations(node: AsnNode, asnTypename: str, prefix: str, names: AST_Lookup, leafTypeDict: AST_Leaftypes) -> List[str]:
+    clean = vhdlBackend.CleanNameAsToolWants
+    while isinstance(node, AsnMetaMember):
+        node = names[node._containedType]
+    while isinstance(node, str):
+        node = names[node]
+    if isinstance(node, AsnInt):
+        return ["asn1Scc" + clean(asnTypename) + " " + prefix]
+    elif isinstance(node, (AsnSequenceOf, AsnSetOf)):
+        if not node._range:
+            panicWithCallStack("need a SIZE constraint or else we can't generate C code (%s)!\n" % node.Location())  # pragma: no cover
+        lines = []  # type: List[str]
+        for i in range(0, node._range[-1]):
+            lines.extend(
+                computeBambuDeclarations(
+                    node._containedType,
+                    node._containedType,
+                    prefix + "_elem_%d" % i,
+                    names,
+                    leafTypeDict))
+        return lines
+    elif isinstance(node, (AsnSequence, AsnSet)):
+        lines = []  # type: List[str]
+        for child in node._members:
+            lines.extend(
+                computeBambuDeclarations(
+                    child[1],
+                    child[1],
+                    prefix + "_%s" % clean(child[0]),
+                    names,
+                    leafTypeDict))
+        return lines
+    else:
+        panicWithCallStack("Unsupported type: " + str(node.__class__))
+
+def readInputsAsBambuWants(sp: ApLevelContainer, param: Param, names: AST_Lookup, leafTypeDict: AST_Leaftypes):
+    prefixVHDL = param._id
+    prefixSimulink = param._id
+    asnTypename = param._signal._asnNodename
+    node = names[asnTypename]
+    return computeBambuInputAssignments(sp, node, asnTypename, prefixSimulink, prefixVHDL, names, leafTypeDict)
+
+def computeBambuInputAssignments(sp: ApLevelContainer, node: AsnNode, asnTypename: str, prefixSimulink: str, prefixVHDL: str, names: AST_Lookup, leafTypeDict: AST_Leaftypes) -> List[str]:
+    clean = vhdlBackend.CleanNameAsToolWants
+    while isinstance(node, AsnMetaMember):
+        node = names[node._containedType]
+    while isinstance(node, str):
+        node = names[node]
+    if isinstance(node, AsnInt):
+        return ["%s_U.%s = %s" % (clean(sp._id), prefixSimulink, prefixVHDL)]
+    elif isinstance(node, (AsnSequenceOf, AsnSetOf)):
+        if not node._range:
+            panicWithCallStack("need a SIZE constraint or else we can't generate C code (%s)!\n" % node.Location())  # pragma: no cover
+        lines = []  # type: List[str]
+        for i in range(0, node._range[-1]):
+            lines.extend(
+                computeBambuInputAssignments(
+                    sp,
+                    node._containedType,
+                    node._containedType,
+                    prefixSimulink + ".element_data[%d]" % i,
+                    prefixVHDL + "_elem_%d" % i,
+                    names,
+                    leafTypeDict))
+        return lines
+    elif isinstance(node, (AsnSequence, AsnSet)):
+        lines = []  # type: List[str]
+        for child in node._members:
+            lines.extend(
+                computeBambuInputAssignments(
+                    sp,
+                    child[1],
+                    child[1],
+                    prefixSimulink + ".%s" % clean(child[0]),
+                    prefixVHDL + "_%s" % clean(child[0]),
+                    names,
+                    leafTypeDict))
+        return lines
+    else:
+        panicWithCallStack("Unsupported type: " + str(node.__class__))
+
+def writeOutputsAsBambuWants(sp: ApLevelContainer, param: Param, names: AST_Lookup, leafTypeDict: AST_Leaftypes):
+    prefixVHDL = "*" + param._id
+    prefixSimulink = param._id
+    asnTypename = param._signal._asnNodename
+    node = names[asnTypename]
+    return computeBambuOutputAssignments(sp, node, asnTypename, prefixSimulink, prefixVHDL, names, leafTypeDict)
+
+def computeBambuOutputAssignments(sp: ApLevelContainer, node: AsnNode, asnTypename: str, prefixSimulink: str, prefixVHDL: str, names: AST_Lookup, leafTypeDict: AST_Leaftypes) -> List[str]:
+    clean = vhdlBackend.CleanNameAsToolWants
+    while isinstance(node, AsnMetaMember):
+        node = names[node._containedType]
+    while isinstance(node, str):
+        node = names[node]
+    if isinstance(node, AsnInt):
+        return ["%s = %s_Y.%s" % (prefixVHDL, clean(sp._id), prefixSimulink)]
+    elif isinstance(node, (AsnSequenceOf, AsnSetOf)):
+        if not node._range:
+            panicWithCallStack("need a SIZE constraint or else we can't generate C code (%s)!\n" % node.Location())  # pragma: no cover
+        lines = []  # type: List[str]
+        for i in range(0, node._range[-1]):
+            lines.extend(
+                computeBambuOutputAssignments(
+                    sp,
+                    node._containedType,
+                    node._containedType,
+                    prefixSimulink + ".element_data[%d]" % i,
+                    prefixVHDL + "_elem_%d" % i,
+                    names,
+                    leafTypeDict))
+        return lines
+    elif isinstance(node, (AsnSequence, AsnSet)):
+        lines = []  # type: List[str]
+        for child in node._members:
+            lines.extend(
+                computeBambuOutputAssignments(
+                    sp,
+                    child[1],
+                    child[1],
+                    prefixSimulink + ".%s" % clean(child[0]),
+                    prefixVHDL + "_%s" % clean(child[0]),
+                    names,
+                    leafTypeDict))
+        return lines
+    else:
+        panicWithCallStack("Unsupported type: " + str(node.__class__))
+
+
+def EmitBambuSimulinkBridge(sp: ApLevelContainer, subProgramImplementation: str):
+    # Parameter access is much faster in Python - cache these two globals
+    names = asnParser.g_names
+    leafTypeDict = asnParser.g_leafTypeDict
+
+    outputCsourceFilename = vhdlBackend.CleanNameAsToolWants(sp._id) + "_bambu.c"
+    
+    bambuFile = open(os.path.dirname(vhdlBackend.C_SourceFile.name) + '/' +  outputCsourceFilename, 'w')
+    
+    bambuFile.write("#include \"%s.h\" // Space certified compiler generated\n" % vhdlBackend.asn_name)
+    bambuFile.write("#include \"%s.h\"\n" % vhdlBackend.CleanNameAsToolWants(sp._id))
+    bambuFile.write("#include \"%s_types.h\"\n\n" % vhdlBackend.CleanNameAsToolWants(sp._id))   
+    
+    bambuFile.write('void bambu_%s(\n    ' %  sp._id)
+    lines = []
+    for param in sp._params:
+        lines.extend(
+            getTypeAndVarsAsBambuWantsThem(param, names, leafTypeDict))
+    for idx, line in enumerate(lines):
+        bambuFile.write(
+            '%s%s' % (",\n    " if idx != 0 else "", line))
+    bambuFile.write(') {\n')
+    
+    lines = []
+    for param in sp._params:
+        if isinstance(param, InParam):
+            lines.extend(
+                readInputsAsBambuWants(sp, param, names, leafTypeDict))
+    for idx, line in enumerate(lines):
+        bambuFile.write(
+            '%s%s;' % ("\n    ", line))
+        
+    stepStr = """
+
+#ifndef rtmGetStopRequested
+    %s_step();
+#else
+    if (!rtmGetStopRequested(%s_M)) {
+        %s_step();
+        if (rtmGetStopRequested(%s_M)) { %s_terminate(); }
+    }
+#endif
+""" % (sp._id, sp._id, sp._id, sp._id, sp._id)
+    bambuFile.write(stepStr)
+    
+    lines = []
+    for param in sp._params:
+        if isinstance(param, OutParam):
+            lines.extend(
+                writeOutputsAsBambuWants(sp, param, names, leafTypeDict))
+    for idx, line in enumerate(lines):
+        bambuFile.write(
+            '%s%s;' % ("\n    ", line)) 
+    
+    bambuFile.write('\n}\n\n')
