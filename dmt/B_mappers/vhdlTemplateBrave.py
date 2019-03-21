@@ -319,8 +319,8 @@ project.setOptions({'UseNxLibrary': 'Yes',
                     'ManageUnconnectedSignals': 'Ground',
                     'AdderToDSPMapThreshold': '0',
                     'DefaultRAMMapping': 'RAM',
-                    'MappingEffort': 'High', 'ManageAsynchronousReadPort': 'Yes',
-		    'TimingDriven': 'No'})
+                    'MappingEffort': 'Low', 'ManageAsynchronousReadPort': 'No',
+		    'TimingDriven': 'Yes'})
 project.addMappingDirective('getModels(.*regfile_3p.*)', 'RAM', 'RF')
 #=======================================================================================================
 # Assigning timing constraints
