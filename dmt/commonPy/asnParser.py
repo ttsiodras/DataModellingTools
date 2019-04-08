@@ -45,12 +45,15 @@ ASN.1 Parser
 This module parses ASN.1 grammars and creates an abstract syntax tree (AST)
 inside configMT.inputCodeAST, for use with the code generators.
 '''
+
+# pylint: disable=too-many-lines
+
 import os
 import sys
 import copy
 import tempfile
 import re
-import distutils.spawn as spawn
+from distutils import spawn
 import hashlib
 
 import xml.sax  # type: ignore
@@ -236,7 +239,7 @@ def VerifyAndFixAST() -> Dict[str, str]:
         if lastEquivalents == equivalents and lastKnownTypes == knownTypes and lastUnknownTypes == unknownTypes:
             break
 
-    if len(unknownTypes) != 0:
+    if unknownTypes:
         utility.panic('AsnParser: Types remain unknown after symbol fixup:\n%s\n' % list(unknownTypes.keys()))
 
     # Remove all AsnMetaTypes from the ast
@@ -384,7 +387,7 @@ def CheckForInvalidKeywords(node_or_str: Union[str, AsnNode]) -> None:
 
 def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=invalid-sequence-index
     # Add basic ASN.1 caching to avoid calling the ASN.1 compiler over and over
-    projectCache = os.getenv ("PROJECT_CACHE")
+    projectCache = os.getenv("PROJECT_CACHE")
     if projectCache is not None and not os.path.isdir(projectCache):
         utility.panic(
             "The configured cache folder:\n\n\t" + projectCache + "\n\n...is not there!\n")
@@ -401,7 +404,7 @@ def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=inv
             filehash.update(each.encode('utf-8'))
         newHash = filehash.hexdigest()
         # set the name of the XML files containing the dumped ASTs
-        xmlAST  = projectCache + os.sep + newHash + "_ast_v4.xml"
+        xmlAST = projectCache + os.sep + newHash + "_ast_v4.xml"
         xmlAST2 = projectCache + os.sep + newHash + "_ast_v1.xml"
         if not os.path.exists(xmlAST) or not os.path.exists(xmlAST2):
             someFilesHaveChanged = True
@@ -499,7 +502,7 @@ class Element:
 
 
 class InputFormatXMLHandler(xml.sax.ContentHandler):  # type: ignore
-    def __init__(self, debug: bool=False) -> None:
+    def __init__(self, debug: bool = False) -> None:
         xml.sax.ContentHandler.__init__(self)  # type: ignore
         self._debug = False
         if debug:
@@ -695,7 +698,7 @@ def CommonSetSeqOf(newModule: Module, lineNo: int, xmlSequenceOfNode: Element, c
     if xmlType is None:
         utility.panic("CommonSetSeqOf: No child under SequenceOfType (%s, %s)" %  # pragma: no cover
                       (newModule._asnFilename, lineNo))  # pragma: no cover
-    if len(xmlType._children) == 0:
+    if len(xmlType._children) == 0:  # pylint: disable=len-as-condition
         utility.panic("CommonSetSeqOf: No children for Type (%s, %s)" %  # pragma: no cover
                       (newModule._asnFilename, lineNo))  # pragma: no cover
     if xmlType._children[0]._name == "ReferenceType":
@@ -735,11 +738,15 @@ def CommonSeqSetChoice(
     for x in xmlSequenceNode._children:
         if x._name == childTypeName:
             opti = GetAttr(x, "Optional")
+            bAlwaysPresent = GetAttr(x, "bAlwaysPresent")
+            bAlwaysAbsent = GetAttr(x, "bAlwaysAbsent")
             if opti and opti == "True":
-                utility.warn("OPTIONAL attribute ignored (for field contained in %s,%s)" % (newModule._asnFilename, lineNo))
+                utility.warn("OPTIONAL attribute ignored by A/B mappers (for field contained in %s,%s)" % (newModule._asnFilename, lineNo))
             enumID = GetAttr(x, "EnumID")
             myMembers.append([GetAttr(x, "VarName"), GenericFactory(newModule, GetChild(x, "Type"))])
             myMembers[-1].append(enumID)
+            for flag in [opti, bAlwaysPresent, bAlwaysAbsent]:
+                myMembers[-1].append(flag == "True")
     for tup in myMembers:
         if isinstance(tup[1], AsnMetaType):
             asnMetaMember = AsnMetaMember(
@@ -794,7 +801,7 @@ def GenericFactory(newModule: Module, xmlType: Element) -> AsnNode:
     lineNo = GetAttr(xmlType, "Line")
     global g_lineno
     g_lineno = lineNo
-    if len(xmlType._children) == 0:
+    if len(xmlType._children) == 0:  # pylint: disable=len-as-condition
         utility.panic("GenericFactory: No children for Type (%s, %s)" %  # pragma: no cover
                       (newModule._asnFilename, lineNo))  # pragma: no cover
     xmlContainedType = xmlType._children[0]
@@ -895,7 +902,7 @@ def SimpleCleaner(x: str) -> str:
 
 
 def PrintType(f: IO[Any], xmlType: Element, indent: str, nameCleaner: Callable[[str], str]) -> None:
-    if len(xmlType._children) == 0:
+    if len(xmlType._children) == 0:  # pylint: disable=len-as-condition
         utility.panic("AST inconsistency: xmlType._children == 0\nContact ESA")  # pragma: no cover
     realType = xmlType._children[0]
     if realType._name == "BooleanType":
@@ -926,7 +933,7 @@ def PrintType(f: IO[Any], xmlType: Element, indent: str, nameCleaner: Callable[[
         def addNewOption(x: Any) -> None:
             options.append(x)
         VisitAll(realType, "EnumValue", addNewOption)
-        if len(options) > 0:
+        if options:
             f.write(indent + '    ' + nameCleaner(GetAttr(options[0], "StringValue")) + "(" + GetAttr(options[0], "IntValue") + ")")
             for otherOptions in options[1:]:
                 f.write(',\n' + indent + '    ' + nameCleaner(GetAttr(otherOptions, "StringValue")) + "(" + GetAttr(otherOptions, "IntValue") + ")")
@@ -936,10 +943,10 @@ def PrintType(f: IO[Any], xmlType: Element, indent: str, nameCleaner: Callable[[
             f.write('SEQUENCE {\n')
         else:
             f.write('SET {\n')
-        if len(realType._children) > 0:
+        if len(realType._children) > 0:  # pylint: disable=len-as-condition
             f.write(indent + '    ' + nameCleaner(GetAttr(realType._children[0], "VarName")) + "\t")
             firstChildOptional = GetAttr(realType._children[0], "Optional") == "True"
-            if len(realType._children[0]._children) == 0:
+            if len(realType._children[0]._children) == 0:  # pylint: disable=len-as-condition
                 utility.panic("AST inconsistency: len(realType._children[0]._children) = 0\nContact ESA")  # pragma: no cover
             PrintType(f, realType._children[0]._children[0], indent + "    ", nameCleaner)  # the contained type of the first child
             if firstChildOptional:
@@ -947,7 +954,7 @@ def PrintType(f: IO[Any], xmlType: Element, indent: str, nameCleaner: Callable[[
             for sequenceOrSetChild in realType._children[1:]:
                 f.write(",\n" + indent + '    ' + nameCleaner(GetAttr(sequenceOrSetChild, "VarName")) + "\t")
                 childOptional = GetAttr(sequenceOrSetChild, "Optional") == "True"
-                if len(sequenceOrSetChild._children) == 0:
+                if len(sequenceOrSetChild._children) == 0:  # pylint: disable=len-as-condition
                     utility.panic("AST inconsistency: len(sequenceOrSetChild._children) = 0\nContact ESA")  # pragma: no cover
                 PrintType(f, sequenceOrSetChild._children[0], indent + "    ", nameCleaner)  # the contained type
                 if childOptional:
@@ -957,14 +964,14 @@ def PrintType(f: IO[Any], xmlType: Element, indent: str, nameCleaner: Callable[[
         f.write('\n' + indent + '}')
     elif realType._name == "ChoiceType":
         f.write('CHOICE {\n')
-        if len(realType._children) > 0:
+        if len(realType._children) > 0:  # pylint: disable=len-as-condition
             f.write(indent + '    ' + nameCleaner(GetAttr(realType._children[0], "VarName")) + "\t")
-            if len(realType._children[0]._children) == 0:
+            if len(realType._children[0]._children) == 0:  # pylint: disable=len-as-condition
                 utility.panic("AST inconsistency: len(realType._children[0]._children) = 0\nContact ESA")  # pragma: no cover
             PrintType(f, realType._children[0]._children[0], indent + "    ", nameCleaner)  # the contained type of the first child
             for choiceChild in realType._children[1:]:
                 f.write(",\n" + indent + '    ' + nameCleaner(GetAttr(choiceChild, "VarName")) + "\t")
-                if len(choiceChild._children) == 0:
+                if len(choiceChild._children) == 0:  # pylint: disable=len-as-condition
                     utility.panic("AST inconsistency: len(choiceChild._children) = 0\nContact ESA")  # pragma: no cover
                 PrintType(f, choiceChild._children[0], indent + "    ", nameCleaner)  # the contained type
         else:
@@ -975,7 +982,7 @@ def PrintType(f: IO[Any], xmlType: Element, indent: str, nameCleaner: Callable[[
         mmin = GetAttr(realType, "Min")
         mmax = GetAttr(realType, "Max")
         f.write(' (SIZE (%s .. %s)) OF ' % (mmin, mmax))
-        if len(realType._children) > 0:
+        if len(realType._children) > 0:  # pylint: disable=len-as-condition
             PrintType(f, realType._children[0], indent + "    ", nameCleaner)  # the contained type
         else:
             utility.panic("AST inconsistency: len(realType._children)=0\nContact ESA")  # pragma: no cover
@@ -984,7 +991,7 @@ def PrintType(f: IO[Any], xmlType: Element, indent: str, nameCleaner: Callable[[
         mmin = GetAttr(realType, "Min")
         mmax = GetAttr(realType, "Max")
         f.write(' (SIZE (%s .. %s)) OF ' % (mmin, mmax))
-        if len(realType._children) > 0:
+        if len(realType._children) > 0:  # pylint: disable=len-as-condition
             PrintType(f, realType._children[0], indent + "    ", nameCleaner)  # the contained type
         else:
             utility.panic("AST inconsistency: len(realType._children)=0\nContact ESA")  # pragma: no cover
@@ -992,7 +999,7 @@ def PrintType(f: IO[Any], xmlType: Element, indent: str, nameCleaner: Callable[[
         utility.panic("AST inconsistency: Unknown type (%s)\nContact ESA" % realType._name)  # pragma: no cover
 
 
-def PrintGrammarFromAST(f: IO[Any], nameCleaner: Callable[[str], str]=SimpleCleaner) -> None:
+def PrintGrammarFromAST(f: IO[Any], nameCleaner: Callable[[str], str] = SimpleCleaner) -> None:
     ourtypeAssignments = []
     VisitAll(
         g_xmlASTrootNode._children[0], "Asn1File",

@@ -247,7 +247,7 @@ def OnShutdown(unused_badTypes: SetOfBadTypenames) -> None:
     pass
 
 
-class Params(object):
+class Params:
     cTypes = {
         "BOOLEAN": "flag",
         "INTEGER": "asn1SccSint",
@@ -302,8 +302,8 @@ def CommonBaseImpl(comment: str,
                    path: str,
                    params: Params,
                    accessPathInC: str,
-                   postfix: str="",
-                   returnPointer: bool=False) -> None:
+                   postfix: str = "",
+                   returnPointer: bool = False) -> None:
     takeAddr = '&' if returnPointer else ''
     g_outputGetSetH.write("\n/* %s */\n%s %s_Get%s(%s);\n" % (comment, ctype, path, postfix, params.GetDecl()))
     g_outputGetSetC.write("\n/* %s */\n%s %s_Get%s(%s)\n" % (comment, ctype, path, postfix, params.GetDecl()))
@@ -324,7 +324,7 @@ def CommonBaseImplSequenceFixed(comment: str,
                                 params: Params,
                                 _: str,
                                 node: Union[AsnSequenceOf, AsnSetOf, AsnString],
-                                postfix: str="") -> None:
+                                postfix: str = "") -> None:
     g_outputGetSetH.write("\n/* %s */\n%s %s_Get%s(%s);\n" % (comment, ctype, path, postfix, params.GetDecl()))
     g_outputGetSetC.write("\n/* %s */\n%s %s_Get%s(%s)\n" % (comment, ctype, path, postfix, params.GetDecl()))
     g_outputGetSetC.write("{\n")
@@ -408,6 +408,13 @@ def CreateGettersAndSetters(
         for child in node._members:
             childNode = child[1]
             childVarname = CleanNameAsPythonWants(child[0])
+            if child[3]:  # OPTIONAL field in a sequence
+                CreateGettersAndSetters(path + "_exist_" + childVarname,
+                                        params,
+                                        accessPathInC + union + ".exist." + childVarname,
+                                        AsnInt(),      # exist field is an int
+                                        names,         # ignored
+                                        leafTypeDict)  # ignored
             if isinstance(childNode, AsnMetaMember):
                 baseTypeOfChild = names[childNode._containedType]._leafType
                 baseTypeOfChild = leafTypeDict.get(baseTypeOfChild, baseTypeOfChild)
@@ -442,30 +449,30 @@ def DumpTypeDumper(
             codeIndent +
             'lines.append("%s"+str(%s.Get()!=0).upper())' % (outputIndent, variableName))
         if variableName.startswith("path[i]"):
-            lines.append(codeIndent + 'self.Reset(state)')
+            lines.append(codeIndent + 'path.Reset(state)')
     elif isinstance(node, AsnInt):
         lines.append(
             codeIndent + 'lines.append("%s"+str(%s.Get()))' % (outputIndent, variableName))
         if variableName.startswith("path[i]"):
-            lines.append(codeIndent + 'self.Reset(state)')
+            lines.append(codeIndent + 'path.Reset(state)')
     elif isinstance(node, AsnReal):
         lines.append(
             codeIndent + 'lines.append("%s"+str(%s.Get()))' % (outputIndent, variableName))
         if variableName.startswith("path[i]"):
-            lines.append(codeIndent + 'self.Reset(state)')
+            lines.append(codeIndent + 'path.Reset(state)')
     elif isinstance(node, AsnString):
         lines.append(
             codeIndent +
             'lines.append("%s\\\""+str(%s.GetPyString()) + "\\\"")' % (outputIndent, variableName))
         if variableName.startswith("path[i]"):
-            lines.append(codeIndent + 'self.Reset(state)')
+            lines.append(codeIndent + 'path.Reset(state)')
     elif isinstance(node, AsnEnumerated):
         mapping = str({val: name for name, val in node._members})
         lines.append(
             codeIndent +
             'lines.append("%s"+%s[str(%s.Get())])' % (outputIndent, mapping, variableName))
         if variableName.startswith("path[i]"):
-            lines.append(codeIndent + 'self.Reset(state)')
+            lines.append(codeIndent + 'path.Reset(state)')
     elif isinstance(node, (AsnChoice, AsnSet, AsnSequence)):
         if not isinstance(node, AsnChoice):
             lines.append(codeIndent + 'lines.append("{")')
@@ -475,10 +482,14 @@ def DumpTypeDumper(
             extraIndent = " "
         for idx, child in enumerate(node._members):
             if isinstance(node, AsnChoice):
+                if variableName.startswith("path[i]"):
+                    lines.append(codeIndent + 'path.Reset(state)')  # pragma: nocover
                 lines.append(
                     codeIndent + 'if %s.kind.Get() == DV.%s:' % (
                         variableName,
                         CleanNameAsPythonWants(child[2])))
+                if variableName.startswith("path[i]"):
+                    lines.append(codeIndent + ' path.Reset(state)')  # pragma: nocover
                 sep = ": "
             elif idx > 0:
                 # Separate fields with comas:
@@ -497,13 +508,15 @@ def DumpTypeDumper(
                 variableName + "." + CleanNameAsPythonWants(child[0]), childNode, names)
         if not isinstance(node, AsnChoice):
             lines.append(codeIndent + 'lines.append("}")')
+        if variableName.startswith("path[i]"):
+            lines.append(codeIndent + 'path.Reset(state)')
     elif isinstance(node, (AsnSetOf, AsnSequenceOf)):
         lines.append(codeIndent + 'lines.append("{")')
         containedNode = node._containedType
         if isinstance(containedNode, str):
             containedNode = names[containedNode]
         lines.append(codeIndent + 'def emitElem(path, i):')
-        lines.append(codeIndent + '    state = self.GetState()')
+        lines.append(codeIndent + '    state = path.GetState()')
         lines.append(codeIndent + '    if i > 0:')
         lines.append(codeIndent + '        lines.append(",")')
         DumpTypeDumper(codeIndent + "    ",
@@ -562,7 +575,7 @@ def CreateDeclarationForType(nodeTypename: str, names: AST_Lookup, leafTypeDict:
         panic("Unexpected ASN.1 type... Send this grammar to ESA")  # pragma: no cover
 
 
-def CreateDeclarationsForAllTypes(names: AST_Lookup, leafTypeDict: AST_Leaftypes, badTypes: SetOfBadTypenames) -> None:
+def CreateDeclarationsForAllTypes(names: AST_Lookup, leafTypeDict: AST_Leaftypes, unused_badTypes: SetOfBadTypenames) -> None:
     for nodeTypename in names:
         # Do not ignore the so called "bad types". In python, IA5Strings are supported
         if not names[nodeTypename]._isArtificial:  # and nodeTypename not in badTypes:

@@ -62,18 +62,40 @@
 #                   |                 |                |           |
 #                   |                 +----------------+           |
 #    +-----------------------------+           ^                   |
-#    |        AsnEnumerated        |           |      +------------------------+
-#    |-----------------------------|           |      | AsnSequenceOf/AsnSetOf |
-#    | _members list:(name, value) |           |      |------------------------|
-#    +-----------------------------+           |      | _containedType         |
-#                     +-----------------------------+ | value: string,         |
-#                     |     AsnSequence/AsnSet      | |        AsnBasicNode,   |
-#                     |-----------------------------| |        AsnEnumerated   |
-#                     | _members list:(name, value) | +------------------------+
-#                     | value: AsnBasicNode,        |
-#                     |        AsnEnumerated,       |
-#                     |        AsnMetaMember        |
-#                     +-----------------------------+
+#    |        AsnEnumerated        |           |             +------------------------+
+#    |-----------------------------|           |             | AsnSequenceOf/AsnSetOf |
+#    | _members list:(name, value) |           |             |------------------------|
+#    +-----------------------------+           |             | _containedType         |
+#                     +------------------------------------+ | value: string,         |
+#                     |     AsnSequence/AsnSet/AsnChoice   | |        AsnBasicNode,   |
+#                     |------------------------------------| |        AsnEnumerated   |
+#                     | _members list:(name, value, ...    | +------------------------+
+#                     | value: AsnBasicNode,               |
+#                     |        AsnEnumerated,              |
+#                     |        AsnMetaMember               |
+#                     | en: the EnumID from ASN1SCC        |
+#                     | op: the OPTIONAL-ity status        |
+#                     | alwaysPresent: bool [1]            |
+#                     | alwaysAbsent: bool  [1]            |
+#                     +------------------------------------+
+#
+# [1] The alwaysAbsent/Present are additions made in Oct/2018 to accomodate
+#     the complex interactions between OPTIONAL and WITH COMPONENTS.
+#     Maxime described it to me as follows:
+#
+#     "The use case is two-fold - for SEQUENCE :
+#
+#     MySeq ::= MyOtherSeq (WITH COMPONENTS {..., b ABSENT })
+#
+#     ...and for CHOICE:
+#
+#     AllPossibleTC ::= CHOICE {
+#        tc-6-1 ..,
+#        tc-5-4 , .....}
+#     TC-Subset ::= AllPossibleTC (WITH COMPONENTS {tc-6-1 ABSENT})
+#
+#     So alwaysPresent is NOT the negative of alwaysPresent:
+#     a field can be optional, OR always present, OR always absent
 
 from typing import List, Union, Dict, Any  # NOQA pylint: disable=unused-import
 
@@ -84,7 +106,7 @@ AsnSequenceOrSet = Union['AsnSequence', 'AsnSet']
 AsnSequenceOrSetOf = Union['AsnSequenceOf', 'AsnSetOf']
 
 
-class AsnNode(object):
+class AsnNode:
 
     def __init__(self, asnFilename: str) -> None:
         self._leafType = "unknown"
@@ -95,7 +117,7 @@ class AsnNode(object):
     def Location(self) -> str:
         return "file %s, line %d" % (self._asnFilename, int(self._lineno))  # pragma: no cover
 
-    def IdenticalPerSMP2(self, other: 'AsnNode', mynames: Lookup, othernames: Lookup) -> bool:  # pylint: disable=no-self-use
+    def IdenticalPerSMP2(self, unused_other: 'AsnNode', unused_mynames: Lookup, unused_othernames: Lookup) -> bool:  # pylint: disable=no-self-use
         utility.panic("internal error: Must be defined in derived class...")
 
     def AsASN1(self, _: Lookup) -> str:  # pylint: disable=no-self-use
@@ -145,7 +167,7 @@ Members:
         self._leafType = "BOOLEAN"
         self._lineno = args.get('lineno', None)
         self._bDefaultValue = args.get('bDefaultValue', None)
-        for i in args.keys():
+        for i in args:
             assert i in AsnBool.validOptions
 
     def __repr__(self) -> str:
@@ -154,7 +176,7 @@ Members:
             result += ", default value " + self._bDefaultValue  # pragma: no cover
         return result
 
-    def IdenticalPerSMP2(self, other: AsnNode, mynames: Lookup, othernames: Lookup) -> bool:  # pylint: disable=no-self-use
+    def IdenticalPerSMP2(self, other: AsnNode, unused_mynames: Lookup, unused_othernames: Lookup) -> bool:  # pylint: disable=no-self-use
         return isinstance(other, AsnBool)
 
     def AsASN1(self, _: Lookup) -> str:
@@ -178,7 +200,7 @@ Members:
         self._lineno = args.get('lineno', None)
         self._range = args.get('range', [])
         self._iDefaultValue = args.get('iDefaultValue', None)
-        for i in args.keys():
+        for i in args:
             assert i in AsnInt.validOptions
 
     def __repr__(self) -> str:
@@ -189,7 +211,7 @@ Members:
             result += " with default value of %s" % self._iDefaultValue  # pragma: no cover
         return result
 
-    def IdenticalPerSMP2(self, other: AsnNode, mynames: Lookup, othernames: Lookup) -> bool:  # pylint: disable=no-self-use
+    def IdenticalPerSMP2(self, other: AsnNode, unused_mynames: Lookup, unused_othernames: Lookup) -> bool:  # pylint: disable=no-self-use
         return isinstance(other, AsnInt) and CommonIdenticalRangePerSMP2(self._range, other._range)
 
     def AsASN1(self, _: Lookup) -> str:
@@ -224,7 +246,7 @@ Members:
         self._baseRange = args.get('base', None)
         self._exponentRange = args.get('exponent', None)
         self._dbDefaultValue = args.get('defaultValue', None)
-        for i in args.keys():
+        for i in args:
             assert i in AsnReal.validOptions
 
     def __repr__(self) -> str:
@@ -246,7 +268,7 @@ Members:
             result += " within [%s,%s]" % (self._range[0], self._range[1])
         return result
 
-    def IdenticalPerSMP2(self, other: AsnNode, mynames: Lookup, othernames: Lookup) -> bool:  # pylint: disable=no-self-use
+    def IdenticalPerSMP2(self, other: AsnNode, unused_mynames: Lookup, unused_othernames: Lookup) -> bool:  # pylint: disable=no-self-use
         return isinstance(other, AsnReal) and CommonIdenticalRangePerSMP2(self._range, other._range)
 
     def AsASN1(self, _: Lookup) -> str:
@@ -274,7 +296,7 @@ Members:
         # nameless string types can't be used, so a unique pseudo-type name
         # is created from the fieldname + "_type"
         self._pseudoname = None  # type: Union[None, str]
-        for i in args.keys():
+        for i in args:
             assert i in AsnString.validOptions
 
     def __repr__(self) -> str:
@@ -284,7 +306,7 @@ Members:
             result += str(self._range)
         return result
 
-    def IdenticalPerSMP2(self, other: AsnNode, mynames: Lookup, othernames: Lookup) -> bool:  # pylint: disable=no-self-use
+    def IdenticalPerSMP2(self, other: AsnNode, unused_mynames: Lookup, unused_othernames: Lookup) -> bool:  # pylint: disable=no-self-use
         return isinstance(other, AsnString) and CommonIdenticalRangePerSMP2(self._range, other._range)
 
     def AsASN1(self, _: Lookup) -> str:
@@ -387,7 +409,7 @@ Members:
         # nameless string types can't be used, so a unique pseudo-type name
         # is created from the fieldname + "_type"
         self._pseudoname = None  # type: Union[None, str]
-        for i in args.keys():
+        for i in args:
             assert i in AsnEnumerated.validOptions
         existing = {}  # type: Dict[str, int]
         for elem in self._members:
@@ -407,7 +429,7 @@ Members:
             result += str(member)
         return result
 
-    def IdenticalPerSMP2(self, other: AsnNode, mynames: Lookup, othernames: Lookup) -> bool:  # pylint: disable=no-self-use
+    def IdenticalPerSMP2(self, other: AsnNode, unused_mynames: Lookup, unused_othernames: Lookup) -> bool:  # pylint: disable=no-self-use
         return isinstance(other, AsnEnumerated) and sorted(self._members) == sorted(other._members)
 
     def AsASN1(self, _: Lookup) -> str:
@@ -461,8 +483,12 @@ This class stores the semantic content of an ASN.1 SEQUENCE.
 Members:
     _name : the name of the type
     _members    : a tuple of all child elements. Each tuple contains
-                  two elements: the name of the variable and the
-                  type itself (as an AsnInt, AsnReal, ... or an AsnMetaMember).
+                  many elements: the name of the variable, the type itself
+                  (as an AsnInt, AsnReal, ... or an AsnMetaMember),
+                  an optionality boolean (true mean OPTIONAL),
+                  and two more booleans to indicate alwaysAbsent
+                  and alwaysPresent semantics. See comment at the
+                  top diagram for more info.
 '''
     validOptions = ['members', 'lineno', 'asnFilename']
 
@@ -472,7 +498,7 @@ Members:
         self._leafType = "SEQUENCE"
         self._members = args.get('members', [])
         self._lineno = args.get('lineno', None)
-        for i in args.keys():
+        for i in args:
             assert i in AsnSequence.validOptions
         existing = {}  # type: Dict[str, int]
         for elem in self._members:
@@ -499,7 +525,7 @@ Members:
             isinstance(other, (AsnSet, AsnSequence, AsnChoice)) and \
             CommonIdenticalCheck(self, other, mynames, othernames)
 
-    def AsASN1(self, typeDict: Lookup=None) -> str:
+    def AsASN1(self, typeDict: Lookup = None) -> str:
         if typeDict is None:
             typeDict = {}
         return CommonAsASN1('SEQUENCE', self, typeDict)
@@ -513,7 +539,7 @@ class AsnSet(AsnComplexNode):
         self._leafType = "SET"
         self._members = args.get('members', [])
         self._lineno = args.get('lineno', None)
-        for i in args.keys():
+        for i in args:
             assert i in AsnSequence.validOptions
         existing = {}  # type: Dict[str, int]
         for elem in self._members:
@@ -540,7 +566,7 @@ class AsnSet(AsnComplexNode):
             isinstance(other, (AsnSet, AsnSequence, AsnChoice)) and \
             CommonIdenticalCheck(self, other, mynames, othernames)
 
-    def AsASN1(self, typeDict: Lookup=None) -> str:
+    def AsASN1(self, typeDict: Lookup = None) -> str:
         if typeDict is None:
             typeDict = {}
         return CommonAsASN1('SET', self, typeDict)
@@ -563,7 +589,7 @@ Members:
         self._leafType = "CHOICE"
         self._members = args.get('members', [])
         self._lineno = args.get('lineno', None)
-        for i in args.keys():
+        for i in args:
             assert i in AsnChoice.validOptions
         existing = {}  # type: Dict[str, int]
         for elem in self._members:
@@ -586,7 +612,7 @@ Members:
     def IdenticalPerSMP2(self, other: AsnNode, mynames: Lookup, othernames: Lookup) -> bool:
         return isinstance(other, AsnChoice) and CommonIdenticalCheck(self, other, mynames, othernames)
 
-    def AsASN1(self, typeDict: Lookup=None) -> str:
+    def AsASN1(self, typeDict: Lookup = None) -> str:
         if typeDict is None:
             typeDict = {}
         return CommonAsASN1('CHOICE', self, typeDict)
@@ -642,7 +668,7 @@ Members:
         self._lineno = args.get('lineno', None)
         self._name = "unnamed"  # default in case of SEQUENCE_OF SEQUENCE_OF
         self._leafType = "SEQUENCEOF"
-        for i in args.keys():
+        for i in args:
             assert i in AsnSequenceOf.validOptions
 
     def __repr__(self) -> str:
@@ -660,7 +686,7 @@ Members:
             isinstance(other, (AsnSequenceOf, AsnSetOf)) and \
             CommonIdenticalArrayCheck(self, other, mynames, othernames)
 
-    def AsASN1(self, typeDict: Lookup=None) -> str:
+    def AsASN1(self, typeDict: Lookup = None) -> str:
         if typeDict is None:
             typeDict = {}
         return CommonAsASN1array('SEQUENCE', self, typeDict)
@@ -675,7 +701,7 @@ class AsnSetOf(AsnComplexNode):
         self._lineno = args.get('lineno', None)
         self._name = "unnamed"  # default in case of SEQUENCE_OF SEQUENCE_OF
         self._leafType = "SETOF"
-        for i in args.keys():
+        for i in args:
             assert i in AsnSequenceOf.validOptions
 
     def __repr__(self) -> str:
@@ -693,7 +719,7 @@ class AsnSetOf(AsnComplexNode):
             isinstance(other, (AsnSequenceOf, AsnSetOf)) and \
             CommonIdenticalArrayCheck(self, other, mynames, othernames)
 
-    def AsASN1(self, typeDict: Lookup=None) -> str:
+    def AsASN1(self, typeDict: Lookup = None) -> str:
         if typeDict is None:
             typeDict = {}
         return CommonAsASN1array('SET', self, typeDict)
@@ -715,7 +741,7 @@ Members:
         self._lineno = args.get('lineno', None)
         self._Min = args.get('Min', None)
         self._Max = args.get('Max', None)
-        for i in args.keys():
+        for i in args:
             assert i in AsnMetaMember.validOptions
 
     def __repr__(self) -> str:
@@ -747,7 +773,7 @@ e.g.:
         self._lineno = args.get('lineno', None)
         self._Min = args.get('Min', None)
         self._Max = args.get('Max', None)
-        for i in args.keys():
+        for i in args:
             assert i in AsnMetaType.validOptions
 
     def __repr__(self) -> str:
