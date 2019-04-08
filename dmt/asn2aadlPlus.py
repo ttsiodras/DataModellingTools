@@ -436,6 +436,7 @@ end Stream_Element_Buffer;
         o.write('    Source_Data_Size => %d B%s;\n' % (le_size_rounded, bAADLv2 and "ytes" or ""))
         o.write('    -- name of the corresponding data type in the source file:\n')
         o.write('    Type_Source_Name => "%s";\n' % asnTypename)
+        o.write('    TASTE::Position_In_File => [ line => %s ; column => 1 ; ];\n' % node._lineno)
         o.write('    -- what kind of type is this?\n')
         prefix = bAADLv2 and "TASTE" or "assert_properties"
         o.write('    %s::ASN1_Basic_Type =>' % prefix)

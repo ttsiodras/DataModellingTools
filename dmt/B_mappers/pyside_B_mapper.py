@@ -175,7 +175,9 @@ editor = None
 
     global g_firstElem
     g_firstElem = True
-    buttons = []  # type: List[List[str]]
+    # buttons = []  # type: List[List[str]]
+    buttons = ([["plotButton", "Plot"], ["meterButton", "Meter"],
+                ["unusedButton", "Unused"]])
     # RI = TC (Telecommand), PI = TM (Telemetry)
     if modelingLanguage.lower() == 'gui_ri':
         g_BackendFile.write('''
@@ -223,7 +225,8 @@ def setSharedLib(dll=None):
         buttons = ([["sendButton", "Send TC"], ["loadButton", "Load TC"],
                     ["saveButton", "Save TC"]])
         classType = "asn1Editor"
-    elif modelingLanguage.lower() == 'gui_pi':
+    else:
+        assert modelingLanguage.lower() == 'gui_pi'
         g_BackendFile.write('''
 
 tmId = -1
@@ -628,7 +631,7 @@ def WriteCodeForGUIControls(prefixes: List[str],  # pylint: disable=invalid-sequ
         if g_onceOnly:
             g_PyDataModel.write(
                 '''{'nodeTypename': '%s', 'type': '%s', 'id': '%s', 'isOptional': %s, 'alwaysPresent': %s, 'alwaysAbsent': %s, ''' % (
-                    nodeTypename, node._name, txtPrefix, isOptional, alwaysPresent,alwaysAbsent))
+                    nodeTypename, node._name, txtPrefix, isOptional, alwaysPresent, alwaysAbsent))
             if isinstance(node, AsnChoice):
                 g_PyDataModel.write('''"choices":[''')
             elif isinstance(node, (AsnSequence, AsnSet)):
