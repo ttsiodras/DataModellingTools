@@ -31,9 +31,9 @@ enums_dump = "\n    ".join(
 )
 
 enums_dump += "\n    ".join(
-    'printf("%s = %d\\n");' % (name.strip(), int(val))
-    for name, val in enums
-)
+    'printf("{} = {}\\n");'.format(name.strip(), val.strip('L'))
+    for name, val in enums)
+
 uniq = os.getpid()
 extractor_filename = "/tmp/enums_%d" % uniq
 f = open(extractor_filename + ".c", 'w')
