@@ -175,7 +175,9 @@ editor = None
 
     global g_firstElem
     g_firstElem = True
-    buttons = []  # type: List[List[str]]
+    # buttons = []  # type: List[List[str]]
+    buttons = ([["plotButton", "Plot"], ["meterButton", "Meter"],
+                ["unusedButton", "Unused"]])
     # RI = TC (Telecommand), PI = TM (Telemetry)
     if modelingLanguage.lower() == 'gui_ri':
         g_BackendFile.write('''
@@ -223,7 +225,8 @@ def setSharedLib(dll=None):
         buttons = ([["sendButton", "Send TC"], ["loadButton", "Load TC"],
                     ["saveButton", "Save TC"]])
         classType = "asn1Editor"
-    elif modelingLanguage.lower() == 'gui_pi':
+    else:
+        assert modelingLanguage.lower() == 'gui_pi'
         g_BackendFile.write('''
 
 tmId = -1
@@ -364,7 +367,7 @@ def checkConstraints(asnVal):
 
 
 def encode_ACN(asnVal):
-    \'\'\' Encore the native Asn1Scc structure in ACN \'\'\'
+    \'\'\' Encode the native Asn1Scc structure in ACN \'\'\'
 
     # Check the ASN.1 constraints:
     if not checkConstraints(asnVal):
@@ -546,7 +549,10 @@ def WriteCodeForGUIControls(prefixes: List[str],  # pylint: disable=invalid-sequ
                             param: Param,
                             leafTypeDict: AST_Leaftypes,
                             names: AST_Lookup,
-                            nodeTypename: str='') -> None:
+                            nodeTypename: str = '',
+                            isOptional: bool = False,
+                            alwaysPresent: bool = False,
+                            alwaysAbsent: bool = False) -> None:
     global g_firstElem
     global g_onceOnly
     global g_asnId
@@ -574,43 +580,44 @@ def WriteCodeForGUIControls(prefixes: List[str],  # pylint: disable=invalid-sequ
         if len(parentControl) >= i:
             pyStr += "[{index}]".format(index=parentControl[i - 1])
         for item in prefixes[i][len(prefixes[i - 1]):].split('.'):
-            if len(item) > 0:
+            if item:
                 pyStr += '''["{prefixKey}"]'''.format(prefixKey=item)
 
     if isinstance(node, (AsnInt, AsnReal, AsnOctetString)):
         if isinstance(node, AsnInt):
             if g_onceOnly:
                 g_PyDataModel.write(
-                    '''{'nodeTypename': '%s', 'type': '%s', 'id': '%s', 'minR': %d, 'maxR': %d}''' % (
-                        nodeTypename, node._name, txtPrefix,
+                    '''{'nodeTypename': '%s', 'type': '%s', 'id': '%s', 'isOptional': %s, 'alwaysPresent': %s, 'alwaysAbsent': %s, 'minR': %d, 'maxR': %d}''' % (
+                        nodeTypename, node._name, txtPrefix, isOptional, alwaysPresent, alwaysAbsent,
                         node._range[0], node._range[1]))
 
         elif isinstance(node, AsnReal):
             if g_onceOnly:
                 g_PyDataModel.write(
-                    '''{'nodeTypename': '%s', 'type': '%s', 'id': '%s', 'minR': %f, 'maxR': %f}''' % (
-                        nodeTypename, node._name, txtPrefix,
+                    '''{'nodeTypename': '%s', 'type': '%s', 'id': '%s', 'isOptional': %s, 'alwaysPresent': %s, 'alwaysAbsent': %s, 'minR': %20.20f, 'maxR': %20.20f}''' % (
+                        nodeTypename, node._name, txtPrefix, isOptional, alwaysPresent, alwaysAbsent,
                         node._range[0], node._range[1]))
 
         elif isinstance(node, AsnOctetString):
             if g_onceOnly:
                 g_PyDataModel.write(
-                    '''{'nodeTypename': '%s', 'type': 'STRING', 'id': '%s', 'minSize': %d, 'maxSize': %d}''' % (
-                        nodeTypename, txtPrefix, node._range[0], node._range[1]))
+                    '''{'nodeTypename': '%s', 'type': 'STRING', 'id': '%s', 'isOptional': %s, 'alwaysPresent': %s, 'alwaysAbsent': %s, 'minSize': %d, 'maxSize': %d}''' % (
+                        nodeTypename, txtPrefix, isOptional, alwaysPresent, alwaysAbsent,
+                        node._range[0], node._range[1]))
 
     elif isinstance(node, AsnBool):
         if g_onceOnly:
             g_PyDataModel.write(
-                '''{'nodeTypename': '%s', 'type': '%s', 'id': '%s', 'default': 'False'}''' % (
-                    nodeTypename, node._name, txtPrefix))
+                '''{'nodeTypename': '%s', 'type': '%s', 'id': '%s', 'isOptional': %s, 'alwaysPresent': %s, 'alwaysAbsent': %s, 'default': 'False'}''' % (
+                    nodeTypename, node._name, txtPrefix, isOptional, alwaysPresent, alwaysAbsent))
 
     elif isinstance(node, AsnEnumerated):
         if g_onceOnly:
             global g_needsComa
             g_needsComa = False
             g_PyDataModel.write(
-                '''{'nodeTypename': '%s', 'type': '%s', 'id': '%s', 'values':[''' % (
-                    nodeTypename, node._name, txtPrefix))
+                '''{'nodeTypename': '%s', 'type': '%s', 'id': '%s', 'isOptional': %s, 'alwaysPresent': %s, 'alwaysAbsent': %s, 'values':[''' % (
+                    nodeTypename, node._name, txtPrefix, isOptional, alwaysPresent, alwaysAbsent))
             values = []
             valuesmap = []
             for enum_value in node._members:
@@ -623,11 +630,11 @@ def WriteCodeForGUIControls(prefixes: List[str],  # pylint: disable=invalid-sequ
     elif isinstance(node, (AsnSequence, AsnChoice, AsnSet)):
         if g_onceOnly:
             g_PyDataModel.write(
-                '''{'nodeTypename': '%s', 'type': '%s', 'id': '%s', ''' % (
-                    nodeTypename, node._name, txtPrefix))
+                '''{'nodeTypename': '%s', 'type': '%s', 'id': '%s', 'isOptional': %s, 'alwaysPresent': %s, 'alwaysAbsent': %s, ''' % (
+                    nodeTypename, node._name, txtPrefix, isOptional, alwaysPresent, alwaysAbsent))
             if isinstance(node, AsnChoice):
                 g_PyDataModel.write('''"choices":[''')
-            elif isinstance(node, AsnSequence) or isinstance(node, AsnSet):
+            elif isinstance(node, (AsnSequence, AsnSet)):
                 g_PyDataModel.write('''"children":[''')
         # Recurse on children
         if node._members:
@@ -639,15 +646,25 @@ def WriteCodeForGUIControls(prefixes: List[str],  # pylint: disable=invalid-sequ
         for child in node._members:
             # child[0] is the name of the field
             # child[2] is the string "field_PRESENT" used for choice indexes
+            # child[3] is the field optionality status
+            # child[4] is the "alwaysPresent" status (when child[3] is True)
+            # child[5] is the "alwaysAbsent" status (when child[3] is True)
             CleanChild = CleanName(child[0])
             childType = child[1]
+            isOptional = child[3]
+            alwaysPresent = child[4]
+            alwaysAbsent = child[5]
+            # print(CleanChild + " optional: "+ str(isOptional) + " always Present: " + str(alwaysPresent) + " always absent: " + str(alwaysAbsent))
             if isinstance(childType, AsnMetaMember):
                 childType = names[childType._containedType]
             seqPrefix = prefixes[-1]
             prefixes[-1] = prefixes[-1] + "." + CleanChild
             WriteCodeForGUIControls(prefixes, parentControl, childType,
                                     subProgram, subProgramImplementation,
-                                    param, leafTypeDict, names)
+                                    param, leafTypeDict, names,
+                                    isOptional=isOptional,
+                                    alwaysPresent=alwaysPresent,
+                                    alwaysAbsent=alwaysAbsent)
             prefixes[-1] = seqPrefix
         if g_onceOnly:
             if isinstance(node, AsnChoice):
@@ -664,8 +681,8 @@ def WriteCodeForGUIControls(prefixes: List[str],  # pylint: disable=invalid-sequ
     elif isinstance(node, (AsnSequenceOf, AsnSetOf)):
         if g_onceOnly:
             g_PyDataModel.write(
-                "{'nodeTypename': '%s', 'type': 'SEQOF', 'id': '%s', 'minSize': %d, 'maxSize': %d, 'seqoftype':" % (
-                    nodeTypename, txtPrefix, node._range[0], node._range[1]))
+                "{'nodeTypename': '%s', 'type': 'SEQOF', 'id': '%s', 'isOptional': %s, 'alwaysPresent': %s, 'alwaysAbsent': %s, 'minSize': %d, 'maxSize': %d, 'seqoftype':" % (
+                    nodeTypename, txtPrefix, isOptional, alwaysPresent, alwaysAbsent, node._range[0], node._range[1]))
         containedNode = node._containedType
         if isinstance(containedNode, str):
             containedNode = names[containedNode]
