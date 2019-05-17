@@ -1173,7 +1173,7 @@ def computeBambuDeclarations(node: AsnNode, asnTypename: str, prefix: str, names
             lines.extend(
                 computeBambuDeclarations(
                     child[1],
-                    child[1],
+                    child[1]._containedType,
                     prefix + "_%s" % clean(child[0]),
                     names,
                     leafTypeDict))
