@@ -150,7 +150,7 @@ $(BDIR)/asn1crt.c $(BDIR)/$(GRAMMAR).c $(BDIR)/real.c $(BDIR)/acn.c $(BDIR)/$(GR
 
 $(BDIR)/DV.py:       $(GRAMMAR).asn
 %(tab)sgrep 'REQUIRED_BYTES_FOR_.*ENCODING' $(BDIR)/$(GRAMMAR).h | awk '{print $$2 " = " $$3}' > $@
-%(tab)spython learn_CHOICE_enums.py %(base)s >> $@
+%(tab)spython learn_CHOICE_enums.py %(base)s >> $@ || rm $@
 
 $(BDIR)/%%.o:       $(BDIR)/%%.c
 %(tab)sgcc -g -fPIC -c `python-config --includes` -o $@ $<
