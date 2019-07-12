@@ -376,7 +376,7 @@ grep for the errorcode value inside ASN1SCC generated headers."""
             for idx in range(0, strLength):
                 self._params.append(idx)
                 self._accessPath = accessPath + "[" + str(idx) + "]"
-                self.Set(src[idx], reset=False)
+                self.Set(ord(src[idx]), reset=False)
                 self._params.pop()
         else:
             for idx in range(0, strLength):
@@ -398,7 +398,7 @@ grep for the errorcode value inside ASN1SCC generated headers."""
                 retval += bytes([self.Get(reset=False)])
                 self._params.pop()
             self.Reset()
-            return retval
+            return retval.decode("utf-8")
         else:
             retval = ""
             strLength = self.GetLength(False)
