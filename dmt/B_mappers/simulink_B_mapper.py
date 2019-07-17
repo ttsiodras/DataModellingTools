@@ -454,6 +454,7 @@ class SimulinkGlueGenerator(SynchronousToolGlueGenerator):
         self.C_SourceFile.write("    if (!initialized) {\n")
         self.C_SourceFile.write("        initialized = 1;\n")
         self.C_SourceFile.write("        %s_initialize(1);\n" % self.g_FVname)
+        # If there are HW(FPGA) configurations defined, initialize also the HW side (the device driver: <self.g_FVname>_Simulink.vhdl.c).
         if sp._fpgaConfigurations is not '':
             self.C_SourceFile.write("        init_%s_Brave_Fpga();\n" % maybeFVname)
         self.C_SourceFile.write("    }\n")

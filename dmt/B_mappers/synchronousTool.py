@@ -37,8 +37,15 @@ TSource = TypeVar('TSource')
 TDestin = TypeVar('TDestin')
 
 brave_seen = {}
+# Add suffix to generated FPGA device driver's (<PI name>_<Language>.vhdl.c) functions to avoid multiple definition errors (conflict with "vm_if")
 fpgaSuffix = ''
+# Add a different suffix to the dispatcher C function (part of device driver)
+# Dispatcher <Function Block name>_<PI name><dispatcherSuffix> will delegate to one or the other side (SW or HW)
+# If delegation is to HW, then <Function Block name>_<PI name><fpgaSuffix> will be called
 dispatcherSuffix = "_Brave_Dispatch"
+# FPGA/HW device driver (<PI name>_<Language>.vhdl.c) is being generated (also) when Function Block will exist both as SW and HW, that is, when
+# 1) language defined is C or Simulink but on the autogen pass is "seen" as VHDL (so that respective B-mapper is invoked),
+# and 2) there are FPGA configurations defined (default is False)
 genHwDevDrv = False
 
 class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
@@ -109,12 +116,17 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                   outputDir: str,
                   maybeFVname: str,
                   useOSS: bool) -> None:
+        # FPGA/HW device driver is being generated (also) when Function Block will exist both as SW and HW, that is, when
+        # 1) language defined is C or Simulink but on this autogen pass is "seen" as VHDL (so that respective B-mapper is invoked),
+        # and 2) there are FPGA configurations defined
         global genHwDevDrv
+        # Add suffix to generated FPGA device driver's functions to avoid multiple definition errors (conflict with "vm_if")
         global fpgaSuffix
         genHwDevDrv = subProgram._fpgaConfigurations is not '' and ((subProgramImplementation.lower() == "c" or subProgramImplementation.lower() == "simulink") and modelingLanguage == "vhdl");
         if genHwDevDrv:
             fpgaSuffix = "_Brave_Fpga"
         else:
+            # To avoid code duplication, use suffix anyway but as an empty string when not to be applied
             fpgaSuffix = ''
         
         if modelingLanguage == "QGenAda":
@@ -525,7 +537,6 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
         self.Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
     def OnShutdown(self, modelingLanguage: str, asnFile: str, sp: ApLevelContainer, subProgramImplementation: str, maybeFVname: str) -> None:
-        # Check if Function Block will exist both as SW and HW
         global genHwDevDrv
         global fpgaSuffix
         global dispatcherSuffix
@@ -591,7 +602,6 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                 self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation + "_wrapper"))
 
         else:
-            # Check if Function Block will exist both as SW and HW. If yes append suffix to avoid multiple definition errors.
             if genHwDevDrv:
                 if maybeFVname not in brave_seen:
                     brave_seen[maybeFVname] = 'no_init_yet';
@@ -622,6 +632,9 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
             self.C_HeaderFile.write(");\n")
             
             # Check if Function Block will exist both as SW and HW. If yes generate dispatcher function (to delegate to SW or HW).
+            # Dispatcher <Function Block name>_<PI name><dispatcherSuffix> is part of the FPGA device driver <PI name>_<Language>.vhdl.h/c
+            # Dispatcher can return: 0 (successfully delegated to HW), 1 (delegated to SW), 2 (unsuccessfully delegated to HW)
+            # Here being added to the .h file
             if genHwDevDrv:
                 if maybeFVname != "":
                     self.C_HeaderFile.write("int %s_%s%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id), dispatcherSuffix))
@@ -673,6 +686,15 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                     self.C_SourceFile.write('void *p' + self.CleanNameAsToolWants(param._id) + ', size_t *pSize_' + self.CleanNameAsToolWants(param._id))
             self.C_SourceFile.write(")\n{\n")
 
+            # Call Dispatcher function
+            # Dispatcher will delegate to one or the other side (SW or HW) depending on whether the value of the global variable storing the current
+            # configuration equals one of those configurations defined for the target Function Block (in IV field listing the FPGA configurations)
+            # Mechanism is as follows:
+            # 1) SW side glue <PI name>_<Language>.<Language>.h/c calls HW side glue (device driver) <PI name>_<Language>.vhdl.h/c
+            #   specifically <Function Block name>_<PI name> function calls the Dispatcher <Function Block name>_<PI name><dispatcherSuffix>
+            # 2) Dispatcher in HW side delegates back to SW side (when returning 1 or 2) or to FPGA (and returns 0)
+            # 3) If successfully delegated to HW (returning 0), SW side returns immediately so to avoid calling up SW side as well
+            #   Otherwise execution continues up trough "normal" SW side calling
             if sp._fpgaConfigurations is not '' and subProgramImplementation.lower() == "simulink" and modelingLanguage != "vhdl":
                 self.C_SourceFile.write('    // Calling Brave VHDL dispatcher function\n')
                 self.C_SourceFile.write('    if (0 == %s_%s%s (' % \
@@ -743,6 +765,9 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
             self.C_SourceFile.write("}\n\n")
 
             # Check if Function Block will exist both as SW and HW. If yes generate dispatcher function (to delegate to SW or HW).
+            # Dispatcher <Function Block name>_<PI name><dispatcherSuffix> is part of the FPGA device driver <PI name>_<Language>.vhdl.h/c
+            # Dispatcher can return: 0 (successfully delegated to HW), 1 (delegated to SW), 2 (unsuccessfully delegated to HW)
+            # Here being added to the .c file
             if genHwDevDrv:
                 if maybeFVname != "":
                     self.C_SourceFile.write("int %s_%s%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id), dispatcherSuffix))

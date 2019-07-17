@@ -391,10 +391,13 @@ def ProcessCustomBackends(
         else:
             panic("Unexpected call of getCustomBackends...")  # pragma: no cover
 
+    # Add call to the VHDL B-mapper also for C and Simulink functions (x[2]) with FPGA configuration(s) defined (x[4])
     for si in [x for x in SystemsAndImplementations if x[2] is not None and (x[2].lower() in ["gui_ri", "gui_pi", "vhdl"] or ((x[2].lower() == "c" or x[2].lower() == "simulink") and len(x)>4 and x[4] is not ''))]:
         # We do, start the work
         spName, sp_impl, lang, maybeFVname = si[0], si[1], si[2], si[3]
+        # Add call to the VHDL B-mapper also for C and Simulink functions (si[2]) with FPGA configuration(s) defined (si[4])
         if (si[2].lower() == "c" or si[2].lower() == "simulink") and len(si)>4 and si[4] is not '':
+            # pretend its VHDL
             lang = "vhdl"
         sp = commonPy.aadlAST.g_apLevelContainers[spName]
         if len(sp._params) == 0:

@@ -151,7 +151,7 @@ class ApLevelContainer:
         self._calls = []
         self._params = []
         self._connections = []
-        self._fpgaConfigurations = ''
+        self._fpgaConfigurations = '' # The configuration(s)/"mode(s)" for which the Function's HW implementation shall apply (execution in FPGA)
         self._language = None
 
     def AddCalledAPLC(self, idAPLC):
@@ -170,6 +170,7 @@ class ApLevelContainer:
     def SetLanguage(self, language):
         self._language = language
 
+    # Assign FPGA configurations
     def SetFPGAConfigurations(self, fpgaConfigurations):
         self._fpgaConfigurations = fpgaConfigurations
 
