@@ -447,6 +447,10 @@ class VHDLGlueGenerator(SynchronousToolGlueGeneratorGeneric[List[int], List[int]
 #define LOGDEBUG(x...)
 #endif
 
+// BRAVE device driver considers different possible FPGA status
+// See for instance device drivers' function <Function Block name>_<PI name>_Brave_Fpga (invoked by dispatcher when delegation is to HW)
+// and that first checks if FPGA is "ready" before converting parameters and initiating RMAP exchanges with HW
+// This status is to be maintained by a dedicated component acting as the FPGA reconfiguration manager and that "watchdogs" the HW component
 #define FPGA_READY              "ready"
 #define FPGA_RECONFIGURING      "reconfiguring"
 #define FPGA_ERROR              "error"

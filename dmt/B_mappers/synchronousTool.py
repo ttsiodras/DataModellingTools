@@ -609,6 +609,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                     brave_seen[maybeFVname] = 'with_init_already'
             
             if genHwDevDrv:
+                # Execute() returns if interaction with BRAVE HW is successful, that is, if RMAP write and read commands are successful (0) or not (-1)
                 self.C_HeaderFile.write("int Execute_%s%s();\n" % (self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation), fpgaSuffix))
             else:    
                 self.C_HeaderFile.write("void Execute_%s();\n" % self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation))
@@ -616,6 +617,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                 if not (genHwDevDrv and maybeFVname in brave_seen and brave_seen[maybeFVname] is 'with_init_already'):
                     self.C_HeaderFile.write("void init_%s%s();\n" % (self.CleanNameAsADAWants(maybeFVname), fpgaSuffix))
                 if genHwDevDrv:
+                    # Return to dispatcher if HW delegation via Execute() is successful (0) or not (-1).
                     self.C_HeaderFile.write("int %s_%s%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id), fpgaSuffix))
                 else:
                     self.C_HeaderFile.write("void %s_%s%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id), fpgaSuffix))
@@ -652,6 +654,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
             self.C_HeaderFile.write("\n#endif\n")
 
             if genHwDevDrv:
+                # Execute() returns if interaction with BRAVE HW is successful, that is, if RMAP write and read commands are successful (0) or not (-1)
                 self.C_SourceFile.write("int Execute_%s%s()\n{\n" % (self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation), fpgaSuffix))
             else:
                 self.C_SourceFile.write("void Execute_%s()\n{\n" % self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation))
@@ -672,6 +675,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
 
             if maybeFVname != "":
                 if genHwDevDrv:
+                    # Return to dispatcher if HW delegation via Execute() is successful (0) or not (-1).
                     self.C_SourceFile.write("int %s_%s%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id), fpgaSuffix))
                 else:
                     self.C_SourceFile.write("void %s_%s%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id), fpgaSuffix))
@@ -693,7 +697,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
             # 1) SW side glue <PI name>_<Language>.<Language>.h/c calls HW side glue (device driver) <PI name>_<Language>.vhdl.h/c
             #   specifically <Function Block name>_<PI name> function calls the Dispatcher <Function Block name>_<PI name><dispatcherSuffix>
             # 2) Dispatcher in HW side delegates back to SW side (when returning 1 or 2) or to FPGA (and returns 0)
-            # 3) If successfully delegated to HW (returning 0), SW side returns immediately so to avoid calling up SW side as well
+            # 3) If successfully delegated to HW (returning 0), afterwards SW side returns immediately so to avoid calling up SW side as well
             #   Otherwise execution continues up trough "normal" SW side calling
             if sp._fpgaConfigurations is not '' and subProgramImplementation.lower() == "simulink" and modelingLanguage != "vhdl":
                 self.C_SourceFile.write('    // Calling Brave VHDL dispatcher function\n')
@@ -711,6 +715,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                 self.C_SourceFile.write(")) return;\n")
                 
             if genHwDevDrv:
+                # Check if FPGA is ready before converting parameters and initiating RMAP exchanges with HW
                 self.C_SourceFile.write('    // Check if FPGA is ready.\n')
                 self.C_SourceFile.write('    extern const char globalFpgaStatus_%s[];\n' % (self.CleanNameAsADAWants(maybeFVname)))
                 self.C_SourceFile.write('    if(strcmp(globalFpgaStatus_%s, FPGA_READY)){\n' % (self.CleanNameAsADAWants(maybeFVname)))
@@ -740,6 +745,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
 
             # Do functional work
             if genHwDevDrv:
+                # Check if HW delegation via Execute() is successful: return -1 to Dispatcher if not (so SW side can be called as fallback)
                 self.C_SourceFile.write("    if(Execute_%s%s()) return -1;\n" % (self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation), fpgaSuffix))
             else:
                 self.C_SourceFile.write("    Execute_%s();\n" % self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation))
@@ -761,6 +767,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                                              self.CleanNameAsToolWants(param._id),
                                              param._signal._asnSize))
             if genHwDevDrv:
+                # HW delegation via Execute() was successful, so return 0 to Dispatcher
                 self.C_SourceFile.write("    return 0;\n")
             self.C_SourceFile.write("}\n\n")
 
@@ -768,6 +775,12 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
             # Dispatcher <Function Block name>_<PI name><dispatcherSuffix> is part of the FPGA device driver <PI name>_<Language>.vhdl.h/c
             # Dispatcher can return: 0 (successfully delegated to HW), 1 (delegated to SW), 2 (unsuccessfully delegated to HW)
             # Here being added to the .c file
+            # Detailed description:
+            # Delegate to one or the other side (SW or HW) depending on whether the value of a global variable storing the current
+            # configuration (p_szGlobalState) equals one of those configurations listed (fConfigList) for the target Function Block in its respective IV field.
+            # If so, OR such list defines the "magic" word "AllModes", computation will be delegated to HW/FPGA (<Function Block name>_<PI name><fpgaSuffix> will be called).
+            # Otherwise, FPGA is not called and computation will proceed in SW through the "usual" SW side/glue counterpart.
+            # Debug level logs (LOGDEBUG) can be used to track this delegation during testing.
             if genHwDevDrv:
                 if maybeFVname != "":
                     self.C_SourceFile.write("int %s_%s%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id), dispatcherSuffix))
@@ -783,7 +796,10 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                 self.C_SourceFile.write(")\n{\n")
                 self.C_SourceFile.write('    /*\n')
                 self.C_SourceFile.write('    Delegate to one or the other side (SW or HW) depending on whether the value of a global variable storing the current\n')
-                self.C_SourceFile.write('    configuration equals one of those defined for the target function in new IV field.\n')
+                self.C_SourceFile.write('    configuration (p_szGlobalState) equals one of those configurations listed (fConfigList) for the target Function Block in its respective IV field.\n')
+                self.C_SourceFile.write('    If so, OR such list defines the "magic" word "AllModes", computation will be delegated to HW/FPGA (<Function Block name>_<PI name><fpgaSuffix> will be called).\n')
+                self.C_SourceFile.write('    Otherwise, FPGA is not called and computation will proceed in SW through the "usual" SW side/glue counterpart.\n')
+                self.C_SourceFile.write('    Debug level logs (LOGDEBUG) can be used to track this delegation during testing.\n')
                 self.C_SourceFile.write('    */\n')
                 self.C_SourceFile.write('    extern const char p_szGlobalState[];\n')
                 self.C_SourceFile.write('    char *fConfig;\n')
