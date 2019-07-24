@@ -136,7 +136,7 @@ ASN2DATAMODEL:=asn2dataModel
 GRAMMAR := %(origGrammarBase)s
 BASEGRAMMAR := %(base)s
 BDIR:= .
-OBJ     := $(BDIR)/$(GRAMMAR).o $(BDIR)/asn1crt.o $(BDIR)/asn1crt_encoding_uper.o $(BDIR)/asn1crt_encoding_acn.o $(BDIR)/$(BASEGRAMMAR)_getset.o
+OBJ     := $(BDIR)/$(GRAMMAR).o $(BDIR)/asn1crt.o $(BDIR)/asn1crt_encoding.o $(BDIR)/asn1crt_encoding_uper.o $(BDIR)/asn1crt_encoding_acn.o $(BDIR)/$(BASEGRAMMAR)_getset.o
 
 all:    $(BDIR)/$(BASEGRAMMAR)_getset.so $(BDIR)/DV.py
 
@@ -144,7 +144,7 @@ $(BDIR)/$(GRAMMAR)_getset.c:       $(GRAMMAR).asn
 %(tab)smkdir -p $(BDIR)
 %(tab)s$(ASN2DATAMODEL) -toPython -o $(BDIR) $<
 
-$(BDIR)/asn1crt.c $(BDIR)/$(GRAMMAR).c $(BDIR)/asn1crt_encoding_uper.c $(BDIR)/asn1crt_encoding_acn.c $(BDIR)/$(GRAMMAR).h $(BDIR)/asn1crt.h:       $(GRAMMAR).asn
+$(BDIR)/asn1crt.c $(BDIR)/$(GRAMMAR).c $(BDIR)/asn1crt.c $(BDIR)/asn1crt_encoding.c $(BDIR)/asn1crt_encoding_uper.c $(BDIR)/asn1crt_encoding_acn.c $(BDIR)/$(GRAMMAR).h $(BDIR)/asn1crt.h:       $(GRAMMAR).asn
 %(tab)sif [ ! -f "$(GRAMMAR).acn" ] ; then %(mono)s $(ASN1SCC) -ACND -o $(BDIR) $< ; fi
 %(tab)s%(mono)s $(ASN1SCC) -ACN -c -uPER -equal -o $(BDIR) $< $(GRAMMAR).acn
 
