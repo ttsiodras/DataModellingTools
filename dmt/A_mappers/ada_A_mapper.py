@@ -50,7 +50,7 @@ def OnStartup(unused_modelingLanguage: str, asnFiles: List[str], outputDir: str,
     extraFlags = os.getenv("ASN1SCC_FLAGS") or ""
     os.system(
         ("mono " if sys.platform.startswith('linux') else "") +
-        "\"{}\" -typePrefix asn1Scc -Ada {} -uPER -o \"".format(asn1SccPath, extraFlags) +
+        "\"{}\" -typePrefix asn1Scc -Ada {} -o \"".format(asn1SccPath, extraFlags) +
         outputDir + "\" \"" + "\" \"".join(asnFiles) + "\"")
     os.system("rm -f \"" + outputDir + "\"/*.adb")
 
