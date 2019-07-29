@@ -221,7 +221,8 @@ def setSharedLib(dll=None):
     {tcName}_via_shared_lib = dll.{fvName}_PI_{tcName}
 
 '''.format(fvName=FVname, tcName=CleanSP))
-        g_PyDataModel.write('\ntc["{tcName}"] = '.format(tcName=CleanSP))
+        g_PyDataModel.write('\ntc["{tcName}"] = '.format(
+                                                  tcName=CleanSP.lower()))
         buttons = ([["sendButton", "Send TC"], ["loadButton", "Load TC"],
                     ["saveButton", "Save TC"]])
         classType = "asn1Editor"
