@@ -49,12 +49,12 @@ def OnStartup(unused_modelingLanguage: str, asnFiles: List[str], outputDir: str,
         ("mono " if sys.platform.startswith('linux') else "") +
         "\"{}\" -typePrefix asn1Scc -c -uPER -o \"".format(asn1SccPath) +
         outputDir + "\" \"" + "\" \"".join(asnFiles) + "\"")
-    cmd = 'rm -f '
-    for i in ['real.c', 'asn1crt.c', 'acn.c']:
-        cmd += ' "' + outputDir + '"/' + i
-    os.system(cmd)
-    for tmp in asnFiles:
-        os.system("rm -f \"" + outputDir + os.sep + os.path.basename(os.path.splitext(tmp)[0]) + ".c\"")
+#   cmd = 'rm -f '
+#   for i in ['real.c', 'asn1crt.c', 'acn.c']:
+#       cmd += ' "' + outputDir + '"/' + i
+#   os.system(cmd)
+#   for tmp in asnFiles:
+#       os.system("rm -f \"" + outputDir + os.sep + os.path.basename(os.path.splitext(tmp)[0]) + ".c\"")
 
 
 def OnBasic(unused_nodeTypename: str, unused_node: AsnBasicNode, unused_leafTypeDict: AST_Leaftypes) -> None:
