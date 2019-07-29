@@ -80,6 +80,7 @@ but with an extra call to OnFinal at the end.
 
 import os
 import sys
+import hashlib
 from distutils import spawn
 
 from typing import cast, Optional, Dict, List, Tuple, Set, Any  # NOQA pylint: disable=unused-import
@@ -145,19 +146,48 @@ def ParseAADLfilesAndResolveSignals() -> None:
     '''Invokes the ANTLR generated AADL parser, and resolves
 all references to AAADL Data types into the param._signal member
 of each SUBPROGRAM param.'''
-    import tempfile
-    f = tempfile.NamedTemporaryFile(delete=False)
-    astFile = f.name
-    f.close()
-    os.unlink(astFile)
-    parserUtility = os.path.join(
-        os.path.abspath(os.path.dirname(__file__)), "parse_aadl.py")
-    cmd = "python2 " + parserUtility + " -o " + astFile + ' ' + \
+    projectCache = os.getenv("PROJECT_CACHE")
+    if projectCache is not None:
+        if not os.path.isdir(projectCache):
+            panic("The configured cache folder:\n\n\t" + projectCache +
+                  "\n\n...is not there!\n")
+    cachedModelExists = False
+    aadlASTcache = None
+    if projectCache is not None:
+        filehash = hashlib.md5()
+        for each in sorted(sys.argv[1:]):
+            filehash.update(open(each).read().encode('utf-8'))
+        newHash = filehash.hexdigest()
+        # set the name of the Pickle files containing the dumped AST
+        aadlASTcache = projectCache + os.sep + newHash + "_aadl_ast.pickle"
+        if not os.path.exists(aadlASTcache):
+            print("[DMT] No cached AADL model found for",
+                  ",".join(sys.argv[1:]))
+        else:
+            cachedModelExists = True
+            print("[DMT] Reusing cached AADL model for",
+                  ",".join(sys.argv[1:]))
+
+    import pickle
+    if cachedModelExists:
+        astInfo = pickle.load(open(aadlASTcache, 'rb'), fix_imports=False)
+    else:
+        import tempfile
+        f = tempfile.NamedTemporaryFile(delete=False)
+        astFile = f.name
+        f.close()
+        os.unlink(astFile)
+        parserUtility = os.path.join(
+            os.path.abspath(os.path.dirname(__file__)), "parse_aadl.py")
+        cmd = "python2 " + parserUtility + " -o " + astFile + ' ' + \
             ' '.join(sys.argv[1:])
-    if os.system(cmd) != 0:
-        if os.path.exists(astFile):
-            os.unlink(astFile)
-        panic("AADL parsing failed. Aborting...")
+        if os.system(cmd) != 0:
+            if os.path.exists(astFile):
+                os.unlink(astFile)
+            panic("AADL parsing failed. Aborting...")
+        astInfo = pickle.load(open(astFile, 'rb'), fix_imports=False)
+        if aadlASTcache:
+            pickle.dump(astInfo, open(aadlASTcache, 'wb'), fix_imports=False)
 
     def FixMetaClasses(sp: ApLevelContainer) -> None:
         def patchMe(o: Any) -> None:
@@ -181,8 +211,6 @@ of each SUBPROGRAM param.'''
         for cn in sp._connections:
             patchMe(cn)
     try:
-        import pickle
-        astInfo = pickle.load(open(astFile, 'rb'), fix_imports=False)
         for k in ['g_processImplementations', 'g_apLevelContainers',
                   'g_signals', 'g_systems', 'g_subProgramImplementations',
                   'g_threadImplementations']:
