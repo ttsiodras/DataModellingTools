@@ -420,48 +420,47 @@ def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=inv
         os.fdopen(dummy).close()
         xmlAST2 = xmlAST + "2"
 
-    asn1SccPath = spawn.find_executable('asn1.exe')
-    if asn1SccPath is None:
-        utility.panic("ASN1SCC seems not installed on your system (asn1.exe not found in PATH).\n")
-    else:
-        if someFilesHaveChanged:
-            asn1SccDir = os.path.dirname(os.path.abspath(asn1SccPath))
-            spawnResult = os.system("mono \"" + asn1SccPath + "\" -customStg \"" + asn1SccDir + "/xml.stg:" + xmlAST + "\" -typePrefix asn1Scc -fp AUTO -customStgAstVersion 4 \"" + "\" \"".join(listOfFilenames) + "\"")
-            if spawnResult != 0:
-                errCode = spawnResult / 256
-                if errCode == 1:
-                    utility.panic("ASN1SCC reported syntax errors. Aborting...")
-                elif errCode == 2:
-                    utility.panic("ASN1SCC reported semantic errors (or mono failed). Aborting...")
-                elif errCode == 3:
-                    utility.panic("ASN1SCC reported internal error. Contact ESA with this input. Aborting...")
-                elif errCode == 4:
-                    utility.panic("ASN1SCC reported usage error. Aborting...")
-                else:
-                    utility.panic("ASN1SCC generic error. Contact ESA with this input. Aborting...")
-        ParseASN1SCC_AST(xmlAST)
-        if projectCache is None:
-            os.unlink(xmlAST)
-        g_names.update(g_names)
-        g_leafTypeDict.update(g_leafTypeDict)
-        g_checkedSoFarForKeywords.update(g_checkedSoFarForKeywords)
-        g_typesOfFile.update(g_typesOfFile)
+    if someFilesHaveChanged:
+        asn1SccPath = spawn.find_executable('asn1.exe')
+        if asn1SccPath is None:
+            utility.panic("ASN1SCC seems not installed on your system (asn1.exe not found in PATH).\n")
+        asn1SccDir = os.path.dirname(os.path.abspath(asn1SccPath))
+        spawnResult = os.system("mono \"" + asn1SccPath + "\" -customStg \"" + asn1SccDir + "/xml.stg:" + xmlAST + "\" -typePrefix asn1Scc -fp AUTO -customStgAstVersion 4 \"" + "\" \"".join(listOfFilenames) + "\"")
+        if spawnResult != 0:
+            errCode = spawnResult / 256
+            if errCode == 1:
+                utility.panic("ASN1SCC reported syntax errors. Aborting...")
+            elif errCode == 2:
+                utility.panic("ASN1SCC reported semantic errors (or mono failed). Aborting...")
+            elif errCode == 3:
+                utility.panic("ASN1SCC reported internal error. Contact ESA with this input. Aborting...")
+            elif errCode == 4:
+                utility.panic("ASN1SCC reported usage error. Aborting...")
+            else:
+                utility.panic("ASN1SCC generic error. Contact ESA with this input. Aborting...")
+    ParseASN1SCC_AST(xmlAST)
+    if projectCache is None:
+        os.unlink(xmlAST)
+    g_names.update(g_names)
+    g_leafTypeDict.update(g_leafTypeDict)
+    g_checkedSoFarForKeywords.update(g_checkedSoFarForKeywords)
+    g_typesOfFile.update(g_typesOfFile)
 
-        # We also need to mark the artificial types -
-        # So spawn the custom type output at level 1 (unfiltered)
-        # and mark any types not inside it as artificial.
-        if someFilesHaveChanged:
-            os.system("mono \"" + asn1SccPath + "\" -customStg \"" + asn1SccDir + "/xml.stg:" + xmlAST2 + "\" -fp AUTO -typePrefix asn1Scc -customStgAstVersion 1 \"" + "\" \"".join(listOfFilenames) + "\"")
-        realTypes = {}
-        for line in os.popen("grep  'ExportedType\>' \"" + xmlAST2 + "\"").readlines():  # flake8: noqa pylint: disable=anomalous-backslash-in-string
-            line = re.sub(r'^.*Name="', '', line.strip())
-            line = re.sub(r'" />$', '', line)
-            realTypes[line] = 1
-        if projectCache is None:
-            os.unlink(xmlAST2)
-        for nodeTypename in list(g_names.keys()):
-            if nodeTypename not in realTypes:
-                g_names[nodeTypename]._isArtificial = True
+    # We also need to mark the artificial types -
+    # So spawn the custom type output at level 1 (unfiltered)
+    # and mark any types not inside it as artificial.
+    if someFilesHaveChanged:
+        os.system("mono \"" + asn1SccPath + "\" -customStg \"" + asn1SccDir + "/xml.stg:" + xmlAST2 + "\" -fp AUTO -typePrefix asn1Scc -customStgAstVersion 1 \"" + "\" \"".join(listOfFilenames) + "\"")
+    realTypes = {}
+    for line in os.popen("grep  'ExportedType\>' \"" + xmlAST2 + "\"").readlines():  # flake8: noqa pylint: disable=anomalous-backslash-in-string
+        line = re.sub(r'^.*Name="', '', line.strip())
+        line = re.sub(r'" />$', '', line)
+        realTypes[line] = 1
+    if projectCache is None:
+        os.unlink(xmlAST2)
+    for nodeTypename in list(g_names.keys()):
+        if nodeTypename not in realTypes:
+            g_names[nodeTypename]._isArtificial = True
 
 
 def Dump() -> None:
