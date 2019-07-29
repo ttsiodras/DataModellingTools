@@ -491,7 +491,7 @@ def main() -> None:
         pr.enable()
         import atexit
 
-        def dumpSpeedData():
+        def dumpSpeedData() -> None:
             pr.disable()
             s = io.StringIO()
             sortby = 'cumulative'
