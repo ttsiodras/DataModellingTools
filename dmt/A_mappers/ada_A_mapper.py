@@ -52,7 +52,7 @@ def OnStartup(unused_modelingLanguage: str, asnFiles: List[str], outputDir: str,
         ("mono " if sys.platform.startswith('linux') else "") +
         "\"{}\" -typePrefix asn1Scc -Ada {} -o \"".format(asn1SccPath, extraFlags) +
         outputDir + "\" \"" + "\" \"".join(asnFiles) + "\"")
-    # os.system("rm -f \"" + outputDir + "\"/*.adb")
+    os.system("rm -f \"" + outputDir + "\"/*.adb")
 
 
 def OnBasic(unused_nodeTypename: str, unused_node: AsnBasicNode, unused_leafTypeDict: AST_Leaftypes) -> None:
