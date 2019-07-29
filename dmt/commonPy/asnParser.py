@@ -408,12 +408,12 @@ def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=inv
         xmlAST2 = projectCache + os.sep + newHash + "_ast_v1.xml"
         if not os.path.exists(xmlAST) or not os.path.exists(xmlAST2):
             someFilesHaveChanged = True
-            print("[DMT] ASN.1 model changed, re-processing...")
+            print("[DMT] No cached model found for", ",".join(listOfFilenames))
     else:
         # no projectCache set, so xmlAST and xmlAST2 are set to None
         someFilesHaveChanged = True
     if not someFilesHaveChanged:
-        print("[DMT] No change in ASN.1 model.")
+        print("[DMT] Reusing cached ASN.1 AST for ", ",".join(listOfFilenames))
 
     if not xmlAST:
         (dummy, xmlAST) = tempfile.mkstemp()
