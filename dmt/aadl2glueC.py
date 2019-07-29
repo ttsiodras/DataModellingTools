@@ -150,8 +150,10 @@ of each SUBPROGRAM param.'''
     astFile = f.name
     f.close()
     os.unlink(astFile)
-    parserUtility = os.path.join(os.path.abspath(os.path.dirname(__file__)), "parse_aadl.py")
-    cmd = "python2 " + parserUtility + " -o " + astFile + ' ' + ' '.join(sys.argv[1:])
+    parserUtility = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)), "parse_aadl.py")
+    cmd = "python2 " + parserUtility + " -o " + astFile + ' ' + \
+            ' '.join(sys.argv[1:])
     if os.system(cmd) != 0:
         if os.path.exists(astFile):
             os.unlink(astFile)
