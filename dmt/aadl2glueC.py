@@ -452,6 +452,24 @@ def main() -> None:
         import pdb  # pragma: no cover pylint: disable=wrong-import-position,wrong-import-order
         pdb.set_trace()  # pragma: no cover
 
+    if "-profile" in sys.argv:
+        sys.argv.remove("-profile")
+        import cProfile
+        import pstats
+        import io
+        pr = cProfile.Profile()
+        pr.enable()
+        import atexit
+
+        def dumpSpeedData():
+            pr.disable()
+            s = io.StringIO()
+            sortby = 'cumulative'
+            ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+            ps.print_stats()
+            print(s.getvalue())
+        atexit.register(dumpSpeedData)
+
     if "-v" in sys.argv:
         import pkg_resources  # pragma: no cover
         version = pkg_resources.require("dmt")[0].version  # pragma: no cover
