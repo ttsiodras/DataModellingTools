@@ -121,7 +121,7 @@ def calculateForNativeAndASN1SCC(absASN1SCCpath, autosrc, names, inputFiles):
     configMT.outputDir = autosrc + os.sep
     # dumpable.CreateDumpableCtypes(uniqueASNfiles)
 
-    for asnTypename in list(names.keys()):
+    for asnTypename in sorted(list(names.keys())):
         node = names[asnTypename]
         if node._isArtificial:
             continue
@@ -135,7 +135,7 @@ def calculateForNativeAndASN1SCC(absASN1SCCpath, autosrc, names, inputFiles):
     # Code generation - asn1c part
     # Create a dictionary to lookup the asn-types from their corresponding c-type
     namesDict = {}
-    for asnTypename in list(names.keys()):
+    for asnTypename in sorted(list(names.keys())):
         node = names[asnTypename]
         if node._isArtificial:
             continue
@@ -407,7 +407,7 @@ properties
     Data_Model::Data_Representation => Character;
 end Stream_Element_Buffer;
 ''')
-    for asnTypename in list(asnParser.g_names.keys()):
+    for asnTypename in sorted(list(asnParser.g_names.keys())):
         node = asnParser.g_names[asnTypename]
         if node._isArtificial:
             continue
@@ -502,7 +502,7 @@ end Stream_Element_Buffer;
     o.write('END    Taste_DataView;\n\n')
     o.write('SYSTEM IMPLEMENTATION Taste_DataView.others\n')
     o.write('SUBCOMPONENTS\n')
-    for asnTypename in list(asnParser.g_names.keys()):
+    for asnTypename in sorted(list(asnParser.g_names.keys())):
         node = asnParser.g_names[asnTypename]
         if node._isArtificial:
             continue
@@ -511,11 +511,11 @@ end Stream_Element_Buffer;
     o.write('END Taste_DataView.others;\n')
 
     listOfAsn1Files = {}
-    for asnTypename in list(asnParser.g_names.keys()):
+    for asnTypename in sorted(list(asnParser.g_names.keys())):
         listOfAsn1Files[asnParser.g_names[asnTypename]._asnFilename] = 1
 
     if bAADLv2:
-        for asnFilename in list(listOfAsn1Files.keys()):
+        for asnFilename in sorted(list(listOfAsn1Files.keys())):
             base = os.path.splitext(os.path.basename(asnFilename))[0]
             possibleACN = ASNtoACN(asnFilename)
             if os.path.exists(possibleACN):

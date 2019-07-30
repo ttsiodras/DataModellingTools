@@ -5,7 +5,7 @@ RUN cat  /etc/apt/apt.conf.d/99badproxies
 RUN apt-get update
 RUN apt-get install -y libxslt-dev libxml2-dev python-psycopg2 mono-runtime libmono-system-data4.0-cil libmono-system-web4.0-cil libfsharp-core4.3-cil
 RUN apt-get install -y wget python3-pip
-RUN wget -O - -q https://github.com/ttsiodras/asn1scc/releases/download/4.1e/asn1scc-bin-4.1e.tar.bz2 | tar jxvf -
+RUN wget -O - -q https://github.com/ttsiodras/asn1scc/releases/download/4.2.0.1.f/asn1scc-bin-4.2.0.1f.tar.bz2 | tar jxvf -
 RUN apt-get install -y python-pip
 RUN wget -O - -q https://github.com/ttsiodras/DataModellingTools/files/335591/antlr-2.7.7.tar.gz | tar zxvf - ; cd antlr-2.7.7/lib/python ; pip2 install .
 RUN pip2 install SQLAlchemy psycopg2

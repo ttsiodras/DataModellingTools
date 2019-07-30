@@ -152,6 +152,11 @@ class Printer(RecursiveMapper):
 
 
 def main():
+    if "-pdb" in sys.argv:
+        sys.argv.remove("-pdb")  # pragma: no cover
+        import pdb  # pragma: no cover pylint: disable=wrong-import-position,wrong-import-order
+        pdb.set_trace()  # pragma: no cover
+
     if sys.argv.count("-o") != 0:
         idx = sys.argv.index("-o")
         try:
