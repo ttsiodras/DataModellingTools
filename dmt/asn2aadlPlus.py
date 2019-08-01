@@ -230,7 +230,10 @@ def main():
 
     projectCache = os.getenv("PROJECT_CACHE")
     if projectCache is not None and not os.path.isdir(projectCache):
-        panic("The configured cache folder:\n\n\t" + projectCache + "\n\n...is not there!\n")
+        try:
+            os.mkdir(projectCache)
+        except:
+            panic("The configured cache folder:\n\n\t" + projectCache + "\n\n...is not there!\n")
 
     # Backwards compatibility - the '-acn' option is no longer necessary
     # (we auto-detect ACN files via their extension)
