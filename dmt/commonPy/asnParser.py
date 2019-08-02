@@ -389,8 +389,11 @@ def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=inv
     # Add basic ASN.1 caching to avoid calling the ASN.1 compiler over and over
     projectCache = os.getenv("PROJECT_CACHE")
     if projectCache is not None and not os.path.isdir(projectCache):
-        utility.panic(
-            "The configured cache folder:\n\n\t" + projectCache + "\n\n...is not there!\n")
+        try:
+            os.mkdir(projectCache)
+        except:
+            utility.panic(
+                "The configured cache folder:\n\n\t" + projectCache + "\n\n...is not there!\n")
     xmlAST = xmlAST2 = None
     someFilesHaveChanged = False
     if projectCache is not None:

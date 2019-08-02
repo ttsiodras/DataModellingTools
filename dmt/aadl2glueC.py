@@ -149,8 +149,11 @@ of each SUBPROGRAM param.'''
     projectCache = os.getenv("PROJECT_CACHE")
     if projectCache is not None:
         if not os.path.isdir(projectCache):
-            panic("The configured cache folder:\n\n\t" + projectCache +
-                  "\n\n...is not there!\n")
+            try:
+                os.mkdir(projectCache)
+            except:
+                panic("The configured cache folder:\n\n\t" + projectCache +
+                      "\n\n...is not there!\n")
     cachedModelExists = False
     aadlASTcache = None
     if projectCache is not None:

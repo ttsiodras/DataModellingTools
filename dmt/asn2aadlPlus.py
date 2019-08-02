@@ -30,9 +30,6 @@ from .commonPy.asnAST import (
 
 from .commonPy.utility import inform, panic, mysystem
 
-g_keepFiles = False
-g_privateHeapSize = -1
-g_platformCompilers = ['gcc']
 # Ada package names per type
 g_AdaPackageNameOfType = {}
 
@@ -142,16 +139,16 @@ def calculateForNativeAndASN1SCC(absASN1SCCpath, autosrc, names, inputFiles):
         namesDict[cleanNameAsAsn1cWants(asnTypename)] = asnTypename
 
     # Get a list of all available compilers
-    global g_platformCompilers
+    platformCompilers = ['gcc']
     try:
         pipe = Popen("find-supported-compilers", stdout=PIPE).stdout
-        g_platformCompilers = pipe.read().splitlines()
+        platformCompilers = pipe.read().splitlines()
     except OSError as err:
         print('Not running in a TASTE Environment: {}\nUsing GCC only for computing sizeofs'.format(str(err)))
-        g_platformCompilers = ['gcc'.encode()]
+        platformCompilers = ['gcc'.encode()]
     # Get the maximum size of each asn1type from all platform compilers
     messageSizes = {}
-    for cc in g_platformCompilers:
+    for cc in platformCompilers:
         # Compile the generated C-file with each compiler
         pwd = os.getcwd()
         os.chdir(autosrc)
@@ -171,7 +168,7 @@ def calculateForNativeAndASN1SCC(absASN1SCCpath, autosrc, names, inputFiles):
             nm = "gnm"
         else:
             nm = "nm"
-        for line in os.popen( nm + " --print-size " + autosrc + os.sep + base + ".stats.o").readlines():
+        for line in os.popen(nm + " --print-size " + autosrc + os.sep + base + ".stats.o").readlines():
             try:
                 (dummy, size, dummy2, msg) = line.split()
             except ValueError:
@@ -229,8 +226,14 @@ def main():
         print("asn2aadlPlus v" + str(version))  # pragma: no cover
         sys.exit(1)  # pragma: no cover
 
-    global g_keepFiles
-    global g_privateHeapSize
+    keepFiles = False
+
+    projectCache = os.getenv("PROJECT_CACHE")
+    if projectCache is not None and not os.path.isdir(projectCache):
+        try:
+            os.mkdir(projectCache)
+        except:
+            panic("The configured cache folder:\n\n\t" + projectCache + "\n\n...is not there!\n")
 
     # Backwards compatibility - the '-acn' option is no longer necessary
     # (we auto-detect ACN files via their extension)
@@ -242,15 +245,14 @@ def main():
         sys.argv[ofs] = '--aadlv2'
 
     try:
-        optlist, args = getopt.gnu_getopt(sys.argv[1:], "hvkadt:", ['help', 'version', 'keep', 'aadlv2', 'debug', 'platform=', 'test='])
-    except:
+        optlist, args = getopt.gnu_getopt(sys.argv[1:], "hvkad", ['help', 'version', 'keep', 'aadlv2', 'debug', 'platform='])
+    except getopt.GetoptError:
         usage()
 
     bAADLv2 = False
-    g_keepFiles = False
-    g_privateHeapSize = -1
+    keepFiles = False
 
-    for opt, arg in optlist:
+    for opt, unused_arg in optlist:
         if opt in ("-h", "--help"):
             usage()
         elif opt in ("-v", "--version"):
@@ -262,9 +264,7 @@ def main():
             # Updated, June 2011: AADLv1 no longer supported.
             bAADLv2 = True
         elif opt in ("-k", "--keep"):
-            g_keepFiles = True
-        elif opt in ("-t", "--test"):
-            g_privateHeapSize = int(arg)
+            keepFiles = True
 
     if len(args) < 2:
         usage()
@@ -309,7 +309,7 @@ def main():
         if oldMD5s:
             def ok(f):
                 return os.path.exists(f) and md5(f) == oldMD5s[f]
-            # ...and all the current input ASN.1 files exist in the 'burned' list 
+            # ...and all the current input ASN.1 files exist in the 'burned' list
             # that was built inside the previous version of the output AADL file,
             # AND
             # all the current input ASN.1 files exist and their MD5 checksum
@@ -365,35 +365,26 @@ def main():
         o.write('  with Taste;\n')
         o.write('  with Base_Types;\n')
         o.write('  with Deployment;\n')
-    # o.write('-- No more private heap required (we use the space certified compiler)\n')
-    # o.write('-- Memory_Required: 0\n\n')
-    try:
-        pathToDirectives = os.popen("taste-config --directives").readlines()[0].strip()
-    except:
-        panic("taste-config is not in the PATH. Aborting...")
     typesUnusableAsInterfaceParameters = []
     if bAADLv2:
         directiveTypes = [
             "Simulink_Tunable_Parameter", "Timer", "Taste_directive"]
         for typeName in directiveTypes:
-            #sourceText = '\n   Source_Text => ("' + pathToDirectives + '");'
             sourceText = ""
             adaPackageName = "TASTE_Directives"
             moduleName = "TASTE-Directives"
-            o.write('''
-DATA {typeName}
-PROPERTIES
-   TASTE::Ada_Package_Name => "{adaPackageName}";
-   Type_Source_Name => "{typeNameASN}";
-   Deployment::ASN1_Module_Name => "{moduleName}";{sourceText}
-   TASTE::Forbid_in_PI => true;
-END {typeName};
-'''.format(pathToDirectives=pathToDirectives,
-           typeName=typeName,
-           typeNameASN=typeName.replace('_', '-'),
-           sourceText=sourceText,
-           adaPackageName=adaPackageName,
-           moduleName=moduleName))
+            o.write('DATA {typeName}\n'
+                    'PROPERTIES\n'
+                    '   TASTE::Ada_Package_Name => "{adaPackageName}";\n'
+                    '   Type_Source_Name => "{typeNameASN}";\n'
+                    '   Deployment::ASN1_Module_Name => "{moduleName}";{sourceText}\n'
+                    '   TASTE::Forbid_in_PI => true;\n'
+                    'END {typeName};\n'.format(
+                        typeName=typeName,
+                        typeNameASN=typeName.replace('_', '-'),
+                        sourceText=sourceText,
+                        adaPackageName=adaPackageName,
+                        moduleName=moduleName))
 
         typesUnusableAsInterfaceParameters = []
         for line in os.popen("badTypes '" + "' '".join(asnFiles) + "'").readlines():
@@ -417,10 +408,10 @@ end Stream_Element_Buffer;
         o.write('    -- name of the ASN.1 source file:\n')
         # o.write('    Source_Text => ("%s");\n' % os.path.basename(asnParser.g_names[asnTypename]._asnFilename))
         o.write('    Source_Text => ("%s");\n' % asnParser.g_names[asnTypename]._asnFilename)
-        prefix = bAADLv2 and "TASTE::" or ""
+        prefix = "TASTE::" if bAADLv2 else ""
         possibleACN = ASNtoACN(asnParser.g_names[asnTypename]._asnFilename)
         if bAADLv2 and os.path.exists(possibleACN):
-            prefix2 = bAADLv2 and "TASTE::" or "assert_properties::"
+            prefix2 = "TASTE::" if bAADLv2 else "assert_properties::"
             base = os.path.splitext(os.path.basename(possibleACN))[0]
             fname = base.replace("-", "_")
             o.write('    %sEncodingDefinitionFile => classifier(DataView::ACN_%s);\n' % (prefix2, fname))
@@ -438,7 +429,7 @@ end Stream_Element_Buffer;
         o.write('    Type_Source_Name => "%s";\n' % asnTypename)
         o.write('    TASTE::Position_In_File => [ line => %s ; column => 1 ; ];\n' % node._lineno)
         o.write('    -- what kind of type is this?\n')
-        prefix = bAADLv2 and "TASTE" or "assert_properties"
+        prefix = "TASTE" if bAADLv2 else "assert_properties"
         o.write('    %s::ASN1_Basic_Type =>' % prefix)
         if isinstance(node, AsnBool):
             o.write('aBOOLEAN;\n')
@@ -530,11 +521,12 @@ end Stream_Element_Buffer;
     o.close()
 
     # Remove generated code
-    if not g_keepFiles:
+    if not keepFiles:
         shutil.rmtree(autosrc)
     else:
         print("Generated message buffers in '%s'" % autosrc)
     # os.chdir(pwd)
+
 
 if __name__ == "__main__":
     main()
