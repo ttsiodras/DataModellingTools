@@ -467,6 +467,7 @@ end Stream_Element_Buffer;
             o.write('PROPERTIES\n')
             o.write('    Data_Model::Data_Representation => array;\n')
             o.write('    Data_Model::Dimension => (%d); -- Size of the buffer\n' % le_size_rounded)
+            o.write('    Source_Data_Size => %d; -- Size of the buffer in bytes\n' % le_size_rounded)
             if bAADLv2:
                 o.write('    Data_Model::Base_Type => (classifier (DataView::Stream_Element_Buffer));\n')
             else:
