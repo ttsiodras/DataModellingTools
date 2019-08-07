@@ -484,6 +484,8 @@ end Stream_Element_Buffer;
             o.write('    Length : data Base_Types::%s;\n' % (bAADLv2 and "Unsigned_32" or "uint32"))
             o.write('PROPERTIES\n')
             o.write('    Data_Model::Data_Representation => Struct;\n')
+            o.write('    Source_Data_Size => %d Bytes; -- Size of the buffer in bytes\n' % (
+                le_size_rounded + 16))
             o.write('END ' + cleanName + '_Buffer.impl;\n\n')
 
     # Generate a SYSTEM in the DataView, otherwise Ocarina cannot parse it
