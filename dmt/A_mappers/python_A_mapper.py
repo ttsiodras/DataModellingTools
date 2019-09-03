@@ -144,15 +144,15 @@ $(BDIR)/$(GRAMMAR)_getset.c:       $(GRAMMAR).asn
 %(tab)smkdir -p $(BDIR)
 %(tab)s$(ASN2DATAMODEL) -toPython -o $(BDIR) $<
 
-$(BDIR)/asn1crt.c $(BDIR)/$(GRAMMAR).c $(BDIR)/asn1crt.c $(BDIR)/asn1crt_encoding.c $(BDIR)/asn1crt_encoding_uper.c $(BDIR)/asn1crt_encoding_acn.c $(BDIR)/$(GRAMMAR).h $(BDIR)/asn1crt.h:       $(GRAMMAR).asn
+$(BDIR)/asn1crt.c $(BDIR)/$(GRAMMAR).c $(BDIR)/asn1crt_encoding.c $(BDIR)/asn1crt_encoding_uper.c $(BDIR)/asn1crt_encoding_acn.c $(BDIR)/$(GRAMMAR).h $(BDIR)/asn1crt.h:       $(GRAMMAR).asn
 %(tab)sif [ ! -f "$(GRAMMAR).acn" ] ; then %(mono)s $(ASN1SCC) -ACND -o $(BDIR) $< ; fi
 %(tab)s%(mono)s $(ASN1SCC) -ACN -c -uPER -equal -o $(BDIR) $< $(GRAMMAR).acn
 
-$(BDIR)/DV.py:       $(GRAMMAR).asn
+$(BDIR)/DV.py:       $(GRAMMAR).asn $(BDIR)/$(GRAMMAR).h
 %(tab)sgrep 'REQUIRED_BYTES_FOR_.*ENCODING' $(BDIR)/$(GRAMMAR).h | awk '{print $$2 " = " $$3}' > $@
 %(tab)spython learn_CHOICE_enums.py %(base)s >> $@ || rm $@
 
-$(BDIR)/%%.o:       $(BDIR)/%%.c
+$(BDIR)/%%.o:       $(BDIR)/%%.c $(BDIR)/$(GRAMMAR).h
 %(tab)sgcc -g -fPIC -c `python-config --includes` -o $@ $<
 
 $(BDIR)/$(BASEGRAMMAR)_getset.so:	${OBJ}
