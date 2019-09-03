@@ -148,7 +148,7 @@ $(BDIR)/$(GRAMMAR)_getset.c:       $(GRAMMAR).asn
 
 # Create the ACN file if it is missing
 $(BDIR)/$(GRAMMAR).acn:
-%(tab)mono $(ASN1SCC) -ACND -o $(BDIR) $(GRAMMAR).asn
+%(tab)smono $(ASN1SCC) -ACND -o $(BDIR) $(GRAMMAR).asn
 
 # The hell of multiple outputs (see https://www.gnu.org/software/automake/manual/html_node/Multiple-Outputs.html )
 $(BDIR)/asn1crt.c:	$(GRAMMAR).asn  $(GRAMMAR).acn
