@@ -131,6 +131,8 @@ def OnStartup(unused_modelingLanguage: str, asnFile: str, outputDir: str, badTyp
     # mono_exe = "mono " if sys.platform.startswith('linux') else ""
     mono_exe = "mono"
     makefile_text = '''\
+export MAKEFLAGS="-j $(grep -c ^processor /proc/cpuinfo)"
+
 ASN1SCC:=$(shell which asn1.exe)
 ASN2DATAMODEL:=asn2dataModel
 GRAMMAR := %(origGrammarBase)s
@@ -144,9 +146,26 @@ $(BDIR)/$(GRAMMAR)_getset.c:       $(GRAMMAR).asn
 %(tab)smkdir -p $(BDIR)
 %(tab)s$(ASN2DATAMODEL) -toPython -o $(BDIR) $<
 
-$(BDIR)/asn1crt.c $(BDIR)/$(GRAMMAR).c $(BDIR)/asn1crt_encoding.c $(BDIR)/asn1crt_encoding_uper.c $(BDIR)/asn1crt_encoding_acn.c $(BDIR)/$(GRAMMAR).h $(BDIR)/asn1crt.h:       $(GRAMMAR).asn
-%(tab)sif [ ! -f "$(GRAMMAR).acn" ] ; then %(mono)s $(ASN1SCC) -ACND -o $(BDIR) $< ; fi
+# Create the ACN file if it is missing
+$(BDIR)/$(GRAMMAR).acn:
+%(tab)mono $(ASN1SCC) -ACND -o $(BDIR) $(GRAMMAR).asn
+
+# The hell of multiple outputs (see https://www.gnu.org/software/automake/manual/html_node/Multiple-Outputs.html )
+$(BDIR)/asn1crt.c:	$(GRAMMAR).asn  $(GRAMMAR).acn
 %(tab)s%(mono)s $(ASN1SCC) -ACN -c -uPER -equal -o $(BDIR) $< $(GRAMMAR).acn
+
+# The hell of multiple outputs (see https://www.gnu.org/software/automake/manual/html_node/Multiple-Outputs.html )
+$(BDIR)/$(GRAMMAR).c $(BDIR)/asn1crt_encoding.c $(BDIR)/asn1crt_encoding_uper.c $(BDIR)/asn1crt_encoding_acn.c $(BDIR)/$(GRAMMAR).h $(BDIR)/asn1crt.h:	$(BDIR)/asn1crt.c
+## Recover from the removal of any of these
+%(tab)s@for i in $@; do               \
+%(tab)s    if test -f "$$i" ; then :; \
+%(tab)s    else                       \
+%(tab)s%(tab)srm -f $< ;             \
+%(tab)s%(tab)s$(MAKE) $< ;           \
+%(tab)s    fi ;                       \
+%(tab)sdone
+
+$(BDIR)/$(GRAMMAR).c $(BDIR)/asn1crt_encoding.c $(BDIR)/asn1crt_encoding_uper.c $(BDIR)/asn1crt_encoding_acn.c $(BDIR)/$(GRAMMAR).h $(BDIR)/asn1crt.h:
 
 $(BDIR)/DV.py:       $(GRAMMAR).asn $(BDIR)/$(GRAMMAR).h
 %(tab)sgrep 'REQUIRED_BYTES_FOR_.*ENCODING' $(BDIR)/$(GRAMMAR).h | awk '{print $$2 " = " $$3}' > $@
