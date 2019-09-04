@@ -450,7 +450,7 @@ class SimulinkGlueGenerator(SynchronousToolGlueGenerator):
         self.C_SourceFile.write("    static int initialized = 0;\n")
         self.C_SourceFile.write("    if (!initialized) {\n")
         self.C_SourceFile.write("        initialized = 1;\n")
-        self.C_SourceFile.write("        %s_initialize(1);\n" % self.g_FVname)
+        self.C_SourceFile.write("        %s_initialize();\n" % self.g_FVname)
         self.C_SourceFile.write("    }\n")
 
     def ExecuteBlock(self, unused_modelingLanguage: str, unused_asnFile: str, unused_sp: ApLevelContainer, unused_subProgramImplementation: str, unused_maybeFVname: str) -> None:
