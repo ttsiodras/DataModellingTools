@@ -159,7 +159,7 @@ def calculateForNativeAndASN1SCC(absASN1SCCpath, autosrc, names, inputFiles):
         for cfile in os.listdir("."):
             if cfile.endswith(".c"):
                 if mysystem('%s -c -std=c99 -I. "%s" 2>"%s.stats.err"' % (path_to_compiler, cfile, base)) != 0:
-                    panic("Compilation of generated sources failed - is %s installed?\n"
+                    panic("Compilation with %s failed...\n"
                           "(report inside '%s')\n" % (cc, os.path.join(autosrc, base + ".stats.err")))
         os.chdir(pwd)
 
@@ -210,6 +210,7 @@ Where <files> is a list of ASN.1 and ACN files, and options can be:
     -a, --aadlv2    Generate AADLv2 compliant output
     -v, --version   Show version number
     -d, --debug	    Enable debug output
+    -f, --fast      Do not emit Source_Data_Size lines (invoke ASN1SCC without uPER or ACN options)
     -p, --platform  Comma seperated list of platform compilers (default: gcc)
     -h, --help	    This help message""")
 
