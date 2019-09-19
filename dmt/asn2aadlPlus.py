@@ -420,9 +420,10 @@ end Stream_Element_Buffer;
             base = os.path.splitext(os.path.basename(possibleACN))[0]
             fname = base.replace("-", "_")
             o.write('    %sEncodingDefinitionFile => classifier(DataView::ACN_%s);\n' % (prefix2, fname))
-        o.write('    %sAda_Package_Name => "%s";\n' % (prefix, g_AdaPackageNameOfType[asnTypename]))
-        if bAADLv2:
-            o.write('    Deployment::ASN1_Module_Name => "%s";\n' % g_AdaPackageNameOfType[asnTypename].replace('_', '-'))
+        if not bFast:
+            o.write('    %sAda_Package_Name => "%s";\n' % (prefix, g_AdaPackageNameOfType[asnTypename]))
+            if bAADLv2:
+                o.write('    Deployment::ASN1_Module_Name => "%s";\n' % g_AdaPackageNameOfType[asnTypename].replace('_', '-'))
         if os.getenv('UPD') is None:
             o.write('    Source_Language => (ASN1);\n')
         if not bFast:
@@ -472,8 +473,9 @@ end Stream_Element_Buffer;
             o.write('    -- Buffer to hold a marshalled data of type ' + cleanName + "\n")
             o.write('PROPERTIES\n')
             o.write('    Data_Model::Data_Representation => array;\n')
-            o.write('    Data_Model::Dimension => (%d); -- Size of the buffer\n' % le_size_rounded)
-            o.write('    Source_Data_Size => %d Bytes; -- Size of the buffer in bytes\n' % le_size_rounded)
+            if not bFast:
+                o.write('    Data_Model::Dimension => (%d); -- Size of the buffer\n' % le_size_rounded)
+                o.write('    Source_Data_Size => %d Bytes; -- Size of the buffer in bytes\n' % le_size_rounded)
             if bAADLv2:
                 o.write('    Data_Model::Base_Type => (classifier (DataView::Stream_Element_Buffer));\n')
             else:
@@ -490,8 +492,9 @@ end Stream_Element_Buffer;
             o.write('    Length : data Base_Types::%s;\n' % (bAADLv2 and "Unsigned_32" or "uint32"))
             o.write('PROPERTIES\n')
             o.write('    Data_Model::Data_Representation => Struct;\n')
-            o.write('    Source_Data_Size => %d Bytes; -- Size of the buffer in bytes\n' % (
-                le_size_rounded + 16))
+            if not bFast:
+                o.write('    Source_Data_Size => %d Bytes; -- Size of the buffer in bytes\n' % (
+                    le_size_rounded + 16))
             o.write('END ' + cleanName + '_Buffer.impl;\n\n')
 
     # Generate a SYSTEM in the DataView, otherwise Ocarina cannot parse it
