@@ -186,20 +186,27 @@ class FromVHDLToASN1SCC(RecursiveMapperGeneric[List[int], str]):  # pylint: disa
         return lines
 
     def MapOctetString(self, srcVHDL: List[int], destVar: str, node: AsnOctetString, _: AST_Leaftypes, __: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
-        register = srcVHDL[0] + srcVHDL[1]
-        lines = []  # type: List[str]
         if not node._range:
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
         if len(node._range) > 1 and node._range[0] != node._range[1]:
-            panicWithCallStack("VHDL OCTET STRING (in %s) must have a fixed SIZE constraint !" % node.Location())  # pragma: no cover
-        for i in range(0, node._range[-1]):
-            lines.append("{\n")
-            lines.append("    unsigned char tmp;\n")
-            #lines.append("    BraveReadRegister(g_Handle, BASE_ADDR + %s, &tmp);\n" % hex(register + i))
-            lines.append("    %s.arr[%d] = tmp;\n" % (destVar, i))
-            lines.append("}\n")
+            panicWithCallStack("OCTET STRING (in %s) must have a fixed SIZE constraint !" % node.Location())  # pragma: no cover
         if isSequenceVariable(node):
-            lines.append("%s.nCount = %s;\n" % (destVar, node._range[-1]))
+            panicWithCallStack("OCTET STRING (in %s) must have a fixed SIZE constraint !" % node.Location())  # pragma: no cover
+        if node._range[-1] % 4 != 0: # TODO
+            panicWithCallStack("OCTET STRING (in %s) is not a multiple of 4 bytes (this is not yet supported)." % node.Location())            
+
+        register = srcVHDL[0] + srcVHDL[1]
+        lines = []  # type: List[str]
+        
+        lines.append("{\n")
+        lines.append("    unsigned int tmp, i;\n")
+        lines.append("    for(i=0; i<%d; i++) {\n" % int(node._range[-1] / 4))
+        lines.append("        tmp = 0;\n")
+        lines.append("        rmap_tgt_read(R_RMAP_BASEADR + %s + (i*4), &tmp, 4, R_RMAP_DSTADR);\n" % hex(register))      
+        lines.append("        memcpy(%s.arr + (i*4), (unsigned char*)&tmp, sizeof(unsigned int));\n" % destVar)
+        lines.append("    }\n")
+        lines.append("}\n")
+        
         srcVHDL[0] += node._range[-1]
         return lines
 
@@ -311,22 +318,22 @@ class FromASN1SCCtoVHDL(RecursiveMapperGeneric[str, List[int]]):  # pylint: disa
         if not node._range:
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
         if isSequenceVariable(node):
-            panicWithCallStack("VHDL OCTET STRING (in %s) must have a fixed SIZE constraint !" % node.Location())  # pragma: no cover
+            panicWithCallStack("OCTET STRING (in %s) must have a fixed SIZE constraint !" % node.Location())  # pragma: no cover
+        if node._range[-1] % 4 != 0:  # TODO
+            panicWithCallStack("OCTET STRING (in %s) is not a multiple of 4 bytes (this is not yet supported)." % node.Location())
+
         register = dstVHDL[0] + dstVHDL[1]
-        limit = sourceSequenceLimit(node, srcVar)
         lines = []  # type: List[str]
-        for i in range(0, node._range[-1]):
-            lines.append("{\n")
-            lines.append("    unsigned char tmp;\n")
-            if isSequenceVariable(node):
-                lines.append("    if (%s >= %d)\n" % (limit, i + 1))
-                lines.append("        tmp = %s.arr[%d];\n" % (srcVar, i))
-                lines.append("    else\n")
-                lines.append("        tmp = 0;\n")
-            else:
-                lines.append("    tmp = %s.arr[%d];\n" % (srcVar, i))
-            #lines.append("    BraveWriteRegister(g_Handle, BASE_ADDR + %s + %d, tmp);\n" % (hex(register), i))
-            lines.append("}\n")
+
+        lines.append("{\n")
+        lines.append("    unsigned int tmp, i;\n")
+        lines.append("    for(i=0; i<%d; i++) {\n" % int(node._range[-1] / 4))
+        lines.append("        tmp = 0;\n")
+        lines.append("        tmp = *(unsigned int*)(%s.arr + (i*4));\n" % srcVar)
+        lines.append("        rmap_tgt_write(R_RMAP_BASEADR + %s + (i*4), &tmp, 4, R_RMAP_DSTADR);\n" % hex(register))     
+        lines.append("    }\n")
+        lines.append("}\n")
+
         dstVHDL[0] += node._range[-1]
         return lines
 
@@ -425,6 +432,7 @@ class VHDLGlueGenerator(SynchronousToolGlueGeneratorGeneric[List[int], List[int]
 #define LOGERRORS
 #define LOGWARNINGS
 #define LOGINFOS
+//#define LOGDEBUGS
 
 #ifdef LOGERRORS
 #define LOGERROR(x...) printf(x)
@@ -456,7 +464,7 @@ class VHDLGlueGenerator(SynchronousToolGlueGeneratorGeneric[List[int], List[int]
 #define FPGA_ERROR              "error"
 #define FPGA_DISABLED           "disabled"
 
-#define RETRIES                 10
+#define RETRIES                 200
 
 #ifdef _WIN32
 
@@ -693,11 +701,16 @@ class MapASN1ToVHDLreadinputdata(RecursiveMapperGeneric[List[int], str]):  # pyl
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
         if len(node._range) > 1 and node._range[0] != node._range[1]:
             panicWithCallStack("VHDL OCTET STRING (in %s) must have a fixed SIZE constraint !" % node.Location())  # pragma: no cover
+        if node._range[-1] % 4 != 0:  # TODO
+            panicWithCallStack("OCTET STRING (in %s) is not a multiple of 4 bytes (this is not yet supported)." % node.Location())            
         maxlen = len(str(node._range[-1]))
         lines = []  # type: List[str]
         for i in range(node._range[-1]):
-            lines.append('when X"%s" => %s_elem_%0*d(7 downto 0) <= apbi.pwdata(7 downto 0);' %
-                         (hex(reginfo[0])[2:], dstVHDL, maxlen, i))
+            if (i) % 4 == 0:
+                lines.append('when X"%s" => %s_elem_%0*d(7 downto 0) <= apbi.pwdata(7 downto 0);' % (hex(reginfo[0])[2:] if len(hex(reginfo[0])[2:]) > 3 else ('0' + hex(reginfo[0])[2:]), dstVHDL, maxlen, i+0))
+                lines.append('                %s_elem_%0*d(7 downto 0) <= apbi.pwdata(15 downto 8);' % (dstVHDL, maxlen, i+1))
+                lines.append('                %s_elem_%0*d(7 downto 0) <= apbi.pwdata(23 downto 16);' % (dstVHDL, maxlen, i+2))
+                lines.append('                %s_elem_%0*d(7 downto 0) <= apbi.pwdata(31 downto 24);' % (dstVHDL, maxlen, i+3))
             reginfo[0] += 1
         return lines
 
@@ -762,11 +775,16 @@ class MapASN1ToVHDLwriteoutputdata(RecursiveMapperGeneric[List[int], str]):  # p
             panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
         if len(node._range) > 1 and node._range[0] != node._range[1]:
             panicWithCallStack("VHDL OCTET STRING (in %s) must have a fixed SIZE constraint !" % node.Location())  # pragma: no cover
+        if node._range[-1] % 4 != 0:  # TODO
+            panicWithCallStack("OCTET STRING (in %s) is not a multiple of 4 bytes (this is not yet supported)." % node.Location())            
         maxlen = len(str(node._range[-1]))
         lines = []  # type: List[str]
         for i in range(node._range[-1]):
-            lines.append('when X"%s" => apbo.prdata(7 downto 0) <= %s_elem_%0*d(7 downto 0);' %
-                         (hex(reginfo[0])[2:], dstVHDL, maxlen, i))
+            if (i) % 4 == 0:
+                lines.append('when X"%s" => apbo.prdata(7 downto 0) <= %s_elem_%0*d(7 downto 0);' % (hex(reginfo[0])[2:] if len(hex(reginfo[0])[2:]) > 3 else ('0' + hex(reginfo[0])[2:]), dstVHDL, maxlen, i+0))
+                lines.append('                apbo.prdata(15 downto 8) <= %s_elem_%0*d(7 downto 0);' % (dstVHDL, maxlen, i+1))
+                lines.append('                apbo.prdata(23 downto 16) <= %s_elem_%0*d(7 downto 0);' % (dstVHDL, maxlen, i+2))
+                lines.append('                apbo.prdata(31 downto 24) <= %s_elem_%0*d(7 downto 0);' % (dstVHDL, maxlen, i+3))
             reginfo[0] += 1
         return lines
 
@@ -1444,9 +1462,9 @@ def EmitBambuCBridge(sp: ApLevelContainer, subProgramImplementation: str):
     lines = []
     for param in sp._params:
         if isinstance(param, InParam):
-            lines.extend(["asn1Scc" + param._signal._asnNodename + " IN_" + param._id])
+            lines.extend(["asn1Scc" + vhdlBackend.CleanNameAsToolWants(param._signal._asnNodename) + " IN_" + param._id])
         else:
-            lines.extend(["asn1Scc" + param._signal._asnNodename + " OUT_" + param._id])
+            lines.extend(["asn1Scc" + vhdlBackend.CleanNameAsToolWants(param._signal._asnNodename) + " OUT_" + param._id])
     for idx, line in enumerate(lines):
         bambuFile.write(
             '%s%s;' % ("\n    ", line))
