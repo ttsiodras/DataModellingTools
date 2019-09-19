@@ -246,12 +246,13 @@ def main():
         sys.argv[ofs] = '--aadlv2'
 
     try:
-        optlist, args = getopt.gnu_getopt(sys.argv[1:], "hvkad", ['help', 'version', 'keep', 'aadlv2', 'debug', 'platform='])
+        optlist, args = getopt.gnu_getopt(sys.argv[1:], "hvkadf", ['help', 'version', 'keep', 'aadlv2', 'debug', 'fast', 'platform='])
     except getopt.GetoptError:
         usage()
 
     bAADLv2 = False
     keepFiles = False
+    bFast = False
 
     for opt, unused_arg in optlist:
         if opt in ("-h", "--help"):
@@ -261,6 +262,8 @@ def main():
             sys.exit(0)
         elif opt in ("-d", "--debug"):
             configMT.debugParser = True
+        elif opt in ("-f", "--fast"):
+            bFast = True
         elif opt in ("-a", "--aadlv2"):
             # Updated, June 2011: AADLv1 no longer supported.
             bAADLv2 = True
@@ -344,9 +347,10 @@ def main():
     # CHOICEs, however, changed the picture...  what to put in?
     # Time to use the maximum of Native (SIZ2) and UPER (SIZE) and ACN (SIZ3)...
 
-    messageSizes = calculateForNativeAndASN1SCC(absASN1SCCpath, autosrc, asnParser.g_names, inputFiles)
-    for nodeTypename in list(messageSizes.keys()):
-        messageSizes[nodeTypename] = [messageSizes[nodeTypename], (8 * (int((messageSizes[nodeTypename] - 1) / 8)) + 8)]
+    if not bFast:
+        messageSizes = calculateForNativeAndASN1SCC(absASN1SCCpath, autosrc, asnParser.g_names, inputFiles)
+        for nodeTypename in list(messageSizes.keys()):
+            messageSizes[nodeTypename] = [messageSizes[nodeTypename], (8 * (int((messageSizes[nodeTypename] - 1) / 8)) + 8)]
 
     base = os.path.basename(aadlFile)
     base = re.sub(r'\..*$', '', base)
@@ -421,11 +425,12 @@ end Stream_Element_Buffer;
             o.write('    Deployment::ASN1_Module_Name => "%s";\n' % g_AdaPackageNameOfType[asnTypename].replace('_', '-'))
         if os.getenv('UPD') is None:
             o.write('    Source_Language => (ASN1);\n')
-        o.write('    -- Size of a buffer to cover all forms of message representation:\n')
-        le_size = 0 if asnTypename not in messageSizes else messageSizes[asnTypename][0]
-        o.write('    -- Real message size is %d; suggested aligned message buffer is...\n' % le_size)
-        le_size_rounded = 0 if asnTypename not in messageSizes else messageSizes[asnTypename][1]
-        o.write('    Source_Data_Size => %d B%s;\n' % (le_size_rounded, bAADLv2 and "ytes" or ""))
+        if not bFast:
+            o.write('    -- Size of a buffer to cover all forms of message representation:\n')
+            le_size = 0 if asnTypename not in messageSizes else messageSizes[asnTypename][0]
+            o.write('    -- Real message size is %d; suggested aligned message buffer is...\n' % le_size)
+            le_size_rounded = 0 if asnTypename not in messageSizes else messageSizes[asnTypename][1]
+            o.write('    Source_Data_Size => %d B%s;\n' % (le_size_rounded, bAADLv2 and "ytes" or ""))
         o.write('    -- name of the corresponding data type in the source file:\n')
         o.write('    Type_Source_Name => "%s";\n' % asnTypename)
         o.write('    TASTE::Position_In_File => [ line => %s ; column => 1 ; ];\n' % node._lineno)
