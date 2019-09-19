@@ -348,6 +348,9 @@ def main():
     # Time to use the maximum of Native (SIZ2) and UPER (SIZE) and ACN (SIZ3)...
 
     if not bFast:
+        # If taste-updata-dataview is called, then we just want the GUI to be aware
+        # of the list of ASN.1 types - the Ellidiss GUI does not care about the
+        # Source_Data_Size values... so skip all GCC-related work!
         messageSizes = calculateForNativeAndASN1SCC(absASN1SCCpath, autosrc, asnParser.g_names, inputFiles)
         for nodeTypename in list(messageSizes.keys()):
             messageSizes[nodeTypename] = [messageSizes[nodeTypename], (8 * (int((messageSizes[nodeTypename] - 1) / 8)) + 8)]
