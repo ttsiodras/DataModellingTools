@@ -1388,8 +1388,11 @@ def EmitBambuSimulinkBridge(sp: ApLevelContainer, subProgramImplementation: str)
     
     bambuFile.write("#include \"%s.h\" // Space certified compiler generated\n" % vhdlBackend.asn_name)
     bambuFile.write("#include \"%s.h\"\n" % vhdlBackend.CleanNameAsToolWants(sp._id))
-    bambuFile.write("#include \"%s_types.h\"\n\n" % vhdlBackend.CleanNameAsToolWants(sp._id))   
-    
+    bambuFile.write("#include \"%s_types.h\"\n\n" % vhdlBackend.CleanNameAsToolWants(sp._id))
+    #TODO can be added later for optimization (and these 2 files can then be removed from Bambu call
+    #bambuFile.write("#include \"%s.c\"\n\n" % vhdlBackend.CleanNameAsToolWants(sp._id))
+    #bambuFile.write("#include \"%s_data.c\"\n\n" % vhdlBackend.CleanNameAsToolWants(sp._id))
+
     bambuFile.write('void bambu_%s(\n    ' %  sp._id)
     lines = []
     for param in sp._params:
@@ -1400,6 +1403,16 @@ def EmitBambuSimulinkBridge(sp: ApLevelContainer, subProgramImplementation: str)
             '%s%s' % (",\n    " if idx != 0 else "", line))
     bambuFile.write(') {\n')
     
+    initStr = """
+
+    static int initialized = 0;
+    if (!initialized) {
+        initialized = 1;
+        %s_initialize();
+    }
+""" % (sp._id)
+    bambuFile.write(initStr)
+
     lines = []
     for param in sp._params:
         if isinstance(param, InParam):
