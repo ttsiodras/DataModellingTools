@@ -175,6 +175,7 @@ class FromVHDLToASN1SCC(RecursiveMapperGeneric[List[int], str]):  # pylint: disa
         # return ["%s = (double) %s;\n" % (destVar, srcVHDL)]
 
     def MapBoolean(self, srcVHDL: List[int], destVar: str, _: AsnBool, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+        panicWithCallStack("BOOLEANs (%s) not yet supported." % node.Location())  # pragma: no cover
         register = srcVHDL[0] + srcVHDL[1]
         lines = []  # type: List[str]
         lines.append("{\n")
@@ -211,6 +212,7 @@ class FromVHDLToASN1SCC(RecursiveMapperGeneric[List[int], str]):  # pylint: disa
         return lines
 
     def MapEnumerated(self, srcVHDL: List[int], destVar: str, _: AsnEnumerated, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+        panicWithCallStack("ENUMERATEDs (%s) not yet supported." % node.Location())  # pragma: no cover
         register = srcVHDL[0] + srcVHDL[1]
         lines = []  # type: List[str]
         lines.append("{\n")
@@ -237,6 +239,7 @@ class FromVHDLToASN1SCC(RecursiveMapperGeneric[List[int], str]):  # pylint: disa
         return self.MapSequence(srcVHDL, destVar, node, leafTypeDict, names)  # pragma: nocover
 
     def MapChoice(self, srcVHDL: List[int], destVar: str, node: AsnChoice, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+        panicWithCallStack("CHOICEs (%s) not yet supported." % node.Location())  # pragma: no cover
         register = srcVHDL[0] + srcVHDL[1]
         lines = []  # type: List[str]
         childNo = 0
