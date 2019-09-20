@@ -820,7 +820,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                         self.C_SourceFile.write('p' + self.CleanNameAsToolWants(param._id) + ', pSize_' + self.CleanNameAsToolWants(param._id))
                 self.C_SourceFile.write(")){\n")
                 self.C_SourceFile.write('               // HW error, return 2\n')
-                self.C_SourceFile.write('               LOGERROR("[ <-?-> <-?-> <-?-> %s Dispatcher <-?-> <-?-> <-?-> ] HW error!\\n");\n' % (self.CleanNameAsADAWants(maybeFVname)))
+                self.C_SourceFile.write('               LOGERROR("[ <-?-> <-?-> <-?-> %s Dispatcher <-?-> <-?-> <-?-> ] HW error! (FALLBACK: SW)\\n");\n' % (self.CleanNameAsADAWants(maybeFVname)))
                 self.C_SourceFile.write('               return 2;\n')
                 self.C_SourceFile.write('           }\n')
                 self.C_SourceFile.write('           // delegated to HW, return 0\n')
