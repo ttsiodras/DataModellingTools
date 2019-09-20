@@ -554,6 +554,10 @@ uint32_t count;
         self.C_SourceFile.write('      }\n')
         self.C_SourceFile.write('      LOGDEBUG(" - Read OK\\n");\n')
         self.C_SourceFile.write('    }\n')
+        self.C_SourceFile.write('    if(!flag && count == RETRIES){\n')
+        self.C_SourceFile.write('      LOGERROR("Max Target read attempts reached.\\n");\n')
+        self.C_SourceFile.write('      return -1;\n')
+        self.C_SourceFile.write('    }\n')
         self.C_SourceFile.write('    return 0;\n')
 
 # pylint: disable=no-self-use
