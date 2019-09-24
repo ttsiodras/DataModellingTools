@@ -316,6 +316,7 @@ project.setOptions({'UseNxLibrary': 'Yes',
 		    'MergeRegisterToPad': 'Always',
                     'ManageUnconnectedOutputs': 'Ground',
                     'ManageUnconnectedSignals': 'Ground',
+                    'ManageAsynchronousReadPort': 'Yes',
                     'DefaultRAMMapping': 'RAM'})
 project.addMappingDirective('getModels(.*regfile_3p.*)', 'RAM', 'RF')
 #=======================================================================================================
