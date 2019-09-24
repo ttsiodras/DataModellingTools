@@ -314,13 +314,9 @@ project.addFiles('top_lib', ['rdhc_bb.vhd'])
 
 project.setOptions({'UseNxLibrary': 'Yes',
 		    'MergeRegisterToPad': 'Always',
-                    'MultiplierToDSPMapThreshold': '1',
                     'ManageUnconnectedOutputs': 'Ground',
                     'ManageUnconnectedSignals': 'Ground',
-                    'AdderToDSPMapThreshold': '0',
-                    'DefaultRAMMapping': 'RAM',
-                    'MappingEffort': 'Low', 'ManageAsynchronousReadPort': 'No',
-		    'TimingDriven': 'Yes'})
+                    'DefaultRAMMapping': 'RAM'})
 project.addMappingDirective('getModels(.*regfile_3p.*)', 'RAM', 'RF')
 #=======================================================================================================
 # Assigning timing constraints
