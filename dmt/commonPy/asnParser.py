@@ -269,9 +269,11 @@ def VerifyAndFixAST() -> Dict[str, str]:
             target._asnFilename = originalNode._asnFilename
             if isinstance(node, AsnInt) and Min is not None and Max is not None:
                 target._range = [Min, Max]  # type: ignore
+                target._isArtificial = originalNode._isArtificial
         elif isinstance(node, AsnInt) and Min is not None and Max is not None:
             target = copy.copy(node)  # we need to keep the Min/Max
             target._range = [Min, Max]
+            target._isArtificial = originalNode._isArtificial
         else:
             target = node
         g_names[nodeTypename] = target
@@ -394,7 +396,7 @@ def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=inv
         except:
             utility.panic(
                 "The configured cache folder:\n\n\t" + projectCache + "\n\n...is not there!\n")
-    xmlAST = xmlAST2 = None
+    xmlAST = None
     someFilesHaveChanged = False
     if projectCache is not None:
         filehash = hashlib.md5()
@@ -408,12 +410,11 @@ def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=inv
         newHash = filehash.hexdigest()
         # set the name of the XML files containing the dumped ASTs
         xmlAST = projectCache + os.sep + newHash + "_ast_v4.xml"
-        xmlAST2 = projectCache + os.sep + newHash + "_ast_v1.xml"
-        if not os.path.exists(xmlAST) or not os.path.exists(xmlAST2):
+        if not os.path.exists(xmlAST):
             someFilesHaveChanged = True
             print("[DMT] No cached model found for", ",".join(listOfFilenames))
     else:
-        # no projectCache set, so xmlAST and xmlAST2 are set to None
+        # no projectCache set, so xmlAST is set to None
         someFilesHaveChanged = True
     if not someFilesHaveChanged:
         print("[DMT] Reusing cached ASN.1 AST for ", ",".join(listOfFilenames))
@@ -421,7 +422,6 @@ def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=inv
     if not xmlAST:
         (dummy, xmlAST) = tempfile.mkstemp()
         os.fdopen(dummy).close()
-        xmlAST2 = xmlAST + "2"
 
     if someFilesHaveChanged:
         asn1SccPath = spawn.find_executable('asn1.exe')
@@ -448,22 +448,6 @@ def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=inv
     g_leafTypeDict.update(g_leafTypeDict)
     g_checkedSoFarForKeywords.update(g_checkedSoFarForKeywords)
     g_typesOfFile.update(g_typesOfFile)
-
-    # We also need to mark the artificial types -
-    # So spawn the custom type output at level 1 (unfiltered)
-    # and mark any types not inside it as artificial.
-    if someFilesHaveChanged:
-        os.system("mono \"" + asn1SccPath + "\" -customStg \"" + asn1SccDir + "/xml.stg:" + xmlAST2 + "\" -fp AUTO -typePrefix asn1Scc -customStgAstVersion 1 \"" + "\" \"".join(listOfFilenames) + "\"")
-    realTypes = {}
-    for line in os.popen("grep  'ExportedType\>' \"" + xmlAST2 + "\"").readlines():  # flake8: noqa pylint: disable=anomalous-backslash-in-string
-        line = re.sub(r'^.*Name="', '', line.strip())
-        line = re.sub(r'" />$', '', line)
-        realTypes[line] = 1
-    if projectCache is None:
-        os.unlink(xmlAST2)
-    for nodeTypename in list(g_names.keys()):
-        if nodeTypename not in realTypes:
-            g_names[nodeTypename]._isArtificial = True
 
 
 def Dump() -> None:
@@ -818,9 +802,13 @@ def VisitTypeAssignment(newModule: Module, xmlTypeAssignment: Element) -> Tuple[
     xmlType = GetChild(xmlTypeAssignment, "Type")
     if xmlType is None:
         utility.panic("VisitTypeAssignment: No child under TypeAssignment")  # pragma: no cover
-    return (
-        GetAttr(xmlTypeAssignment, "Name"),
-        GenericFactory(newModule, xmlType))
+    newNode = GenericFactory(newModule, xmlType)
+    isArtificial = GetAttr(xmlTypeAssignment, "AddedType")
+    if isArtificial is None:
+        utility.panic("You are using an older version of ASN1SCC - please upgrade.")
+    newNode._isArtificial = isArtificial == "True"
+    name = GetAttr(xmlTypeAssignment, "Name")
+    return (name, newNode)
 
 
 def VisitAsn1Module(xmlAsn1File: Element, xmlModule: Element, modules: List[Module]) -> None:  # pylint: disable=invalid-sequence-index
