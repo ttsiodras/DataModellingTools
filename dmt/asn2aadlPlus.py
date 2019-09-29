@@ -85,17 +85,20 @@ def calculateForNativeAndASN1SCC(absASN1SCCpath, autosrc, names, inputFiles):
     inputASN1files = [x for x in inputFiles if not x.lower().endswith('.acn')]
 
     # Spawn ASN1SCC.exe compiler - for MacOS define a new sh file calling mono Asn1f2.exe
-    if platform.system() == "Windows" or platform.system() == "Darwin":
-        mysystem("%s -c -uPER -o \"%s\" %s %s" % (absASN1SCCpath, autosrc, acn, '"' + '" "'.join(inputFiles) + '"'))
-        for line in os.popen("%s -AdaUses %s" % (absASN1SCCpath, '" "'.join(inputASN1files))):
-            g_AdaPackageNameOfType[line.split(':')[0]] = line.split(':')[1].rstrip()
-    else:
-        cmd = "mono %s -c -uPER -fp AUTO -typePrefix asn1Scc -o \"%s\" %s %s" % (absASN1SCCpath, autosrc, acn, '"' + '" "'.join(inputFiles) + '"')
-        res = mysystem(cmd)
-        if res != 0:
-            panic("This command failed: %s\n" % cmd)
-        for line in os.popen('mono  %s -fp AUTO -typePrefix asn1Scc -AdaUses "%s"' % (absASN1SCCpath, '" "'.join(inputASN1files))):
-            g_AdaPackageNameOfType[line.split(':')[0]] = line.split(':')[1].rstrip()
+    # if platform.system() == "Windows" or platform.system() == "Darwin":
+    #     mysystem("%s -c -uPER -o \"%s\" %s %s" % (absASN1SCCpath, autosrc, acn, '"' + '" "'.join(inputFiles) + '"'))
+    #     for line in os.popen("%s -AdaUses %s" % (absASN1SCCpath, '" "'.join(inputASN1files))):
+    #         g_AdaPackageNameOfType[line.split(':')[0]] = line.split(':')[1].rstrip()
+    # else:
+    #     cmd = "mono %s -c -uPER -fp AUTO -typePrefix asn1Scc -o \"%s\" %s %s" % (absASN1SCCpath, autosrc, acn, '"' + '" "'.join(inputFiles) + '"')
+    #     res = mysystem(cmd)
+    #     if res != 0:
+    #         panic("This command failed: %s\n" % cmd)
+    #     for line in os.popen('mono  %s -fp AUTO -typePrefix asn1Scc -AdaUses "%s"' % (absASN1SCCpath, '" "'.join(inputASN1files))):
+    #         g_AdaPackageNameOfType[line.split(':')[0]] = line.split(':')[1].rstrip()
+    for asnModuleID, setOfTypenames in asnParser.g_adaUses.items():
+        for typeName in setOfTypenames:
+            g_AdaPackageNameOfType[typeName] = asnModuleID
 
     msgEncoderFile = open(autosrc + os.sep + base + ".stats.c", 'w')
 

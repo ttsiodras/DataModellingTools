@@ -57,7 +57,7 @@ from distutils import spawn
 import hashlib
 
 import xml.sax  # type: ignore
-from typing import IO, TypeVar, Type, Optional, Callable, Union, List, Dict, Tuple, Any  # NOQA pylint: disable=W0611
+from typing import IO, TypeVar, Type, Optional, Callable, Union, List, Set, Dict, Tuple, Any  # NOQA pylint: disable=W0611
 
 from . import configMT
 from . import utility
@@ -81,12 +81,14 @@ AST_TypenamesOfFile = Dict[Filename, List[str]]  # pylint: disable=invalid-seque
 AST_TypesOfFile = Dict[Filename, List[AsnNode]]  # pylint: disable=invalid-sequence-index
 AST_Leaftypes = Dict[Typename, str]
 AST_Modules = Dict[str, List[Typename]]  # pylint: disable=invalid-sequence-index
+AST_AdaUses = Dict[str, Set[Typename]]  # pylint: disable=invalid-sequence-index
 
 g_names = {}         # type: AST_Lookup
 g_typesOfFile = {}   # type: AST_TypenamesOfFile
 g_leafTypeDict = {}  # type: AST_Leaftypes
 g_astOfFile = {}     # type: AST_TypesOfFile
 g_modules = {}       # type: AST_Modules
+g_adaUses = {}       # type: AST_AdaUses
 
 g_checkedSoFarForKeywords = {}  # type: Dict[str, int]
 
@@ -808,6 +810,7 @@ def VisitTypeAssignment(newModule: Module, xmlTypeAssignment: Element) -> Tuple[
         utility.panic("You are using an older version of ASN1SCC - please upgrade.")
     newNode._isArtificial = isArtificial == "True"
     name = GetAttr(xmlTypeAssignment, "Name")
+    g_adaUses.setdefault(newModule._id, set()).add(name)
     return (name, newNode)
 
 
