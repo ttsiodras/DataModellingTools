@@ -92,9 +92,6 @@ def calculateForNativeAndASN1SCC(absASN1SCCpath, autosrc, names, inputFiles):
         res = mysystem(cmd)
         if res != 0:
             panic("This command failed: %s\n" % cmd)
-    for asnModuleID, setOfTypenames in asnParser.g_adaUses.items():
-        for typeName in setOfTypenames:
-            g_AdaPackageNameOfType[typeName] = asnModuleID
 
     msgEncoderFile = open(autosrc + os.sep + base + ".stats.c", 'w')
 
@@ -345,6 +342,12 @@ def main():
         panic("ASN1SCC seems not installed on your system (asn1.exe not found in PATH).\n")
     absASN1SCCpath = os.path.abspath(asn1SccPath)
 
+    # Update the AdaUses dictionary - can now be safely done in all cases,
+    # since the information is extracted from the base ASN1SCC AST.
+    for asnModuleID, setOfTypenames in asnParser.g_adaUses.items():
+        for typeName in setOfTypenames:
+            g_AdaPackageNameOfType[typeName] = asnModuleID
+
     # A, those good old days... I could calculate the buffer size for BER (SIZ), and then compare
     # it to the size for Native (SIZ2, see above) and the max of the two suffices for any conf of the message.
     # CHOICEs, however, changed the picture...  what to put in?
@@ -427,10 +430,9 @@ end Stream_Element_Buffer;
             base = os.path.splitext(os.path.basename(possibleACN))[0]
             fname = base.replace("-", "_")
             o.write('    %sEncodingDefinitionFile => classifier(DataView::ACN_%s);\n' % (prefix2, fname))
-        if not bFast:
-            o.write('    %sAda_Package_Name => "%s";\n' % (prefix, g_AdaPackageNameOfType[asnTypename]))
-            if bAADLv2:
-                o.write('    Deployment::ASN1_Module_Name => "%s";\n' % g_AdaPackageNameOfType[asnTypename].replace('_', '-'))
+        o.write('    %sAda_Package_Name => "%s";\n' % (prefix, g_AdaPackageNameOfType[asnTypename]))
+        if bAADLv2:
+            o.write('    Deployment::ASN1_Module_Name => "%s";\n' % g_AdaPackageNameOfType[asnTypename].replace('_', '-'))
         if os.getenv('UPD') is None:
             o.write('    Source_Language => (ASN1);\n')
         if not bFast:
