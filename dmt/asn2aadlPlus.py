@@ -346,7 +346,7 @@ def main():
     # since the information is extracted from the base ASN1SCC AST.
     for asnModuleID, setOfTypenames in asnParser.g_adaUses.items():
         for typeName in setOfTypenames:
-            g_AdaPackageNameOfType[typeName] = asnModuleID
+            g_AdaPackageNameOfType[typeName] = asnModuleID.replace('-', '_')
 
     # A, those good old days... I could calculate the buffer size for BER (SIZ), and then compare
     # it to the size for Native (SIZ2, see above) and the max of the two suffices for any conf of the message.
