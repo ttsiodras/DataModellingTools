@@ -810,7 +810,7 @@ def VisitTypeAssignment(newModule: Module, xmlTypeAssignment: Element) -> Tuple[
         utility.panic("You are using an older version of ASN1SCC - please upgrade.")
     newNode._isArtificial = isArtificial == "True"
     name = GetAttr(xmlTypeAssignment, "Name")
-    g_adaUses.setdefault(newModule._id, set()).add(name.replace('-', '_')
+    g_adaUses.setdefault(newModule._id, set()).add(name.replace('-', '_'))
     return (name, newNode)
 
 
