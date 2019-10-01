@@ -53,7 +53,9 @@ entity TASTE is
       reset_n  : in  std_logic;         -- System RST
       -- APB interface
       apbi     : in  apb_slv_in_type;
-      apbo     : out apb_slv_out_type
+      apbo     : out apb_slv_out_type;
+      led_complete      : out std_logic;
+      led_start         : out std_logic
     );
 end TASTE;
 
@@ -67,7 +69,14 @@ architecture arch of TASTE is
     -- Signals for start/finish
 %(startStopSignals)s
 
+    -- Debug signals --
+    signal led_start_reg		: std_logic;
+    signal led_complete_reg		: std_logic;
+
 begin
+
+    led_complete	<= led_complete_reg;
+    led_start		<= led_start_reg;
 
     -- Implement register write
     process (reset_n, clk_i)
@@ -75,8 +84,10 @@ begin
         if (reset_n='0') then
             -- Signals for reset
 %(reset)s
+            led_start_reg               <= '0';
+            led_complete_reg            <= '0';
         elsif (clk_i'event and clk_i='1') then
-
+%(updateStartCompleteLedRegs)s
             -- Update start-stop pulses
 %(updateStartStopPulses)s
             if (apbi.pwrite='1' and apbi.psel= '1' and apbi.penable = '1') then

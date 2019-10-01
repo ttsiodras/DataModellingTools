@@ -946,6 +946,7 @@ g_placeholders = {
     "ioregisters": '',
     "startStopSignals": '',
     "reset": '',
+    "updateStartCompleteLedRegs": '',
     "updateStartStopPulses": '',
     "readinputdata": '',
     "outputs": '',
@@ -1123,6 +1124,15 @@ def OnFinal() -> None:
         AddToStr('reset', "            --%(pi)s_inp                          <= (others => '0');\n" % {'pi': c._spCleanName})
         AddToStr('reset', "            %(pi)s_StartCalculationsPulse       <= '0';\n" % {'pi': c._spCleanName})
         AddToStr('reset', "            %(pi)s_StartCalculationsInternalOld <= '0';\n" % {'pi': c._spCleanName})
+
+        AddToStr('updateStartCompleteLedRegs', "            led_complete_reg        <= %(pi)s_CalculationsComplete;\n" % {'pi': c._spCleanName})
+        AddToStr('updateStartCompleteLedRegs', "            if %(pi)s_StartCalculationsPulse = '1' then\n" % {'pi': c._spCleanName})
+        AddToStr('updateStartCompleteLedRegs', "                led_start_reg       <= '1';\n")
+        AddToStr('updateStartCompleteLedRegs', "            end if;\n")
+        AddToStr('updateStartCompleteLedRegs', "            if %(pi)s_CalculationsComplete = '1' then\n" % {'pi': c._spCleanName})
+        AddToStr('updateStartCompleteLedRegs', "                led_start_reg       <= '0';\n")
+        AddToStr('updateStartCompleteLedRegs', "            end if;\n")
+
         AddToStr('updateStartStopPulses',
                  '            %(pi)s_StartCalculationsPulse <= %(pi)s_StartCalculationsInternal xor %(pi)s_StartCalculationsInternalOld;\n' % {'pi': c._spCleanName})
         AddToStr('updateStartStopPulses',
