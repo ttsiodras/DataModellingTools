@@ -947,10 +947,13 @@ g_placeholders = {
     "updateStartCompleteLedRegs": '',
     "updateStartStopPulses": '',
     "readinputdata": '',
+    "setStartSignalsLow": '',
     "outputs": '',
     "completions": '',
     "writeoutputdata": '',
-    "connectionsToSystemC": ''
+    "connectionsToSystemC": '',
+    "updateCalculationsCompleteReset": '',
+    "updateCalculationsComplete": ''
 }
 
 
@@ -1114,7 +1117,8 @@ def OnFinal() -> None:
     signal %(pi)s_StartCalculationsInternalOld : std_logic;
     signal %(pi)s_StartCalculationsInternal : std_logic;
     signal %(pi)s_StartCalculationsPulse : std_logic;
-    signal %(pi)s_CalculationsComplete : std_logic;          -- the finish signal for %(pi)s
+    signal %(pi)s_CalculationsCompletePulse : std_logic;          -- the finish signal for %(pi)s
+    signal %(pi)s_CalculationsComplete : std_logic;          -- the finish signal register
 
 ''' % {'pi': c._spCleanName})
 
@@ -1137,17 +1141,30 @@ def OnFinal() -> None:
                  '            %(pi)s_StartCalculationsInternalOld <= %(pi)s_StartCalculationsInternal;\n' % {'pi': c._spCleanName})
 
         AddToStr('readinputdata', '\n'.join([' ' * 22 + x for x in readinputdataLines]) + '\n')
+        
+        AddToStr('setStartSignalsLow', ' ' * 12 + "if(%s_CalculationsCompletePulse = '1') then\n" % c._spCleanName)
+        AddToStr('setStartSignalsLow', ' ' * 12 + "     %s_StartCalculationsInternal    <= '0';\n" % c._spCleanName)
+        AddToStr('setStartSignalsLow', ' ' * 12 + "     %s_StartCalculationsPulse       <= '0';\n" % c._spCleanName)
+        AddToStr('setStartSignalsLow', ' ' * 12 + "     %s_StartCalculationsInternalOld <= '0';\n" % c._spCleanName)
+        AddToStr('setStartSignalsLow', ' ' * 12 + "end if;\n")
+        
         AddToStr('writeoutputdata', '\n'.join([' ' * 16 + x for x in writeoutputdataLines]) + '\n')
 
         AddToStr('connectionsToSystemC', '\n    Interface_%s : bambu_%s\n' % (c._spCleanName, c._spCleanName))
         AddToStr('connectionsToSystemC', '        port map (\n')
         AddToStr('connectionsToSystemC', ',\n'.join(['            ' + x for x in connectionsToSystemCLines]) + ',\n')
         AddToStr('connectionsToSystemC', '            start_%s => %s_StartCalculationsPulse,\n' % (c._spCleanName, c._spCleanName))
-        AddToStr('connectionsToSystemC', '            finish_%s => %s_CalculationsComplete,\n' % (c._spCleanName, c._spCleanName))
+        AddToStr('connectionsToSystemC', '            finish_%s => %s_CalculationsCompletePulse,\n' % (c._spCleanName, c._spCleanName))
         AddToStr('connectionsToSystemC', '            clock_%s => clk_i,\n' % c._spCleanName)
         AddToStr('connectionsToSystemC', '            reset_%s => reset_n\n' % c._spCleanName)
         AddToStr('connectionsToSystemC', '        );\n')
 
+        AddToStr('updateCalculationsCompleteReset', ' ' * 12 + "%s_CalculationsComplete    <= '0';\n" % c._spCleanName)
+        AddToStr('updateCalculationsComplete', ' ' * 12 + "if(%s_CalculationsCompletePulse = '1') then\n" % c._spCleanName)
+        AddToStr('updateCalculationsComplete', ' ' * 12 + "    %s_CalculationsComplete <= '1';\n" % c._spCleanName)
+        AddToStr('updateCalculationsComplete', ' ' * 12 + "elsif (%s_StartCalculationsPulse='1') then\n" % c._spCleanName)
+        AddToStr('updateCalculationsComplete', ' ' * 12 + "    %s_CalculationsComplete <= '0';\n" % c._spCleanName)
+        AddToStr('updateCalculationsComplete', ' ' * 12 + "end if;\n")
 
     AddToStr('outputs', ', '.join(outputs) + (', ' if len(outputs) else ''))
     AddToStr('completions', ', '.join(completions))

@@ -96,6 +96,7 @@ begin
 %(readinputdata)s
                  end case;
             end if;
+%(setStartSignalsLow)s
         end if;
     end process;
 
@@ -114,6 +115,15 @@ begin
 
     -- Connections to the VHDL circuits
 %(connectionsToSystemC)s
+
+    process(reset_n, clk_i)
+    begin
+        if (reset_n='0') then
+%(updateCalculationsCompleteReset)s
+        elsif (clk_i'event and clk_i='1') then
+%(updateCalculationsComplete)s
+        end if;
+    end process;
 
 end arch;'''
 
@@ -369,6 +379,8 @@ if not project.route():
     sys.exit(1)
 
 project.save('routed.nxm')
+
+project.save('routed.vhd')
 
 #reports
 project.reportInstances()
