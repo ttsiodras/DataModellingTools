@@ -271,7 +271,7 @@ def VerifyAndFixAST() -> Dict[str, str]:
             target._asnFilename = originalNode._asnFilename
             if isinstance(node, AsnInt) and Min is not None and Max is not None:
                 target._range = [Min, Max]  # type: ignore
-                target._isArtificial = originalNode._isArtificial
+            target._isArtificial = originalNode._isArtificial
         elif isinstance(node, AsnInt) and Min is not None and Max is not None:
             target = copy.copy(node)  # we need to keep the Min/Max
             target._range = [Min, Max]
