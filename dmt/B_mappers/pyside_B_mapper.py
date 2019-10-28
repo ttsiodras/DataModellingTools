@@ -220,7 +220,7 @@ def setSharedLib(dll=None):
     shared_lib = True
     {tcName}_via_shared_lib = dll.{fvName}_PI_{tcName}
 
-'''.format(fvName=FVname, tcName=CleanSP))
+'''.format(fvName=FVname.lower(), tcName=CleanSP))
         g_PyDataModel.write('\ntc["{tcName}"] = '.format(
             tcName=CleanSP))
         buttons = ([["sendButton", "Send TC"], ["loadButton", "Load TC"],
@@ -275,7 +275,7 @@ def setSharedLib(dll=None):
     shared_lib = dll
     dll.register_{tmName}(cmp_func)
 
-'''.format(tmName=CleanSP, fvName=FVname))
+'''.format(tmName=CleanSP, fvName=FVname.lower()))
         g_PyDataModel.write('\ntm["{tmName}"] = '.format(tmName=CleanSP))
         buttons = ([["plotButton", "Plot"], ["meterButton", "Meter"],
                     ["unusedButton", "Unused"]])
