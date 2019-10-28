@@ -102,7 +102,7 @@ def OnStartup(unused_modelingLanguage: str, asnFile: str, outputDir: str, badTyp
     g_outputGetSetC.write('}\n\n')
     g_outputGetSetC.write('void ResetStream(BitStream *pStrm) {\n')
     g_outputGetSetC.write('    assert(pStrm);\n')
-    g_outputGetSetC.write('    assert(pStrm->count > 0);\n')
+    g_outputGetSetC.write('    assert(pStrm->count >= 0);\n')
     g_outputGetSetC.write('    pStrm->currentByte = 0;\n')
     g_outputGetSetC.write('    pStrm->currentBit = 0;\n')
     g_outputGetSetC.write('}\n\n')
