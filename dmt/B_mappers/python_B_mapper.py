@@ -153,7 +153,7 @@ def OnStartup(modelingLanguage: str,
             g_bodyPython.append('                return')
             g_bodyPython.append('            self._msgQueue = OpenMsgQueueForReading(str(os.geteuid()) + "_' + maybeFVname + '_PI_Python_queue")')
             g_bodyPython.append('            if (self._msgQueue != -1): break')
-            g_bodyPython.append('            print "Communication channel over %%d_%s_PI_Python_queue not established yet...\\n" %% os.geteuid()' % maybeFVname)
+            g_bodyPython.append('            print("Communication channel over %%d_%s_PI_Python_queue not established yet...\\n" %% os.geteuid())' % maybeFVname)
             g_bodyPython.append('            time.sleep(1)')
             g_bodyPython.append('        bufferSize = GetMsgQueueBufferSize(self._msgQueue)')
             g_bodyPython.append('        self._pMem = ctypes.create_string_buffer(bufferSize).raw')
@@ -174,16 +174,16 @@ def OnStartup(modelingLanguage: str,
     if modelingLanguage.lower() == "gui_pi":
         g_SourceFile.write('T_' + cleanFVname + '_PI_list ii_' + CleanSP + ' = i_' + CleanSP + ';\n')
         g_TMprocessors.append('    if self.messageReceivedType == i_' + CleanSP + ':')
-        g_TMprocessors.append('        print "\\n"+chr(27)+"[32m" + "Received Telemetry: ' + CleanSP + '" + chr(27) + "[0m\\n"')
+        g_TMprocessors.append('        print("\\n"+chr(27)+"[32m" + "Received Telemetry: ' + CleanSP + '" + chr(27) + "[0m\\n")')
         g_TMprocessors.append('        backup = self._pMem')
         for param in subProgram._params:
             CleanParam = CleanName(param._id)
             g_TMprocessors.append("        # Read the data for param %s" % param._id)
             g_TMprocessors.append("        var_%s = %s_asn.%s()" % (CleanParam, g_asn_name, CleanName(param._signal._asnNodename)))
             g_TMprocessors.append("        var_%s.SetData(self._pMem)" % CleanParam)
-            g_TMprocessors.append('        print "Parameter %s:"' % CleanParam)
+            g_TMprocessors.append('        print("Parameter %s:")' % CleanParam)
             g_TMprocessors.append('        var_%s.PrintAll()' % CleanParam)
-            g_TMprocessors.append('        print')
+            g_TMprocessors.append('        print()')
             g_TMprocessors.append("        # self._pMem = DV.MovePtrBySizeOf_%s(self._pMem)" % CleanName(param._signal._asnNodename))
         g_TMprocessors.append("        # Revert the pointer to start of the data")
         g_TMprocessors.append('        self._pMem = backup')
@@ -202,7 +202,7 @@ def OnStartup(modelingLanguage: str,
         decl += "):"
         g_bodyPython.append(decl)
         g_bodyPython.append("    if -1 == SendTC_%s(%s):" % (CleanSP, ",".join([x + "._ptr" for x in parms])))
-        g_bodyPython.append("        print 'Failed to send TC: %s...\\n'" % CleanSP)
+        g_bodyPython.append("        print('Failed to send TC: %s...\\n')" % CleanSP)
         g_bodyPython.append("        raise IOError(\"%s\")" % CleanSP)
 
         g_SourceFile.write('typedef struct {\n')
