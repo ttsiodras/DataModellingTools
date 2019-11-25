@@ -101,6 +101,7 @@ from .B_mappers import micropython_async_B_mapper
 from .B_mappers import vhdl_B_mapper
 from .B_mappers import zestSC1_B_mapper
 from .B_mappers import brave_B_mapper           # Specific CoRA B-mapper for BRAVE
+from .B_mappers import zynqzc706_B_mapper       # Specific CoRA-ZynQ B-mapper for the ZynQ ZC706
 
 from .B_mappers.module_protos import Sync_B_Mapper, Async_B_Mapper
 
@@ -217,11 +218,19 @@ types). This used to cover Dumpable C/Ada Types and OG headers.'''
 def getSyncBackend(modelingLanguage: str) -> Sync_B_Mapper:
     if modelingLanguage not in g_sync_mappers:
         panic("Synchronous modeling language '%s' not supported" % modelingLanguage)
-    # For VHDL, BRAVE will take precedence in case both BRAVE and ZESTSC1 environment variables are defined
-    if os.getenv("BRAVE") is not None and modelingLanguage == 'vhdl':
-        return cast(Sync_B_Mapper, brave_B_mapper)
-    if os.getenv("ZESTSC1") is not None and modelingLanguage == 'vhdl':
-        return cast(Sync_B_Mapper, zestSC1_B_mapper)
+    if modelingLanguage == 'vhdl':
+        if os.getenv("BRAVE") is not None:
+            if os.getenv("ZESTSC1") is not None or os.getenv("ZYNQZC706") is not None:
+                panic("Backend conflict: more HW target environment variables defined apart from 'BRAVE'.")
+            return cast(Sync_B_Mapper, brave_B_mapper)
+        if os.getenv("ZESTSC1") is not None:
+            if os.getenv("BRAVE") is not None or os.getenv("ZYNQZC706") is not None:
+                panic("Backend conflict: more HW target environment variables defined apart from 'ZESTSC1'.")
+            return cast(Sync_B_Mapper, zestSC1_B_mapper)
+        if os.getenv("ZYNQZC706") is not None:
+            if os.getenv("BRAVE") is not None or os.getenv("ZESTSC1") is not None:
+                panic("Backend conflict: more HW target environment variables defined apart from 'ZYNQZC706'.")
+            return cast(Sync_B_Mapper, zynqzc706_B_mapper)
     return cast(Sync_B_Mapper, g_sync_mappers[modelingLanguage])
 
 
@@ -383,11 +392,18 @@ def ProcessCustomBackends(
         if lang.lower() in ["gui_pi", "gui_ri"]:
             return [cast(Sync_B_Mapper, x) for x in [python_B_mapper, pyside_B_mapper]]  # pragma: no cover
         elif lang.lower() == "vhdl":  # pragma: no cover
-            # For VHDL, BRAVE will take precedence in case both BRAVE and ZESTSC1 environment variables are defined
             if os.getenv("BRAVE") is not None:
+                if os.getenv("ZESTSC1") is not None or os.getenv("ZYNQZC706") is not None:
+                    panic("Backend conflict: more HW target environment variables defined apart from 'BRAVE'.")
                 return [cast(Sync_B_Mapper, brave_B_mapper)]  # pragma: no cover
             if os.getenv("ZESTSC1") is not None:
+                if os.getenv("BRAVE") is not None or os.getenv("ZYNQZC706") is not None:
+                    panic("Backend conflict: more HW target environment variables defined apart from 'ZESTSC1'.")
                 return [cast(Sync_B_Mapper, zestSC1_B_mapper)]  # pragma: no cover
+            if os.getenv("ZYNQZC706") is not None:
+                if os.getenv("BRAVE") is not None or os.getenv("ZESTSC1") is not None:
+                    panic("Backend conflict: more HW target environment variables defined apart from 'ZYNQZC706'.")
+                return [cast(Sync_B_Mapper, zynqzc706_B_mapper)]  # pragma: no cover
             else:
                 return [cast(Sync_B_Mapper, vhdl_B_mapper)]  # pragma: no cover
         else:

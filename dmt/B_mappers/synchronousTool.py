@@ -36,17 +36,17 @@ from ..commonPy.asnParser import AST_Lookup, AST_Leaftypes
 TSource = TypeVar('TSource')
 TDestin = TypeVar('TDestin')
 
-brave_seen = {}
+fpga_seen = {}
 # Add suffix to generated FPGA device driver's (<PI name>_<Language>.vhdl.c) functions to avoid multiple definition errors (conflict with "vm_if")
 fpgaSuffix = ''
 # Add a different suffix to the dispatcher C function (part of device driver)
 # Dispatcher <Function Block name>_<PI name><dispatcherSuffix> will delegate to one or the other side (SW or HW)
 # If delegation is to HW, then <Function Block name>_<PI name><fpgaSuffix> will be called
-dispatcherSuffix = "_Brave_Dispatch"
+dispatcherSuffix = "_FPGA_Dispatch"
 # FPGA/HW device driver (<PI name>_<Language>.vhdl.c) is being generated (also) when Function Block will exist both as SW and HW, that is, when
 # 1) language defined is C or Simulink but on the autogen pass is "seen" as VHDL (so that respective B-mapper is invoked),
 # and 2) there are FPGA configurations defined (default is False)
-genHwDevDrv = False
+genFpgaDevDrv = False
 
 class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
 
@@ -119,12 +119,12 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
         # FPGA/HW device driver is being generated (also) when Function Block will exist both as SW and HW, that is, when
         # 1) language defined is C or Simulink but on this autogen pass is "seen" as VHDL (so that respective B-mapper is invoked),
         # and 2) there are FPGA configurations defined
-        global genHwDevDrv
+        global genFpgaDevDrv
         # Add suffix to generated FPGA device driver's functions to avoid multiple definition errors (conflict with "vm_if")
         global fpgaSuffix
-        genHwDevDrv = subProgram._fpgaConfigurations is not '' and ((subProgramImplementation.lower() == "c" or subProgramImplementation.lower() == "simulink") and modelingLanguage == "vhdl");
-        if genHwDevDrv:
-            fpgaSuffix = "_Brave_Fpga"
+        genFpgaDevDrv = subProgram._fpgaConfigurations is not '' and ((subProgramImplementation.lower() == "c" or subProgramImplementation.lower() == "simulink") and modelingLanguage == "vhdl");
+        if genFpgaDevDrv:
+            fpgaSuffix = "_Fpga"
         else:
             # To avoid code duplication, use suffix anyway but as an empty string when not to be applied
             fpgaSuffix = ''
@@ -537,7 +537,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
         self.Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
     def OnShutdown(self, modelingLanguage: str, asnFile: str, sp: ApLevelContainer, subProgramImplementation: str, maybeFVname: str) -> None:
-        global genHwDevDrv
+        global genFpgaDevDrv
         global fpgaSuffix
         global dispatcherSuffix
         
@@ -602,21 +602,21 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                 self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation + "_wrapper"))
 
         else:
-            if genHwDevDrv:
-                if maybeFVname not in brave_seen:
-                    brave_seen[maybeFVname] = 'no_init_yet';
+            if genFpgaDevDrv:
+                if maybeFVname not in fpga_seen:
+                    fpga_seen[maybeFVname] = 'no_init_yet';
                 else:
-                    brave_seen[maybeFVname] = 'with_init_already'
+                    fpga_seen[maybeFVname] = 'with_init_already'
             
-            if genHwDevDrv:
-                # Execute() returns if interaction with BRAVE HW is successful, that is, if RMAP write and read commands are successful (0) or not (-1)
+            if genFpgaDevDrv:
+                # Execute() returns if interaction with FPGA HW is successful, that is, if HW writes and reads are successful (0) or not (-1)
                 self.C_HeaderFile.write("int Execute_%s%s();\n" % (self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation), fpgaSuffix))
             else:    
                 self.C_HeaderFile.write("void Execute_%s();\n" % self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation))
             if maybeFVname != "":
-                if not (genHwDevDrv and maybeFVname in brave_seen and brave_seen[maybeFVname] is 'with_init_already'):
+                if not (genFpgaDevDrv and maybeFVname in fpga_seen and fpga_seen[maybeFVname] is 'with_init_already'):
                     self.C_HeaderFile.write("void init_%s%s();\n" % (self.CleanNameAsADAWants(maybeFVname), fpgaSuffix))
-                if genHwDevDrv:
+                if genFpgaDevDrv:
                     # Return to dispatcher if HW delegation via Execute() is successful (0) or not (-1).
                     self.C_HeaderFile.write("int %s_%s%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id), fpgaSuffix))
                 else:
@@ -637,7 +637,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
             # Dispatcher <Function Block name>_<PI name><dispatcherSuffix> is part of the FPGA device driver <PI name>_<Language>.vhdl.h/c
             # Dispatcher can return: 0 (successfully delegated to HW), 1 (delegated to SW), 2 (unsuccessfully delegated to HW)
             # Here being added to the .h file
-            if genHwDevDrv:
+            if genFpgaDevDrv:
                 if maybeFVname != "":
                     self.C_HeaderFile.write("int %s_%s%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id), dispatcherSuffix))
                 else:  # pragma: no cover
@@ -653,8 +653,8 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
             
             self.C_HeaderFile.write("\n#endif\n")
 
-            if genHwDevDrv:
-                # Execute() returns if interaction with BRAVE HW is successful, that is, if RMAP write and read commands are successful (0) or not (-1)
+            if genFpgaDevDrv:
+                # Execute() returns if interaction with FPGA HW is successful, that is, if HW writes and reads are successful (0) or not (-1)
                 self.C_SourceFile.write("int Execute_%s%s()\n{\n" % (self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation), fpgaSuffix))
             else:
                 self.C_SourceFile.write("void Execute_%s()\n{\n" % self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation))
@@ -662,11 +662,11 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
             self.C_SourceFile.write("}\n\n")
 
             if maybeFVname != "":
-                if not (genHwDevDrv and maybeFVname in brave_seen and brave_seen[maybeFVname] is 'with_init_already'):
+                if not (genFpgaDevDrv and maybeFVname in fpga_seen and fpga_seen[maybeFVname] is 'with_init_already'):
                     self.C_SourceFile.write("void init_%s%s()\n" % (self.CleanNameAsADAWants(maybeFVname), fpgaSuffix))
             else:  # pragma: no cover
                 self.C_SourceFile.write("void %s_init()\n" % self.CleanNameAsADAWants(sp._id))  # pragma: no cover
-            if not (genHwDevDrv and maybeFVname in brave_seen and brave_seen[maybeFVname] is 'with_init_already'):
+            if not (genFpgaDevDrv and maybeFVname in fpga_seen and fpga_seen[maybeFVname] is 'with_init_already'):
                 self.C_SourceFile.write("{\n")
                 self.InitializeBlock(modelingLanguage, asnFile, sp, subProgramImplementation, maybeFVname)
                 # self.C_SourceFile.write("    extern void InitializeGlue();\n")
@@ -674,7 +674,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                 self.C_SourceFile.write("}\n\n")
 
             if maybeFVname != "":
-                if genHwDevDrv:
+                if genFpgaDevDrv:
                     # Return to dispatcher if HW delegation via Execute() is successful (0) or not (-1).
                     self.C_SourceFile.write("int %s_%s%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id), fpgaSuffix))
                 else:
@@ -700,7 +700,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
             # 3) If successfully delegated to HW (returning 0), afterwards SW side returns immediately so to avoid calling up SW side as well
             #   Otherwise execution continues up trough "normal" SW side calling
             if sp._fpgaConfigurations is not '' and subProgramImplementation.lower() == "simulink" and modelingLanguage != "vhdl":
-                self.C_SourceFile.write('    // Calling Brave VHDL dispatcher function\n')
+                self.C_SourceFile.write('    // Calling Fpga VHDL dispatcher function\n')
                 self.C_SourceFile.write('    if (0 == %s_%s%s (' % \
                                                     (self.CleanNameAsADAWants(maybeFVname),
                                                      self.CleanNameAsADAWants(sp._id),
@@ -714,8 +714,8 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                         self.C_SourceFile.write('p' + self.CleanNameAsToolWants(param._id) + ', pSize_' + self.CleanNameAsToolWants(param._id))                                                
                 self.C_SourceFile.write(")) return;\n")
                 
-            if genHwDevDrv:
-                # Check if FPGA is ready before converting parameters and initiating RMAP exchanges with HW
+            if genFpgaDevDrv:
+                # Check if FPGA is ready before converting parameters and initiating exchanges with HW
                 self.C_SourceFile.write('    // Check if FPGA is ready.\n')
                 self.C_SourceFile.write('    extern const char globalFpgaStatus_%s[];\n' % (self.CleanNameAsADAWants(maybeFVname)))
                 self.C_SourceFile.write('    if(strcmp(globalFpgaStatus_%s, FPGA_READY)){\n' % (self.CleanNameAsADAWants(maybeFVname)))
@@ -744,7 +744,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                                              self.CleanNameAsToolWants(param._id)))  # pragma: no cover
 
             # Do functional work
-            if genHwDevDrv:
+            if genFpgaDevDrv:
                 # Check if HW delegation via Execute() is successful: return -1 to Dispatcher if not (so SW side can be called as fallback)
                 self.C_SourceFile.write("    if(Execute_%s%s()) return -1;\n" % (self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation), fpgaSuffix))
             else:
@@ -766,7 +766,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                                              tmpSpName,
                                              self.CleanNameAsToolWants(param._id),
                                              param._signal._asnSize))
-            if genHwDevDrv:
+            if genFpgaDevDrv:
                 # HW delegation via Execute() was successful, so return 0 to Dispatcher
                 self.C_SourceFile.write("    return 0;\n")
             self.C_SourceFile.write("}\n\n")
@@ -781,7 +781,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
             # If so, OR such list defines the "magic" word "AllModes", computation will be delegated to HW/FPGA (<Function Block name>_<PI name><fpgaSuffix> will be called).
             # Otherwise, FPGA is not called and computation will proceed in SW through the "usual" SW side/glue counterpart.
             # Debug level logs (LOGDEBUG) can be used to track this delegation during testing.
-            if genHwDevDrv:
+            if genFpgaDevDrv:
                 if maybeFVname != "":
                     self.C_SourceFile.write("int %s_%s%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id), dispatcherSuffix))
                 else:  # pragma: no cover
