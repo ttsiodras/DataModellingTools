@@ -161,7 +161,7 @@ class FromVHDLToASN1SCC(RecursiveMapperGeneric[List[int], str]):  # pylint: disa
         lines.append("    unsigned int i;\n")
         lines.append("    asn1SccSint val = 0;\n")
         lines.append("    for(i=0; i<sizeof(asn1SccSint)/4; i++) {\n")
-        lines.append("        axi_read(R_AXI_BASEADR + %s + (i*4), &tmp, 4, R_AXI_DSTADR);\n" % hex(register))
+        lines.append("        //axi_read(R_AXI_BASEADR + %s + (i*4), &tmp, 4, R_AXI_DSTADR);\n" % hex(register))
         lines.append("        tmp >>= 32; // ?\n")
         lines.append("        val |= (tmp << (32*i));\n")
         lines.append("    }\n")
@@ -179,7 +179,7 @@ class FromVHDLToASN1SCC(RecursiveMapperGeneric[List[int], str]):  # pylint: disa
         lines = []  # type: List[str]        
         lines.append("{\n")
         lines.append("    unsigned int tmp = 0;\n")
-        lines.append("    axi_read(R_AXI_BASEADR + %s, &tmp, 4, R_AXI_DSTADR);\n" % hex(register))      
+        lines.append("    //axi_read(R_AXI_BASEADR + %s, &tmp, 4, R_AXI_DSTADR);\n" % hex(register))      
         lines.append("    %s = (asn1SccUint) tmp;\n" % destVar)
         lines.append("}\n")
         srcVHDL[0] += 4
@@ -202,7 +202,7 @@ class FromVHDLToASN1SCC(RecursiveMapperGeneric[List[int], str]):  # pylint: disa
         lines.append("    unsigned int tmp, i;\n")
         lines.append("    for(i=0; i<%d; i++) {\n" % int(node._range[-1] / 4))
         lines.append("        tmp = 0;\n")
-        lines.append("        axi_read(R_AXI_BASEADR + %s + (i*4), &tmp, 4, R_AXI_DSTADR);\n" % hex(register))      
+        lines.append("        //axi_read(R_AXI_BASEADR + %s + (i*4), &tmp, 4, R_AXI_DSTADR);\n" % hex(register))      
         lines.append("        memcpy(%s.arr + (i*4), (unsigned char*)&tmp, sizeof(unsigned int));\n" % destVar)
         lines.append("    }\n")
         lines.append("}\n")
@@ -215,7 +215,7 @@ class FromVHDLToASN1SCC(RecursiveMapperGeneric[List[int], str]):  # pylint: disa
         lines = []  # type: List[str]        
         lines.append("{\n")
         lines.append("    unsigned int tmp;\n")
-        lines.append("    axi_read(R_AXI_BASEADR + %s, &tmp, 4, R_AXI_DSTADR);\n" % hex(register))      
+        lines.append("    //axi_read(R_AXI_BASEADR + %s, &tmp, 4, R_AXI_DSTADR);\n" % hex(register))      
         lines.append("    %s = tmp;\n" % destVar)
         lines.append("}\n")
         srcVHDL[0] += 4
@@ -295,7 +295,7 @@ class FromASN1SCCtoVHDL(RecursiveMapperGeneric[str, List[int]]):  # pylint: disa
         lines.append("    asn1SccSint val = %s;\n" % srcVar)
         lines.append("    for(i=0; i<sizeof(asn1SccSint)/4; i++) {\n")
         lines.append("        tmp = val & 0xFFFFFFFF;\n")
-        lines.append("        axi_write(R_AXI_BASEADR + %s + (i*4), &tmp, 4, R_AXI_DSTADR);\n" % hex(register))
+        lines.append("        //axi_write(R_AXI_BASEADR + %s + (i*4), &tmp, 4, R_AXI_DSTADR);\n" % hex(register))
         lines.append("        val >>= 32;\n")
         lines.append("    }\n")
         lines.append("}\n")
@@ -310,7 +310,7 @@ class FromASN1SCCtoVHDL(RecursiveMapperGeneric[str, List[int]]):  # pylint: disa
         lines = []  # type: List[str]
         lines.append("{\n")
         lines.append("    unsigned int tmp = (unsigned int)%s;\n" % srcVar)
-        lines.append("    axi_write(R_AXI_BASEADR + %s, &tmp, 4, R_AXI_DSTADR);\n" % hex(register))
+        lines.append("    //axi_write(R_AXI_BASEADR + %s, &tmp, 4, R_AXI_DSTADR);\n" % hex(register))
         lines.append("}\n")
         dstVHDL[0] += 4
         return lines
@@ -331,7 +331,7 @@ class FromASN1SCCtoVHDL(RecursiveMapperGeneric[str, List[int]]):  # pylint: disa
         lines.append("    for(i=0; i<%d; i++) {\n" % int(node._range[-1] / 4))
         lines.append("        tmp = 0;\n")
         lines.append("        tmp = *(unsigned int*)(%s.arr + (i*4));\n" % srcVar)
-        lines.append("        axi_write(R_AXI_BASEADR + %s + (i*4), &tmp, 4, R_AXI_DSTADR);\n" % hex(register))     
+        lines.append("        //axi_write(R_AXI_BASEADR + %s + (i*4), &tmp, 4, R_AXI_DSTADR);\n" % hex(register))     
         lines.append("    }\n")
         lines.append("}\n")
 
@@ -345,7 +345,7 @@ class FromASN1SCCtoVHDL(RecursiveMapperGeneric[str, List[int]]):  # pylint: disa
         lines = []  # type: List[str]
         lines.append("{\n")
         lines.append("    unsigned int tmp = (unsigned int)%s;\n" % srcVar)
-        lines.append("    axi_write(R_AXI_BASEADR + %s, &tmp, 4, R_AXI_DSTADR);\n" % hex(register))
+        lines.append("    //axi_write(R_AXI_BASEADR + %s, &tmp, 4, R_AXI_DSTADR);\n" % hex(register))
         lines.append("}\n")
         dstVHDL[0] += 4
         return lines
@@ -495,7 +495,8 @@ static long long bswap64(long long x)
 
 unsigned int count;
 
-#include "axi123.h"
+// include any needed lib headers
+// #include "axi123.h"
 
 #define R_AXI_DSTADR 0xfe
 #define R_AXI_BASEADR 0x80000300
@@ -528,7 +529,7 @@ unsigned int count;
     # def InitializeBlock(self, modelingLanguage, asnFile, sp, subProgramImplementation, maybeFVname):
     def InitializeBlock(self, unused_modelingLanguage: str, unused_asnFile: str, unused_sp: ApLevelContainer, unused_subProgramImplementation: str, unused_maybeFVname: str) -> None:
         self.C_SourceFile.write('''    LOGINFO("[ ********* %s Init ********* ] Device driver init ... \\n");
-    axi123_init();\n
+    //axi123_init();\n
 ''' % (self.CleanNameAsADAWants(unused_maybeFVname)))
 
     # def ExecuteBlock(self, modelingLanguage, asnFile, sp, subProgramImplementation, maybeFVname):
@@ -537,23 +538,23 @@ unsigned int count;
         self.C_SourceFile.write("    // Now that the parameters are passed inside the FPGA, run the processing logic\n")
         
         self.C_SourceFile.write('    unsigned int okstart = 1;\n')
-        self.C_SourceFile.write('    if (axi_write(R_AXI_BASEADR + %s, &okstart, 4, R_AXI_DSTADR)) {\n' %
+        self.C_SourceFile.write('    //if (//axi_write(R_AXI_BASEADR + %s, &okstart, 4, R_AXI_DSTADR)) {\n' %
                                 hex(int(VHDL_Circuit.lookupSP[sp._id]._offset)))
-        self.C_SourceFile.write('       LOGERROR("Failed writing Target\\n");\n')
-        self.C_SourceFile.write('       return -1;\n')
-        self.C_SourceFile.write('    }\n')
-        self.C_SourceFile.write('    LOGDEBUG(" - Write OK\\n");\n')
+        self.C_SourceFile.write('       //LOGERROR("Failed writing Target\\n");\n')
+        self.C_SourceFile.write('       //return -1;\n')
+        self.C_SourceFile.write('    //}\n')
+        self.C_SourceFile.write('    //LOGDEBUG(" - Write OK\\n");\n')
 
         self.C_SourceFile.write('    count = 0;\n')
         self.C_SourceFile.write('    while (!flag && count < RETRIES){\n')
         self.C_SourceFile.write("      // Wait for processing logic to complete\n")
         self.C_SourceFile.write('      count++;\n')
-        self.C_SourceFile.write('      if (axi_read(R_AXI_BASEADR + %s, &flag, 4, R_AXI_DSTADR)) {\n' %
+        self.C_SourceFile.write('      //if (//axi_read(R_AXI_BASEADR + %s, &flag, 4, R_AXI_DSTADR)) {\n' %
                                 hex(int(VHDL_Circuit.lookupSP[sp._id]._offset)))
-        self.C_SourceFile.write('        LOGERROR("Failed reading Target\\n");\n')
-        self.C_SourceFile.write('        return -1;\n')
-        self.C_SourceFile.write('      }\n')
-        self.C_SourceFile.write('      LOGDEBUG(" - Read OK\\n");\n')
+        self.C_SourceFile.write('        //LOGERROR("Failed reading Target\\n");\n')
+        self.C_SourceFile.write('        //return -1;\n')
+        self.C_SourceFile.write('      //}\n')
+        self.C_SourceFile.write('      //LOGDEBUG(" - Read OK\\n");\n')
         self.C_SourceFile.write('    }\n')
         self.C_SourceFile.write('    if(!flag && count == RETRIES){\n')
         self.C_SourceFile.write('      LOGERROR("Max Target read attempts reached.\\n");\n')
@@ -688,8 +689,8 @@ class MapASN1ToVHDLreadinputdata(RecursiveMapperGeneric[List[int], str]):  # pyl
             panicWithCallStack("INTEGERs need explicit ranges when generating VHDL code... (%s)" % node.Location())  # pragma: no cover
         # bits = math.log(max(map(abs, node._range)+1),2)+(1 if node._range[0] < 0 else 0)
         lines = []  # type: List[str]
-        lines.append('when X"%s" => %s(31 downto  0) <= axii.pwdata(31 downto 0);' % (hex(reginfo[0] + 0)[2:] if len(hex(reginfo[0] + 0)[2:]) > 3 else ('0' + hex(reginfo[0] + 0)[2:]), dstVHDL))
-        lines.append('when X"%s" => %s(63 downto  32) <= axii.pwdata(31 downto 0);' % (hex(reginfo[0] + 4)[2:] if len(hex(reginfo[0] + 4)[2:]) > 3 else ('0' + hex(reginfo[0] + 4)[2:]), dstVHDL))
+        lines.append('when (%s) => %s(31 downto  0) <= S_AXI_WDATA;' % (reginfo[0], dstVHDL))
+        lines.append('when (%s) => %s(63 downto  32) <= S_AXI_WDATA;' % (reginfo[0] + 4, dstVHDL))
         reginfo[0] += 8
         return lines
 
@@ -762,8 +763,8 @@ class MapASN1ToVHDLwriteoutputdata(RecursiveMapperGeneric[List[int], str]):  # p
             panicWithCallStack("INTEGERs need explicit ranges when generating VHDL code... (%s)" % node.Location())  # pragma: no cover
         # bits = math.log(max(map(abs, node._range)+1),2)+(1 if node._range[0] < 0 else 0)
         lines = []  # type: List[str]
-        lines.append('when X"%s" => axio.prdata(31 downto 0) <= %s(31 downto  0);' % (hex(reginfo[0] + 0)[2:] if len(hex(reginfo[0] + 0)[2:]) > 3 else ('0' + hex(reginfo[0] + 0)[2:]), dstVHDL))
-        lines.append('when X"%s" => axio.prdata(31 downto 0) <= %s(63 downto  32);' % (hex(reginfo[0] + 4)[2:] if len(hex(reginfo[0] + 4)[2:]) > 3 else ('0' + hex(reginfo[0] + 4)[2:]), dstVHDL))
+        lines.append('when (%s) => v_comb_out.rdata(31 downto 0) := %s(31 downto  0);' % (reginfo[0] + 0, dstVHDL))
+        lines.append('when (%s) => v_comb_out.rdata(31 downto 0) := %s(63 downto  32);' % (reginfo[0] + 4, dstVHDL))
         reginfo[0] += 8
         return lines
 
@@ -950,10 +951,12 @@ g_placeholders = {
     "setStartSignalsLow": '',
     "outputs": '',
     "completions": '',
+    "starts": '',
     "writeoutputdata": '',
     "connectionsToSystemC": '',
     "updateCalculationsCompleteReset": '',
-    "updateCalculationsComplete": ''
+    "updateCalculationsComplete": '',
+    "pi": ''
 }
 
 
@@ -1027,6 +1030,7 @@ def OnFinal() -> None:
 
     outputs = []
     completions = []
+    starts = []
 
     from . import vhdlTemplateZynQZC706
     ZynQZC706_tarball = os.getenv("ZYNQZC706")
@@ -1040,8 +1044,8 @@ def OnFinal() -> None:
         ioregisterLines = []
 
         readinputdataLines = []
-        readinputdataLines.append("\n" + ' ' * 22 + '-- kickoff ' + c._spCleanName)
-        kickoffWriteAccess = "when X\"%(off)s\" => %(pi)s_StartCalculationsInternal <= %(pi)s_StartCalculationsInternal xor '1';\n" % {'pi': c._spCleanName, 'off': hex(0x0300 + c._offset)[2:] if len(hex(0x0300 + c._offset)[2:]) > 3 else ('0' + hex(0x0300 + c._offset)[2:])}
+        readinputdataLines.append("\n" + '\t' * 6 + '-- kickoff ' + c._spCleanName)
+        kickoffWriteAccess = "when (%(off)s) => v.%(pi)s_StartCalculationsInternal := r.%(pi)s_StartCalculationsInternal xor '1';\n" % {'pi': c._spCleanName , 'off': 768 + c._offset}
         readinputdataLines.append(kickoffWriteAccess)
 
         connectionsToSystemCLines = []
@@ -1069,9 +1073,9 @@ def OnFinal() -> None:
                 outputs.extend([c._spCleanName + '_' + x for x in outputsMapper.Map(p._id, 1, node, VHDL_Circuit.leafTypeDict, VHDL_Circuit.names)])
 
         writeoutputdataLines = []
-        writeoutputdataLines.append("\n" + ' ' * 16 + '-- result calculated flag ' + c._spCleanName)
-        accessCompletionFlag = "when X\"%(off)s\" => axio.prdata(7 downto 0) <= \"0000000\" & %(pi)s_CalculationsComplete;\n" % \
-            {'pi': c._spCleanName, 'off': hex(0x0300 + c._offset)[2:] if len(hex(0x0300 + c._offset)[2:]) > 3 else ('0' + hex(0x0300 + c._offset)[2:])}
+        writeoutputdataLines.append("\n" + '\t' * 5 + '-- result calculated flag ' + c._spCleanName)
+        accessCompletionFlag = "when (%(off)s) => v_comb_out.rdata(7 downto 0) := \"0000000\" & r.done_led;\n" % \
+            {'pi': c._spCleanName, 'off': 768 + c._offset}
         writeoutputdataLines.append(accessCompletionFlag)
 
         for p in c._sp._params:
@@ -1082,6 +1086,7 @@ def OnFinal() -> None:
                         counter, c._spCleanName + '_' + p._id, node, VHDL_Circuit.leafTypeDict, VHDL_Circuit.names))
 
         completions.append(c._spCleanName + '_CalculationsComplete')
+        starts.append(c._spCleanName + '_StartCalculationsPulse')
 
         AddToStr('circuits', '    component bambu_%s is\n' % c._spCleanName)
         AddToStr('circuits', '    port (\n')
@@ -1103,7 +1108,7 @@ def OnFinal() -> None:
         skeleton.append('        reset_%s  : in  std_logic\n' % c._spCleanName)
         skeleton.append('    );\n')
         skeleton.append('    end bambu_%s;\n\n' % c._spCleanName)
-        vhdlSkeleton = open(vhdlBackend.dir + "/TASTE-VHDL-DESIGN/design/bambu_" + c._spCleanName + '.vhd', 'w')
+        vhdlSkeleton = open(vhdlBackend.dir + "/TASTE-VHDL-DESIGN/ip/src/bambu_" + c._spCleanName + '.vhd', 'w')
         vhdlSkeleton.write(
             vhdlTemplateZynQZC706.per_circuit_vhd % {
                 'pi': c._spCleanName,
@@ -1114,12 +1119,8 @@ def OnFinal() -> None:
         AddToStr('ioregisters', '\n'.join(['    ' + x for x in ioregisterLines]) + '\n\n')
 
         AddToStr('startStopSignals', '''\
-    signal %(pi)s_StartCalculationsInternalOld : std_logic;
-    signal %(pi)s_StartCalculationsInternal : std_logic;
     signal %(pi)s_StartCalculationsPulse : std_logic;
-    signal %(pi)s_CalculationsCompletePulse : std_logic;          -- the finish signal for %(pi)s
-    signal %(pi)s_CalculationsComplete : std_logic;          -- the finish signal register
-
+    signal %(pi)s_CalculationsComplete : std_logic;          -- the finish signal for %(pi)s
 ''' % {'pi': c._spCleanName})
 
         AddToStr('reset', "            %(pi)s_StartCalculationsInternal    <= '0';\n" % {'pi': c._spCleanName})
@@ -1148,15 +1149,15 @@ def OnFinal() -> None:
         AddToStr('setStartSignalsLow', ' ' * 12 + "     %s_StartCalculationsInternalOld <= '0';\n" % c._spCleanName)
         AddToStr('setStartSignalsLow', ' ' * 12 + "end if;\n")
         
-        AddToStr('writeoutputdata', '\n'.join([' ' * 16 + x for x in writeoutputdataLines]) + '\n')
+        AddToStr('writeoutputdata', '\n'.join(['\t' * 5 + x for x in writeoutputdataLines]) + '\n')
 
         AddToStr('connectionsToSystemC', '\n    Interface_%s : bambu_%s\n' % (c._spCleanName, c._spCleanName))
         AddToStr('connectionsToSystemC', '        port map (\n')
         AddToStr('connectionsToSystemC', ',\n'.join(['            ' + x for x in connectionsToSystemCLines]) + ',\n')
         AddToStr('connectionsToSystemC', '            start_%s => %s_StartCalculationsPulse,\n' % (c._spCleanName, c._spCleanName))
-        AddToStr('connectionsToSystemC', '            finish_%s => %s_CalculationsCompletePulse,\n' % (c._spCleanName, c._spCleanName))
-        AddToStr('connectionsToSystemC', '            clock_%s => clk_i,\n' % c._spCleanName)
-        AddToStr('connectionsToSystemC', '            reset_%s => reset_n\n' % c._spCleanName)
+        AddToStr('connectionsToSystemC', '            finish_%s => %s_CalculationsComplete,\n' % (c._spCleanName, c._spCleanName))
+        AddToStr('connectionsToSystemC', '            clock_%s => S_AXI_ACLK,\n' % c._spCleanName)
+        AddToStr('connectionsToSystemC', '            reset_%s => S_AXI_ARESETN\n' % c._spCleanName)
         AddToStr('connectionsToSystemC', '        );\n')
 
         AddToStr('updateCalculationsCompleteReset', ' ' * 12 + "%s_CalculationsComplete    <= '0';\n" % c._spCleanName)
@@ -1168,29 +1169,24 @@ def OnFinal() -> None:
 
     AddToStr('outputs', ', '.join(outputs) + (', ' if len(outputs) else ''))
     AddToStr('completions', ', '.join(completions))
+    AddToStr('starts', ', '.join(starts))
 
     # Handle invalid write accesses in the passinput space by kicking off the last circuit (i.e. an FDIR circuit)
     if len(VHDL_Circuit.allCircuits) > 0:
-        alternate_kickoffWriteAccess = "when others => %(pi)s_StartCalculationsInternal <= %(pi)s_StartCalculationsInternal xor '1';\n" % {'pi': VHDL_Circuit.allCircuits[-1]._spCleanName}
-    AddToStr('readinputdata', ' ' * 22 + alternate_kickoffWriteAccess)
+        alternate_kickoffWriteAccess = "when others => v.%(pi)s_StartCalculationsInternal := r.%(pi)s_StartCalculationsInternal xor '1';\n" % {'pi': VHDL_Circuit.allCircuits[-1]._spCleanName}
+    AddToStr('readinputdata', '\t' * 6 + alternate_kickoffWriteAccess)
 
-    vhdlFile = open(vhdlBackend.dir + '/TASTE-VHDL-DESIGN/design/TASTE.vhd', 'w')
+    AddToStr('pi', "%s" % c._spCleanName)
+    vhdlFile = open(vhdlBackend.dir + '/TASTE-VHDL-DESIGN/ip/src/TASTE2.vhd', 'w')
     vhdlFile.write(vhdlTemplateZynQZC706.vhd % g_placeholders)
     vhdlFile.close()
 
     msg = ""
     for c in VHDL_Circuit.allCircuits:
-        msg += ' bambu_%s.vhd' % c._spCleanName
+        msg += ' ../ip/src/bambu_%s.vhd' % c._spCleanName
     makefile = open(vhdlBackend.dir + '/TASTE-VHDL-DESIGN/design/Makefile', 'w')
     makefile.write(vhdlTemplateZynQZC706.makefile % {'pi': msg, 'tab': '\t'})
     makefile.close()
-
-    msg = ""
-    for c in VHDL_Circuit.allCircuits:
-        msg += '\n\'bambu_%s.vhd\',' % c._spCleanName
-    script = open(vhdlBackend.dir + '/TASTE-VHDL-DESIGN/design/script.py', 'w')
-    script.write(vhdlTemplateZynQZC706.script % {'pi': msg})
-    script.close()
 
 
 def getTypeAndVarsAsBambuWantsThem(param: Param, names: AST_Lookup, leafTypeDict: AST_Leaftypes):

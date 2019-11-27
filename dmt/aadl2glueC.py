@@ -221,15 +221,15 @@ def getSyncBackend(modelingLanguage: str) -> Sync_B_Mapper:
     if modelingLanguage == 'vhdl':
         if os.getenv("BRAVE") is not None:
             if os.getenv("ZESTSC1") is not None or os.getenv("ZYNQZC706") is not None:
-                panic("Backend conflict: more HW target environment variables defined apart from 'BRAVE'.")
+                panic("Backend conflict: more HW target environment variables defined apart from 'BRAVE'. Please run 'unset' for each of those.")
             return cast(Sync_B_Mapper, brave_B_mapper)
         if os.getenv("ZESTSC1") is not None:
             if os.getenv("BRAVE") is not None or os.getenv("ZYNQZC706") is not None:
-                panic("Backend conflict: more HW target environment variables defined apart from 'ZESTSC1'.")
+                panic("Backend conflict: more HW target environment variables defined apart from 'ZESTSC1'. Please run 'unset' for each of those.")
             return cast(Sync_B_Mapper, zestSC1_B_mapper)
         if os.getenv("ZYNQZC706") is not None:
             if os.getenv("BRAVE") is not None or os.getenv("ZESTSC1") is not None:
-                panic("Backend conflict: more HW target environment variables defined apart from 'ZYNQZC706'.")
+                panic("Backend conflict: more HW target environment variables defined apart from 'ZYNQZC706'. Please run 'unset' for each of those.")
             return cast(Sync_B_Mapper, zynqzc706_B_mapper)
     return cast(Sync_B_Mapper, g_sync_mappers[modelingLanguage])
 
@@ -394,15 +394,15 @@ def ProcessCustomBackends(
         elif lang.lower() == "vhdl":  # pragma: no cover
             if os.getenv("BRAVE") is not None:
                 if os.getenv("ZESTSC1") is not None or os.getenv("ZYNQZC706") is not None:
-                    panic("Backend conflict: more HW target environment variables defined apart from 'BRAVE'.")
+                    panic("Backend conflict: more HW target environment variables defined apart from 'BRAVE'. Please run 'unset' for each of those.")
                 return [cast(Sync_B_Mapper, brave_B_mapper)]  # pragma: no cover
             if os.getenv("ZESTSC1") is not None:
                 if os.getenv("BRAVE") is not None or os.getenv("ZYNQZC706") is not None:
-                    panic("Backend conflict: more HW target environment variables defined apart from 'ZESTSC1'.")
+                    panic("Backend conflict: more HW target environment variables defined apart from 'ZESTSC1'. Please run 'unset' for each of those.")
                 return [cast(Sync_B_Mapper, zestSC1_B_mapper)]  # pragma: no cover
             if os.getenv("ZYNQZC706") is not None:
                 if os.getenv("BRAVE") is not None or os.getenv("ZESTSC1") is not None:
-                    panic("Backend conflict: more HW target environment variables defined apart from 'ZYNQZC706'.")
+                    panic("Backend conflict: more HW target environment variables defined apart from 'ZYNQZC706'. Please run 'unset' for each of those.")
                 return [cast(Sync_B_Mapper, zynqzc706_B_mapper)]  # pragma: no cover
             else:
                 return [cast(Sync_B_Mapper, vhdl_B_mapper)]  # pragma: no cover
