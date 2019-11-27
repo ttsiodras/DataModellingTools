@@ -33,6 +33,11 @@ parameters, which have C callable interfaces. The necessary
 stubs (to allow calling from the VM side) are also generated.
 '''
 
+'''
+Status: Device driver side (PS, ARM) calls to AXI are still to be implemented. Hence such AXI writes/reads are temporarily commented out.
+TODO This and other possibly needed libraries will soon be linked and included with the exported device driver.
+'''
+
 import os
 import re
 import math
