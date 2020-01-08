@@ -175,9 +175,12 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
             self.C_SourceFile.write("#ifdef __unix__\n")
             self.C_SourceFile.write("#include <stdio.h>\n")
             self.C_SourceFile.write("#include <string.h>\n\n")
-            self.C_SourceFile.write("#include <assert.h>\n\n")
-            self.C_SourceFile.write("#endif\n")
+            self.C_SourceFile.write("#include <assert.h>\n")
+            self.C_SourceFile.write("#endif\n\n")
 
+            self.C_SourceFile.write("#ifndef STATIC\n")
+            self.C_SourceFile.write("#define STATIC\n")
+            self.C_SourceFile.write("#endif\n\n")
             self.C_SourceFile.write("#include \"%s\"\n" % outputCheaderFilename)
 
             self.HeadersOnStartup(modelingLanguage, asnFile, subProgram, subProgramImplementation, outputDir, maybeFVname)
