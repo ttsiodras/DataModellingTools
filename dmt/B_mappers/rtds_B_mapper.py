@@ -489,7 +489,7 @@ class RTDS_GlueGenerator(ASynchronousToolGlueGenerator):
         fileOutHeader = self.C_HeaderFile
         fileOutSource = self.C_SourceFile
         isPointer = True
-        if isinstance(node, AsnBasicNode) or isinstance(node, AsnEnumerated):
+        if isinstance(node, (AsnBasicNode, AsnEnumerated)):
             isPointer = False
         cleaned = self.CleanNameAsToolWants(nodeTypename)
         fileOutHeader.write(

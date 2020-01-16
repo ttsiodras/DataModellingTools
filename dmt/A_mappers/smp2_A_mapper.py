@@ -46,7 +46,7 @@ def Version() -> None:
 
 
 # noinspection PyDefaultArgument
-def getUID(strIdentifier: str, idStore: Dict[str, str]={}) -> str:  # pylint: disable=dangerous-default-value
+def getUID(strIdentifier: str, idStore: Dict[str, str] = {}) -> str:  # pylint: disable=dangerous-default-value
     def h(digits: int) -> str:
         ret = ""
         for _ in range(0, digits):

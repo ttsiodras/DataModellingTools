@@ -211,7 +211,7 @@ CREATE TABLE {cleanTypename} (
 def CommonSeqSetChoice(nodeTypename: str,
                        node: Union[AsnChoice, AsnSet, AsnSequence],
                        unused_leafTypeDict: AST_Leaftypes,
-                       isChoice: bool=False) -> None:
+                       isChoice: bool = False) -> None:
     cleanTypename = CleanName(nodeTypename)
     g_sqlOutput.write(
         '\nCREATE TABLE {cleanTypename} (\n    id int NOT NULL,\n'.format(

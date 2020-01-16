@@ -64,7 +64,7 @@ def DiscoverBadTypes() -> SetOfBadTypenames:
     # Hack for IA5Strings (IA5s are used in TASTE's runtime configuration spec)
     while True:
         foundOne = False
-        for nodeTypename in names.keys():
+        for nodeTypename in names:
             nodeAST = names[nodeTypename]
             if nodeTypename not in badTypes and CheckNodeForIA5(nodeAST):
                 badTypes.add(nodeTypename)

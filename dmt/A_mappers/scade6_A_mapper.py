@@ -88,7 +88,7 @@ def FixupNestedStringsAndEnumerated() -> None:
         node = names[nodeTypename]
         if isinstance(node, (AsnSequence, AsnChoice, AsnSet)):
             for child in node._members:
-                if isinstance(child[1], AsnString) or isinstance(child[1], AsnEnumerated):
+                if isinstance(child[1], (AsnString, AsnEnumerated)):
                     newName = nodeTypename + "_" + child[0]                                                      # pragma: no cover
                     while newName in names:                                                                      # pragma: no cover
                         newName += "_t"                                                                          # pragma: no cover
@@ -158,7 +158,7 @@ def RenderElements(controlString: str) -> None:
         else:
             # This is a bug in pylint - scheduled to be fixed in next release, by:
             # https://github.com/PyCQA/pylint/commit/6d31776454b5e308e4b869a1893b39083dca3146
-            newElement = g_doc.createElement(finalElementName)  # pylint: disable=redefined-variable-type
+            newElement = g_doc.createElement(finalElementName)
         if attributes:
             for atr in attributes:
                 # This is a bug in pylint - scheduled to be fixed in next release, by:
@@ -168,7 +168,7 @@ def RenderElements(controlString: str) -> None:
             parent = createdElements[under]
         parent.appendChild(newElement)
         createdElements[finalElementName] = newElement
-        parent = newElement  # pylint: disable=redefined-variable-type
+        parent = newElement
 
 
 def GetOID(nodeTypename: str) -> str:
@@ -259,7 +259,7 @@ def OnBasic(nodeTypename: str, node: AsnBasicNode, unused_leafTypeDict: AST_Leaf
 def CommonSeqSetChoice(nodeTypename: str,
                        node: Union[AsnSequence, AsnSet, AsnChoice],
                        unused_leafTypeDict: AST_Leaftypes,
-                       isChoice: bool=False) -> None:
+                       isChoice: bool = False) -> None:
     if nodeTypename in g_declaredTypes:
         return
     g_declaredTypes.add(nodeTypename)

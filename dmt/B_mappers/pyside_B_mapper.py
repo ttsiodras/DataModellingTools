@@ -156,7 +156,12 @@ def OnStartup(
 
 import sys
 import ctypes
-import Queue
+try:
+    # Python2
+    import Queue
+except ImportError:
+    # Python3
+    import queue as Queue
 import datamodel
 import DV
 import Stubs
@@ -220,8 +225,9 @@ def setSharedLib(dll=None):
     shared_lib = True
     {tcName}_via_shared_lib = dll.{fvName}_PI_{tcName}
 
-'''.format(fvName=FVname, tcName=CleanSP))
-        g_PyDataModel.write('\ntc["{tcName}"] = '.format(tcName=CleanSP))
+'''.format(fvName=FVname.lower(), tcName=CleanSP))
+        g_PyDataModel.write('\ntc["{tcName}"] = '.format(
+            tcName=CleanSP))
         buttons = ([["sendButton", "Send TC"], ["loadButton", "Load TC"],
                     ["saveButton", "Save TC"]])
         classType = "asn1Editor"
@@ -274,7 +280,7 @@ def setSharedLib(dll=None):
     shared_lib = dll
     dll.register_{tmName}(cmp_func)
 
-'''.format(tmName=CleanSP, fvName=FVname))
+'''.format(tmName=CleanSP, fvName=FVname.lower()))
         g_PyDataModel.write('\ntm["{tmName}"] = '.format(tmName=CleanSP))
         buttons = ([["plotButton", "Plot"], ["meterButton", "Meter"],
                     ["unusedButton", "Unused"]])
@@ -414,7 +420,7 @@ def encode_uPER(asnVal):
         if log:
             log.error('uPER encoding failed')
         else:
-            print '[ERROR] uPER encoding failed'
+            print('[ERROR] uPER encoding failed')
         return
 
     return buffer.GetPyString()
@@ -467,7 +473,7 @@ def expect(Q, VNvalue, ignoreOther=False, timeout=None):
                 "Expected {interfaceName} (%s), but received other\
  (%s)" % (str(tmId), str(msgId)))
         else:
-            print 'Received other (%s), but still waiting for {interfaceName}'\
+            print('Received other (%s), but still waiting for {interfaceName}')\
  % str(msgId)
             Q.task_done()
 '''.format(asn1Type=CleanASNType, interfaceName=CleanSP.replace('_', '-')))
@@ -505,7 +511,7 @@ def sendTC(tc):
             if log:
                 log.error('UPER Encoding or UDP Sending failed')
             else:
-                print '[ERROR] UPER Encoding or UDP Sending failed'
+                print('[ERROR] UPER Encoding or UDP Sending failed')
 
     elif shared_lib:
         # TC is sent in native format

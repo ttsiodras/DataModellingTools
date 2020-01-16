@@ -30,9 +30,6 @@ from .commonPy.asnAST import (
 
 from .commonPy.utility import inform, panic, mysystem
 
-g_keepFiles = False
-g_privateHeapSize = -1
-g_platformCompilers = ['gcc']
 # Ada package names per type
 g_AdaPackageNameOfType = {}
 
@@ -90,15 +87,11 @@ def calculateForNativeAndASN1SCC(absASN1SCCpath, autosrc, names, inputFiles):
     # Spawn ASN1SCC.exe compiler - for MacOS define a new sh file calling mono Asn1f2.exe
     if platform.system() == "Windows" or platform.system() == "Darwin":
         mysystem("%s -c -uPER -o \"%s\" %s %s" % (absASN1SCCpath, autosrc, acn, '"' + '" "'.join(inputFiles) + '"'))
-        for line in os.popen("%s -AdaUses %s" % (absASN1SCCpath, '" "'.join(inputASN1files))):
-            g_AdaPackageNameOfType[line.split(':')[0]] = line.split(':')[1].rstrip()
     else:
-        cmd = "mono %s -c -uPER -o \"%s\" %s %s" % (absASN1SCCpath, autosrc, acn, '"' + '" "'.join(inputFiles) + '"')
+        cmd = "mono %s -c -uPER -fp AUTO -typePrefix asn1Scc -o \"%s\" %s %s" % (absASN1SCCpath, autosrc, acn, '"' + '" "'.join(inputFiles) + '"')
         res = mysystem(cmd)
         if res != 0:
             panic("This command failed: %s\n" % cmd)
-        for line in os.popen('mono  %s -AdaUses "%s"' % (absASN1SCCpath, '" "'.join(inputASN1files))):
-            g_AdaPackageNameOfType[line.split(':')[0]] = line.split(':')[1].rstrip()
 
     msgEncoderFile = open(autosrc + os.sep + base + ".stats.c", 'w')
 
@@ -126,10 +119,10 @@ def calculateForNativeAndASN1SCC(absASN1SCCpath, autosrc, names, inputFiles):
         if node._isArtificial:
             continue
         cleaned = cleanNameAsAsn1cWants(asnTypename)
-        msgEncoderFile.write('static %s sizeof_%s;\n' % (cleaned, cleaned))
-        msgEncoderFile.write('char bytesEncoding_%s[%s_REQUIRED_BYTES_FOR_ENCODING];\n' % (cleaned, cleaned))
+        msgEncoderFile.write('static asn1Scc%s sizeof_%s;\n' % (cleaned, cleaned))
+        msgEncoderFile.write('char bytesEncoding_%s[asn1Scc%s_REQUIRED_BYTES_FOR_ENCODING];\n' % (cleaned, cleaned))
         if acn != "":
-            msgEncoderFile.write('char bytesAcnEncoding_%s[%s_REQUIRED_BYTES_FOR_ACN_ENCODING];\n' % (cleaned, cleaned))
+            msgEncoderFile.write('char bytesAcnEncoding_%s[asn1Scc%s_REQUIRED_BYTES_FOR_ACN_ENCODING];\n' % (cleaned, cleaned))
     msgEncoderFile.close()
 
     # Code generation - asn1c part
@@ -142,16 +135,16 @@ def calculateForNativeAndASN1SCC(absASN1SCCpath, autosrc, names, inputFiles):
         namesDict[cleanNameAsAsn1cWants(asnTypename)] = asnTypename
 
     # Get a list of all available compilers
-    global g_platformCompilers
+    platformCompilers = ['gcc']
     try:
         pipe = Popen("find-supported-compilers", stdout=PIPE).stdout
-        g_platformCompilers = pipe.read().splitlines()
+        platformCompilers = pipe.read().splitlines()
     except OSError as err:
         print('Not running in a TASTE Environment: {}\nUsing GCC only for computing sizeofs'.format(str(err)))
-        g_platformCompilers = ['gcc'.encode()]
+        platformCompilers = ['gcc'.encode()]
     # Get the maximum size of each asn1type from all platform compilers
     messageSizes = {}
-    for cc in g_platformCompilers:
+    for cc in platformCompilers:
         # Compile the generated C-file with each compiler
         pwd = os.getcwd()
         os.chdir(autosrc)
@@ -162,7 +155,7 @@ def calculateForNativeAndASN1SCC(absASN1SCCpath, autosrc, names, inputFiles):
         for cfile in os.listdir("."):
             if cfile.endswith(".c"):
                 if mysystem('%s -c -std=c99 -I. "%s" 2>"%s.stats.err"' % (path_to_compiler, cfile, base)) != 0:
-                    panic("Compilation of generated sources failed - is %s installed?\n"
+                    panic("Compilation with %s failed...\n"
                           "(report inside '%s')\n" % (cc, os.path.join(autosrc, base + ".stats.err")))
         os.chdir(pwd)
 
@@ -171,7 +164,7 @@ def calculateForNativeAndASN1SCC(absASN1SCCpath, autosrc, names, inputFiles):
             nm = "gnm"
         else:
             nm = "nm"
-        for line in os.popen( nm + " --print-size " + autosrc + os.sep + base + ".stats.o").readlines():
+        for line in os.popen(nm + " --print-size " + autosrc + os.sep + base + ".stats.o").readlines():
             try:
                 (dummy, size, dummy2, msg) = line.split()
             except ValueError:
@@ -213,6 +206,7 @@ Where <files> is a list of ASN.1 and ACN files, and options can be:
     -a, --aadlv2    Generate AADLv2 compliant output
     -v, --version   Show version number
     -d, --debug	    Enable debug output
+    -f, --fast      Do not emit Source_Data_Size lines (invoke ASN1SCC without uPER or ACN options)
     -p, --platform  Comma seperated list of platform compilers (default: gcc)
     -h, --help	    This help message""")
 
@@ -229,8 +223,14 @@ def main():
         print("asn2aadlPlus v" + str(version))  # pragma: no cover
         sys.exit(1)  # pragma: no cover
 
-    global g_keepFiles
-    global g_privateHeapSize
+    keepFiles = False
+
+    projectCache = os.getenv("PROJECT_CACHE")
+    if projectCache is not None and not os.path.isdir(projectCache):
+        try:
+            os.mkdir(projectCache)
+        except:
+            panic("The configured cache folder:\n\n\t" + projectCache + "\n\n...is not there!\n")
 
     # Backwards compatibility - the '-acn' option is no longer necessary
     # (we auto-detect ACN files via their extension)
@@ -242,15 +242,15 @@ def main():
         sys.argv[ofs] = '--aadlv2'
 
     try:
-        optlist, args = getopt.gnu_getopt(sys.argv[1:], "hvkadt:", ['help', 'version', 'keep', 'aadlv2', 'debug', 'platform=', 'test='])
-    except:
+        optlist, args = getopt.gnu_getopt(sys.argv[1:], "hvkadf", ['help', 'version', 'keep', 'aadlv2', 'debug', 'fast', 'platform='])
+    except getopt.GetoptError:
         usage()
 
     bAADLv2 = False
-    g_keepFiles = False
-    g_privateHeapSize = -1
+    keepFiles = False
+    bFast = False
 
-    for opt, arg in optlist:
+    for opt, unused_arg in optlist:
         if opt in ("-h", "--help"):
             usage()
         elif opt in ("-v", "--version"):
@@ -258,13 +258,13 @@ def main():
             sys.exit(0)
         elif opt in ("-d", "--debug"):
             configMT.debugParser = True
+        elif opt in ("-f", "--fast"):
+            bFast = True
         elif opt in ("-a", "--aadlv2"):
             # Updated, June 2011: AADLv1 no longer supported.
             bAADLv2 = True
         elif opt in ("-k", "--keep"):
-            g_keepFiles = True
-        elif opt in ("-t", "--test"):
-            g_privateHeapSize = int(arg)
+            keepFiles = True
 
     if len(args) < 2:
         usage()
@@ -301,15 +301,20 @@ def main():
 
     def checkIfNoWorkIsNeeded(asnfiles, aadlfile):
         oldMD5s = {}
+        oldBFast = None
         for line in open(aadlfile):
+            if 'MadeInFastMode' in line:
+                oldBFast = line.split(':')[1] == "True"
             if 'InputASN1FileChecksum' in line:
                 md5sum, asnfile = line.split(':')[1:3]
                 oldMD5s[asnfile] = md5sum
+
         # if the output AADL file contained MD5 checksums of the input ASN.1 files
-        if oldMD5s:
+        # and the file was created using the same "--fast" setup...
+        if oldMD5s and oldBFast == bFast:
             def ok(f):
                 return os.path.exists(f) and md5(f) == oldMD5s[f]
-            # ...and all the current input ASN.1 files exist in the 'burned' list 
+            # ...and all the current input ASN.1 files exist in the 'burned' list
             # that was built inside the previous version of the output AADL file,
             # AND
             # all the current input ASN.1 files exist and their MD5 checksum
@@ -322,8 +327,7 @@ def main():
                 sys.exit(0)
 
     if os.path.exists(aadlFile) and all(os.path.exists(x) for x in inputFiles):
-        checkIfNoWorkIsNeeded([x for x in inputFiles if not x.lower().endswith(".acn")],
-                              aadlFile)
+        checkIfNoWorkIsNeeded(inputFiles, aadlFile)
 
     # Check if we can skip the work altogether!
 
@@ -338,14 +342,24 @@ def main():
         panic("ASN1SCC seems not installed on your system (asn1.exe not found in PATH).\n")
     absASN1SCCpath = os.path.abspath(asn1SccPath)
 
+    # Update the AdaUses dictionary - can now be safely done in all cases,
+    # since the information is extracted from the base ASN1SCC AST.
+    for asnModuleID, setOfTypenames in asnParser.g_adaUses.items():
+        for typeName in setOfTypenames:
+            g_AdaPackageNameOfType[typeName] = asnModuleID.replace('-', '_')
+
     # A, those good old days... I could calculate the buffer size for BER (SIZ), and then compare
     # it to the size for Native (SIZ2, see above) and the max of the two suffices for any conf of the message.
     # CHOICEs, however, changed the picture...  what to put in?
     # Time to use the maximum of Native (SIZ2) and UPER (SIZE) and ACN (SIZ3)...
 
-    messageSizes = calculateForNativeAndASN1SCC(absASN1SCCpath, autosrc, asnParser.g_names, inputFiles)
-    for nodeTypename in list(messageSizes.keys()):
-        messageSizes[nodeTypename] = [messageSizes[nodeTypename], (8 * (int((messageSizes[nodeTypename] - 1) / 8)) + 8)]
+    if not bFast:
+        # If taste-updata-dataview is called, then we just want the GUI to be aware
+        # of the list of ASN.1 types - the Ellidiss GUI does not care about the
+        # Source_Data_Size values... so skip all GCC-related work!
+        messageSizes = calculateForNativeAndASN1SCC(absASN1SCCpath, autosrc, asnParser.g_names, inputFiles)
+        for nodeTypename in list(messageSizes.keys()):
+            messageSizes[nodeTypename] = [messageSizes[nodeTypename], (8 * (int((messageSizes[nodeTypename] - 1) / 8)) + 8)]
 
     base = os.path.basename(aadlFile)
     base = re.sub(r'\..*$', '', base)
@@ -356,7 +370,8 @@ def main():
     o.write('--! File generated by asn2aadl v%s: DO NOT EDIT !\n' % __version__)
     o.write('--------------------------------------------------------\n')
 
-    for f in [x for x in inputFiles if not x.lower().endswith(".acn")]:
+    o.write('--! MadeInFastMode:' + str(bFast) + ':\n')
+    for f in inputFiles:
         o.write('--! InputASN1FileChecksum:' + md5(f) + ':' + f + ':\n')
     o.write('--------------------------------------------------------\n\n')
     o.write('package DataView\n\npublic\n\n')
@@ -365,35 +380,26 @@ def main():
         o.write('  with Taste;\n')
         o.write('  with Base_Types;\n')
         o.write('  with Deployment;\n')
-    # o.write('-- No more private heap required (we use the space certified compiler)\n')
-    # o.write('-- Memory_Required: 0\n\n')
-    try:
-        pathToDirectives = os.popen("taste-config --directives").readlines()[0].strip()
-    except:
-        panic("taste-config is not in the PATH. Aborting...")
     typesUnusableAsInterfaceParameters = []
     if bAADLv2:
         directiveTypes = [
             "Simulink_Tunable_Parameter", "Timer", "Taste_directive"]
         for typeName in directiveTypes:
-            #sourceText = '\n   Source_Text => ("' + pathToDirectives + '");'
             sourceText = ""
             adaPackageName = "TASTE_Directives"
             moduleName = "TASTE-Directives"
-            o.write('''
-DATA {typeName}
-PROPERTIES
-   TASTE::Ada_Package_Name => "{adaPackageName}";
-   Type_Source_Name => "{typeNameASN}";
-   Deployment::ASN1_Module_Name => "{moduleName}";{sourceText}
-   TASTE::Forbid_in_PI => true;
-END {typeName};
-'''.format(pathToDirectives=pathToDirectives,
-           typeName=typeName,
-           typeNameASN=typeName.replace('_', '-'),
-           sourceText=sourceText,
-           adaPackageName=adaPackageName,
-           moduleName=moduleName))
+            o.write('DATA {typeName}\n'
+                    'PROPERTIES\n'
+                    '   TASTE::Ada_Package_Name => "{adaPackageName}";\n'
+                    '   Type_Source_Name => "{typeNameASN}";\n'
+                    '   Deployment::ASN1_Module_Name => "{moduleName}";{sourceText}\n'
+                    '   TASTE::Forbid_in_PI => true;\n'
+                    'END {typeName};\n'.format(
+                        typeName=typeName,
+                        typeNameASN=typeName.replace('_', '-'),
+                        sourceText=sourceText,
+                        adaPackageName=adaPackageName,
+                        moduleName=moduleName))
 
         typesUnusableAsInterfaceParameters = []
         for line in os.popen("badTypes '" + "' '".join(asnFiles) + "'").readlines():
@@ -417,10 +423,10 @@ end Stream_Element_Buffer;
         o.write('    -- name of the ASN.1 source file:\n')
         # o.write('    Source_Text => ("%s");\n' % os.path.basename(asnParser.g_names[asnTypename]._asnFilename))
         o.write('    Source_Text => ("%s");\n' % asnParser.g_names[asnTypename]._asnFilename)
-        prefix = bAADLv2 and "TASTE::" or ""
+        prefix = "TASTE::" if bAADLv2 else ""
         possibleACN = ASNtoACN(asnParser.g_names[asnTypename]._asnFilename)
         if bAADLv2 and os.path.exists(possibleACN):
-            prefix2 = bAADLv2 and "TASTE::" or "assert_properties::"
+            prefix2 = "TASTE::" if bAADLv2 else "assert_properties::"
             base = os.path.splitext(os.path.basename(possibleACN))[0]
             fname = base.replace("-", "_")
             o.write('    %sEncodingDefinitionFile => classifier(DataView::ACN_%s);\n' % (prefix2, fname))
@@ -429,15 +435,17 @@ end Stream_Element_Buffer;
             o.write('    Deployment::ASN1_Module_Name => "%s";\n' % g_AdaPackageNameOfType[asnTypename].replace('_', '-'))
         if os.getenv('UPD') is None:
             o.write('    Source_Language => (ASN1);\n')
-        o.write('    -- Size of a buffer to cover all forms of message representation:\n')
-        le_size = 0 if asnTypename not in messageSizes else messageSizes[asnTypename][0]
-        o.write('    -- Real message size is %d; suggested aligned message buffer is...\n' % le_size)
-        le_size_rounded = 0 if asnTypename not in messageSizes else messageSizes[asnTypename][1]
-        o.write('    Source_Data_Size => %d B%s;\n' % (le_size_rounded, bAADLv2 and "ytes" or ""))
+        if not bFast:
+            o.write('    -- Size of a buffer to cover all forms of message representation:\n')
+            le_size = 0 if asnTypename not in messageSizes else messageSizes[asnTypename][0]
+            o.write('    -- Real message size is %d; suggested aligned message buffer is...\n' % le_size)
+            le_size_rounded = 0 if asnTypename not in messageSizes else messageSizes[asnTypename][1]
+            o.write('    Source_Data_Size => %d B%s;\n' % (le_size_rounded, bAADLv2 and "ytes" or ""))
         o.write('    -- name of the corresponding data type in the source file:\n')
         o.write('    Type_Source_Name => "%s";\n' % asnTypename)
+        o.write('    TASTE::Position_In_File => [ line => %s ; column => 1 ; ];\n' % node._lineno)
         o.write('    -- what kind of type is this?\n')
-        prefix = bAADLv2 and "TASTE" or "assert_properties"
+        prefix = "TASTE" if bAADLv2 else "assert_properties"
         o.write('    %s::ASN1_Basic_Type =>' % prefix)
         if isinstance(node, AsnBool):
             o.write('aBOOLEAN;\n')
@@ -474,7 +482,9 @@ end Stream_Element_Buffer;
             o.write('    -- Buffer to hold a marshalled data of type ' + cleanName + "\n")
             o.write('PROPERTIES\n')
             o.write('    Data_Model::Data_Representation => array;\n')
-            o.write('    Data_Model::Dimension => (%d); -- Size of the buffer\n' % le_size_rounded)
+            if not bFast:
+                o.write('    Data_Model::Dimension => (%d); -- Size of the buffer\n' % le_size_rounded)
+                o.write('    Source_Data_Size => %d Bytes; -- Size of the buffer in bytes\n' % le_size_rounded)
             if bAADLv2:
                 o.write('    Data_Model::Base_Type => (classifier (DataView::Stream_Element_Buffer));\n')
             else:
@@ -491,6 +501,9 @@ end Stream_Element_Buffer;
             o.write('    Length : data Base_Types::%s;\n' % (bAADLv2 and "Unsigned_32" or "uint32"))
             o.write('PROPERTIES\n')
             o.write('    Data_Model::Data_Representation => Struct;\n')
+            if not bFast:
+                o.write('    Source_Data_Size => %d Bytes; -- Size of the buffer in bytes\n' % (
+                    le_size_rounded + 16))
             o.write('END ' + cleanName + '_Buffer.impl;\n\n')
 
     # Generate a SYSTEM in the DataView, otherwise Ocarina cannot parse it
@@ -529,11 +542,12 @@ end Stream_Element_Buffer;
     o.close()
 
     # Remove generated code
-    if not g_keepFiles:
+    if not keepFiles:
         shutil.rmtree(autosrc)
     else:
         print("Generated message buffers in '%s'" % autosrc)
     # os.chdir(pwd)
+
 
 if __name__ == "__main__":
     main()

@@ -57,7 +57,7 @@ from distutils import spawn
 import hashlib
 
 import xml.sax  # type: ignore
-from typing import IO, TypeVar, Type, Optional, Callable, Union, List, Dict, Tuple, Any  # NOQA pylint: disable=W0611
+from typing import IO, TypeVar, Type, Optional, Callable, Union, List, Set, Dict, Tuple, Any  # NOQA pylint: disable=W0611
 
 from . import configMT
 from . import utility
@@ -81,12 +81,14 @@ AST_TypenamesOfFile = Dict[Filename, List[str]]  # pylint: disable=invalid-seque
 AST_TypesOfFile = Dict[Filename, List[AsnNode]]  # pylint: disable=invalid-sequence-index
 AST_Leaftypes = Dict[Typename, str]
 AST_Modules = Dict[str, List[Typename]]  # pylint: disable=invalid-sequence-index
+AST_AdaUses = Dict[str, Set[Typename]]  # pylint: disable=invalid-sequence-index
 
 g_names = {}         # type: AST_Lookup
 g_typesOfFile = {}   # type: AST_TypenamesOfFile
 g_leafTypeDict = {}  # type: AST_Leaftypes
 g_astOfFile = {}     # type: AST_TypesOfFile
 g_modules = {}       # type: AST_Modules
+g_adaUses = {}       # type: AST_AdaUses
 
 g_checkedSoFarForKeywords = {}  # type: Dict[str, int]
 
@@ -269,9 +271,11 @@ def VerifyAndFixAST() -> Dict[str, str]:
             target._asnFilename = originalNode._asnFilename
             if isinstance(node, AsnInt) and Min is not None and Max is not None:
                 target._range = [Min, Max]  # type: ignore
+            target._isArtificial = originalNode._isArtificial
         elif isinstance(node, AsnInt) and Min is not None and Max is not None:
             target = copy.copy(node)  # we need to keep the Min/Max
             target._range = [Min, Max]
+            target._isArtificial = originalNode._isArtificial
         else:
             target = node
         g_names[nodeTypename] = target
@@ -389,9 +393,12 @@ def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=inv
     # Add basic ASN.1 caching to avoid calling the ASN.1 compiler over and over
     projectCache = os.getenv("PROJECT_CACHE")
     if projectCache is not None and not os.path.isdir(projectCache):
-        utility.panic(
-            "The configured cache folder:\n\n\t" + projectCache + "\n\n...is not there!\n")
-    xmlAST = xmlAST2 = None
+        try:
+            os.mkdir(projectCache)
+        except:
+            utility.panic(
+                "The configured cache folder:\n\n\t" + projectCache + "\n\n...is not there!\n")
+    xmlAST = None
     someFilesHaveChanged = False
     if projectCache is not None:
         filehash = hashlib.md5()
@@ -407,61 +414,44 @@ def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=inv
         xmlAST = projectCache + os.sep + newHash + "_ast_v4.xml"
         xmlAST2 = projectCache + os.sep + newHash + "_ast_v1.xml"
         if not os.path.exists(xmlAST) or not os.path.exists(xmlAST2):
+
             someFilesHaveChanged = True
-            print("[DMT] ASN.1 model changed, re-processing...")
+            print("[DMT] No cached model found for", ",".join(listOfFilenames))
     else:
-        # no projectCache set, so xmlAST and xmlAST2 are set to None
+        # no projectCache set, so xmlAST is set to None
         someFilesHaveChanged = True
     if not someFilesHaveChanged:
-        print("[DMT] No change in ASN.1 model.")
+        print("[DMT] Reusing cached ASN.1 AST for ", ",".join(listOfFilenames))
 
     if not xmlAST:
         (dummy, xmlAST) = tempfile.mkstemp()
         os.fdopen(dummy).close()
-        xmlAST2 = xmlAST + "2"
 
-    asn1SccPath = spawn.find_executable('asn1.exe')
-    if asn1SccPath is None:
-        utility.panic("ASN1SCC seems not installed on your system (asn1.exe not found in PATH).\n")
-    else:
-        if someFilesHaveChanged:
-            asn1SccDir = os.path.dirname(os.path.abspath(asn1SccPath))
-            spawnResult = os.system("mono \"" + asn1SccPath + "\" -customStg \"" + asn1SccDir + "/xml.stg:" + xmlAST + "\" -customStgAstVersion 4 \"" + "\" \"".join(listOfFilenames) + "\"")
-            if spawnResult != 0:
-                errCode = spawnResult / 256
-                if errCode == 1:
-                    utility.panic("ASN1SCC reported syntax errors. Aborting...")
-                elif errCode == 2:
-                    utility.panic("ASN1SCC reported semantic errors (or mono failed). Aborting...")
-                elif errCode == 3:
-                    utility.panic("ASN1SCC reported internal error. Contact ESA with this input. Aborting...")
-                elif errCode == 4:
-                    utility.panic("ASN1SCC reported usage error. Aborting...")
-                else:
-                    utility.panic("ASN1SCC generic error. Contact ESA with this input. Aborting...")
-        ParseASN1SCC_AST(xmlAST)
-        if projectCache is None:
-            os.unlink(xmlAST)
-        g_names.update(g_names)
-        g_leafTypeDict.update(g_leafTypeDict)
-        g_checkedSoFarForKeywords.update(g_checkedSoFarForKeywords)
-        g_typesOfFile.update(g_typesOfFile)
-
-        # We also need to mark the artificial types -
-        # So spawn the custom type output at level 1 (unfiltered)
-        # and mark any types not inside it as artificial.
-        if someFilesHaveChanged:
-            os.system("mono \"" + asn1SccPath + "\" -customStg \"" + asn1SccDir + "/xml.stg:" + xmlAST2 + "\" -customStgAstVersion 1 \"" + "\" \"".join(listOfFilenames) + "\"")
-        realTypes = {}
-        for line in os.popen("grep  'ExportedType\>' \"" + xmlAST2 + "\"").readlines():  # flake8: noqa pylint: disable=anomalous-backslash-in-string
-            line = re.sub(r'^.*Name="', '', line.strip())
-            line = re.sub(r'" />$', '', line)
-            realTypes[line] = 1
-        if projectCache is None:
-            os.unlink(xmlAST2)
-        for nodeTypename in list(g_names.keys()):
-            if nodeTypename not in realTypes:
-                g_names[nodeTypename]._isArtificial = True
+    if someFilesHaveChanged:
+        asn1SccPath = spawn.find_executable('asn1.exe')
+        if asn1SccPath is None:
+            utility.panic("ASN1SCC seems not installed on your system (asn1.exe not found in PATH).\n")
+        asn1SccDir = os.path.dirname(os.path.abspath(asn1SccPath))
+        spawnResult = os.system("mono \"" + asn1SccPath + "\" -customStg \"" + asn1SccDir + "/xml.stg:" + xmlAST + "\" -typePrefix asn1Scc -fp AUTO -customStgAstVersion 4 \"" + "\" \"".join(listOfFilenames) + "\"")
+        if spawnResult != 0:
+            errCode = spawnResult / 256
+            if errCode == 1:
+                utility.panic("ASN1SCC reported syntax errors. Aborting...")
+            elif errCode == 2:
+                utility.panic("ASN1SCC reported semantic errors (or mono failed). Aborting...")
+            elif errCode == 3:
+                utility.panic("ASN1SCC reported internal error. Contact ESA with this input. Aborting...")
+            elif errCode == 4:
+                utility.panic("ASN1SCC reported usage error. Aborting...")
+            else:
+                utility.panic("ASN1SCC generic error. Contact ESA with this input. Aborting...")
+    ParseASN1SCC_AST(xmlAST)
+    if projectCache is None:
+        os.unlink(xmlAST)
+    g_names.update(g_names)
+    g_leafTypeDict.update(g_leafTypeDict)
+    g_checkedSoFarForKeywords.update(g_checkedSoFarForKeywords)
+    g_typesOfFile.update(g_typesOfFile)
 
 
 def Dump() -> None:
@@ -816,9 +806,14 @@ def VisitTypeAssignment(newModule: Module, xmlTypeAssignment: Element) -> Tuple[
     xmlType = GetChild(xmlTypeAssignment, "Type")
     if xmlType is None:
         utility.panic("VisitTypeAssignment: No child under TypeAssignment")  # pragma: no cover
-    return (
-        GetAttr(xmlTypeAssignment, "Name"),
-        GenericFactory(newModule, xmlType))
+    newNode = GenericFactory(newModule, xmlType)
+    isArtificial = GetAttr(xmlTypeAssignment, "AddedType")
+    if isArtificial is None:
+        utility.panic("You are using an older version of ASN1SCC - please upgrade.")
+    newNode._isArtificial = isArtificial == "True"
+    name = GetAttr(xmlTypeAssignment, "Name")
+    g_adaUses.setdefault(newModule._id, set()).add(name)
+    return (name, newNode)
 
 
 def VisitAsn1Module(xmlAsn1File: Element, xmlModule: Element, modules: List[Module]) -> None:  # pylint: disable=invalid-sequence-index

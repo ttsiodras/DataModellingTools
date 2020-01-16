@@ -1,4 +1,4 @@
-### $ANTLR 2.7.7 (20120126): "aadl.g" -> "AadlParser.py"$
+### $ANTLR 2.7.7 (20160127): "aadl.g" -> "AadlParser.py"$
 ### import antlr and other modules ..
 import sys
 import antlr
@@ -103,39 +103,41 @@ ASSIGNPLUS = 75
 VALUE = 76
 IN = 77
 BINDING = 78
-OR = 79
-AND = 80
-TRUE = 81
-FALSE = 82
-NOT = 83
-STRING_LITERAL = 84
-CALLS = 85
-MODES = 86
-INITIAL = 87
-LTRANS = 88
-RTRANS = 89
-ARROW = 90
-OUT = 91
-INVERSE = 92
-DARROW = 93
-FLOWS = 94
-SOURCE = 95
-SINK = 96
-PATH = 97
-AADLSPEC = 98
-NOTT = 99
-TRANSITIONS = 100
-HASH = 101
-DIGIT = 102
-EXPONENT = 103
-INT_EXPONENT = 104
-EXTENDED_DIGIT = 105
-BASED_INTEGER = 106
-BASE = 107
-ESC = 108
-HEX_DIGIT = 109
-WS = 110
-SL_COMMENT = 111
+LBRACKET = 79
+RBRACKET = 80
+OR = 81
+AND = 82
+TRUE = 83
+FALSE = 84
+NOT = 85
+STRING_LITERAL = 86
+CALLS = 87
+MODES = 88
+INITIAL = 89
+LTRANS = 90
+RTRANS = 91
+ARROW = 92
+OUT = 93
+INVERSE = 94
+DARROW = 95
+FLOWS = 96
+SOURCE = 97
+SINK = 98
+PATH = 99
+AADLSPEC = 100
+NOTT = 101
+TRANSITIONS = 102
+HASH = 103
+DIGIT = 104
+EXPONENT = 105
+INT_EXPONENT = 106
+EXTENDED_DIGIT = 107
+BASED_INTEGER = 108
+BASE = 109
+ESC = 110
+HEX_DIGIT = 111
+WS = 112
+SL_COMMENT = 113
 
 class Parser(antlr.LLkParser):
     ### user action >>>
@@ -2269,7 +2271,7 @@ class Parser(antlr.LLkParser):
             pass
         elif la1 and la1 in [IDENT]:
             pass
-            _cnt684= 0
+            _cnt687= 0
             while True:
                 if (self.LA(1)==IDENT):
                     pass
@@ -2277,8 +2279,8 @@ class Parser(antlr.LLkParser):
                 else:
                     break
                 
-                _cnt684 += 1
-            if _cnt684 < 1:
+                _cnt687 += 1
+            if _cnt687 < 1:
                 raise antlr.NoViableAltException(self.LT(1), self.getFilename())
         elif la1 and la1 in [NONE]:
             pass
@@ -2855,7 +2857,7 @@ class Parser(antlr.LLkParser):
             pass
         elif la1 and la1 in [IDENT,LCURLY]:
             pass
-            _cnt546= 0
+            _cnt549= 0
             while True:
                 if (self.LA(1)==IDENT or self.LA(1)==LCURLY):
                     pass
@@ -2863,8 +2865,8 @@ class Parser(antlr.LLkParser):
                 else:
                     break
                 
-                _cnt546 += 1
-            if _cnt546 < 1:
+                _cnt549 += 1
+            if _cnt549 < 1:
                 raise antlr.NoViableAltException(self.LT(1), self.getFilename())
         elif la1 and la1 in [NONE]:
             pass
@@ -2885,7 +2887,7 @@ class Parser(antlr.LLkParser):
             pass
         elif la1 and la1 in [IDENT,DATA,BUS,PORT,EVENT,PARAMETER]:
             pass
-            _cnt634= 0
+            _cnt637= 0
             while True:
                 if (_tokenSet_3.member(self.LA(1))) and (_tokenSet_4.member(self.LA(2))) and (_tokenSet_5.member(self.LA(3))):
                     pass
@@ -2898,8 +2900,8 @@ class Parser(antlr.LLkParser):
                 else:
                     break
                 
-                _cnt634 += 1
-            if _cnt634 < 1:
+                _cnt637 += 1
+            if _cnt637 < 1:
                 raise antlr.NoViableAltException(self.LT(1), self.getFilename())
         elif la1 and la1 in [NONE]:
             pass
@@ -2919,7 +2921,7 @@ class Parser(antlr.LLkParser):
             pass
         elif la1 and la1 in [IDENT]:
             pass
-            _cnt701= 0
+            _cnt704= 0
             while True:
                 if (self.LA(1)==IDENT):
                     pass
@@ -2927,8 +2929,8 @@ class Parser(antlr.LLkParser):
                 else:
                     break
                 
-                _cnt701 += 1
-            if _cnt701 < 1:
+                _cnt704 += 1
+            if _cnt704 < 1:
                 raise antlr.NoViableAltException(self.LT(1), self.getFilename())
         elif la1 and la1 in [NONE]:
             pass
@@ -3058,7 +3060,7 @@ class Parser(antlr.LLkParser):
             pass
         elif la1 and la1 in [IDENT,DATA]:
             pass
-            _cnt658= 0
+            _cnt661= 0
             while True:
                 if (self.LA(1)==IDENT or self.LA(1)==DATA) and (self.LA(2)==COLON or self.LA(2)==ACCESS) and (self.LA(3)==IDENT or self.LA(3)==DATA):
                     pass
@@ -3069,8 +3071,8 @@ class Parser(antlr.LLkParser):
                 else:
                     break
                 
-                _cnt658 += 1
-            if _cnt658 < 1:
+                _cnt661 += 1
+            if _cnt661 < 1:
                 raise antlr.NoViableAltException(self.LT(1), self.getFilename())
         elif la1 and la1 in [NONE]:
             pass
@@ -3117,7 +3119,7 @@ class Parser(antlr.LLkParser):
             pass
         elif la1 and la1 in [IDENT,BUS]:
             pass
-            _cnt671= 0
+            _cnt674= 0
             while True:
                 if (self.LA(1)==IDENT or self.LA(1)==BUS) and (self.LA(2)==COLON or self.LA(2)==ACCESS) and (self.LA(3)==IDENT or self.LA(3)==BUS):
                     pass
@@ -3128,8 +3130,8 @@ class Parser(antlr.LLkParser):
                 else:
                     break
                 
-                _cnt671 += 1
-            if _cnt671 < 1:
+                _cnt674 += 1
+            if _cnt674 < 1:
                 raise antlr.NoViableAltException(self.LT(1), self.getFilename())
         elif la1 and la1 in [NONE]:
             pass
@@ -5718,7 +5720,7 @@ class Parser(antlr.LLkParser):
         elif la1 and la1 in [CONSTANT]:
             pass
             self.match(CONSTANT)
-        elif la1 and la1 in [IDENT,THREAD,PROCESS,SYSTEM,SUBPROGRAM,DATA,PROCESSOR,MEMORY,BUS,DEVICE,LPAREN,PLUS,MINUS,NUMERIC_LIT,REFERENCE,ACCESS,VALUE,TRUE,FALSE,NOT,STRING_LITERAL]:
+        elif la1 and la1 in [IDENT,THREAD,PROCESS,SYSTEM,SUBPROGRAM,DATA,PROCESSOR,MEMORY,BUS,DEVICE,LPAREN,PLUS,MINUS,NUMERIC_LIT,REFERENCE,ACCESS,VALUE,LBRACKET,TRUE,FALSE,NOT,STRING_LITERAL]:
             pass
         else:
                 raise antlr.NoViableAltException(self.LT(1), self.getFilename())
@@ -5729,7 +5731,7 @@ class Parser(antlr.LLkParser):
         elif la1 and la1 in [ACCESS]:
             pass
             self.match(ACCESS)
-        elif la1 and la1 in [IDENT,THREAD,PROCESS,SYSTEM,SUBPROGRAM,DATA,PROCESSOR,MEMORY,BUS,DEVICE,LPAREN,PLUS,MINUS,NUMERIC_LIT,REFERENCE,VALUE,TRUE,FALSE,NOT,STRING_LITERAL]:
+        elif la1 and la1 in [IDENT,THREAD,PROCESS,SYSTEM,SUBPROGRAM,DATA,PROCESSOR,MEMORY,BUS,DEVICE,LPAREN,PLUS,MINUS,NUMERIC_LIT,REFERENCE,VALUE,LBRACKET,TRUE,FALSE,NOT,STRING_LITERAL]:
             pass
         else:
                 raise antlr.NoViableAltException(self.LT(1), self.getFilename())
@@ -5784,7 +5786,7 @@ class Parser(antlr.LLkParser):
         elif la1 and la1 in [CONSTANT]:
             pass
             self.match(CONSTANT)
-        elif la1 and la1 in [IDENT,THREAD,PROCESS,SYSTEM,SUBPROGRAM,DATA,PROCESSOR,MEMORY,BUS,DEVICE,LPAREN,PLUS,MINUS,NUMERIC_LIT,REFERENCE,VALUE,TRUE,FALSE,NOT,STRING_LITERAL]:
+        elif la1 and la1 in [IDENT,THREAD,PROCESS,SYSTEM,SUBPROGRAM,DATA,PROCESSOR,MEMORY,BUS,DEVICE,LPAREN,PLUS,MINUS,NUMERIC_LIT,REFERENCE,VALUE,LBRACKET,TRUE,FALSE,NOT,STRING_LITERAL]:
             pass
         else:
                 raise antlr.NoViableAltException(self.LT(1), self.getFilename())
@@ -5850,7 +5852,7 @@ class Parser(antlr.LLkParser):
         elif la1 and la1 in [CONSTANT]:
             pass
             self.match(CONSTANT)
-        elif la1 and la1 in [IDENT,THREAD,PROCESS,SYSTEM,SUBPROGRAM,DATA,PROCESSOR,MEMORY,BUS,DEVICE,LPAREN,PLUS,MINUS,NUMERIC_LIT,REFERENCE,ACCESS,VALUE,TRUE,FALSE,NOT,STRING_LITERAL]:
+        elif la1 and la1 in [IDENT,THREAD,PROCESS,SYSTEM,SUBPROGRAM,DATA,PROCESSOR,MEMORY,BUS,DEVICE,LPAREN,PLUS,MINUS,NUMERIC_LIT,REFERENCE,ACCESS,VALUE,LBRACKET,TRUE,FALSE,NOT,STRING_LITERAL]:
             pass
         else:
                 raise antlr.NoViableAltException(self.LT(1), self.getFilename())
@@ -5861,7 +5863,7 @@ class Parser(antlr.LLkParser):
         elif la1 and la1 in [ACCESS]:
             pass
             self.match(ACCESS)
-        elif la1 and la1 in [IDENT,THREAD,PROCESS,SYSTEM,SUBPROGRAM,DATA,PROCESSOR,MEMORY,BUS,DEVICE,LPAREN,PLUS,MINUS,NUMERIC_LIT,REFERENCE,VALUE,TRUE,FALSE,NOT,STRING_LITERAL]:
+        elif la1 and la1 in [IDENT,THREAD,PROCESS,SYSTEM,SUBPROGRAM,DATA,PROCESSOR,MEMORY,BUS,DEVICE,LPAREN,PLUS,MINUS,NUMERIC_LIT,REFERENCE,VALUE,LBRACKET,TRUE,FALSE,NOT,STRING_LITERAL]:
             pass
         else:
                 raise antlr.NoViableAltException(self.LT(1), self.getFilename())
@@ -5950,94 +5952,113 @@ class Parser(antlr.LLkParser):
     def pe_or_list(self):    
         retValue = None
         
-        synPredMatched501 = False
-        if (self.LA(1)==LPAREN) and (_tokenSet_20.member(self.LA(2))) and (_tokenSet_21.member(self.LA(3))) and (_tokenSet_22.member(self.LA(4))):
-            _m501 = self.mark()
-            synPredMatched501 = True
-            self.inputState.guessing += 1
-            try:
-                pass
-                self.match(LPAREN)
-                pe1=self.property_expression()
-                self.match(COMMA)
-            except antlr.RecognitionException, pe:
-                synPredMatched501 = False
-            self.rewind(_m501)
-            self.inputState.guessing -= 1
-        if synPredMatched501:
+        la1 = self.LA(1)
+        if False:
             pass
-            if not self.inputState.guessing:
-                retValue = None
-            pass
-            self.match(LPAREN)
-            pe2=self.property_expression()
-            _cnt504= 0
-            while True:
-                if (self.LA(1)==COMMA):
-                    pass
-                    self.match(COMMA)
-                    pe3=self.property_expression()
-                else:
-                    break
-                
-                _cnt504 += 1
-            if _cnt504 < 1:
-                raise antlr.NoViableAltException(self.LT(1), self.getFilename())
-            self.match(RPAREN)
-        elif (self.LA(1)==LPAREN) and (_tokenSet_23.member(self.LA(2))) and (_tokenSet_24.member(self.LA(3))) and (_tokenSet_25.member(self.LA(4))):
-            pass
-            pass
-            self.match(LPAREN)
-            la1 = self.LA(1)
-            if False:
-                pass
-            elif la1 and la1 in [IDENT,THREAD,PROCESS,SYSTEM,SUBPROGRAM,DATA,PROCESSOR,MEMORY,BUS,DEVICE,PLUS,MINUS,NUMERIC_LIT,REFERENCE,STRING_LITERAL]:
-                pass
-                a=self.allbutbool()
-                if not self.inputState.guessing:
-                    if a != None: retValue = a
-            elif la1 and la1 in [RPAREN]:
-                pass
-            else:
-                    raise antlr.NoViableAltException(self.LT(1), self.getFilename())
-                
-            self.match(RPAREN)
-        elif (_tokenSet_26.member(self.LA(1))):
+        elif la1 and la1 in [IDENT,THREAD,PROCESS,SYSTEM,SUBPROGRAM,DATA,PROCESSOR,MEMORY,BUS,DEVICE,PLUS,MINUS,NUMERIC_LIT,REFERENCE,STRING_LITERAL]:
             pass
             pass
             a=self.allbutbool()
             if not self.inputState.guessing:
                 if a != None: retValue = a
-        elif (_tokenSet_27.member(self.LA(1))) and (_tokenSet_28.member(self.LA(2))) and (_tokenSet_29.member(self.LA(3))) and (_tokenSet_30.member(self.LA(4))):
+        elif la1 and la1 in [LBRACKET]:
             pass
-            synPredMatched510 = False
-            if (self.LA(1)==VALUE) and (self.LA(2)==LPAREN) and (self.LA(3)==IDENT) and (self.LA(4)==DOUBLECOLON or self.LA(4)==RPAREN):
-                _m510 = self.mark()
-                synPredMatched510 = True
+            pass
+            self.match(LBRACKET)
+            while True:
+                if (self.LA(1)==IDENT):
+                    pass
+                    a=self.property_name_reference()
+                    self.match(ASSIGN)
+                    b=self.property_expression()
+                    self.match(SEMI)
+                else:
+                    break
+                
+            self.match(RBRACKET)
+        else:
+            synPredMatched501 = False
+            if (self.LA(1)==LPAREN) and (_tokenSet_20.member(self.LA(2))) and (_tokenSet_21.member(self.LA(3))) and (_tokenSet_22.member(self.LA(4))):
+                _m501 = self.mark()
+                synPredMatched501 = True
                 self.inputState.guessing += 1
                 try:
                     pass
-                    self.property_name_constant_reference()
-                    self.match(DOTDOT)
+                    self.match(LPAREN)
+                    pe1=self.property_expression()
+                    self.match(COMMA)
                 except antlr.RecognitionException, pe:
-                    synPredMatched510 = False
-                self.rewind(_m510)
+                    synPredMatched501 = False
+                self.rewind(_m501)
                 self.inputState.guessing -= 1
-            if synPredMatched510:
+            if synPredMatched501:
+                pass
+                if not self.inputState.guessing:
+                    retValue = None
+                pass
+                self.match(LPAREN)
+                pe2=self.property_expression()
+                _cnt504= 0
+                while True:
+                    if (self.LA(1)==COMMA):
+                        pass
+                        self.match(COMMA)
+                        pe3=self.property_expression()
+                    else:
+                        break
+                    
+                    _cnt504 += 1
+                if _cnt504 < 1:
+                    raise antlr.NoViableAltException(self.LT(1), self.getFilename())
+                self.match(RPAREN)
+            elif (self.LA(1)==LPAREN) and (_tokenSet_23.member(self.LA(2))) and (_tokenSet_24.member(self.LA(3))) and (_tokenSet_25.member(self.LA(4))):
                 pass
                 pass
-                self.property_name_constant_reference()
-                self.num_range()
-            elif (_tokenSet_27.member(self.LA(1))) and (_tokenSet_28.member(self.LA(2))) and (_tokenSet_29.member(self.LA(3))) and (_tokenSet_30.member(self.LA(4))):
+                self.match(LPAREN)
+                la1 = self.LA(1)
+                if False:
+                    pass
+                elif la1 and la1 in [IDENT,THREAD,PROCESS,SYSTEM,SUBPROGRAM,DATA,PROCESSOR,MEMORY,BUS,DEVICE,PLUS,MINUS,NUMERIC_LIT,REFERENCE,STRING_LITERAL]:
+                    pass
+                    a=self.allbutbool()
+                    if not self.inputState.guessing:
+                        if a != None: retValue = a
+                elif la1 and la1 in [RPAREN]:
+                    pass
+                else:
+                        raise antlr.NoViableAltException(self.LT(1), self.getFilename())
+                    
+                self.match(RPAREN)
+            elif (_tokenSet_26.member(self.LA(1))) and (_tokenSet_27.member(self.LA(2))) and (_tokenSet_28.member(self.LA(3))) and (_tokenSet_29.member(self.LA(4))):
                 pass
-                pass
-                self.logical_or()
+                synPredMatched510 = False
+                if (self.LA(1)==VALUE) and (self.LA(2)==LPAREN) and (self.LA(3)==IDENT) and (self.LA(4)==DOUBLECOLON or self.LA(4)==RPAREN):
+                    _m510 = self.mark()
+                    synPredMatched510 = True
+                    self.inputState.guessing += 1
+                    try:
+                        pass
+                        self.property_name_constant_reference()
+                        self.match(DOTDOT)
+                    except antlr.RecognitionException, pe:
+                        synPredMatched510 = False
+                    self.rewind(_m510)
+                    self.inputState.guessing -= 1
+                if synPredMatched510:
+                    pass
+                    pass
+                    self.property_name_constant_reference()
+                    self.num_range()
+                elif (_tokenSet_26.member(self.LA(1))) and (_tokenSet_27.member(self.LA(2))) and (_tokenSet_28.member(self.LA(3))) and (_tokenSet_29.member(self.LA(4))):
+                    pass
+                    pass
+                    self.logical_or()
+                else:
+                    raise antlr.NoViableAltException(self.LT(1), self.getFilename())
+                
             else:
                 raise antlr.NoViableAltException(self.LT(1), self.getFilename())
             
-        else:
-            raise antlr.NoViableAltException(self.LT(1), self.getFilename())
-        
         return retValue
     
     def in_binding(self):    
@@ -6167,7 +6188,7 @@ class Parser(antlr.LLkParser):
         pass
         if not self.inputState.guessing:
             result = None
-        c=self.component_category()
+        self.component_category()
         la1 = self.LA(1)
         if False:
             pass
@@ -6186,27 +6207,27 @@ class Parser(antlr.LLkParser):
     def numeric_or_range_term(self):    
         retValue = None
         
-        synPredMatched527 = False
+        synPredMatched530 = False
         if (self.LA(1)==PLUS or self.LA(1)==MINUS) and (self.LA(2)==VALUE) and (self.LA(3)==LPAREN) and (self.LA(4)==IDENT):
-            _m527 = self.mark()
-            synPredMatched527 = True
+            _m530 = self.mark()
+            synPredMatched530 = True
             self.inputState.guessing += 1
             try:
                 pass
                 self.signed_constant()
                 self.match(DOTDOT)
             except antlr.RecognitionException, pe:
-                synPredMatched527 = False
-            self.rewind(_m527)
+                synPredMatched530 = False
+            self.rewind(_m530)
             self.inputState.guessing -= 1
-        if synPredMatched527:
+        if synPredMatched530:
             pass
             if not self.inputState.guessing:
                 retValue = None
             pass
             self.signed_constant()
             self.num_range()
-        elif ((self.LA(1) >= PLUS and self.LA(1) <= NUMERIC_LIT)) and (_tokenSet_31.member(self.LA(2))) and (_tokenSet_32.member(self.LA(3))) and (_tokenSet_33.member(self.LA(4))):
+        elif ((self.LA(1) >= PLUS and self.LA(1) <= NUMERIC_LIT)) and (_tokenSet_30.member(self.LA(2))) and (_tokenSet_31.member(self.LA(3))) and (_tokenSet_32.member(self.LA(4))):
             pass
             pass
             s=self.signed_aadlnumeric_or_signed_constant()
@@ -6314,7 +6335,7 @@ class Parser(antlr.LLkParser):
                 raise antlr.NoViableAltException(self.LT(1), self.getFilename())
             
         self.match(LCURLY)
-        _cnt550= 0
+        _cnt553= 0
         while True:
             if (self.LA(1)==IDENT):
                 pass
@@ -6322,8 +6343,8 @@ class Parser(antlr.LLkParser):
             else:
                 break
             
-            _cnt550 += 1
-        if _cnt550 < 1:
+            _cnt553 += 1
+        if _cnt553 < 1:
             raise antlr.NoViableAltException(self.LT(1), self.getFilename())
         self.match(RCURLY)
         la1 = self.LA(1)
@@ -6457,7 +6478,7 @@ class Parser(antlr.LLkParser):
             self.match(IDENT)
             if not self.inputState.guessing:
                 retValue = UniquePortIdentifier(compid.getText(), portid.getText())
-        elif (self.LA(1)==IDENT) and (_tokenSet_34.member(self.LA(2))):
+        elif (self.LA(1)==IDENT) and (_tokenSet_33.member(self.LA(2))):
             pass
             soleportid = self.LT(1)
             self.match(IDENT)
@@ -6885,7 +6906,7 @@ class Parser(antlr.LLkParser):
             self.match(IDENT)
             if not self.inputState.guessing:
                 retValue = UniquePortIdentifier(compid.getText(), portid.getText())
-        elif (self.LA(1)==IDENT) and (_tokenSet_35.member(self.LA(2))):
+        elif (self.LA(1)==IDENT) and (_tokenSet_34.member(self.LA(2))):
             pass
             soleportid = self.LT(1)
             self.match(IDENT)
@@ -7181,7 +7202,7 @@ class Parser(antlr.LLkParser):
             self.match(DOT)
             portid = self.LT(1)
             self.match(IDENT)
-        elif (self.LA(1)==IDENT) and (_tokenSet_35.member(self.LA(2))):
+        elif (self.LA(1)==IDENT) and (_tokenSet_34.member(self.LA(2))):
             pass
             soleportid = self.LT(1)
             self.match(IDENT)
@@ -7326,7 +7347,7 @@ class Parser(antlr.LLkParser):
             pass
             self.connection_identifier()
             self.match(ARROW)
-            _cnt719= 0
+            _cnt722= 0
             while True:
                 if (self.LA(1)==IDENT) and (self.LA(2)==DOT) and (self.LA(3)==IDENT) and (self.LA(4)==ARROW):
                     pass
@@ -7337,10 +7358,10 @@ class Parser(antlr.LLkParser):
                 else:
                     break
                 
-                _cnt719 += 1
-            if _cnt719 < 1:
+                _cnt722 += 1
+            if _cnt722 < 1:
                 raise antlr.NoViableAltException(self.LT(1), self.getFilename())
-        elif (self.LA(1)==IDENT) and (_tokenSet_36.member(self.LA(2))):
+        elif (self.LA(1)==IDENT) and (_tokenSet_35.member(self.LA(2))):
             pass
         else:
             raise antlr.NoViableAltException(self.LT(1), self.getFilename())
@@ -7377,7 +7398,7 @@ class Parser(antlr.LLkParser):
         self.match(END)
         self.match(FLOW)
         self.subcomponent_flow_identifier()
-        _cnt734= 0
+        _cnt737= 0
         while True:
             if (self.LA(1)==ARROW):
                 pass
@@ -7388,8 +7409,8 @@ class Parser(antlr.LLkParser):
             else:
                 break
             
-            _cnt734 += 1
-        if _cnt734 < 1:
+            _cnt737 += 1
+        if _cnt737 < 1:
             raise antlr.NoViableAltException(self.LT(1), self.getFilename())
         la1 = self.LA(1)
         if False:
@@ -7639,6 +7660,8 @@ _tokenNames = [
     "\"value\"", 
     "\"in\"", 
     "\"binding\"", 
+    "LBRACKET", 
+    "RBRACKET", 
     "\"or\"", 
     "\"and\"", 
     "\"true\"", 
@@ -7713,7 +7736,7 @@ _tokenSet_4 = antlr.BitSet(mk_tokenSet_4())
 ### generate bit set
 def mk_tokenSet_5(): 
     ### var1
-    data = [ 10748416L, 67108886L, 0L, 0L]
+    data = [ 10748416L, 268435478L, 0L, 0L]
     return data
 _tokenSet_5 = antlr.BitSet(mk_tokenSet_5())
 
@@ -7804,42 +7827,42 @@ _tokenSet_17 = antlr.BitSet(mk_tokenSet_17())
 ### generate bit set
 def mk_tokenSet_18(): 
     ### var1
-    data = [ 800L, 4195328L, 0L, 0L]
+    data = [ 800L, 16778240L, 0L, 0L]
     return data
 _tokenSet_18 = antlr.BitSet(mk_tokenSet_18())
 
 ### generate bit set
 def mk_tokenSet_19(): 
     ### var1
-    data = [ 17179869728L, 4195328L, 0L, 0L]
+    data = [ 17179869728L, 16778240L, 0L, 0L]
     return data
 _tokenSet_19 = antlr.BitSet(mk_tokenSet_19())
 
 ### generate bit set
 def mk_tokenSet_20(): 
     ### var1
-    data = [ 159882184826524160L, 1970176L, 0L, 0L]
+    data = [ 159882184826524160L, 7868416L, 0L, 0L]
     return data
 _tokenSet_20 = antlr.BitSet(mk_tokenSet_20())
 
 ### generate bit set
 def mk_tokenSet_21(): 
     ### var1
-    data = [ 10146293301133824L, 1019904L, 0L, 0L]
+    data = [ 10146293301133824L, 4067328L, 0L, 0L]
     return data
 _tokenSet_21 = antlr.BitSet(mk_tokenSet_21())
 
 ### generate bit set
 def mk_tokenSet_22(): 
     ### var1
-    data = [ 161034473020823040L, 2068480L, 0L, 0L]
+    data = [ 161034473020823040L, 8261632L, 0L, 0L]
     return data
 _tokenSet_22 = antlr.BitSet(mk_tokenSet_22())
 
 ### generate bit set
 def mk_tokenSet_23(): 
     ### var1
-    data = [ 159895378966057472L, 1048576L, 0L, 0L]
+    data = [ 159895378966057472L, 4194304L, 0L, 0L]
     return data
 _tokenSet_23 = antlr.BitSet(mk_tokenSet_23())
 
@@ -7853,84 +7876,77 @@ _tokenSet_24 = antlr.BitSet(mk_tokenSet_24())
 ### generate bit set
 def mk_tokenSet_25(): 
     ### var1
-    data = [ 4628596524719277920L, 4224000L, 0L, 0L]
+    data = [ 4628596524719277920L, 16806912L, 0L, 0L]
     return data
 _tokenSet_25 = antlr.BitSet(mk_tokenSet_25())
 
 ### generate bit set
 def mk_tokenSet_26(): 
     ### var1
-    data = [ 159877786780013056L, 1048576L, 0L, 0L]
+    data = [ 4398046511104L, 3674112L, 0L, 0L]
     return data
 _tokenSet_26 = antlr.BitSet(mk_tokenSet_26())
 
 ### generate bit set
 def mk_tokenSet_27(): 
     ### var1
-    data = [ 4398046511104L, 921600L, 0L, 0L]
+    data = [ 4611690416473899072L, 4075520L, 0L, 0L]
     return data
 _tokenSet_27 = antlr.BitSet(mk_tokenSet_27())
 
 ### generate bit set
 def mk_tokenSet_28(): 
     ### var1
-    data = [ 4611690416473899072L, 1028096L, 0L, 0L]
+    data = [ 4611708026108248928L, 20870144L, 0L, 0L]
     return data
 _tokenSet_28 = antlr.BitSet(mk_tokenSet_28())
 
 ### generate bit set
 def mk_tokenSet_29(): 
     ### var1
-    data = [ 4611708026108248928L, 5239808L, 0L, 0L]
+    data = [ 4611778394860787552L, 20872194L, 0L, 0L]
     return data
 _tokenSet_29 = antlr.BitSet(mk_tokenSet_29())
 
 ### generate bit set
 def mk_tokenSet_30(): 
     ### var1
-    data = [ 4611778394860787552L, 5241858L, 0L, 0L]
+    data = [ 4621845505868038720L, 12288L, 0L, 0L]
     return data
 _tokenSet_30 = antlr.BitSet(mk_tokenSet_30())
 
 ### generate bit set
 def mk_tokenSet_31(): 
     ### var1
-    data = [ 4621845505868038720L, 12288L, 0L, 0L]
+    data = [ 4772720508888126304L, 24736768L, 0L, 0L]
     return data
 _tokenSet_31 = antlr.BitSet(mk_tokenSet_31())
 
 ### generate bit set
 def mk_tokenSet_32(): 
     ### var1
-    data = [ 4772720508888126304L, 6190080L, 0L, 0L]
+    data = [ 4772790877632321376L, 25132162L, 0L, 0L]
     return data
 _tokenSet_32 = antlr.BitSet(mk_tokenSet_32())
 
 ### generate bit set
 def mk_tokenSet_33(): 
     ### var1
-    data = [ 4772790877632321376L, 6290562L, 0L, 0L]
+    data = [ 8796093022272L, 2550145536L, 0L, 0L]
     return data
 _tokenSet_33 = antlr.BitSet(mk_tokenSet_33())
 
 ### generate bit set
 def mk_tokenSet_34(): 
     ### var1
-    data = [ 8796093022272L, 637542912L, 0L, 0L]
+    data = [ 64L, 268444160L, 0L, 0L]
     return data
 _tokenSet_34 = antlr.BitSet(mk_tokenSet_34())
 
 ### generate bit set
 def mk_tokenSet_35(): 
     ### var1
-    data = [ 64L, 67117568L, 0L, 0L]
-    return data
-_tokenSet_35 = antlr.BitSet(mk_tokenSet_35())
-
-### generate bit set
-def mk_tokenSet_36(): 
-    ### var1
     data = [ 8388672L, 8704L, 0L, 0L]
     return data
-_tokenSet_36 = antlr.BitSet(mk_tokenSet_36())
+_tokenSet_35 = antlr.BitSet(mk_tokenSet_35())
     

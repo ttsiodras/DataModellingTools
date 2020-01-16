@@ -519,7 +519,7 @@ def WriteCodeForGUIControls(
     varPrefix = prefix.replace("::", "_")
     txtPrefix = re.sub(r'^.*::', '', prefix)
     # Depending on the type of the node, create the appropriate controls
-    if isinstance(node, AsnInt) or isinstance(node, AsnReal) or isinstance(node, AsnOctetString):
+    if isinstance(node, (AsnInt, AsnReal, AsnOctetString)):
         # Write a static label before the child
         g_MyCreation.write("wxStaticText* itemStaticText_%s =  new wxStaticText( %s, wxID_STATIC, _(\"%s\"), wxDefaultPosition, wxDefaultSize, 0 );\n" %
                            (varPrefix, ScrollWnd, txtPrefix))
@@ -655,7 +655,7 @@ def maybeElseZero(childNo: int) -> str:
 
 
 def CopyDataFromDlgToASN1(f: IO[Any], srcVar: str, destVar: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
-    if isinstance(node, AsnInt) or isinstance(node, AsnReal):
+    if isinstance(node, (AsnInt, AsnReal)):
         targetType = {"INTEGER": "asn1SccSint", "REAL": "double"}[node._leafType]
         f.write("if (false == StringToAny<%s>(\"%s\", _itemTextCtrl_%s->GetValue().ToAscii().release(), %s, msgError)) {\n" % (targetType, srcVar, srcVar, destVar))
         f.write("    wxMessageBox(wxConvLocal.cMB2WC(msgError.c_str()), _T(\"Data input error\"), wxICON_ERROR);\n")
@@ -727,7 +727,7 @@ def CopyDataFromASN1ToDlg(fDesc: IO[Any],
                           node: AsnNode,
                           leafTypeDict: AST_Leaftypes,
                           names: AST_Lookup,
-                          bClear: bool=False) -> None:
+                          bClear: bool = False) -> None:
     if isinstance(node, AsnInt):
         fDesc.write("{\n")
         fDesc.write("    ostringstream s;\n")
@@ -896,7 +896,7 @@ def WriteCodeForGnuPlot(prefix: str, node: AsnNode, subProgram: ApLevelContainer
     CleanParam = CleanName(param._id)
     if prefix in ("TCDATA: ", "TMDATA: "):
         prefix += CleanSP + "::" + CleanParam
-    if isinstance(node, AsnInt) or isinstance(node, AsnReal) or isinstance(node, AsnOctetString):
+    if isinstance(node, (AsnInt, AsnReal, AsnOctetString)):
         g_GnuplotFile.write(prefix + '\n')
     elif isinstance(node, AsnBool):
         pass
@@ -988,7 +988,7 @@ def Common(nodeTypename: str,
     control = "itemBoxSizer_%s" % CleanName(subProgram._id)
     WriteCodeForGUIControls('', control, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
     global g_bBraceOpen
-    if len(g_SPs) == 0 or subProgram._id != g_SPs[-1]:
+    if not g_SPs or subProgram._id != g_SPs[-1]:
         if g_bBraceOpen:
             g_MyAction.write("} // %s\n" % g_SPs[-1])
             g_MySave.write("} // %s\n" % g_SPs[-1])

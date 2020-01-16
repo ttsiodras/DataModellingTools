@@ -102,7 +102,7 @@ def OnStartup(unused_modelingLanguage: str, asnFile: str, outputDir: str, badTyp
     g_outputGetSetC.write('}\n\n')
     g_outputGetSetC.write('void ResetStream(BitStream *pStrm) {\n')
     g_outputGetSetC.write('    assert(pStrm);\n')
-    g_outputGetSetC.write('    assert(pStrm->count > 0);\n')
+    g_outputGetSetC.write('    assert(pStrm->count >= 0);\n')
     g_outputGetSetC.write('    pStrm->currentByte = 0;\n')
     g_outputGetSetC.write('    pStrm->currentBit = 0;\n')
     g_outputGetSetC.write('}\n\n')
@@ -131,12 +131,14 @@ def OnStartup(unused_modelingLanguage: str, asnFile: str, outputDir: str, badTyp
     # mono_exe = "mono " if sys.platform.startswith('linux') else ""
     mono_exe = "mono"
     makefile_text = '''\
+export MAKEFLAGS="-j $(grep -c ^processor /proc/cpuinfo)"
+
 ASN1SCC:=$(shell which asn1.exe)
 ASN2DATAMODEL:=asn2dataModel
 GRAMMAR := %(origGrammarBase)s
 BASEGRAMMAR := %(base)s
 BDIR:= .
-OBJ     := $(BDIR)/$(GRAMMAR).o $(BDIR)/asn1crt.o $(BDIR)/real.o $(BDIR)/acn.o $(BDIR)/$(BASEGRAMMAR)_getset.o
+OBJ     := $(BDIR)/$(GRAMMAR).o $(BDIR)/asn1crt.o $(BDIR)/asn1crt_encoding.o $(BDIR)/asn1crt_encoding_uper.o $(BDIR)/asn1crt_encoding_acn.o $(BDIR)/$(BASEGRAMMAR)_getset.o
 
 all:    $(BDIR)/$(BASEGRAMMAR)_getset.so $(BDIR)/DV.py
 
@@ -144,22 +146,39 @@ $(BDIR)/$(GRAMMAR)_getset.c:       $(GRAMMAR).asn
 %(tab)smkdir -p $(BDIR)
 %(tab)s$(ASN2DATAMODEL) -toPython -o $(BDIR) $<
 
-$(BDIR)/asn1crt.c $(BDIR)/$(GRAMMAR).c $(BDIR)/real.c $(BDIR)/acn.c $(BDIR)/$(GRAMMAR).h $(BDIR)/asn1crt.h:       $(GRAMMAR).asn
-%(tab)sif [ ! -f "$(GRAMMAR).acn" ] ; then %(mono)s $(ASN1SCC) -ACND -o $(BDIR) $< ; fi
+# Create the ACN file if it is missing
+$(BDIR)/$(GRAMMAR).acn:
+%(tab)smono $(ASN1SCC) -ACND -o $(BDIR) $(GRAMMAR).asn
+
+# The hell of multiple outputs (see https://www.gnu.org/software/automake/manual/html_node/Multiple-Outputs.html )
+$(BDIR)/asn1crt.c:	$(GRAMMAR).asn  $(GRAMMAR).acn
 %(tab)s%(mono)s $(ASN1SCC) -ACN -c -uPER -equal -o $(BDIR) $< $(GRAMMAR).acn
 
-$(BDIR)/DV.py:       $(GRAMMAR).asn
-%(tab)sgrep 'REQUIRED_BYTES_FOR_.*ENCODING' $(BDIR)/$(GRAMMAR).h | awk '{print $$2 " = " $$3}' > $@
-%(tab)spython learn_CHOICE_enums.py %(base)s >> $@
+# The hell of multiple outputs (see https://www.gnu.org/software/automake/manual/html_node/Multiple-Outputs.html )
+$(BDIR)/$(GRAMMAR).c $(BDIR)/asn1crt_encoding.c $(BDIR)/asn1crt_encoding_uper.c $(BDIR)/asn1crt_encoding_acn.c $(BDIR)/$(GRAMMAR).h $(BDIR)/asn1crt.h:	$(BDIR)/asn1crt.c
+## Recover from the removal of any of these
+%(tab)s@for i in $@; do               \
+%(tab)s    if test -f "$$i" ; then :; \
+%(tab)s    else                       \
+%(tab)s%(tab)srm -f $< ;             \
+%(tab)s%(tab)s$(MAKE) $< ;           \
+%(tab)s    fi ;                       \
+%(tab)sdone
 
-$(BDIR)/%%.o:       $(BDIR)/%%.c
+$(BDIR)/$(GRAMMAR).c $(BDIR)/asn1crt_encoding.c $(BDIR)/asn1crt_encoding_uper.c $(BDIR)/asn1crt_encoding_acn.c $(BDIR)/$(GRAMMAR).h $(BDIR)/asn1crt.h:
+
+$(BDIR)/DV.py:       $(GRAMMAR).asn $(BDIR)/$(GRAMMAR).h
+%(tab)sgrep 'REQUIRED_BYTES_FOR_.*ENCODING' $(BDIR)/$(GRAMMAR).h | awk '{print $$2 " = " $$3}' > $@
+%(tab)spython learn_CHOICE_enums.py %(base)s >> $@ || rm $@
+
+$(BDIR)/%%.o:       $(BDIR)/%%.c $(BDIR)/$(GRAMMAR).h
 %(tab)sgcc -g -fPIC -c `python-config --includes` -o $@ $<
 
 $(BDIR)/$(BASEGRAMMAR)_getset.so:	${OBJ}
 %(tab)sgcc -g -fPIC -shared `python-config --ldflags` -o $@ $^
 
 clean:
-%(tab)srm -f $(BDIR)/asn1crt.?  $(BDIR)/real.?  $(BDIR)/$(GRAMMAR).?  $(BDIR)/acn.?
+%(tab)srm -f $(BDIR)/asn1crt*  $(BDIR)/$(GRAMMAR).?
 %(tab)srm -f $(BDIR)/DV.py $(BDIR)/*.pyc $(BDIR)/$(BASEGRAMMAR)_getset.? $(BDIR)/$(BASEGRAMMAR)_getset.so
 %(tab)srm -f $(BDIR)/$(GRAMMAR)_asn.py
 '''

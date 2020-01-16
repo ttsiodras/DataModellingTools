@@ -80,7 +80,8 @@ but with an extra call to OnFinal at the end.
 
 import os
 import sys
-import distutils.spawn as spawn
+import hashlib
+from distutils import spawn
 
 from typing import cast, Optional, Dict, List, Tuple, Set, Any  # NOQA pylint: disable=unused-import
 
@@ -147,17 +148,51 @@ def ParseAADLfilesAndResolveSignals() -> None:
     '''Invokes the ANTLR generated AADL parser, and resolves
 all references to AAADL Data types into the param._signal member
 of each SUBPROGRAM param.'''
-    import tempfile
-    f = tempfile.NamedTemporaryFile(delete=False)
-    astFile = f.name
-    f.close()
-    os.unlink(astFile)
-    parserUtility = os.path.join(os.path.abspath(os.path.dirname(__file__)), "parse_aadl.py")
-    cmd = "python2 " + parserUtility + " -o " + astFile + ' ' + ' '.join(sys.argv[1:])
-    if os.system(cmd) != 0:
-        if os.path.exists(astFile):
-            os.unlink(astFile)
-        panic("AADL parsing failed. Aborting...")
+    projectCache = os.getenv("PROJECT_CACHE")
+    if projectCache is not None:
+        if not os.path.isdir(projectCache):
+            try:
+                os.mkdir(projectCache)
+            except:
+                panic("The configured cache folder:\n\n\t" + projectCache +
+                      "\n\n...is not there!\n")
+    cachedModelExists = False
+    aadlASTcache = None
+    if projectCache is not None:
+        filehash = hashlib.md5()
+        for each in sorted(sys.argv[1:]):
+            filehash.update(open(each).read().encode('utf-8'))
+        newHash = filehash.hexdigest()
+        # set the name of the Pickle files containing the dumped AST
+        aadlASTcache = projectCache + os.sep + newHash + "_aadl_ast.pickle"
+        if not os.path.exists(aadlASTcache):
+            print("[DMT] No cached AADL model found for",
+                  ",".join(sys.argv[1:]))
+        else:
+            cachedModelExists = True
+            print("[DMT] Reusing cached AADL model for",
+                  ",".join(sys.argv[1:]))
+
+    import pickle
+    if cachedModelExists:
+        astInfo = pickle.load(open(aadlASTcache, 'rb'), fix_imports=False)
+    else:
+        import tempfile
+        f = tempfile.NamedTemporaryFile(delete=False)
+        astFile = f.name
+        f.close()
+        os.unlink(astFile)
+        parserUtility = os.path.join(
+            os.path.abspath(os.path.dirname(__file__)), "parse_aadl.py")
+        cmd = "python2 " + parserUtility + " -o " + astFile + ' ' + \
+            ' '.join(sys.argv[1:])
+        if os.system(cmd) != 0:
+            if os.path.exists(astFile):
+                os.unlink(astFile)
+            panic("AADL parsing failed. Aborting...")
+        astInfo = pickle.load(open(astFile, 'rb'), fix_imports=False)
+        if aadlASTcache:
+            pickle.dump(astInfo, open(aadlASTcache, 'wb'), fix_imports=False)
 
     def FixMetaClasses(sp: ApLevelContainer) -> None:
         def patchMe(o: Any) -> None:
@@ -168,7 +203,7 @@ of each SUBPROGRAM param.'''
                     for step in python2className.split('.')[1:]:
                         klass = getattr(klass, step)
                     o.__class__ = klass
-            except Exception as _:
+            except Exception:
                 pass
 
         patchMe(sp)
@@ -181,8 +216,6 @@ of each SUBPROGRAM param.'''
         for cn in sp._connections:
             patchMe(cn)
     try:
-        import pickle
-        astInfo = pickle.load(open(astFile, 'rb'), fix_imports=False)
         for k in ['g_processImplementations', 'g_apLevelContainers',
                   'g_signals', 'g_systems', 'g_subProgramImplementations',
                   'g_threadImplementations']:
@@ -207,7 +240,7 @@ types). This used to cover Dumpable C/Ada Types and OG headers.'''
     outputDir = commonPy.configMT.outputDir
     asn1SccPath = spawn.find_executable('asn1.exe')
     # allow externally-defined flags when calling the asn1 compiler (e.g. to set word size based on target)
-    extraFlags = os.getenv ("ASN1SCC_FLAGS") or ""
+    extraFlags = os.getenv("ASN1SCC_FLAGS") or ""
     if asnFile is not None:
         if not asn1SccPath:
             panic("ASN1SCC seems not installed on your system (asn1.exe not found in PATH).\n")  # pragma: no cover
@@ -314,7 +347,7 @@ def ProcessAsync(  # pylint: disable=dangerous-default-value
         maybeFVname: str,
         useOSS: bool,
         badTypes: SetOfBadTypenames,
-        loaded_languages_cache: List[str]=[]) -> Async_B_Mapper:  # pylint: disable=invalid-sequence-index
+        loaded_languages_cache: List[str] = []) -> Async_B_Mapper:  # pylint: disable=invalid-sequence-index
 
     backend = getAsyncBackend(modelingLanguage)
 
@@ -418,7 +451,7 @@ def ProcessCustomBackends(
             # pretend its VHDL
             lang = "vhdl"
         sp = commonPy.aadlAST.g_apLevelContainers[spName]
-        if len(sp._params) == 0:
+        if not sp._params:
             if lang.lower() == "gui_ri":  # pragma: no cover
                 if "gui_polling" not in sp._id:  # pragma: no cover
                     panic("Due to wxWidgets limitations, your TCs must have at least one parameter (fix %s)" % sp._id)  # pragma: no cover
@@ -480,6 +513,24 @@ def main() -> None:
         import pdb  # pragma: no cover pylint: disable=wrong-import-position,wrong-import-order
         pdb.set_trace()  # pragma: no cover
 
+    if "-profile" in sys.argv:
+        sys.argv.remove("-profile")
+        import cProfile
+        import pstats
+        import io
+        pr = cProfile.Profile()
+        pr.enable()
+        import atexit
+
+        def dumpSpeedData() -> None:
+            pr.disable()
+            s = io.StringIO()
+            sortby = 'cumulative'
+            ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+            ps.print_stats()
+            print(s.getvalue())
+        atexit.register(dumpSpeedData)
+
     if "-v" in sys.argv:
         import pkg_resources  # pragma: no cover
         version = pkg_resources.require("dmt")[0].version  # pragma: no cover
@@ -528,7 +579,7 @@ def main() -> None:
     if len(asn1files) == 1:
         asnFile = asn1files[0]
         commonPy.asnParser.ParseAsnFileList(asn1files)
-    elif len(asn1files) != 0:
+    elif asn1files:
         panic("There appear to be more than one ASN.1 files referenced (%s)..." % str(asn1files))
 
     if asnFile is not None:
@@ -575,8 +626,8 @@ def main() -> None:
         sp = commonPy.aadlAST.g_apLevelContainers[spName]
         inform("Creating glue for parameters of %s.%s...", sp._id, sp_impl)
 
-        # Avoid generating empty glue - no parameters for this APLC
-        if len(sp._params) == 0:
+        if not sp._params:
+            # Avoid generating empty glue - no parameters for this APLC
             continue
 
         # All SCADE versions are handled by lustre_B_mapper
@@ -601,9 +652,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    if "-pdb" in sys.argv:
-        sys.argv.remove("-pdb")  # pragma: no cover
-        import pdb  # pragma: no cover pylint: disable=wrong-import-position,wrong-import-order
-        pdb.run('main()')  # pragma: no cover
-    else:
-        main()
+    main()

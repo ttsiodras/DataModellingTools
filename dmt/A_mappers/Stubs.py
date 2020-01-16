@@ -23,11 +23,15 @@ from __future__ import absolute_import
 import os
 import re
 import copy
+import sys
 import DV_Types  # pylint: disable=import-error
 from ctypes import (
     cdll, c_void_p, c_ubyte, c_double, c_uint,
     c_longlong, c_bool, c_int, c_long, c_char
 )
+
+if sys.version_info > (3,):
+    long = int
 
 # load the *getset.so in this folder
 script_path = os.path.dirname(os.path.realpath(__file__))
@@ -102,12 +106,20 @@ class DataStream(object):
 
     def GetPyString(self):
         # print "Reading",
-        msg = ""
-        pData = c_void_p(GetBitstreamBuffer(self._bs))
-        for i in range(0, GetStreamCurrentLength(self._bs)):
-            b = GetBufferByte(pData, i)
-            msg += chr(b)
-            # print b, ",",
+        if sys.version_info > (3,):
+            msg = b""
+            pData = c_void_p(GetBitstreamBuffer(self._bs))
+            for i in range(0, GetStreamCurrentLength(self._bs)):
+                b = GetBufferByte(pData, i)
+                msg += bytes([b])
+                # print b, ",",
+        else:
+            msg = ""
+            pData = c_void_p(GetBitstreamBuffer(self._bs))
+            for i in range(0, GetStreamCurrentLength(self._bs)):
+                b = GetBufferByte(pData, i)
+                msg += chr(b)
+                # print b, ",",
         # print "EOF"
         return msg
 
@@ -117,10 +129,16 @@ class DataStream(object):
         self._bs.count = strLength
         pData = c_void_p(GetBitstreamBuffer(self._bs))
         # print "Writing",
-        for i in range(0, strLength):
-            b = ord(data[i])
-            # print b, ",",
-            SetBufferByte(pData, i, b)
+        if sys.version_info > (3,):
+            for i in range(0, strLength):
+                b = data[i]
+                # print b, ",",
+                SetBufferByte(pData, i, b)
+        else:
+            for i in range(0, strLength):
+                b = ord(data[i])
+                # print b, ",",
+                SetBufferByte(pData, i, b)
         # print "EOF"
 
 
@@ -354,22 +372,42 @@ grep for the errorcode value inside ASN1SCC generated headers."""
         self.SetLength(strLength, False)
         self._Caccessor += "_iDx"
         accessPath = self._accessPath
-        for idx in range(0, strLength):
-            self._params.append(idx)
-            self._accessPath = accessPath + "[" + str(idx) + "]"
-            self.Set(ord(src[idx]), reset=False)
-            self._params.pop()
+        if sys.version_info > (3,):
+            for idx in range(0, strLength):
+                self._params.append(idx)
+                self._accessPath = accessPath + "[" + str(idx) + "]"
+                self.Set(ord(src[idx]), reset=False)
+                self._params.pop()
+        else:
+            for idx in range(0, strLength):
+                self._params.append(idx)
+                self._accessPath = accessPath + "[" + str(idx) + "]"
+                self.Set(ord(src[idx]), reset=False)
+                self._params.pop()
         self.Reset()
 
     def GetPyString(self):
-        retval = ""
-        strLength = self.GetLength(False)
-        self._Caccessor += "_iDx"
-        accessPath = self._accessPath
-        for idx in range(0, strLength):
-            self._params.append(idx)
-            self._accessPath = accessPath + "[" + str(idx) + "]"
-            retval += chr(self.Get(reset=False))
-            self._params.pop()
-        self.Reset()
-        return retval
+        if sys.version_info > (3,):
+            retval = b""
+            strLength = self.GetLength(False)
+            self._Caccessor += "_iDx"
+            accessPath = self._accessPath
+            for idx in range(0, strLength):
+                self._params.append(idx)
+                self._accessPath = accessPath + "[" + str(idx) + "]"
+                retval += bytes([self.Get(reset=False)])
+                self._params.pop()
+            self.Reset()
+            return retval.decode("utf-8")
+        else:
+            retval = ""
+            strLength = self.GetLength(False)
+            self._Caccessor += "_iDx"
+            accessPath = self._accessPath
+            for idx in range(0, strLength):
+                self._params.append(idx)
+                self._accessPath = accessPath + "[" + str(idx) + "]"
+                retval += chr(self.Get(reset=False))
+                self._params.pop()
+            self.Reset()
+            return retval

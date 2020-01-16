@@ -1,4 +1,4 @@
-### $ANTLR 2.7.7 (20120126): "aadl.g" -> "AadlLexer.py"$
+### $ANTLR 2.7.7 (20160127): "aadl.g" -> "AadlLexer.py"$
 ### import antlr and other modules ..
 import sys
 import antlr
@@ -17,50 +17,50 @@ if version < '2.3':
 ### >>>The Literals<<<
 literals = {}
 literals[u"type"] = 32
-literals[u"inverse"] = 92
+literals[u"inverse"] = 94
 literals[u"constant"] = 70
 literals[u"connections"] = 58
 literals[u"public"] = 7
 literals[u"list"] = 69
-literals[u"initial"] = 87
+literals[u"initial"] = 89
 literals[u"applies"] = 62
 literals[u"end"] = 5
 literals[u"aadlboolean"] = 39
-literals[u"flows"] = 94
+literals[u"flows"] = 96
 literals[u"memory"] = 20
 literals[u"aadlstring"] = 40
 literals[u"flow"] = 67
 literals[u"system"] = 16
 literals[u"implementation"] = 24
 literals[u"to"] = 28
-literals[u"and"] = 80
-literals[u"not"] = 99
+literals[u"and"] = 82
+literals[u"not"] = 101
 literals[u"package"] = 4
 literals[u"inherit"] = 61
 literals[u"aadlreal"] = 48
-literals[u"source"] = 95
+literals[u"source"] = 97
 literals[u"reference"] = 57
 literals[u"provides"] = 29
 literals[u"server"] = 59
-literals[u"sink"] = 96
+literals[u"sink"] = 98
 literals[u"event"] = 66
 literals[u"range"] = 54
 literals[u"enumeration"] = 41
-literals[u"calls"] = 85
-literals[u"out"] = 91
+literals[u"calls"] = 87
+literals[u"out"] = 93
 literals[u"set"] = 37
 literals[u"parameter"] = 68
 literals[u"of"] = 55
 literals[u"is"] = 38
 literals[u"aadlinteger"] = 49
-literals[u"or"] = 79
+literals[u"or"] = 81
 literals[u"access"] = 60
 literals[u"none"] = 11
 literals[u"features"] = 25
 literals[u"data"] = 18
 literals[u"all"] = 63
 literals[u"thread"] = 12
-literals[u"path"] = 97
+literals[u"path"] = 99
 literals[u"properties"] = 72
 literals[u"units"] = 45
 literals[u"bus"] = 21
@@ -70,20 +70,20 @@ literals[u"private"] = 8
 literals[u"port"] = 65
 literals[u"requires"] = 30
 literals[u"refines"] = 31
-literals[u"false"] = 82
+literals[u"false"] = 84
 literals[u"processor"] = 19
 literals[u"device"] = 22
 literals[u"property"] = 36
 literals[u"annex"] = 34
 literals[u"classifier"] = 56
-literals[u"transitions"] = 100
+literals[u"transitions"] = 102
 literals[u"process"] = 15
 literals[u"value"] = 76
-literals[u"modes"] = 86
+literals[u"modes"] = 88
 literals[u"in"] = 77
 literals[u"delta"] = 71
 literals[u"mode"] = 64
-literals[u"true"] = 81
+literals[u"true"] = 83
 literals[u"group"] = 14
 literals[u"refined"] = 27
 literals[u"subprogram"] = 17
@@ -174,39 +174,41 @@ ASSIGNPLUS = 75
 VALUE = 76
 IN = 77
 BINDING = 78
-OR = 79
-AND = 80
-TRUE = 81
-FALSE = 82
-NOT = 83
-STRING_LITERAL = 84
-CALLS = 85
-MODES = 86
-INITIAL = 87
-LTRANS = 88
-RTRANS = 89
-ARROW = 90
-OUT = 91
-INVERSE = 92
-DARROW = 93
-FLOWS = 94
-SOURCE = 95
-SINK = 96
-PATH = 97
-AADLSPEC = 98
-NOTT = 99
-TRANSITIONS = 100
-HASH = 101
-DIGIT = 102
-EXPONENT = 103
-INT_EXPONENT = 104
-EXTENDED_DIGIT = 105
-BASED_INTEGER = 106
-BASE = 107
-ESC = 108
-HEX_DIGIT = 109
-WS = 110
-SL_COMMENT = 111
+LBRACKET = 79
+RBRACKET = 80
+OR = 81
+AND = 82
+TRUE = 83
+FALSE = 84
+NOT = 85
+STRING_LITERAL = 86
+CALLS = 87
+MODES = 88
+INITIAL = 89
+LTRANS = 90
+RTRANS = 91
+ARROW = 92
+OUT = 93
+INVERSE = 94
+DARROW = 95
+FLOWS = 96
+SOURCE = 97
+SINK = 98
+PATH = 99
+AADLSPEC = 100
+NOTT = 101
+TRANSITIONS = 102
+HASH = 103
+DIGIT = 104
+EXPONENT = 105
+INT_EXPONENT = 106
+EXTENDED_DIGIT = 107
+BASED_INTEGER = 108
+BASE = 109
+ESC = 110
+HEX_DIGIT = 111
+WS = 112
+SL_COMMENT = 113
 
 class Lexer(antlr.CharScanner) :
     ### user action >>>
@@ -237,6 +239,10 @@ class Lexer(antlr.CharScanner) :
                                 pass
                                 self.mRPAREN(True)
                                 theRetToken = self._returnToken
+                            elif la1 and la1 in u'[':
+                                pass
+                                self.mLBRACKET(True)
+                                theRetToken = self._returnToken
                             elif la1 and la1 in u'}':
                                 pass
                                 self.mRCURLY(True)
@@ -256,10 +262,6 @@ class Lexer(antlr.CharScanner) :
                             elif la1 and la1 in u'=':
                                 pass
                                 self.mASSIGN(True)
-                                theRetToken = self._returnToken
-                            elif la1 and la1 in u']':
-                                pass
-                                self.mRTRANS(True)
                                 theRetToken = self._returnToken
                             elif la1 and la1 in u'#':
                                 pass
@@ -302,6 +304,10 @@ class Lexer(antlr.CharScanner) :
                                     pass
                                     self.mLTRANS(True)
                                     theRetToken = self._returnToken
+                                elif (self.LA(1)==u']') and (self.LA(2)==u'-'):
+                                    pass
+                                    self.mRTRANS(True)
+                                    theRetToken = self._returnToken
                                 elif (self.LA(1)==u'-') and (self.LA(2)==u'>') and (True):
                                     pass
                                     self.mARROW(True)
@@ -317,6 +323,10 @@ class Lexer(antlr.CharScanner) :
                                 elif (self.LA(1)==u'{') and (True):
                                     pass
                                     self.mLCURLY(True)
+                                    theRetToken = self._returnToken
+                                elif (self.LA(1)==u']') and (True):
+                                    pass
+                                    self.mRBRACKET(True)
                                     theRetToken = self._returnToken
                                 elif (self.LA(1)==u':') and (True):
                                     pass
@@ -399,6 +409,40 @@ class Lexer(antlr.CharScanner) :
         try:      ## for error handling
             pass
             self.match('{')
+        
+        except antlr.RecognitionException, ex:
+            self.reportError(ex)
+            self.consume()
+            self.consumeUntil(_tokenSet_0)
+        
+        self.set_return_token(_createToken, _token, _ttype, _begin)
+    
+    def mLBRACKET(self, _createToken):    
+        _ttype = 0
+        _token = None
+        _begin = self.text.length()
+        _ttype = LBRACKET
+        _saveIndex = 0
+        try:      ## for error handling
+            pass
+            self.match('[')
+        
+        except antlr.RecognitionException, ex:
+            self.reportError(ex)
+            self.consume()
+            self.consumeUntil(_tokenSet_0)
+        
+        self.set_return_token(_createToken, _token, _ttype, _begin)
+    
+    def mRBRACKET(self, _createToken):    
+        _ttype = 0
+        _token = None
+        _begin = self.text.length()
+        _ttype = RBRACKET
+        _saveIndex = 0
+        try:      ## for error handling
+            pass
+            self.match(']')
         
         except antlr.RecognitionException, ex:
             self.reportError(ex)
@@ -807,7 +851,7 @@ class Lexer(antlr.CharScanner) :
                 self.match('\\')
             elif la1 and la1 in u'u':
                 pass
-                _cnt818= 0
+                _cnt823= 0
                 while True:
                     if (self.LA(1)==u'u'):
                         pass
@@ -815,8 +859,8 @@ class Lexer(antlr.CharScanner) :
                     else:
                         break
                     
-                    _cnt818 += 1
-                if _cnt818 < 1:
+                    _cnt823 += 1
+                if _cnt823 < 1:
                     self.raise_NoViableAlt(self.LA(1))
                 self.mHEX_DIGIT(False)
                 self.mHEX_DIGIT(False)
@@ -871,7 +915,7 @@ class Lexer(antlr.CharScanner) :
         _saveIndex = 0
         try:      ## for error handling
             pass
-            _cnt776= 0
+            _cnt781= 0
             while True:
                 if ((self.LA(1) >= u'0' and self.LA(1) <= u'9')):
                     pass
@@ -879,8 +923,8 @@ class Lexer(antlr.CharScanner) :
                 else:
                     break
                 
-                _cnt776 += 1
-            if _cnt776 < 1:
+                _cnt781 += 1
+            if _cnt781 < 1:
                 self.raise_NoViableAlt(self.LA(1))
             if (self.LA(1)==u'#'):
                 pass
@@ -900,7 +944,7 @@ class Lexer(antlr.CharScanner) :
                         if (self.LA(1)==u'_'):
                             pass
                             self.match('_')
-                            _cnt782= 0
+                            _cnt787= 0
                             while True:
                                 if ((self.LA(1) >= u'0' and self.LA(1) <= u'9')):
                                     pass
@@ -908,8 +952,8 @@ class Lexer(antlr.CharScanner) :
                                 else:
                                     break
                                 
-                                _cnt782 += 1
-                            if _cnt782 < 1:
+                                _cnt787 += 1
+                            if _cnt787 < 1:
                                 self.raise_NoViableAlt(self.LA(1))
                         else:
                             break
@@ -918,7 +962,7 @@ class Lexer(antlr.CharScanner) :
                         pass
                         pass
                         self.match('.')
-                        _cnt787= 0
+                        _cnt792= 0
                         while True:
                             if ((self.LA(1) >= u'0' and self.LA(1) <= u'9')):
                                 pass
@@ -926,14 +970,14 @@ class Lexer(antlr.CharScanner) :
                             else:
                                 break
                             
-                            _cnt787 += 1
-                        if _cnt787 < 1:
+                            _cnt792 += 1
+                        if _cnt792 < 1:
                             self.raise_NoViableAlt(self.LA(1))
                         while True:
                             if (self.LA(1)==u'_'):
                                 pass
                                 self.match('_')
-                                _cnt790= 0
+                                _cnt795= 0
                                 while True:
                                     if ((self.LA(1) >= u'0' and self.LA(1) <= u'9')):
                                         pass
@@ -941,8 +985,8 @@ class Lexer(antlr.CharScanner) :
                                     else:
                                         break
                                     
-                                    _cnt790 += 1
-                                if _cnt790 < 1:
+                                    _cnt795 += 1
+                                if _cnt795 < 1:
                                     self.raise_NoViableAlt(self.LA(1))
                             else:
                                 break
@@ -1044,7 +1088,7 @@ class Lexer(antlr.CharScanner) :
             else:
                     self.raise_NoViableAlt(self.LA(1))
                 
-            _cnt805= 0
+            _cnt810= 0
             while True:
                 if ((self.LA(1) >= u'0' and self.LA(1) <= u'9')):
                     pass
@@ -1052,8 +1096,8 @@ class Lexer(antlr.CharScanner) :
                 else:
                     break
                 
-                _cnt805 += 1
-            if _cnt805 < 1:
+                _cnt810 += 1
+            if _cnt810 < 1:
                 self.raise_NoViableAlt(self.LA(1))
         
         except antlr.RecognitionException, ex:
@@ -1085,7 +1129,7 @@ class Lexer(antlr.CharScanner) :
             else:
                     self.raise_NoViableAlt(self.LA(1))
                 
-            _cnt800= 0
+            _cnt805= 0
             while True:
                 if ((self.LA(1) >= u'0' and self.LA(1) <= u'9')):
                     pass
@@ -1093,8 +1137,8 @@ class Lexer(antlr.CharScanner) :
                 else:
                     break
                 
-                _cnt800 += 1
-            if _cnt800 < 1:
+                _cnt805 += 1
+            if _cnt805 < 1:
                 self.raise_NoViableAlt(self.LA(1))
         
         except antlr.RecognitionException, ex:

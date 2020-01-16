@@ -5,9 +5,9 @@ options {
 }
 
 {
-    from commonPy.aadlAST import *
-    from commonPy.utility import panic
-    import commonPy.configMT
+    from commonPy2.aadlAST import *
+    from commonPy2.utility import panic
+    import commonPy2.configMT
     global g_currentPackage
     g_currentPackage = ""
 }
@@ -1646,6 +1646,10 @@ pe_or_list returns [retValue]
         |       
             ( logical_or )
         )
+    |
+        (
+            LBRACKET (a=property_name_reference ASSIGN b=property_expression SEMI)* RBRACKET
+        ) 
 ;
 
 
@@ -1759,7 +1763,7 @@ component_classifier_term returns [result]
 {
     result = None
 }
-    c=component_category ( cr=classifier_reference { result = cr })?
+    component_category ( cr=classifier_reference { result = cr })?
 ;
 
 
@@ -2595,6 +2599,8 @@ tokens {
 LPAREN      : '(' ;
 RPAREN      : ')' ;
 LCURLY      : '{' ;
+LBRACKET    : '[' ;
+RBRACKET    : ']' ;
 RCURLY      : '}' ;
 COLON       :  ':' ;
 PLUS        : '+' ;

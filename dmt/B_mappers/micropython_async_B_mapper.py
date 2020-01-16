@@ -165,6 +165,9 @@ mp_float_t mp_obj_get_float(mp_obj_t self_in);
 
 """
 
+# pylint: disable=unused-argument
+# pylint: disable=no-self-use
+
 
 class MapUPyObjData(RecursiveMapperGeneric[str, str]):
     def __init__(self) -> None:
@@ -263,7 +266,7 @@ class MapUPyObjEncode(RecursiveMapperGeneric[str, Tuple[str, str]]):
 
     def MapInteger(self, srcVar: str, destVar: Tuple[str, str], _: AsnInt, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
         # TODO check range of integer
-        dest, data = destVar
+        dest, unused = destVar
         return ['%s = mp_obj_new_int(%s);' % (dest, srcVar)]
 
     def MapReal(self, srcVar: str, destVar: Tuple[str, str], _: AsnReal, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
@@ -277,7 +280,7 @@ class MapUPyObjEncode(RecursiveMapperGeneric[str, Tuple[str, str]]):
         ]
 
     def MapBoolean(self, srcVar: str, destVar: Tuple[str, str], _: AsnBool, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
-        dest, data = destVar
+        dest, unused = destVar
         return ['%s = mp_obj_new_bool(%s);' % (dest, srcVar)]
 
     def MapOctetString(self, srcVar: str, destVar: Tuple[str, str], node: AsnOctetString, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
@@ -297,7 +300,7 @@ class MapUPyObjEncode(RecursiveMapperGeneric[str, Tuple[str, str]]):
 
     def MapEnumerated(self, srcVar: str, destVar: Tuple[str, str], _: AsnEnumerated, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:
         # TODO check the enum value fits in a small int and use MP_OBJ_NEW_SMALL_INT
-        dest, data = destVar
+        dest, unused = destVar
         return ['%s = mp_obj_new_int(%s);' % (dest, srcVar)]
 
     def MapSequence(self, srcVar: str, destVar: Tuple[str, str], node: AsnSequenceOrSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:
@@ -490,9 +493,9 @@ class MicroPython_GlueGenerator(ASynchronousToolGlueGenerator):
         try:
             return self.neededQstrFields[fields][0]
         except KeyError:
-            id = 'upython_qstr_fields%u' % len(self.neededQstrFields)
-            self.neededQstrFields[fields] = (id, fields)
-            return id
+            ide = 'upython_qstr_fields%u' % len(self.neededQstrFields)
+            self.neededQstrFields[fields] = (ide, fields)
+            return ide
 
     def AddChoiceFields(self, choiceNode: AsnChoice, fields: List[str]) -> None:
         self.choiceNodes[choiceNode] = fields
@@ -614,8 +617,8 @@ class MicroPython_GlueGenerator(ASynchronousToolGlueGenerator):
 
         # Generate the init function
         lines = []
-        for id, fields in self.neededQstrFields.values():
-            lines.append('qstr %s[%u];' % (id, len(fields)))
+        for ide, fields in self.neededQstrFields.values():
+            lines.append('qstr %s[%u];' % (ide, len(fields)))
         lines.append('')
         lines.append('void mp_taste_types_init(void) {')
         lines.append('    static int inited = 0;')
@@ -623,9 +626,9 @@ class MicroPython_GlueGenerator(ASynchronousToolGlueGenerator):
         lines.append('        return;')
         lines.append('    }')
         lines.append('    inited = 1;')
-        for id, fields in self.neededQstrFields.values():
+        for ide, fields in self.neededQstrFields.values():
             for i, f in enumerate(fields):
-                lines.append('    %s[%u] = qstr_from_str("%s");' % (id, i, f))
+                lines.append('    %s[%u] = qstr_from_str("%s");' % (ide, i, f))
         lines.append('}')
         self.C_SourceFile.write('\n'.join(lines) + '\n\n')
 

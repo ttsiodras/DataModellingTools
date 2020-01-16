@@ -33,6 +33,8 @@ parameters, which have C callable interfaces. The necessary
 stubs (to allow calling from the VM side) are also generated.
 '''
 
+# pylint: disable=too-many-lines
+
 import os
 import re
 import math
@@ -122,7 +124,7 @@ class VHDL_Circuit:
     allCircuits = []  # type: List[VHDL_Circuit]
     lookupSP = {}  # type: Dict[str, VHDL_Circuit]
     currentCircuit = None  # type: VHDL_Circuit
-    names = None  # type: asnParser.AST_Lookup
+    names = {}  # type: asnParser.AST_Lookup
     leafTypeDict = None  # type: asnParser.AST_Leaftypes
     currentOffset = 0x0  # type: int
 
@@ -1210,11 +1212,11 @@ def OnFinal() -> None:
 #         systemcBody.write('    }\n')
 #         systemcBody.write('}\n\n')
 
-    AddToStr('outputs', ', '.join(outputs) + (', ' if len(outputs) else ''))
+    AddToStr('outputs', ', '.join(outputs) + (', ' if outputs else ''))
     AddToStr('completions', ', '.join(completions))
 
     # Handle invalid write accesses in the passinput space by kicking off the last circuit (i.e. an FDIR circuit)
-    if len(VHDL_Circuit.allCircuits) > 0:
+    if VHDL_Circuit.allCircuits:
         alternate_kickoffWriteAccess = "when others => %(pi)s_StartCalculationsInternal <= %(pi)s_StartCalculationsInternal xor '1';\n" % {'pi': VHDL_Circuit.allCircuits[-1]._spCleanName}
     AddToStr('readinputdata', ' ' * 22 + alternate_kickoffWriteAccess)
 

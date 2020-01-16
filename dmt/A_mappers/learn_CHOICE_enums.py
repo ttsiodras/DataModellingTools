@@ -31,7 +31,7 @@ enums_dump = "\n    ".join(
 )
 
 enums_dump += "\n    ".join(
-    'printf("%s = %d\\n");' % (name.strip(), int(val))
+    'printf("{} = {}\\n");'.format(name.strip(), val.replace('LL', ''))
     for name, val in enums
 )
 uniq = os.getpid()

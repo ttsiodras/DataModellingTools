@@ -688,7 +688,7 @@ class OG_GlueGenerator(ASynchronousToolGlueGenerator):
             fileOutHeader.write("}\n\n")
 
         coding = {"uper": "UPER", "native": "NATIVE", "acn": "ACN"}[encoding.lower()]
-        if isinstance(node, AsnInt) or isinstance(node, AsnBool) or isinstance(node, AsnReal) or isinstance(node, AsnEnumerated):
+        if isinstance(node, (AsnInt, AsnBool, AsnReal, AsnEnumerated)):
             fileOutHeader.write(
                 "#define ENCODE_SYNC_%s_%s(varName, param1) ENCODE_%s_%s(varName, param1)\n\n" %
                 (coding,

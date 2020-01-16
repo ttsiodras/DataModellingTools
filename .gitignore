@@ -14,3 +14,10 @@ tests-sqlalchemy/test.db
 tests-sqlalchemy/verifier/LotsOfDataTypes.asn
 tests-sqlalchemy/verifier/asn2dataModel/
 .mypy_cache
+env
+aclocal.m4
+autom4te.cache/
+config.log
+config.status
+setup.py
+dmt/commonPy/__init__.py

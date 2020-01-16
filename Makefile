@@ -5,11 +5,19 @@ PY_SRC:=$(filter-out dmt/B_mappers/antlr.main.py dmt/A_mappers/Stubs.py, ${PY_SR
 # the one installed in $HOME/.local via setup.py.
 #
 # To address this, we find where our pip-installed typing lives:
-TYPING_FOLDER:=$(shell pip3 show typing | grep ^Location | sed 's,^.*: ,,')
+TYPING_FOLDER:=$(shell pip3 show typing 2>/dev/null | grep ^Location | sed 's,^.*: ,,')
 export PYTHONPATH=${TYPING_FOLDER}
 
-# all:	flake8 pylint mypy coverage testDB
-all:	flake8 mypy coverage testDB
+all:	tests
+
+tests:	flake8 pylint mypy coverage testDB
+
+configure:
+	./configure
+
+install:	configure
+	pip3 uninstall -y dmt || exit 0  # Uninstall if there, but don't abort if not installed
+	pip3 install --user .
 
 flake8:
 	@echo Performing syntax checks via flake8...
@@ -33,4 +41,4 @@ testDB:
 	@echo Performing database tests...
 	@$(MAKE) -C tests-sqlalchemy  || exit 1
 
-.PHONY:	flake8 pylint mypy coverage
+.PHONY:	flake8 pylint mypy coverage install configure

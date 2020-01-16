@@ -24,7 +24,7 @@ code generator A.'''
 
 import os
 import sys
-import distutils.spawn as spawn
+from distutils import spawn
 
 from typing import List
 from ..commonPy.utility import panic
@@ -47,12 +47,12 @@ def OnStartup(unused_modelingLanguage: str, asnFiles: List[str], outputDir: str,
     if not asn1SccPath:
         panic("ASN1SCC seems to be missing from your system (asn1.exe not found in PATH).\n")  # pragma: no cover
     # allow externally-defined flags when calling the asn1 compiler (e.g. to set word size based on target)
-    extraFlags = os.getenv ("ASN1SCC_FLAGS") or ""
+    extraFlags = os.getenv("ASN1SCC_FLAGS") or ""
     os.system(
         ("mono " if sys.platform.startswith('linux') else "") +
-        "\"{}\" -typePrefix asn1Scc -Ada {} -uPER -o \"".format(asn1SccPath, extraFlags) +
+        "\"{}\" -typePrefix asn1Scc -equal -Ada {} -o \"".format(asn1SccPath, extraFlags) +
         outputDir + "\" \"" + "\" \"".join(asnFiles) + "\"")
-    os.system("rm -f \"" + outputDir + "\"/*.adb")
+    # os.system("rm -f \"" + outputDir + "\"/*.adb")
 
 
 def OnBasic(unused_nodeTypename: str, unused_node: AsnBasicNode, unused_leafTypeDict: AST_Leaftypes) -> None:
