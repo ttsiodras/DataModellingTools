@@ -252,18 +252,12 @@ def getSyncBackend(modelingLanguage: str) -> Sync_B_Mapper:
     if modelingLanguage not in g_sync_mappers:
         panic("Synchronous modeling language '%s' not supported" % modelingLanguage)
     if modelingLanguage == 'vhdl':
-        if os.getenv("BRAVE") is not None:
-            if os.getenv("ZESTSC1") is not None or os.getenv("ZYNQZC706") is not None:
-                panic("Backend conflict: more HW target environment variables defined apart from 'BRAVE'. Please run 'unset' for each of those.")
-            return cast(Sync_B_Mapper, brave_B_mapper)
-        if os.getenv("ZESTSC1") is not None:
-            if os.getenv("BRAVE") is not None or os.getenv("ZYNQZC706") is not None:
-                panic("Backend conflict: more HW target environment variables defined apart from 'ZESTSC1'. Please run 'unset' for each of those.")
-            return cast(Sync_B_Mapper, zestSC1_B_mapper)
-        if os.getenv("ZYNQZC706") is not None:
-            if os.getenv("BRAVE") is not None or os.getenv("ZESTSC1") is not None:
-                panic("Backend conflict: more HW target environment variables defined apart from 'ZYNQZC706'. Please run 'unset' for each of those.")
-            return cast(Sync_B_Mapper, zynqzc706_B_mapper)
+        if commonPy.configMT.fpga_mapper == "BRAVE":
+            return cast(Sync_B_Mapper, brave_B_mapper)  # pragma: no cover
+        elif commonPy.configMT.fpga_mapper == "ZESTSC1":
+            return cast(Sync_B_Mapper, zestSC1_B_mapper)  # pragma: no cover
+        elif commonPy.configMT.fpga_mapper == "ZYNQZC706":
+            return cast(Sync_B_Mapper, zynqzc706_B_mapper)  # pragma: no cover
     return cast(Sync_B_Mapper, g_sync_mappers[modelingLanguage])
 
 
@@ -425,17 +419,11 @@ def ProcessCustomBackends(
         if lang.lower() in ["gui_pi", "gui_ri"]:
             return [cast(Sync_B_Mapper, x) for x in [python_B_mapper, pyside_B_mapper]]  # pragma: no cover
         elif lang.lower() == "vhdl":  # pragma: no cover
-            if os.getenv("BRAVE") is not None:
-                if os.getenv("ZESTSC1") is not None or os.getenv("ZYNQZC706") is not None:
-                    panic("Backend conflict: more HW target environment variables defined apart from 'BRAVE'. Please run 'unset' for each of those.")
+            if commonPy.configMT.fpga_mapper == "BRAVE":
                 return [cast(Sync_B_Mapper, brave_B_mapper)]  # pragma: no cover
-            if os.getenv("ZESTSC1") is not None:
-                if os.getenv("BRAVE") is not None or os.getenv("ZYNQZC706") is not None:
-                    panic("Backend conflict: more HW target environment variables defined apart from 'ZESTSC1'. Please run 'unset' for each of those.")
+            elif commonPy.configMT.fpga_mapper == "ZESTSC1":
                 return [cast(Sync_B_Mapper, zestSC1_B_mapper)]  # pragma: no cover
-            if os.getenv("ZYNQZC706") is not None:
-                if os.getenv("BRAVE") is not None or os.getenv("ZESTSC1") is not None:
-                    panic("Backend conflict: more HW target environment variables defined apart from 'ZYNQZC706'. Please run 'unset' for each of those.")
+            elif commonPy.configMT.fpga_mapper == "ZYNQZC706":
                 return [cast(Sync_B_Mapper, zynqzc706_B_mapper)]  # pragma: no cover
             else:
                 return [cast(Sync_B_Mapper, vhdl_B_mapper)]  # pragma: no cover
@@ -542,7 +530,7 @@ def main() -> None:
         try:
             commonPy.configMT.outputDir = os.path.normpath(sys.argv[idx + 1]) + os.sep
         except:  # pragma: no cover
-            panic('Usage: %s [-v] [-verbose] [-useOSS] [-o dirname] input1.aadl [input2.aadl] ...\n' % sys.argv[0])  # pragma: no cover
+            panic('Usage: %s [-v] [-verbose] [-useOSS] [-fpga <BRAVE|ZESTSC1|ZYNQZC706>] [-o dirname] input1.aadl [input2.aadl] ...\n' % sys.argv[0])  # pragma: no cover
         del sys.argv[idx]
         del sys.argv[idx]
         if not os.path.isdir(commonPy.configMT.outputDir):
@@ -556,10 +544,21 @@ def main() -> None:
     useOSS = "-useOSS" in sys.argv
     if useOSS:
         sys.argv.remove("-useOSS")
+    
+    if "-fpga" in sys.argv:  # pragma: no cover
+        idx = sys.argv.index("-fpga")
+        try:
+            commonPy.configMT.fpga_mapper = os.path.normpath(sys.argv[idx + 1])
+        except:  # pragma: no cover
+            panic('Usage: %s [-v] [-verbose] [-useOSS] [-fpga <BRAVE|ZESTSC1|ZYNQZC706>] [-o dirname] input1.aadl [input2.aadl] ...\n' % sys.argv[0])  # pragma: no cover 
+        if commonPy.configMT.fpga_mapper is None or commonPy.configMT.fpga_mapper not in ['BRAVE','ZESTSC1','ZYNQZC706']:
+            panic('Usage: %s [-v] [-verbose] [-useOSS] [-fpga <BRAVE|ZESTSC1|ZYNQZC706>] [-o dirname] input1.aadl [input2.aadl] ...\n' % sys.argv[0])  # pragma: no cover
+        del sys.argv[idx]
+        del sys.argv[idx]
 
     # No other options must remain in the cmd line...
     if len(sys.argv) < 2:
-        panic('Usage: %s [-v] [-verbose] [-useOSS] [-o dirname] input1.aadl [input2.aadl] ...\n' % sys.argv[0])  # pragma: no cover
+        panic('Usage: %s [-v] [-verbose] [-useOSS] [-fpga <BRAVE|ZESTSC1|ZYNQZC706>] [-o dirname] input1.aadl [input2.aadl] ...\n' % sys.argv[0])  # pragma: no cover
     commonPy.configMT.showCode = True
     for f in sys.argv[1:]:
         if not os.path.isfile(f):

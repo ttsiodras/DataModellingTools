@@ -43,3 +43,4 @@ debugParser = False
 verbose = False
 showCode = False
 outputDir = "." + os.sep
+fpga_mapper = None
