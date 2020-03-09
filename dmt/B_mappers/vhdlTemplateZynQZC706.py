@@ -33,13 +33,34 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 entity TASTE is
-	generic (
-		ADD_BUS_SIZE			: integer 		:= 16;
-		ADD_ALIGNEMENT			: integer		:= 4;
-		ADD_W_START				: integer		:= 768;		-- X"0300"
-		ADD_R_START				: integer		:= 908		-- X"038C"
-		);
     port (
+		---------------------------------------------------
+		--			AXI4 STREAM SLAVE DATA SIGNALS 		 --
+		---------------------------------------------------
+		-- Clock and Reset
+		S_AXIS_ACLK    			: in  std_logic;
+		S_AXIS_ARESETN 			: in  std_logic;
+		-- Data Channel		
+		S_AXIS_TVALID 			: in  std_logic;
+		S_AXIS_TREADY 			: out std_logic;
+		S_AXIS_TDATA  			: in  std_logic_vector(7 downto 0);
+		S_AXIS_TLAST 			: in  std_logic;
+		S_AXIS_TDEST			: in  std_logic_vector(4 downto 0);
+		---------------------------------------------------
+		--			AXI4 STREAM MASTER DATA SIGNALS 	 --
+		---------------------------------------------------
+		-- Clock and Reset
+		M_AXIS_ACLK    			: in  std_logic;
+		M_AXIS_ARESETN 			: in  std_logic;
+		-- Data Channel		
+		M_AXIS_TVALID 			: out std_logic;
+		M_AXIS_TREADY 			: in  std_logic;
+		M_AXIS_TDATA  			: out std_logic_vector(7 downto 0);
+		M_AXIS_TLAST 			: out  std_logic;
+		M_AXIS_TID				: out std_logic_vector(4 downto 0);
+		---------------------------------------------------
+		--			  AXI4 LITE CORE CONTROLLER 		 --
+		---------------------------------------------------
 		-- Clock and Reset
 		S_AXI_ACLK				: in  std_logic;
 		S_AXI_ARESETN			: in  std_logic;
@@ -64,10 +85,7 @@ entity TASTE is
 		-- Write Response Channel
 		S_AXI_BRESP				: out std_logic_vector(1 downto 0);
 		S_AXI_BVALID			: out std_logic;
-		S_AXI_BREADY			: in  std_logic;
-		-- Debug signals
-		start_led				: out std_logic;
-		done_led				: out std_logic
+		S_AXI_BREADY			: in  std_logic
     );
 end TASTE;
 
@@ -78,76 +96,147 @@ architecture rtl of TASTE is
 	---------------------------------------------------	
     -- Circuits for the existing PIs
 %(circuits)s
-	
+
 	---------------------------------------------------
-	--				TYPES DECLARATION			 	 --
-	---------------------------------------------------		
-	-- AXI FSM states
-	type AXI_states is(idle, reading, r_complete, writing, wait_resp);
+	--			  CONSTANTS			 	 	 		 --
+	---------------------------------------------------
 	
-	-- AXI combinational outputs record
-	type AXI_comb_out is record
+	constant OKAY						: std_logic_vector(1 downto 0) 		:= "00";
+	constant EXOKAY						: std_logic_vector(1 downto 0) 		:= "01";
+	constant SLVERR						: std_logic_vector(1 downto 0) 		:= "10";
+	constant DECERR						: std_logic_vector(1 downto 0) 		:= "11";
+	constant S2MM_PACKET_SIZE			: integer							:= 1024;
 	
-		awready						: std_logic;
-		wready						: std_logic;
-		arready						: std_logic;
-		rdata						: std_logic_vector(31 downto 0);
-		rresp						: std_logic_vector(1 downto 0);
-		rvalid						: std_logic;
-		bvalid						: std_logic;
+
+	----------------------------------------------------
+	--			  	TYPE DEFINITION			 	 	  --
+	----------------------------------------------------
+
+	------------------------------
+	--	AXI STREAM SLAVE CTRL	--
+	------------------------------
+	-- AXI4 STREAM SLAVE CONTROLLER FSM --
+	type AXIS_SLAVE_CTRL_states is(idle, runing);
+
+	-- AXI4 stream slave combinational outputs record --	
+	type AXIS_SLAVE_CTRL_comb_out is record		
+
+		tready							: std_logic;
 	
 	end record;
 	
-	-- AXI internal signals record
-	type AXI_inter is record
+	type AXIS_SLAVE_CTRL_inter is record		
+
+		current_state					: AXIS_SLAVE_CTRL_states;
 	
-		currentState								: AXI_states;
-		r_local_address								: integer;
-		bresp										: std_logic_vector(1 downto 0);
-		%(pi)s_StartCalculationsInternal		: std_logic;
-		%(pi)s_StartCalculationsInternalOld	: std_logic;
-		start_led									: std_logic;
-		done_led									: std_logic;
+	end record;
 	
-	end record;	
+	constant INIT_AXIS_SLAVE_CTRL_comb_out		: AXIS_SLAVE_CTRL_comb_out 		:= (tready			=> '0');		
+	
+	constant INIT_AXIS_SLAVE_CTRL_inter			: AXIS_SLAVE_CTRL_inter 		:= (current_state	=> idle);
 
-	---------------------------------------------------
-	--			  CONSTANTS DECLARATION			 	 --
-	---------------------------------------------------		
-	constant OKAY					: std_logic_vector(1 downto 0) 		:= "00";
-	constant EXOKAY					: std_logic_vector(1 downto 0) 		:= "01";
-	constant SLVERR					: std_logic_vector(1 downto 0) 		:= "10";
-	constant DECERR					: std_logic_vector(1 downto 0) 		:= "11";	
+	-------------------------------
+	--	AXI STREAM MASTER CTRL	 --
+	-------------------------------
+	-- AXI4 STREAM MASTER CONTROLLER FSM --
+	type AXIS_MASTER_CTRL_states is(idle, wait_data, runing);
 
-	constant INIT_AXI_comb_out		: AXI_comb_out 						:= (awready				=> '0',	
-																			wready				=> '0',
-																			arready				=> '0',
-                                                                            rdata				=> (others => '0'),
-                                                                            rresp				=> OKAY,
-                                                                            rvalid				=> '0',
-                                                                            bvalid				=> '0');
+	-- AXI4 stream master combinational outputs record --	
+	type AXIS_MASTER_CTRL_comb_out is record		
 
-	constant INIT_AXI_inter			: AXI_inter 						:= (currentState								=> idle,
-																			r_local_address								=> 0,
-																			bresp										=> OKAY,
-																			%(pi)s_StartCalculationsInternal		=> '0',
-																			%(pi)s_StartCalculationsInternalOld	=> '0',
-																			start_led									=> '1',
-																			done_led									=> '0');																		
-	---------------------------------------------------
-	--				SIGNAL DECLARATION			 	 --
-	---------------------------------------------------	
+		tvalid							: std_logic;
+		tdata							: std_logic_vector(7 downto 0);
+		tid								: std_logic_vector(4 downto 0);
+		tlast							: std_logic;
+	
+	end record;
+	
+	type AXIS_MASTER_CTRL_inter is record		
+
+		current_state					: AXIS_MASTER_CTRL_states;
+		current_tid						: std_logic_vector(4 downto 0);
+		data_counter					: std_logic_vector(23 downto 0);
+		fifo_empty_vector				: std_logic_vector(31 downto 0);
+	
+	end record;
+
+	constant INIT_AXIS_MASTER_CTRL_comb_out	: AXIS_MASTER_CTRL_comb_out := (tvalid		=> '0',
+                                                                            tdata		=> (others => '0'),
+                                                                            tid			=> (others => '0'),
+                                                                            tlast		=> '0'
+                                                                            );	
+	
+	constant INIT_AXIS_MASTER_CTRL_inter	: AXIS_MASTER_CTRL_inter 	:= (current_state		=> idle,
+                                                                            current_tid			=> (others => '0'),
+																			data_counter		=> (others => '0'),
+																			fifo_empty_vector	=> (others => '1')
+																			);
+	
+	------------------------------
+	--	AXI LITE SLAVE CTRL		--
+	------------------------------
+	-- AXI4 LITE SLAVE CONTROLLER FSM --
+	type AXI_SLAVE_CTRL_states is(idle, reading, r_complete, writing, wait_resp);
+	
+	-- AXI4 combinational outputs record --
+	type AXI_SLAVE_CTRL_comb_out is record		
+
+		awready			: std_logic;
+		wready			: std_logic;
+		arready			: std_logic;
+		rdata			: std_logic_vector(31 downto 0);
+		rresp			: std_logic_vector(1 downto 0);
+		rvalid			: std_logic;
+		bvalid			: std_logic;
+	
+	end record;
+	
+	-- AXI4 internal signals record --
+	type AXI_SLAVE_CTRL_inter is record
+	
+		current_state			: AXI_SLAVE_CTRL_states;
+		r_local_address			: integer;
+		bresp					: std_logic_vector(1 downto 0);
+
+	
+	end record;
+	
+	constant INIT_AXI_SLAVE_CTRL_comb_out	: AXI_SLAVE_CTRL_comb_out	:= (awready		=> '0',	
+																			wready		=> '0',
+																			arready		=> '0',
+																			rdata		=> (others => '0'),
+																			rresp		=> OKAY,
+																			rvalid		=> '0',
+																			bvalid		=> '0'
+																			);
+																						
+	constant INIT_AXI_SLAVE_CTRL_inter	: AXI_SLAVE_CTRL_inter 		:= (current_state		=> idle,
+																		r_local_address		=> 0,
+																		bresp				=> OKAY
+																		);
+	
+														
+	------------------------------
+	--	SIGNAL DECLARATION		--
+	------------------------------	
     -- Registers for I/O
 %(ioregisters)s
 
-    -- Signals for start/finish
-%(startStopSignals)s
-	
-	-- AXI contrl Signals
-	signal r											: AXI_inter;
-	signal rin											: AXI_inter;
-	signal r_comb_out									: AXI_comb_out;
-	signal rin_comb_out									: AXI_comb_out;	
+	-- AXI STREAM SLAVE CTRL Signals --	
+	signal AXIS_SLAVE_CTRL_r				: AXIS_SLAVE_CTRL_inter;
+	signal AXIS_SLAVE_CTRL_rin				: AXIS_SLAVE_CTRL_inter;
+	signal AXIS_SLAVE_CTRL_r_comb_out		: AXIS_SLAVE_CTRL_comb_out;
+	signal AXIS_SLAVE_CTRL_rin_comb_out		: AXIS_SLAVE_CTRL_comb_out;
+	-- AXI STREAM MASTER CTRL Signals --	
+	signal AXIS_MASTER_CTRL_r				: AXIS_MASTER_CTRL_inter;
+	signal AXIS_MASTER_CTRL_rin				: AXIS_MASTER_CTRL_inter;
+	signal AXIS_MASTER_CTRL_r_comb_out		: AXIS_MASTER_CTRL_comb_out;
+	signal AXIS_MASTER_CTRL_rin_comb_out	: AXIS_MASTER_CTRL_comb_out;	
+	-- AXI LITE SLAVE CTRL Signals --	
+	signal AXI_SLAVE_CTRL_r					: AXI_SLAVE_CTRL_inter;
+	signal AXI_SLAVE_CTRL_rin				: AXI_SLAVE_CTRL_inter;
+	signal AXI_SLAVE_CTRL_r_comb_out		: AXI_SLAVE_CTRL_comb_out;
+	signal AXI_SLAVE_CTRL_rin_comb_out		: AXI_SLAVE_CTRL_comb_out;
 
 begin
 
@@ -160,154 +249,355 @@ begin
 	---------------------------------------------------
 	--				PROCESS INSTANTIATION		     --
 	---------------------------------------------------		
+	-------------------------------
+	--	AXI STREAM SLAVE CTRL	 --
+	-------------------------------	
 	-- Sequential process --
-	sequential:	process(S_AXI_ACLK)
+	seq_axis_slave:	process(S_AXIS_ACLK)
+	begin 		
+		if rising_edge(S_AXIS_ACLK) then
+			AXIS_SLAVE_CTRL_r				<= AXIS_SLAVE_CTRL_rin;
+			AXIS_SLAVE_CTRL_r_comb_out		<= AXIS_SLAVE_CTRL_rin_comb_out;
+		end if;
+	end process;
+	
+	-- Combinational process --	
+	comb_axis_slave: process(	-- internal signals --
+							AXIS_SLAVE_CTRL_r, AXIS_SLAVE_CTRL_r_comb_out,
+							-- AXI inptuts --
+							S_AXIS_ARESETN, S_AXIS_TVALID, S_AXIS_TDATA, S_AXIS_TLAST, S_AXIS_TDEST,
+							-- Bambu signals --
+							-- TODO include fifo full signals --
+							)
+							
+		variable v									: AXIS_SLAVE_CTRL_inter;
+		variable v_comb_out							: AXIS_SLAVE_CTRL_comb_out;
+		variable w_local_address					: integer;
+		
+	begin
+	
+		--------------------------------------
+		--	DEFAULT VARIABLES ASIGNATION	--
+		--------------------------------------
+		v 											:= AXIS_SLAVE_CTRL_r;		
+		----------------------------------------------------------
+		--	DEFAULT COMBINATIONAL OUTPUT VARIABLES ASIGNATION   --
+		----------------------------------------------------------
+		v_comb_out									:= INIT_AXIS_SLAVE_CTRL_comb_out;
+		-----------------------------------------------
+		--	DEFAULT INTERNAL VARIABLE ASIGNATION     --
+		-----------------------------------------------		
+		w_local_address								:= to_integer(unsigned(S_AXIS_TDEST));				
+		
+
+		--------------------------------
+		--	 AXIS SLAVE CTRL FSM      --
+		--------------------------------
+		case AXIS_SLAVE_CTRL_r.current_state is
+			when idle =>
+				v_comb_out.tready				:= '0';			
+				-- TODO include fifo wr and data signals reset --
+				if S_AXIS_TVALID = '1' then
+					v.current_state		:= runing;
+				end if;
+			
+			when runing =>	
+				case w_local_address is
+					when (0) =>
+					-- TODO include fifo signals handling for each address --
+						v_comb_out.tready				:= '0';
+					when others =>
+					-- TODO include fifo signals handling --
+						v_comb_out.tready				:= '0';
+				end case;
+				if S_AXIS_TLAST = '1' then
+					v.current_state		:= idle;
+				end if;
+				
+			when others => null;
+		end case;		
+
+        --------------------------
+		--	RESET ASIGNATION	--
+		--------------------------		
+		if S_AXIS_ARESETN = '0' then
+			v		    				:= INIT_AXIS_SLAVE_CTRL_inter;
+			v_comb_out					:= INIT_AXIS_SLAVE_CTRL_comb_out;
+		end if;
+		--------------------------
+		--	SIGNAL ASIGNATION	--
+		--------------------------
+		AXIS_SLAVE_CTRL_rin 	       	<= v;
+		AXIS_SLAVE_CTRL_rin_comb_out	<= v_comb_out;	
+		
+	end process;	
+	
+	---------------------------------------------------
+	--			  AXI STREAM MASTER CTRL			 --
+	---------------------------------------------------	
+	-- Sequential process --
+	seq_axis_master: process(M_AXIS_ACLK)
+	begin 		
+		if rising_edge(M_AXIS_ACLK) then
+			AXIS_MASTER_CTRL_r				<= AXIS_MASTER_CTRL_rin;
+			AXIS_MASTER_CTRL_r_comb_out		<= AXIS_MASTER_CTRL_rin_comb_out;
+		end if;
+	end process;
+	
+	-- Combinational process --	
+	comb_axis_master: process(	-- internal signals --
+							AXIS_MASTER_CTRL_r, AXIS_MASTER_CTRL_r_comb_out,
+							-- AXI inptuts --
+							M_AXIS_ARESETN, M_AXIS_TREADY,
+							-- Bambu signals --
+							-- TODO include fifo empty and data signals --
+							)
+	
+		variable v									: AXIS_MASTER_CTRL_inter;
+		variable v_comb_out							: AXIS_MASTER_CTRL_comb_out;
+		variable r_local_address					: integer;
+		
+	begin
+	
+		-----------------------------------------------------------------
+		--				   DEFAULT VARIABLES ASIGNATION		           --
+		-----------------------------------------------------------------
+		v 											:= AXIS_MASTER_CTRL_r;	
+		v.fifo_empty_vector							:= INIT_AXIS_MASTER_CTRL_inter.fifo_empty_vector;
+        -- TODO include fifo_empty_vector assign --
+
+		-----------------------------------------------------------------
+		--	 	DEFAULT COMBINATIONAL OUTPUT VARIABLES ASIGNATION      --
+		-----------------------------------------------------------------
+		v_comb_out									:= INIT_AXIS_MASTER_CTRL_comb_out;
+		v_comb_out.tid								:= AXIS_MASTER_CTRL_r.current_tid;
+		-----------------------------------------------------------------
+		--	 			DEFAULT INTERNAL VARIABLE ASIGNATION      	   --
+		-----------------------------------------------------------------
+		r_local_address								:= to_integer(unsigned(AXIS_MASTER_CTRL_r.current_tid));
+		-----------------------------------------------------------------
+		--	 					 AXIS MASTER CTRL FSM      	   		   --
+		-----------------------------------------------------------------
+		case AXIS_MASTER_CTRL_r.current_state is
+			when idle =>
+				v.data_counter					:= (others => '0');
+				v_comb_out.tvalid				:= '0';
+				v_comb_out.tdata				:= (others => '0');
+				-- TODO include assign for fifo rd signal --
+				if M_AXIS_TREADY = '1' then
+					v.current_state		:= wait_data;
+				end if;
+			
+			when wait_data =>
+				v_comb_out.tvalid				:= '0';
+				v_comb_out.tdata				:= (others => '0');
+				-- TODO include assign for fifo rd signal --
+
+				if M_AXIS_TREADY = '1' then			
+					if v.fifo_empty_vector(to_integer(unsigned(AXIS_MASTER_CTRL_r.current_tid))) = '1' then
+						v.current_tid		:= std_logic_vector(unsigned(AXIS_MASTER_CTRL_r.current_tid) + 1);
+					else
+						v.current_state		:= runing;
+					end if;
+				else
+					v.current_state		:= idle;
+				end if;	
+			
+			when runing =>	
+				case r_local_address is
+                    -- TODO address cases for each fifo --
+					when (0) =>
+                        -- TODO include check on fifo empty and data_counter assign --
+                        -- TODO include fifo empty and data to tvaldi and tdata --
+                        if M_AXIS_TREADY = '1' then
+							v.data_counter				:= std_logic_vector(unsigned(AXIS_MASTER_CTRL_r.data_counter) + 1);
+						end if;
+						v_comb_out.tvalid				:= '0';
+						v_comb_out.tdata				:= '0';
+                        -- TODO include assign to fifo rd --
+					when others =>
+						v_comb_out.tvalid				:= '0';
+						v_comb_out.tdata				:= (others => '0');
+                        -- TODO include assign to fifo rd --
+				end case;
+				if to_integer(unsigned(AXIS_MASTER_CTRL_r.data_counter)) = S2MM_PACKET_SIZE-1 then
+					v_comb_out.tlast				:= '1';
+					v.current_tid					:= std_logic_vector(unsigned(AXIS_MASTER_CTRL_r.current_tid) + 1);
+					v.current_state					:= idle;
+				end if;
+				
+			when others => null;
+		end case;		
+		---------------------------------------------------
+		--				  RESET ASIGNATION		 	     --
+		---------------------------------------------------		
+		if M_AXIS_ARESETN = '0' then
+			v		    				:= INIT_AXIS_MASTER_CTRL_inter;
+			v_comb_out					:= INIT_AXIS_MASTER_CTRL_comb_out;
+		end if;
+		---------------------------------------------------
+		--				SIGNAL ASIGNATION			     --
+		---------------------------------------------------
+		AXIS_MASTER_CTRL_rin 	       	<= v;
+		AXIS_MASTER_CTRL_rin_comb_out	<= v_comb_out;	
+	
+	end process;
+
+	
+	---------------------------------------------------
+	--				AXI LITE SLAVE CTRL			 	 --
+	---------------------------------------------------	
+	-- Sequential process --
+	seq_axi_slave:	process(S_AXI_ACLK)
 	begin 		
 		if rising_edge(S_AXI_ACLK) then
-			r				<= rin;
-			r_comb_out		<= rin_comb_out;
+			AXI_SLAVE_CTRL_r				<= AXI_SLAVE_CTRL_rin;
+			AXI_SLAVE_CTRL_r_comb_out		<= AXI_SLAVE_CTRL_rin_comb_out;
 		end if;
 	end process;
 
 	-- Combinational process --	
-	combinational: process(	-- internal signals --
-							r, r_comb_out,
+	comb_axi_slave: process(	-- internal signals --
+							AXI_SLAVE_CTRL_r, AXI_SLAVE_CTRL_r_comb_out,
 							-- AXI inptuts --
 							S_AXI_ARESETN, S_AXI_AWADDR, S_AXI_AWVALID, S_AXI_WDATA, S_AXI_WSTRB, S_AXI_WVALID, S_AXI_ARADDR, S_AXI_ARVALID, S_AXI_RREADY, S_AXI_BREADY,
 							-- Bambu signals --
-							%(outputs)s %(starts)s, %(completions)s
+							%(outputs)s
 							)
 							
-		variable v									: AXI_inter;
-		variable v_comb_out							: AXI_comb_out;
+		variable v									: AXI_SLAVE_CTRL_inter;
+		variable v_comb_out							: AXI_SLAVE_CTRL_comb_out;
 		variable comb_S_AXI_AWVALID_S_AXI_ARVALID	: std_logic_vector(1 downto 0);
 		variable w_local_address					: integer;
 		
 	begin
 	
-		---------------------------------------------------
-		--			DEFAULT VARIABLES ASIGNATION		 --
-		---------------------------------------------------
-		v 											:= r;		
+		-----------------------------------------------------------------
+		--				   DEFAULT VARIABLES ASIGNATION		           --
+		-----------------------------------------------------------------
+		v 											:= AXI_SLAVE_CTRL_r;		
 		-----------------------------------------------------------------
 		--	 	DEFAULT COMBINATIONAL OUTPUT VARIABLES ASIGNATION      --
 		-----------------------------------------------------------------
-		v_comb_out									:= INIT_AXI_comb_out;
-		if %(pi)s_StartCalculationsPulse = '1' then
-			v.start_led								:= not r.start_led;
-			v.done_led								:= '0';
-		end if;
-		if %(pi)s_CalculationsComplete = '1' then
-			v.done_led								:= '1';
-		end if;
+		v_comb_out									:= INIT_AXI_SLAVE_CTRL_comb_out;
 		-----------------------------------------------------------------
 		--	 			DEFAULT INTERNAL VARIABLE ASIGNATION      	   --
 		-----------------------------------------------------------------		
-		w_local_address								:= to_integer(unsigned(S_AXI_AWADDR(ADD_BUS_SIZE-1 downto 0)));		
+		w_local_address								:= to_integer(unsigned(S_AXI_AWADDR(15 downto 0)));
 		comb_S_AXI_AWVALID_S_AXI_ARVALID			:= S_AXI_AWVALID&S_AXI_ARVALID;	
-		
-		-- Update start-stop pulses
-		v.%(pi)s_StartCalculationsInternalOld 	:= r.%(pi)s_StartCalculationsInternal;
-	
-		case r.currentState is
+		-----------------------------------------------------------------
+		--	 					 AXI LITE CTRL FSM      	   		   --
+		-----------------------------------------------------------------		
+		case AXI_SLAVE_CTRL_r.current_state is
 			when idle =>
 				v.bresp					:= OKAY;
 				case comb_S_AXI_AWVALID_S_AXI_ARVALID is
 					when "01" 	=> 
-						v.currentState 	:= reading;
+						v.current_state 	:= reading;
 					when "11" 	=> 
-						v.currentState 	:= reading;
+						v.current_state 	:= reading;
 					when "10" 	=> 
-						v.currentState 	:= writing;
+						v.current_state 	:= writing;
 					when others	=> 
-						v.currentState 	:= idle;
+						v.current_state 	:= idle;
 				end case;			
 			
 			when writing =>
 				v_comb_out.awready		:= S_AXI_AWVALID;
 				v_comb_out.wready		:= S_AXI_WVALID;
-				v.bresp					:= r.bresp;				
+				v.bresp					:= AXI_SLAVE_CTRL_r.bresp;				
 				if S_AXI_WVALID = '1' then
-					v.currentState	:= wait_resp;
+					v.current_state	:= wait_resp;
 					case w_local_address is
-%(readinputdata)s
+                        %(readinputdata)s
+						when others => null;
 					end case;
 				end if;
 				
 			when wait_resp =>
 				v_comb_out.awready		:= S_AXI_AWVALID;
 				v_comb_out.wready		:= S_AXI_WVALID;
-				v.bresp					:= r.bresp;
+				v.bresp					:= AXI_SLAVE_CTRL_r.bresp;
 				v_comb_out.bvalid		:= S_AXI_BREADY;
 				if S_AXI_AWVALID = '0' then
-					v.currentState := idle;
+					v.current_state := idle;
 				else
 					if S_AXI_WVALID = '1' then
 						case w_local_address is
-%(readinputdata)s
+                        %(readinputdata)s
+							when others => null;
 						end case;
 					else
-						v.currentState := writing;
+						v.current_state := writing;
 					end if;
 				end if;
 			
 			when reading =>
 				v_comb_out.arready		:= S_AXI_ARVALID;
 				v.bresp					:= OKAY;
-				v.r_local_address		:= to_integer(unsigned(S_AXI_ARADDR(ADD_BUS_SIZE-1 downto 0)));
-				v.currentState 			:= r_complete;
+				v.r_local_address		:= to_integer(unsigned(S_AXI_ARADDR(15 downto 0)));
+				v.current_state 		:= r_complete;
 			when r_complete => 
 				v_comb_out.arready		:= S_AXI_ARVALID;
 				v_comb_out.rvalid		:= '1';
 				v.bresp					:= OKAY;
 				if S_AXI_RREADY = '1' then
 					if S_AXI_ARVALID = '0' then
-						v.currentState 		:= idle;
+						v.current_state 	:= idle;
 					else
-						v.r_local_address	:= to_integer(unsigned(S_AXI_ARADDR(ADD_BUS_SIZE-1 downto 0)));
+						v.r_local_address	:= to_integer(unsigned(S_AXI_ARADDR(15 downto 0)));
 					end if;
 				end if;
-				case r.r_local_address is
-%(writeoutputdata)s
-					when others =>
-						v_comb_out.rdata(31 downto 0) 	:= (others => '0');								
+				case AXI_SLAVE_CTRL_r.r_local_address is
+					-- result calculated flag do_something2
+                    %(writeoutputdata)s
+					when others => v_comb_out.rdata(31 downto 0) 	:= (others => '0');								
 				end case;
 		end case;
-
 		---------------------------------------------------
 		--				  RESET ASIGNATION		 	     --
 		---------------------------------------------------		
 		if S_AXI_ARESETN = '0' then
-			v		    			:= INIT_AXI_inter;
-			v_comb_out				:= INIT_AXI_comb_out;
+			v		    			:= INIT_AXI_SLAVE_CTRL_inter;
+			v_comb_out				:= INIT_AXI_SLAVE_CTRL_comb_out;
 		end if;
-
 		---------------------------------------------------
 		--				SIGNAL ASIGNATION			     --
-		---------------------------------------------------		
-		rin 	          	<= v;
-		rin_comb_out		<= v_comb_out;
+		---------------------------------------------------
+		AXI_SLAVE_CTRL_rin 	       	<= v;
+		AXI_SLAVE_CTRL_rin_comb_out	<= v_comb_out;
 		
-	end process;	
+	end process;
 
-	---------------------------------------------------
-	--		   INTERNAL ARCHITECTURE SIGNALS	 	 --
-	---------------------------------------------------		
-	%(pi)s_StartCalculationsPulse 			<= r.%(pi)s_StartCalculationsInternal xor r.%(pi)s_StartCalculationsInternalOld;
+	----------------------------------------------------------
+	--			          OUTPUTS	 	 	    		 	--
+	----------------------------------------------------------
 	
 	---------------------------------------------------
-	--					 OUTPUTS	 	 			 --
-	---------------------------------------------------	
-	S_AXI_AWREADY			<= rin_comb_out.awready;
-	S_AXI_WREADY			<= rin_comb_out.wready;
-	S_AXI_ARREADY			<= rin_comb_out.arready;
-	S_AXI_RDATA				<= rin_comb_out.rdata;
-	S_AXI_RRESP				<= rin_comb_out.rresp;
-	S_AXI_RVALID			<= rin_comb_out.rvalid;
-	S_AXI_BRESP				<= rin.bresp;
-	S_AXI_BVALID			<= rin_comb_out.bvalid;
-	start_led				<= r.start_led;
-	done_led				<= r.done_led;	
+	--			  AXI STREAM SLAVE CTRL			 	 --
+	---------------------------------------------------		
+	S_AXIS_TREADY			<= AXIS_SLAVE_CTRL_rin_comb_out.tready;
+	
+	---------------------------------------------------
+	--			  AXI STREAM MASTER CTRL			 --
+	---------------------------------------------------		
+	M_AXIS_TVALID			<= AXIS_MASTER_CTRL_rin_comb_out.tvalid;
+	M_AXIS_TDATA			<= AXIS_MASTER_CTRL_rin_comb_out.tdata;
+	M_AXIS_TLAST			<= AXIS_MASTER_CTRL_rin_comb_out.tlast;
+	M_AXIS_TID				<= AXIS_MASTER_CTRL_rin_comb_out.tid;
+	
+	---------------------------------------------------
+	--				AXI LITE SLAVE CTRL			 	 --
+	---------------------------------------------------		
+	S_AXI_AWREADY			<= AXI_SLAVE_CTRL_rin_comb_out.awready;
+	S_AXI_WREADY			<= AXI_SLAVE_CTRL_rin_comb_out.wready;
+	S_AXI_ARREADY			<= AXI_SLAVE_CTRL_rin_comb_out.arready;
+	S_AXI_RDATA				<= AXI_SLAVE_CTRL_rin_comb_out.rdata;
+	S_AXI_RRESP				<= AXI_SLAVE_CTRL_rin_comb_out.rresp;
+	S_AXI_RVALID			<= AXI_SLAVE_CTRL_rin_comb_out.rvalid;
+	S_AXI_BRESP				<= AXI_SLAVE_CTRL_rin.bresp;
+	S_AXI_BVALID			<= AXI_SLAVE_CTRL_rin_comb_out.bvalid;
+	
 	
 end rtl;'''
 

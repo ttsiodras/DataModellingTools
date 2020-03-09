@@ -1049,9 +1049,6 @@ def OnFinal() -> None:
         ioregisterLines = []
 
         readinputdataLines = []
-        readinputdataLines.append("\n" + '\t' * 6 + '-- kickoff ' + c._spCleanName)
-        kickoffWriteAccess = "when (%(off)s) => v.%(pi)s_StartCalculationsInternal := r.%(pi)s_StartCalculationsInternal xor '1';\n" % {'pi': c._spCleanName , 'off': 768 + c._offset}
-        readinputdataLines.append(kickoffWriteAccess)
 
         connectionsToSystemCLines = []
 
@@ -1078,10 +1075,6 @@ def OnFinal() -> None:
                 outputs.extend([c._spCleanName + '_' + x for x in outputsMapper.Map(p._id, 1, node, VHDL_Circuit.leafTypeDict, VHDL_Circuit.names)])
 
         writeoutputdataLines = []
-        writeoutputdataLines.append("\n" + '\t' * 5 + '-- result calculated flag ' + c._spCleanName)
-        accessCompletionFlag = "when (%(off)s) => v_comb_out.rdata(7 downto 0) := \"0000000\" & r.done_led;\n" % \
-            {'pi': c._spCleanName, 'off': 768 + c._offset}
-        writeoutputdataLines.append(accessCompletionFlag)
 
         for p in c._sp._params:
             node = VHDL_Circuit.names[p._signal._asnNodename]
@@ -1096,8 +1089,6 @@ def OnFinal() -> None:
         AddToStr('circuits', '    component bambu_%s is\n' % c._spCleanName)
         AddToStr('circuits', '    port (\n')
         AddToStr('circuits', '\n'.join(['        ' + x for x in circuitLines]) + '\n')
-        AddToStr('circuits', '        start_%s  : in  std_logic;\n' % c._spCleanName)
-        AddToStr('circuits', '        finish_%s : out std_logic;\n' % c._spCleanName)
         AddToStr('circuits', '        clock_%s : in std_logic;\n' % c._spCleanName)
         AddToStr('circuits', '        reset_%s  : in  std_logic\n' % c._spCleanName)
         AddToStr('circuits', '    );\n')
@@ -1159,8 +1150,6 @@ def OnFinal() -> None:
         AddToStr('connectionsToSystemC', '\n    Interface_%s : bambu_%s\n' % (c._spCleanName, c._spCleanName))
         AddToStr('connectionsToSystemC', '        port map (\n')
         AddToStr('connectionsToSystemC', ',\n'.join(['            ' + x for x in connectionsToSystemCLines]) + ',\n')
-        AddToStr('connectionsToSystemC', '            start_%s => %s_StartCalculationsPulse,\n' % (c._spCleanName, c._spCleanName))
-        AddToStr('connectionsToSystemC', '            finish_%s => %s_CalculationsComplete,\n' % (c._spCleanName, c._spCleanName))
         AddToStr('connectionsToSystemC', '            clock_%s => S_AXI_ACLK,\n' % c._spCleanName)
         AddToStr('connectionsToSystemC', '            reset_%s => S_AXI_ARESETN\n' % c._spCleanName)
         AddToStr('connectionsToSystemC', '        );\n')
@@ -1175,11 +1164,6 @@ def OnFinal() -> None:
     AddToStr('outputs', ', '.join(outputs) + (', ' if len(outputs) else ''))
     AddToStr('completions', ', '.join(completions))
     AddToStr('starts', ', '.join(starts))
-
-    # Handle invalid write accesses in the passinput space by kicking off the last circuit (i.e. an FDIR circuit)
-    if len(VHDL_Circuit.allCircuits) > 0:
-        alternate_kickoffWriteAccess = "when others => v.%(pi)s_StartCalculationsInternal := r.%(pi)s_StartCalculationsInternal xor '1';\n" % {'pi': VHDL_Circuit.allCircuits[-1]._spCleanName}
-    AddToStr('readinputdata', '\t' * 6 + alternate_kickoffWriteAccess)
 
     AddToStr('pi', "%s" % c._spCleanName)
     vhdlFile = open(vhdlBackend.dir + '/TASTE-VHDL-DESIGN/ip/src/TASTE2.vhd', 'w')
