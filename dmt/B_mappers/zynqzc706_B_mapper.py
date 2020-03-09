@@ -167,6 +167,7 @@ class FromVHDLToASN1SCC(RecursiveMapperGeneric[List[int], str]):  # pylint: disa
         lines.append("    asn1SccSint val = 0;\n")
         lines.append("    for(i=0; i<sizeof(asn1SccSint)/4; i++) {\n")
         lines.append("        //axi_read(R_AXI_BASEADR + %s + (i*4), &tmp, 4, R_AXI_DSTADR);\n" % hex(register))
+        lines.append("        tmp = rtems_axi_read32(R_AXI_BASEADR + %s + (i*4));\n" % hex(register))
         lines.append("        tmp >>= 32; // ?\n")
         lines.append("        val |= (tmp << (32*i));\n")
         lines.append("    }\n")
@@ -184,7 +185,8 @@ class FromVHDLToASN1SCC(RecursiveMapperGeneric[List[int], str]):  # pylint: disa
         lines = []  # type: List[str]        
         lines.append("{\n")
         lines.append("    unsigned int tmp = 0;\n")
-        lines.append("    //axi_read(R_AXI_BASEADR + %s, &tmp, 4, R_AXI_DSTADR);\n" % hex(register))      
+        lines.append("    //axi_read(R_AXI_BASEADR + %s, &tmp, 4, R_AXI_DSTADR);\n" % hex(register))
+        lines.append("    tmp = rtems_axi_read32(R_AXI_BASEADR + %s + (i*4));\n" % hex(register))
         lines.append("    %s = (asn1SccUint) tmp;\n" % destVar)
         lines.append("}\n")
         srcVHDL[0] += 4
@@ -207,7 +209,8 @@ class FromVHDLToASN1SCC(RecursiveMapperGeneric[List[int], str]):  # pylint: disa
         lines.append("    unsigned int tmp, i;\n")
         lines.append("    for(i=0; i<%d; i++) {\n" % int(node._range[-1] / 4))
         lines.append("        tmp = 0;\n")
-        lines.append("        //axi_read(R_AXI_BASEADR + %s + (i*4), &tmp, 4, R_AXI_DSTADR);\n" % hex(register))      
+        lines.append("        //axi_read(R_AXI_BASEADR + %s + (i*4), &tmp, 4, R_AXI_DSTADR);\n" % hex(register))
+        lines.append("        tmp = rtems_axi_read32(R_AXI_BASEADR + %s + (i*4));\n" % hex(register))
         lines.append("        memcpy(%s.arr + (i*4), (unsigned char*)&tmp, sizeof(unsigned int));\n" % destVar)
         lines.append("    }\n")
         lines.append("}\n")
@@ -220,7 +223,8 @@ class FromVHDLToASN1SCC(RecursiveMapperGeneric[List[int], str]):  # pylint: disa
         lines = []  # type: List[str]        
         lines.append("{\n")
         lines.append("    unsigned int tmp;\n")
-        lines.append("    //axi_read(R_AXI_BASEADR + %s, &tmp, 4, R_AXI_DSTADR);\n" % hex(register))      
+        lines.append("    //axi_read(R_AXI_BASEADR + %s, &tmp, 4, R_AXI_DSTADR);\n" % hex(register))  
+        lines.append("    tmp = rtems_axi_read32(R_AXI_BASEADR + %s);\n" % hex(register))
         lines.append("    %s = tmp;\n" % destVar)
         lines.append("}\n")
         srcVHDL[0] += 4
@@ -301,6 +305,7 @@ class FromASN1SCCtoVHDL(RecursiveMapperGeneric[str, List[int]]):  # pylint: disa
         lines.append("    for(i=0; i<sizeof(asn1SccSint)/4; i++) {\n")
         lines.append("        tmp = val & 0xFFFFFFFF;\n")
         lines.append("        //axi_write(R_AXI_BASEADR + %s + (i*4), &tmp, 4, R_AXI_DSTADR);\n" % hex(register))
+        lines.append("        rtems_axi_write32(AXI_BANK_IP  + %s + (i*4), tmp);\n" % hex(register))
         lines.append("        val >>= 32;\n")
         lines.append("    }\n")
         lines.append("}\n")
@@ -316,6 +321,7 @@ class FromASN1SCCtoVHDL(RecursiveMapperGeneric[str, List[int]]):  # pylint: disa
         lines.append("{\n")
         lines.append("    unsigned int tmp = (unsigned int)%s;\n" % srcVar)
         lines.append("    //axi_write(R_AXI_BASEADR + %s, &tmp, 4, R_AXI_DSTADR);\n" % hex(register))
+        lines.append("    rtems_axi_write32(AXI_BANK_IP  + %s, tmp);\n" % hex(register))
         lines.append("}\n")
         dstVHDL[0] += 4
         return lines
@@ -336,7 +342,8 @@ class FromASN1SCCtoVHDL(RecursiveMapperGeneric[str, List[int]]):  # pylint: disa
         lines.append("    for(i=0; i<%d; i++) {\n" % int(node._range[-1] / 4))
         lines.append("        tmp = 0;\n")
         lines.append("        tmp = *(unsigned int*)(%s.arr + (i*4));\n" % srcVar)
-        lines.append("        //axi_write(R_AXI_BASEADR + %s + (i*4), &tmp, 4, R_AXI_DSTADR);\n" % hex(register))     
+        lines.append("        //axi_write(R_AXI_BASEADR + %s + (i*4), &tmp, 4, R_AXI_DSTADR);\n" % hex(register)) 
+        lines.append("        rtems_axi_write32(AXI_BANK_IP  + %s + (i*4), tmp);\n" % hex(register))
         lines.append("    }\n")
         lines.append("}\n")
 
@@ -351,6 +358,7 @@ class FromASN1SCCtoVHDL(RecursiveMapperGeneric[str, List[int]]):  # pylint: disa
         lines.append("{\n")
         lines.append("    unsigned int tmp = (unsigned int)%s;\n" % srcVar)
         lines.append("    //axi_write(R_AXI_BASEADR + %s, &tmp, 4, R_AXI_DSTADR);\n" % hex(register))
+        lines.append("    rtems_axi_write32(AXI_BANK_IP  + %s, tmp);\n" % hex(register))
         lines.append("}\n")
         dstVHDL[0] += 4
         return lines
@@ -502,11 +510,31 @@ unsigned int count;
 
 // include any needed lib headers
 // #include "axi123.h"
+#include <rtems.h>
 
 #define R_AXI_DSTADR 0xfe
 #define R_AXI_BASEADR 0x80000300
 //unsigned int axi_base_address = R_AXI_BASEADR; /* Base address on Remote. This is the address to which the data is copied. */
 //unsigned int axi_dst_address = R_AXI_DSTADR; /* AXI Destination address. */
+
+/* NOTICE: the clock driver is explicitly disabled */
+#define XPAR_TASTE_0_BASEADDR 0x43C00000 //this is cheating, from Xilinx generated h file
+
+#define BUS_ALIGNEMENT                4
+#define AXI_BANK_IP                 XPAR_TASTE_0_BASEADDR
+#define START_ADD                    0x00000300
+
+static inline uint32_t rtems_axi_read32(uintptr_t Addr)
+{
+    return *(volatile uint32_t *) Addr;
+}
+
+static inline void rtems_axi_write32(uintptr_t Addr, uint32_t Value)
+{
+    volatile uint32_t *LocalAddr = (volatile uint32_t *)Addr;
+    *LocalAddr = Value;
+    rtems_task_wake_after(1);
+}
 
 ''')
         # self.g_FVname = subProgram._id
