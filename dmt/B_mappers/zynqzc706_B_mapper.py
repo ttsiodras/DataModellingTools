@@ -1573,10 +1573,13 @@ def EmitBambuCBridge(sp: ApLevelContainer, subProgramImplementation: str):
     
     bambuFile = open(os.path.dirname(vhdlBackend.C_SourceFile.name) + '/' +  outputCsourceFilename, 'w')
     
-    functionBlocksName = os.path.dirname(vhdlBackend.C_SourceFile.name)[4:] # not elegant but not sure how to get the Function Block's name from here
+    functionBlocksName = os.path.dirname(vhdlBackend.C_SourceFile.name).lstrip(os.sep)
+    functionBlocksName = functionBlocksName[:functionBlocksName.index(os.sep)] if os.sep in functionBlocksName else functionBlocksName # a bit more elegant way of retrieving function block's name
+
     bambuFile.write("#include \"%s.h\" // Space certified compiler generated\n" % vhdlBackend.asn_name)
     bambuFile.write("#include \"%s.h\"\n" % functionBlocksName) 
-    
+
+
     bambuFile.write('\nvoid bambu_%s(\n    ' %  sp._id)
     # List flattened PI parameters
     lines = []
