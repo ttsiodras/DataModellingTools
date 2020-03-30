@@ -100,7 +100,7 @@ class ASynchronousToolGlueGenerator:
         ID = re.sub(r'[^A-Za-z0-9_]', '_', ID).upper()
         self.C_HeaderFile.write("#ifndef __%s_H__\n" % ID)
         self.C_HeaderFile.write("#define __%s_H__\n\n" % ID)
-        self.C_HeaderFile.write("#ifdef __unix__\n")
+        self.C_HeaderFile.write("#if defined( __unix__ ) || defined( __MSP430__ )\n")
         self.C_HeaderFile.write("#include <stdlib.h> /* for size_t */\n")
         self.C_HeaderFile.write("#else\n")
         self.C_HeaderFile.write("typedef unsigned size_t;\n")
