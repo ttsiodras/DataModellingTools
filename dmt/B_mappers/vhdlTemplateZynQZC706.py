@@ -35,30 +35,6 @@ use ieee.numeric_std.all;
 entity TASTE is
     port (
 		---------------------------------------------------
-		--			AXI4 STREAM SLAVE DATA SIGNALS 		 --
-		---------------------------------------------------
-		-- Clock and Reset
-		S_AXIS_ACLK    			: in  std_logic;
-		S_AXIS_ARESETN 			: in  std_logic;
-		-- Data Channel		
-		S_AXIS_TVALID 			: in  std_logic;
-		S_AXIS_TREADY 			: out std_logic;
-		S_AXIS_TDATA  			: in  std_logic_vector(7 downto 0);
-		S_AXIS_TLAST 			: in  std_logic;
-		S_AXIS_TDEST			: in  std_logic_vector(4 downto 0);
-		---------------------------------------------------
-		--			AXI4 STREAM MASTER DATA SIGNALS 	 --
-		---------------------------------------------------
-		-- Clock and Reset
-		M_AXIS_ACLK    			: in  std_logic;
-		M_AXIS_ARESETN 			: in  std_logic;
-		-- Data Channel		
-		M_AXIS_TVALID 			: out std_logic;
-		M_AXIS_TREADY 			: in  std_logic;
-		M_AXIS_TDATA  			: out std_logic_vector(7 downto 0);
-		M_AXIS_TLAST 			: out  std_logic;
-		M_AXIS_TID				: out std_logic_vector(4 downto 0);
-		---------------------------------------------------
 		--			  AXI4 LITE CORE CONTROLLER 		 --
 		---------------------------------------------------
 		-- Clock and Reset
@@ -105,73 +81,12 @@ architecture rtl of TASTE is
 	constant EXOKAY						: std_logic_vector(1 downto 0) 		:= "01";
 	constant SLVERR						: std_logic_vector(1 downto 0) 		:= "10";
 	constant DECERR						: std_logic_vector(1 downto 0) 		:= "11";
-	constant S2MM_PACKET_SIZE			: integer							:= 1024;
 	
 
 	----------------------------------------------------
 	--			  	TYPE DEFINITION			 	 	  --
 	----------------------------------------------------
 
-	------------------------------
-	--	AXI STREAM SLAVE CTRL	--
-	------------------------------
-	-- AXI4 STREAM SLAVE CONTROLLER FSM --
-	type AXIS_SLAVE_CTRL_states is(idle, runing);
-
-	-- AXI4 stream slave combinational outputs record --	
-	type AXIS_SLAVE_CTRL_comb_out is record		
-
-		tready							: std_logic;
-	
-	end record;
-	
-	type AXIS_SLAVE_CTRL_inter is record		
-
-		current_state					: AXIS_SLAVE_CTRL_states;
-	
-	end record;
-	
-	constant INIT_AXIS_SLAVE_CTRL_comb_out		: AXIS_SLAVE_CTRL_comb_out 		:= (tready			=> '0');		
-	
-	constant INIT_AXIS_SLAVE_CTRL_inter			: AXIS_SLAVE_CTRL_inter 		:= (current_state	=> idle);
-
-	-------------------------------
-	--	AXI STREAM MASTER CTRL	 --
-	-------------------------------
-	-- AXI4 STREAM MASTER CONTROLLER FSM --
-	type AXIS_MASTER_CTRL_states is(idle, wait_data, runing);
-
-	-- AXI4 stream master combinational outputs record --	
-	type AXIS_MASTER_CTRL_comb_out is record		
-
-		tvalid							: std_logic;
-		tdata							: std_logic_vector(7 downto 0);
-		tid								: std_logic_vector(4 downto 0);
-		tlast							: std_logic;
-	
-	end record;
-	
-	type AXIS_MASTER_CTRL_inter is record		
-
-		current_state					: AXIS_MASTER_CTRL_states;
-		current_tid						: std_logic_vector(4 downto 0);
-		data_counter					: std_logic_vector(23 downto 0);
-		fifo_empty_vector				: std_logic_vector(31 downto 0);
-	
-	end record;
-
-	constant INIT_AXIS_MASTER_CTRL_comb_out	: AXIS_MASTER_CTRL_comb_out := (tvalid		=> '0',
-                                                                            tdata		=> (others => '0'),
-                                                                            tid			=> (others => '0'),
-                                                                            tlast		=> '0'
-                                                                            );	
-	
-	constant INIT_AXIS_MASTER_CTRL_inter	: AXIS_MASTER_CTRL_inter 	:= (current_state		=> idle,
-                                                                            current_tid			=> (others => '0'),
-																			data_counter		=> (others => '0'),
-																			fifo_empty_vector	=> (others => '1')
-																			);
-	
 	------------------------------
 	--	AXI LITE SLAVE CTRL		--
 	------------------------------
@@ -197,6 +112,9 @@ architecture rtl of TASTE is
 		current_state			: AXI_SLAVE_CTRL_states;
 		r_local_address			: integer;
 		bresp					: std_logic_vector(1 downto 0);
+        --Registers for I/O
+        %(inputdeclaration)s
+        done					: std_logic;
 
 	
 	end record;
@@ -211,9 +129,12 @@ architecture rtl of TASTE is
 																			);
 																						
 	constant INIT_AXI_SLAVE_CTRL_inter	: AXI_SLAVE_CTRL_inter 		:= (current_state		=> idle,
-																		r_local_address		=> 0,
-																		bresp				=> OKAY
-																		);
+										r_local_address		=> 0,
+										bresp				=> OKAY,
+										--Registers for I/O
+                                        %(inputassign)s
+                                        done                => '0'
+                                                                                );
 	
 														
 	------------------------------
@@ -222,16 +143,6 @@ architecture rtl of TASTE is
     -- Registers for I/O
 %(ioregisters)s
 
-	-- AXI STREAM SLAVE CTRL Signals --	
-	signal AXIS_SLAVE_CTRL_r				: AXIS_SLAVE_CTRL_inter;
-	signal AXIS_SLAVE_CTRL_rin				: AXIS_SLAVE_CTRL_inter;
-	signal AXIS_SLAVE_CTRL_r_comb_out		: AXIS_SLAVE_CTRL_comb_out;
-	signal AXIS_SLAVE_CTRL_rin_comb_out		: AXIS_SLAVE_CTRL_comb_out;
-	-- AXI STREAM MASTER CTRL Signals --	
-	signal AXIS_MASTER_CTRL_r				: AXIS_MASTER_CTRL_inter;
-	signal AXIS_MASTER_CTRL_rin				: AXIS_MASTER_CTRL_inter;
-	signal AXIS_MASTER_CTRL_r_comb_out		: AXIS_MASTER_CTRL_comb_out;
-	signal AXIS_MASTER_CTRL_rin_comb_out	: AXIS_MASTER_CTRL_comb_out;	
 	-- AXI LITE SLAVE CTRL Signals --	
 	signal AXI_SLAVE_CTRL_r					: AXI_SLAVE_CTRL_inter;
 	signal AXI_SLAVE_CTRL_rin				: AXI_SLAVE_CTRL_inter;
@@ -249,200 +160,6 @@ begin
 	---------------------------------------------------
 	--				PROCESS INSTANTIATION		     --
 	---------------------------------------------------		
-	-------------------------------
-	--	AXI STREAM SLAVE CTRL	 --
-	-------------------------------	
-	-- Sequential process --
-	seq_axis_slave:	process(S_AXIS_ACLK)
-	begin 		
-		if rising_edge(S_AXIS_ACLK) then
-			AXIS_SLAVE_CTRL_r				<= AXIS_SLAVE_CTRL_rin;
-			AXIS_SLAVE_CTRL_r_comb_out		<= AXIS_SLAVE_CTRL_rin_comb_out;
-		end if;
-	end process;
-	
-	-- Combinational process --	
-	comb_axis_slave: process(	-- internal signals --
-							AXIS_SLAVE_CTRL_r, AXIS_SLAVE_CTRL_r_comb_out,
-							-- AXI inptuts --
-							S_AXIS_ARESETN, S_AXIS_TVALID, S_AXIS_TDATA, S_AXIS_TLAST, S_AXIS_TDEST,
-							-- Bambu signals --
-							-- TODO include fifo full signals --
-							)
-							
-		variable v									: AXIS_SLAVE_CTRL_inter;
-		variable v_comb_out							: AXIS_SLAVE_CTRL_comb_out;
-		variable w_local_address					: integer;
-		
-	begin
-	
-		--------------------------------------
-		--	DEFAULT VARIABLES ASIGNATION	--
-		--------------------------------------
-		v 											:= AXIS_SLAVE_CTRL_r;		
-		----------------------------------------------------------
-		--	DEFAULT COMBINATIONAL OUTPUT VARIABLES ASIGNATION   --
-		----------------------------------------------------------
-		v_comb_out									:= INIT_AXIS_SLAVE_CTRL_comb_out;
-		-----------------------------------------------
-		--	DEFAULT INTERNAL VARIABLE ASIGNATION     --
-		-----------------------------------------------		
-		w_local_address								:= to_integer(unsigned(S_AXIS_TDEST));				
-		
-
-		--------------------------------
-		--	 AXIS SLAVE CTRL FSM      --
-		--------------------------------
-		case AXIS_SLAVE_CTRL_r.current_state is
-			when idle =>
-				v_comb_out.tready				:= '0';			
-				-- TODO include fifo wr and data signals reset --
-				if S_AXIS_TVALID = '1' then
-					v.current_state		:= runing;
-				end if;
-			
-			when runing =>	
-				case w_local_address is
-					when (0) =>
-					-- TODO include fifo signals handling for each address --
-						v_comb_out.tready				:= '0';
-					when others =>
-					-- TODO include fifo signals handling --
-						v_comb_out.tready				:= '0';
-				end case;
-				if S_AXIS_TLAST = '1' then
-					v.current_state		:= idle;
-				end if;
-				
-			when others => null;
-		end case;		
-
-        --------------------------
-		--	RESET ASIGNATION	--
-		--------------------------		
-		if S_AXIS_ARESETN = '0' then
-			v		    				:= INIT_AXIS_SLAVE_CTRL_inter;
-			v_comb_out					:= INIT_AXIS_SLAVE_CTRL_comb_out;
-		end if;
-		--------------------------
-		--	SIGNAL ASIGNATION	--
-		--------------------------
-		AXIS_SLAVE_CTRL_rin 	       	<= v;
-		AXIS_SLAVE_CTRL_rin_comb_out	<= v_comb_out;	
-		
-	end process;	
-	
-	---------------------------------------------------
-	--			  AXI STREAM MASTER CTRL			 --
-	---------------------------------------------------	
-	-- Sequential process --
-	seq_axis_master: process(M_AXIS_ACLK)
-	begin 		
-		if rising_edge(M_AXIS_ACLK) then
-			AXIS_MASTER_CTRL_r				<= AXIS_MASTER_CTRL_rin;
-			AXIS_MASTER_CTRL_r_comb_out		<= AXIS_MASTER_CTRL_rin_comb_out;
-		end if;
-	end process;
-	
-	-- Combinational process --	
-	comb_axis_master: process(	-- internal signals --
-							AXIS_MASTER_CTRL_r, AXIS_MASTER_CTRL_r_comb_out,
-							-- AXI inptuts --
-							M_AXIS_ARESETN, M_AXIS_TREADY,
-							-- Bambu signals --
-							-- TODO include fifo empty and data signals --
-							)
-	
-		variable v									: AXIS_MASTER_CTRL_inter;
-		variable v_comb_out							: AXIS_MASTER_CTRL_comb_out;
-		variable r_local_address					: integer;
-		
-	begin
-	
-		-----------------------------------------------------------------
-		--				   DEFAULT VARIABLES ASIGNATION		           --
-		-----------------------------------------------------------------
-		v 											:= AXIS_MASTER_CTRL_r;	
-		v.fifo_empty_vector							:= INIT_AXIS_MASTER_CTRL_inter.fifo_empty_vector;
-        -- TODO include fifo_empty_vector assign --
-
-		-----------------------------------------------------------------
-		--	 	DEFAULT COMBINATIONAL OUTPUT VARIABLES ASIGNATION      --
-		-----------------------------------------------------------------
-		v_comb_out									:= INIT_AXIS_MASTER_CTRL_comb_out;
-		v_comb_out.tid								:= AXIS_MASTER_CTRL_r.current_tid;
-		-----------------------------------------------------------------
-		--	 			DEFAULT INTERNAL VARIABLE ASIGNATION      	   --
-		-----------------------------------------------------------------
-		r_local_address								:= to_integer(unsigned(AXIS_MASTER_CTRL_r.current_tid));
-		-----------------------------------------------------------------
-		--	 					 AXIS MASTER CTRL FSM      	   		   --
-		-----------------------------------------------------------------
-		case AXIS_MASTER_CTRL_r.current_state is
-			when idle =>
-				v.data_counter					:= (others => '0');
-				v_comb_out.tvalid				:= '0';
-				v_comb_out.tdata				:= (others => '0');
-				-- TODO include assign for fifo rd signal --
-				if M_AXIS_TREADY = '1' then
-					v.current_state		:= wait_data;
-				end if;
-			
-			when wait_data =>
-				v_comb_out.tvalid				:= '0';
-				v_comb_out.tdata				:= (others => '0');
-				-- TODO include assign for fifo rd signal --
-
-				if M_AXIS_TREADY = '1' then			
-					if v.fifo_empty_vector(to_integer(unsigned(AXIS_MASTER_CTRL_r.current_tid))) = '1' then
-						v.current_tid		:= std_logic_vector(unsigned(AXIS_MASTER_CTRL_r.current_tid) + 1);
-					else
-						v.current_state		:= runing;
-					end if;
-				else
-					v.current_state		:= idle;
-				end if;	
-			
-			when runing =>	
-				case r_local_address is
-                    -- TODO address cases for each fifo --
-					when (0) =>
-                        -- TODO include check on fifo empty and data_counter assign --
-                        -- TODO include fifo empty and data to tvaldi and tdata --
-                        if M_AXIS_TREADY = '1' then
-							v.data_counter				:= std_logic_vector(unsigned(AXIS_MASTER_CTRL_r.data_counter) + 1);
-						end if;
-						v_comb_out.tvalid				:= '0';
-						v_comb_out.tdata				:= '0';
-                        -- TODO include assign to fifo rd --
-					when others =>
-						v_comb_out.tvalid				:= '0';
-						v_comb_out.tdata				:= (others => '0');
-                        -- TODO include assign to fifo rd --
-				end case;
-				if to_integer(unsigned(AXIS_MASTER_CTRL_r.data_counter)) = S2MM_PACKET_SIZE-1 then
-					v_comb_out.tlast				:= '1';
-					v.current_tid					:= std_logic_vector(unsigned(AXIS_MASTER_CTRL_r.current_tid) + 1);
-					v.current_state					:= idle;
-				end if;
-				
-			when others => null;
-		end case;		
-		---------------------------------------------------
-		--				  RESET ASIGNATION		 	     --
-		---------------------------------------------------		
-		if M_AXIS_ARESETN = '0' then
-			v		    				:= INIT_AXIS_MASTER_CTRL_inter;
-			v_comb_out					:= INIT_AXIS_MASTER_CTRL_comb_out;
-		end if;
-		---------------------------------------------------
-		--				SIGNAL ASIGNATION			     --
-		---------------------------------------------------
-		AXIS_MASTER_CTRL_rin 	       	<= v;
-		AXIS_MASTER_CTRL_rin_comb_out	<= v_comb_out;	
-	
-	end process;
-
 	
 	---------------------------------------------------
 	--				AXI LITE SLAVE CTRL			 	 --
@@ -462,7 +179,9 @@ begin
 							-- AXI inptuts --
 							S_AXI_ARESETN, S_AXI_AWADDR, S_AXI_AWVALID, S_AXI_WDATA, S_AXI_WSTRB, S_AXI_WVALID, S_AXI_ARADDR, S_AXI_ARVALID, S_AXI_RREADY, S_AXI_BREADY,
 							-- Bambu signals --
-							%(outputs)s
+							%(outputs)s,
+							%(completions)s,
+							%(starts)s
 							)
 							
 		variable v									: AXI_SLAVE_CTRL_inter;
@@ -480,12 +199,15 @@ begin
 		--	 	DEFAULT COMBINATIONAL OUTPUT VARIABLES ASIGNATION      --
 		-----------------------------------------------------------------
 		v_comb_out									:= INIT_AXI_SLAVE_CTRL_comb_out;
+                %(done_start_assign)s
 		-----------------------------------------------------------------
 		--	 			DEFAULT INTERNAL VARIABLE ASIGNATION      	   --
 		-----------------------------------------------------------------		
 		w_local_address								:= to_integer(unsigned(S_AXI_AWADDR(15 downto 0)));
 		comb_S_AXI_AWVALID_S_AXI_ARVALID			:= S_AXI_AWVALID&S_AXI_ARVALID;	
-		-----------------------------------------------------------------
+                -- Update start-stop pulses
+                %(starstoppulses)s
+                -----------------------------------------------------------------
 		--	 					 AXI LITE CTRL FSM      	   		   --
 		-----------------------------------------------------------------		
 		case AXI_SLAVE_CTRL_r.current_state is
@@ -549,7 +271,7 @@ begin
 					end if;
 				end if;
 				case AXI_SLAVE_CTRL_r.r_local_address is
-					-- result calculated flag do_something2
+					-- result calculated flag
                     %(writeoutputdata)s
 					when others => v_comb_out.rdata(31 downto 0) 	:= (others => '0');								
 				end case;
@@ -572,20 +294,8 @@ begin
 	----------------------------------------------------------
 	--			          OUTPUTS	 	 	    		 	--
 	----------------------------------------------------------
-	
-	---------------------------------------------------
-	--			  AXI STREAM SLAVE CTRL			 	 --
-	---------------------------------------------------		
-	S_AXIS_TREADY			<= AXIS_SLAVE_CTRL_rin_comb_out.tready;
-	
-	---------------------------------------------------
-	--			  AXI STREAM MASTER CTRL			 --
-	---------------------------------------------------		
-	M_AXIS_TVALID			<= AXIS_MASTER_CTRL_rin_comb_out.tvalid;
-	M_AXIS_TDATA			<= AXIS_MASTER_CTRL_rin_comb_out.tdata;
-	M_AXIS_TLAST			<= AXIS_MASTER_CTRL_rin_comb_out.tlast;
-	M_AXIS_TID				<= AXIS_MASTER_CTRL_rin_comb_out.tid;
-	
+        %(internalsignals)s	
+
 	---------------------------------------------------
 	--				AXI LITE SLAVE CTRL			 	 --
 	---------------------------------------------------		
@@ -602,10 +312,10 @@ begin
 end rtl;'''
 
 makefile = r'''
-SRCS=../ip/src/TASTE2.vhd %(pi)s
+SRCS=../ip/src/TASTE_AXI.vhd ../ip/src/%(pi)s
 
 all:   ${SRCS}
-%(tab)s@echo "Now we would call vivado... to be done (should be: vivado -mode batch -source TASTE2.tcl)"
+%(tab)svivado -mode batch -source TASTE_AXI.tcl
 
 clean:
 %(tab)srm -rf *.bit
@@ -673,6 +383,54 @@ component_xml = """<?xml version="1.0" encoding="UTF-8"?>
   <spirit:name>TASTE</spirit:name>
   <spirit:version>1.0</spirit:version>
   <spirit:busInterfaces>
+    <spirit:busInterface>
+      <spirit:name>S_AXIS</spirit:name>
+      <spirit:busType spirit:vendor="xilinx.com" spirit:library="interface" spirit:name="axis" spirit:version="1.0"/>
+      <spirit:abstractionType spirit:vendor="xilinx.com" spirit:library="interface" spirit:name="axis_rtl" spirit:version="1.0"/>
+      <spirit:slave/>
+      <spirit:portMaps>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>TDEST</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>S_AXIS_TDEST</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>TDATA</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>S_AXIS_TDATA</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>TLAST</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>S_AXIS_TLAST</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>TVALID</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>S_AXIS_TVALID</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>TREADY</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>S_AXIS_TREADY</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+      </spirit:portMaps>
+    </spirit:busInterface>
     <spirit:busInterface>
       <spirit:name>S_AXI</spirit:name>
       <spirit:busType spirit:vendor="xilinx.com" spirit:library="interface" spirit:name="aximm" spirit:version="1.0"/>
@@ -842,6 +600,54 @@ component_xml = """<?xml version="1.0" encoding="UTF-8"?>
       </spirit:parameters>
     </spirit:busInterface>
     <spirit:busInterface>
+      <spirit:name>S_AXIS_ACLK</spirit:name>
+      <spirit:busType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="clock" spirit:version="1.0"/>
+      <spirit:abstractionType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="clock_rtl" spirit:version="1.0"/>
+      <spirit:slave/>
+      <spirit:portMaps>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>CLK</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>S_AXIS_ACLK</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+      </spirit:portMaps>
+      <spirit:parameters>
+        <spirit:parameter>
+          <spirit:name>ASSOCIATED_BUSIF</spirit:name>
+          <spirit:value spirit:id="BUSIFPARAM_VALUE.S_AXIS_ACLK.ASSOCIATED_BUSIF">S_AXIS</spirit:value>
+        </spirit:parameter>
+        <spirit:parameter>
+          <spirit:name>ASSOCIATED_RESET</spirit:name>
+          <spirit:value spirit:id="BUSIFPARAM_VALUE.S_AXIS_ACLK.ASSOCIATED_RESET">S_AXIS_ARESETN</spirit:value>
+        </spirit:parameter>
+      </spirit:parameters>
+    </spirit:busInterface>
+    <spirit:busInterface>
+      <spirit:name>S_AXIS_ACLK</spirit:name>
+      <spirit:busType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="clock" spirit:version="1.0"/>
+      <spirit:abstractionType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="clock_rtl" spirit:version="1.0"/>
+      <spirit:slave/>
+      <spirit:portMaps>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>CLK</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>S_AXIS_ACLK</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+      </spirit:portMaps>
+      <spirit:parameters>
+        <spirit:parameter>
+          <spirit:name>ASSOCIATED_BUSIF</spirit:name>
+          <spirit:value spirit:id="BUSIFPARAM_VALUE.S_AXIS_ACLK.ASSOCIATED_BUSIF">S_AXIS</spirit:value>
+        </spirit:parameter>
+      </spirit:parameters>
+    </spirit:busInterface>
+    <spirit:busInterface>
       <spirit:name>S_AXI_ACLK</spirit:name>
       <spirit:busType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="clock" spirit:version="1.0"/>
       <spirit:abstractionType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="clock_rtl" spirit:version="1.0"/>
@@ -861,10 +667,6 @@ component_xml = """<?xml version="1.0" encoding="UTF-8"?>
           <spirit:name>ASSOCIATED_BUSIF</spirit:name>
           <spirit:value spirit:id="BUSIFPARAM_VALUE.S_AXI_ACLK.ASSOCIATED_BUSIF">S_AXI</spirit:value>
         </spirit:parameter>
-        <spirit:parameter>
-          <spirit:name>ASSOCIATED_RESET</spirit:name>
-          <spirit:value spirit:id="BUSIFPARAM_VALUE.S_AXI_ACLK.ASSOCIATED_RESET">S_AXI_ARESETN</spirit:value>
-        </spirit:parameter>
       </spirit:parameters>
     </spirit:busInterface>
   </spirit:busInterfaces>
@@ -874,7 +676,7 @@ component_xml = """<?xml version="1.0" encoding="UTF-8"?>
       <spirit:addressBlock>
         <spirit:name>reg0</spirit:name>
         <spirit:baseAddress spirit:format="bitString" spirit:resolve="user" spirit:bitStringLength="32">0</spirit:baseAddress>
-        <spirit:range spirit:format="long" spirit:resolve="user" spirit:minimum="4096" spirit:rangeType="long">65536</spirit:range>
+        <spirit:range spirit:format="long" spirit:resolve="user" spirit:minimum="4096" spirit:rangeType="long">4294967296</spirit:range>
         <spirit:width spirit:format="long" spirit:resolve="user">32</spirit:width>
         <spirit:usage>register</spirit:usage>
       </spirit:addressBlock>
@@ -894,7 +696,7 @@ component_xml = """<?xml version="1.0" encoding="UTF-8"?>
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>bbbda21a</spirit:value>
+            <spirit:value>1800fe90</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -910,7 +712,7 @@ component_xml = """<?xml version="1.0" encoding="UTF-8"?>
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>bbbda21a</spirit:value>
+            <spirit:value>1800fe90</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -924,7 +726,7 @@ component_xml = """<?xml version="1.0" encoding="UTF-8"?>
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>1c7a8e6b</spirit:value>
+            <spirit:value>f92e9879</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -1232,55 +1034,7 @@ component_xml = """<?xml version="1.0" encoding="UTF-8"?>
           </spirit:driver>
         </spirit:wire>
       </spirit:port>
-      <spirit:port>
-        <spirit:name>start_led</spirit:name>
-        <spirit:wire>
-          <spirit:direction>out</spirit:direction>
-          <spirit:wireTypeDefs>
-            <spirit:wireTypeDef>
-              <spirit:typeName>std_logic</spirit:typeName>
-              <spirit:viewNameRef>xilinx_anylanguagesynthesis</spirit:viewNameRef>
-              <spirit:viewNameRef>xilinx_anylanguagebehavioralsimulation</spirit:viewNameRef>
-            </spirit:wireTypeDef>
-          </spirit:wireTypeDefs>
-        </spirit:wire>
-      </spirit:port>
-      <spirit:port>
-        <spirit:name>done_led</spirit:name>
-        <spirit:wire>
-          <spirit:direction>out</spirit:direction>
-          <spirit:wireTypeDefs>
-            <spirit:wireTypeDef>
-              <spirit:typeName>std_logic</spirit:typeName>
-              <spirit:viewNameRef>xilinx_anylanguagesynthesis</spirit:viewNameRef>
-              <spirit:viewNameRef>xilinx_anylanguagebehavioralsimulation</spirit:viewNameRef>
-            </spirit:wireTypeDef>
-          </spirit:wireTypeDefs>
-        </spirit:wire>
-      </spirit:port>
     </spirit:ports>
-    <spirit:modelParameters>
-      <spirit:modelParameter xsi:type="spirit:nameValueTypeType" spirit:dataType="integer">
-        <spirit:name>ADD_BUS_SIZE</spirit:name>
-        <spirit:displayName>Add Bus Size</spirit:displayName>
-        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.ADD_BUS_SIZE">16</spirit:value>
-      </spirit:modelParameter>
-      <spirit:modelParameter spirit:dataType="integer">
-        <spirit:name>ADD_ALIGNEMENT</spirit:name>
-        <spirit:displayName>Add Alignement</spirit:displayName>
-        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.ADD_ALIGNEMENT">4</spirit:value>
-      </spirit:modelParameter>
-      <spirit:modelParameter spirit:dataType="integer">
-        <spirit:name>ADD_W_START</spirit:name>
-        <spirit:displayName>Add W Start</spirit:displayName>
-        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.ADD_W_START">768</spirit:value>
-      </spirit:modelParameter>
-      <spirit:modelParameter spirit:dataType="integer">
-        <spirit:name>ADD_R_START</spirit:name>
-        <spirit:displayName>Add R Start</spirit:displayName>
-        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.ADD_R_START">908</spirit:value>
-      </spirit:modelParameter>
-    </spirit:modelParameters>
   </spirit:model>
   <spirit:choices>
     <spirit:choice>
@@ -1298,9 +1052,9 @@ component_xml = """<?xml version="1.0" encoding="UTF-8"?>
         <spirit:userFileType>IMPORTED_FILE</spirit:userFileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/TASTE2.vhd</spirit:name>
+        <spirit:name>src/TASTE_AXI.vhd</spirit:name>
         <spirit:fileType>vhdlSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_9ba54baf</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_20a3fb2c</spirit:userFileType>
         <spirit:userFileType>IMPORTED_FILE</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
@@ -1312,7 +1066,7 @@ component_xml = """<?xml version="1.0" encoding="UTF-8"?>
         <spirit:userFileType>IMPORTED_FILE</spirit:userFileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>src/TASTE2.vhd</spirit:name>
+        <spirit:name>src/TASTE_AXI.vhd</spirit:name>
         <spirit:fileType>vhdlSource</spirit:fileType>
         <spirit:userFileType>IMPORTED_FILE</spirit:userFileType>
       </spirit:file>
@@ -1320,35 +1074,15 @@ component_xml = """<?xml version="1.0" encoding="UTF-8"?>
     <spirit:fileSet>
       <spirit:name>xilinx_xpgui_view_fileset</spirit:name>
       <spirit:file>
-        <spirit:name>xgui/TASTE_v1_0.tcl</spirit:name>
+        <spirit:name>xgui/TASTE_AXI_v1_0.tcl</spirit:name>
         <spirit:fileType>tclSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_1c7a8e6b</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_f92e9879</spirit:userFileType>
         <spirit:userFileType>XGUI_VERSION_2</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
   </spirit:fileSets>
   <spirit:description>TASTE_v1_0</spirit:description>
   <spirit:parameters>
-    <spirit:parameter>
-      <spirit:name>ADD_BUS_SIZE</spirit:name>
-      <spirit:displayName>Add Bus Size</spirit:displayName>
-      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.ADD_BUS_SIZE">16</spirit:value>
-    </spirit:parameter>
-    <spirit:parameter>
-      <spirit:name>ADD_ALIGNEMENT</spirit:name>
-      <spirit:displayName>Add Alignement</spirit:displayName>
-      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.ADD_ALIGNEMENT">4</spirit:value>
-    </spirit:parameter>
-    <spirit:parameter>
-      <spirit:name>ADD_W_START</spirit:name>
-      <spirit:displayName>Add W Start</spirit:displayName>
-      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.ADD_W_START">768</spirit:value>
-    </spirit:parameter>
-    <spirit:parameter>
-      <spirit:name>ADD_R_START</spirit:name>
-      <spirit:displayName>Add R Start</spirit:displayName>
-      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.ADD_R_START">908</spirit:value>
-    </spirit:parameter>
     <spirit:parameter>
       <spirit:name>Component_Name</spirit:name>
       <spirit:value spirit:resolve="user" spirit:id="PARAM_VALUE.Component_Name" spirit:order="1">TASTE_v1_0</spirit:value>
@@ -1357,27 +1091,7 @@ component_xml = """<?xml version="1.0" encoding="UTF-8"?>
   <spirit:vendorExtensions>
     <xilinx:coreExtensions>
       <xilinx:supportedFamilies>
-        <xilinx:family xilinx:lifeCycle="Production">virtex7</xilinx:family>
-        <xilinx:family xilinx:lifeCycle="Production">qvirtex7</xilinx:family>
-        <xilinx:family xilinx:lifeCycle="Production">kintex7</xilinx:family>
-        <xilinx:family xilinx:lifeCycle="Production">kintex7l</xilinx:family>
-        <xilinx:family xilinx:lifeCycle="Production">qkintex7</xilinx:family>
-        <xilinx:family xilinx:lifeCycle="Production">qkintex7l</xilinx:family>
-        <xilinx:family xilinx:lifeCycle="Production">artix7</xilinx:family>
-        <xilinx:family xilinx:lifeCycle="Production">artix7l</xilinx:family>
-        <xilinx:family xilinx:lifeCycle="Production">aartix7</xilinx:family>
-        <xilinx:family xilinx:lifeCycle="Production">qartix7</xilinx:family>
         <xilinx:family xilinx:lifeCycle="Production">zynq</xilinx:family>
-        <xilinx:family xilinx:lifeCycle="Production">qzynq</xilinx:family>
-        <xilinx:family xilinx:lifeCycle="Production">azynq</xilinx:family>
-        <xilinx:family xilinx:lifeCycle="Production">spartan7</xilinx:family>
-        <xilinx:family xilinx:lifeCycle="Production">aspartan7</xilinx:family>
-        <xilinx:family xilinx:lifeCycle="Production">virtexu</xilinx:family>
-        <xilinx:family xilinx:lifeCycle="Production">zynquplus</xilinx:family>
-        <xilinx:family xilinx:lifeCycle="Production">virtexuplus</xilinx:family>
-        <xilinx:family xilinx:lifeCycle="Production">virtexuplusHBM</xilinx:family>
-        <xilinx:family xilinx:lifeCycle="Production">kintexuplus</xilinx:family>
-        <xilinx:family xilinx:lifeCycle="Production">kintexu</xilinx:family>
       </xilinx:supportedFamilies>
       <xilinx:taxonomies>
         <xilinx:taxonomy>/UserIP</xilinx:taxonomy>
@@ -1385,24 +1099,23 @@ component_xml = """<?xml version="1.0" encoding="UTF-8"?>
       <xilinx:displayName>TASTE_v1_0</xilinx:displayName>
       <xilinx:definitionSource>package_project</xilinx:definitionSource>
       <xilinx:coreRevision>2</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2019-11-06T16:55:24Z</xilinx:coreCreationDateTime>
+      <xilinx:coreCreationDateTime>2020-03-30T11:10:33Z</xilinx:coreCreationDateTime>
       <xilinx:tags>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@7841b94_ARCHIVE_LOCATION">/media/sf_C_DRIVE/Users/ViSOS/Desktop/rdto/TASTE/TASTE2/ip</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@65a9ef71_ARCHIVE_LOCATION">/media/sf_C_DRIVE/Users/ViSOS/Desktop/rdto/TASTE/TASTE2/ip</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@33eb4ed4_ARCHIVE_LOCATION">/media/sf_C_DRIVE/Users/ViSOS/Desktop/rdto/TASTE/TASTE2/ip</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@a4f28fd_ARCHIVE_LOCATION">/media/sf_C_DRIVE/Users/ViSOS/Desktop/rdto/TASTE/TASTE2/ip</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@2b3bc834_ARCHIVE_LOCATION">/media/sf_C_DRIVE/Users/ViSOS/Desktop/rdto/TASTE/TASTE2/ip</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@368e1623_ARCHIVE_LOCATION">/media/sf_C_DRIVE/Users/ViSOS/Desktop/rdto/TASTE/TASTE2/ip</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@1caba8a6_ARCHIVE_LOCATION">/ip</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@54d0a6ec_ARCHIVE_LOCATION">/ip</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@3316f770_ARCHIVE_LOCATION">/ip</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@7b16f982_ARCHIVE_LOCATION">/ip</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@5717d5e9_ARCHIVE_LOCATION">/ip</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@5a5ce90d_ARCHIVE_LOCATION">/ip</xilinx:tag>
       </xilinx:tags>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
-      <xilinx:xilinxVersion>2018.3</xilinx:xilinxVersion>
+      <xilinx:xilinxVersion>2019.2</xilinx:xilinxVersion>
       <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="da618e65"/>
-      <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="5ccc3619"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="99da1e43"/>
-      <xilinx:checksum xilinx:scope="ports" xilinx:value="f2458798"/>
-      <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="51897e61"/>
-      <xilinx:checksum xilinx:scope="parameters" xilinx:value="104060ee"/>
+      <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="f2afdf52"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="7810a59c"/>
+      <xilinx:checksum xilinx:scope="ports" xilinx:value="929b14a0"/>
+      <xilinx:checksum xilinx:scope="parameters" xilinx:value="3fe0208c"/>
     </xilinx:packagingInfo>
   </spirit:vendorExtensions>
 </spirit:component>"""

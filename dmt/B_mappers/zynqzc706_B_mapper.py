@@ -446,7 +446,7 @@ class VHDLGlueGenerator(SynchronousToolGlueGeneratorGeneric[List[int], List[int]
 #define LOGERRORS
 #define LOGWARNINGS
 #define LOGINFOS
-//#define LOGDEBUGS
+#define LOGDEBUGS
 
 #ifdef LOGERRORS
 #define LOGERROR(x...) printf(x)
@@ -571,23 +571,26 @@ static inline void rtems_axi_write32(uintptr_t Addr, uint32_t Value)
         self.C_SourceFile.write("    // Now that the parameters are passed inside the FPGA, run the processing logic\n")
         
         self.C_SourceFile.write('    unsigned int okstart = 1;\n')
-        self.C_SourceFile.write('    //if (//axi_write(R_AXI_BASEADR + %s, &okstart, 4, R_AXI_DSTADR)) {\n' %
+        self.C_SourceFile.write('    rtems_axi_write32(R_AXI_BASEADR + %s, okstart);\n' %
                                 hex(int(VHDL_Circuit.lookupSP[sp._id]._offset)))
-        self.C_SourceFile.write('       //LOGERROR("Failed writing Target\\n");\n')
-        self.C_SourceFile.write('       //return -1;\n')
+        self.C_SourceFile.write('    //if (rtems_axi_write32(R_AXI_BASEADR + %s, okstart)) {\n' %
+                                hex(int(VHDL_Circuit.lookupSP[sp._id]._offset)))
+        self.C_SourceFile.write('    //   LOGERROR("Failed writing Target\\n");\n')
+        self.C_SourceFile.write('    //   return -1;\n')
         self.C_SourceFile.write('    //}\n')
-        self.C_SourceFile.write('    //LOGDEBUG(" - Write OK\\n");\n')
+        self.C_SourceFile.write('    LOGDEBUG(" - Write OK\\n");\n')
 
         self.C_SourceFile.write('    count = 0;\n')
         self.C_SourceFile.write('    while (!flag && count < RETRIES){\n')
         self.C_SourceFile.write("      // Wait for processing logic to complete\n")
         self.C_SourceFile.write('      count++;\n')
-        self.C_SourceFile.write('      //if (//axi_read(R_AXI_BASEADR + %s, &flag, 4, R_AXI_DSTADR)) {\n' %
+        self.C_SourceFile.write("      // axi_read32 returns successful??\n")
+        self.C_SourceFile.write('      if (rtems_axi_read32(R_AXI_BASEADR + %s)!=0) {\n' %
                                 hex(int(VHDL_Circuit.lookupSP[sp._id]._offset)))
-        self.C_SourceFile.write('        //LOGERROR("Failed reading Target\\n");\n')
-        self.C_SourceFile.write('        //return -1;\n')
-        self.C_SourceFile.write('      //}\n')
-        self.C_SourceFile.write('      //LOGDEBUG(" - Read OK\\n");\n')
+        self.C_SourceFile.write('        LOGERROR("Failed reading Target\\n");\n')
+        self.C_SourceFile.write('        return -1;\n')
+        self.C_SourceFile.write('      }\n')
+        self.C_SourceFile.write('      LOGDEBUG(" - Read OK\\n");\n')
         self.C_SourceFile.write('    }\n')
         self.C_SourceFile.write('    if(!flag && count == RETRIES){\n')
         self.C_SourceFile.write('      LOGERROR("Max Target read attempts reached.\\n");\n')
@@ -678,7 +681,7 @@ class MapASN1ToVHDLregisters(RecursiveMapperGeneric[str, str]):
         maxlen = len(str(node._range[-1]))
         lines = []  # type: List[str]
         for i in range(node._range[-1]):
-            lines.append('signal ' + dstVHDL + ('_elem_%0*d: ' % (maxlen, i)) + 'std_logic_vector(7 downto 0);')
+            lines.append('' + dstVHDL + ('_elem_%0*d: ' % (maxlen, i)) + 'std_logic_vector(7 downto 0);')
         return lines
 
     def MapEnumerated(self, _: str, dstVHDL: str, __: AsnEnumerated, ___: AST_Leaftypes, dummy: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
@@ -716,14 +719,191 @@ class MapASN1ToVHDLregisters(RecursiveMapperGeneric[str, str]):
 
 
 # pylint: disable=no-self-use
+class MapASN1ToVHDLinput(RecursiveMapperGeneric[str, str]):
+    def MapInteger(self, _: str, dstVHDL: str, node: AsnInt, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+        if not node._range:
+            panicWithCallStack("INTEGERs need explicit ranges when generating VHDL code... (%s)" % node.Location())  # pragma: no cover
+        bits = math.log(max(abs(x) for x in node._range) + 1, 2)
+        bits += (bits if node._range[0] < 0 else 0)
+        return ['' + dstVHDL + ' : ' + ('std_logic_vector(63 downto 0); -- ASSERT uses 64 bit INTEGERs (optimal would be %d bits)' % bits)]
+
+    def MapReal(self, _: str, __: str, node: AsnReal, ___: AST_Leaftypes, dummy: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+        panic("The VHDL mapper can't work with REALs (synthesizeable circuits!) (%s)" % node.Location())  # pragma: no cover
+
+    def MapBoolean(self, _: str, dstVHDL: str, __: AsnBool, ___: AST_Leaftypes, dummy: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+        return ['' + dstVHDL + ' : ' + 'std_logic_vector(7 downto 0);']
+
+    def MapOctetString(self, _: str, dstVHDL: str, node: AsnOctetString, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+        if not node._range:
+            panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
+            panicWithCallStack("VHDL OCTET STRING (in %s) must have a fixed SIZE constraint !" % node.Location())  # pragma: no cover
+        maxlen = len(str(node._range[-1]))
+        lines = []  # type: List[str]
+        for i in range(node._range[-1]):
+            lines.append('' + dstVHDL + ('_elem_%0*d: ' % (maxlen, i)) + 'std_logic_vector(7 downto 0);')
+        return lines
+
+    def MapEnumerated(self, _: str, dstVHDL: str, __: AsnEnumerated, ___: AST_Leaftypes, dummy: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+        return ['' + dstVHDL + ' : ' + 'std_logic_vector(7 downto 0);']
+
+    def MapSequence(self, _: str, dstVHDL: str, node: Union[AsnSequenceOrSet, AsnChoice], leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+        lines = []  # type: List[str]
+        for x in node._members:
+            lines.extend(self.Map(_, dstVHDL + "_" + CleanName(x[0]), x[1], leafTypeDict, names))
+        return lines
+
+    def MapSet(self, _: str, dstVHDL: str, node: AsnSequenceOrSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+        return self.MapSequence(_, dstVHDL, node, leafTypeDict, names)  # pragma: nocover
+
+    def MapChoice(self, _: str, dstVHDL: str, node: AsnChoice, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+        lines = []  # type: List[str]
+        lines.append('' + dstVHDL + '_choiceIdx : ' + 'std_logic_vector(7 downto 0);')
+        lines.extend(self.MapSequence(_, dstVHDL, node, leafTypeDict, names))
+        return lines
+
+    def MapSequenceOf(self, _: str, dstVHDL: str, node: AsnSequenceOrSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+        if not node._range:
+            panicWithCallStack("For VHDL, a SIZE constraint is mandatory (%s)!\n" % node.Location())  # pragma: no cover
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
+            panicWithCallStack("Must have a fixed SIZE constraint (in %s) for VHDL code!" % node.Location())  # pragma: no cover
+        maxlen = len(str(node._range[-1]))
+        lines = []  # type: List[str]
+        for i in range(node._range[-1]):
+            lines.extend(self.Map(
+                _, dstVHDL + ('_elem_%0*d' % (maxlen, i)), node._containedType, leafTypeDict, names))
+        return lines
+
+    def MapSetOf(self, _: str, dstVHDL: str, node: AsnSequenceOrSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+        return self.MapSequenceOf(_, dstVHDL, node, leafTypeDict, names)  # pragma: nocover
+
+# pylint: disable=no-self-use
+class MapASN1ToVHDLinputassign(RecursiveMapperGeneric[str, str]):
+    def MapInteger(self, _: str, dstVHDL: str, node: AsnInt, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+        if not node._range:
+            panicWithCallStack("INTEGERs need explicit ranges when generating VHDL code... (%s)" % node.Location())  # pragma: no cover
+        bits = math.log(max(abs(x) for x in node._range) + 1, 2)
+        bits += (bits if node._range[0] < 0 else 0)
+        return ['' + dstVHDL + ' => (others => \'0\'),']
+
+    def MapReal(self, _: str, __: str, node: AsnReal, ___: AST_Leaftypes, dummy: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+        panic("The VHDL mapper can't work with REALs (synthesizeable circuits!) (%s)" % node.Location())  # pragma: no cover
+
+    def MapBoolean(self, _: str, dstVHDL: str, __: AsnBool, ___: AST_Leaftypes, dummy: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+        return ['' + dstVHDL + ' => (others => \'0\'),']
+
+    def MapOctetString(self, _: str, dstVHDL: str, node: AsnOctetString, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+        if not node._range:
+            panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
+            panicWithCallStack("VHDL OCTET STRING (in %s) must have a fixed SIZE constraint !" % node.Location())  # pragma: no cover
+        maxlen = len(str(node._range[-1]))
+        lines = []  # type: List[str]
+        for i in range(node._range[-1]):
+            lines.append('' + dstVHDL + ('_elem_%0*d' % (maxlen, i)) + ' => (others => \'0\'),')
+        return lines
+
+    def MapEnumerated(self, _: str, dstVHDL: str, __: AsnEnumerated, ___: AST_Leaftypes, dummy: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+        return ['' + dstVHDL + ' => (others => \'0\'),']
+
+    def MapSequence(self, _: str, dstVHDL: str, node: Union[AsnSequenceOrSet, AsnChoice], leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+        lines = []  # type: List[str]
+        for x in node._members:
+            lines.extend(self.Map(_, dstVHDL + "_" + CleanName(x[0]), x[1], leafTypeDict, names))
+        return lines
+
+    def MapSet(self, _: str, dstVHDL: str, node: AsnSequenceOrSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+        return self.MapSequence(_, dstVHDL, node, leafTypeDict, name2s)  # pragma: nocover
+
+    def MapChoice(self, _: str, dstVHDL: str, node: AsnChoice, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+        lines = []  # type: List[str]
+        lines.append('' + dstVHDL + '_choiceIdx' + ' => (others => \'0\'),')
+        lines.extend(self.MapSequence(_, dstVHDL, node, leafTypeDict, names))
+        return lines
+
+    def MapSequenceOf(self, _: str, dstVHDL: str, node: AsnSequenceOrSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+        if not node._range:
+            panicWithCallStack("For VHDL, a SIZE constraint is mandatory (%s)!\n" % node.Location())  # pragma: no cover
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
+            panicWithCallStack("Must have a fixed SIZE constraint (in %s) for VHDL code!" % node.Location())  # pragma: no cover
+        maxlen = len(str(node._range[-1]))
+        lines = []  # type: List[str]
+        for i in range(node._range[-1]):
+            lines.extend(self.Map(
+                _, dstVHDL + ('_elem_%0*d' % (maxlen, i)), node._containedType, leafTypeDict, names))
+        return lines
+
+    def MapSetOf(self, _: str, dstVHDL: str, node: AsnSequenceOrSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+        return self.MapSequenceOf(_, dstVHDL, node, leafTypeDict, names)  # pragma: nocover
+
+# pylint: disable=no-self-use
+class MapASN1ToVHDLinternalsignals(RecursiveMapperGeneric[str, str]):
+    def MapInteger(self, _: str, dstVHDL: str, node: AsnInt, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+        if not node._range:
+            panicWithCallStack("INTEGERs need explicit ranges when generating VHDL code... (%s)" % node.Location())  # pragma: no cover
+        bits = math.log(max(abs(x) for x in node._range) + 1, 2)
+        bits += (bits if node._range[0] < 0 else 0)
+        return ['' + dstVHDL + ' <= AXI_SLAVE_CTRL_r.' + dstVHDL + ';\n']
+
+    def MapReal(self, _: str, __: str, node: AsnReal, ___: AST_Leaftypes, dummy: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+        panic("The VHDL mapper can't work with REALs (synthesizeable circuits!) (%s)" % node.Location())  # pragma: no cover
+
+    def MapBoolean(self, _: str, dstVHDL: str, __: AsnBool, ___: AST_Leaftypes, dummy: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+        return ['' + dstVHDL + ' <= AXI_SLAVE_CTRL_r.' + dstVHDL + ';\n']
+
+    def MapOctetString(self, _: str, dstVHDL: str, node: AsnOctetString, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+        if not node._range:
+            panicWithCallStack("OCTET STRING (in %s) must have a SIZE constraint inside ASN.1,\nor else we can't generate C code!" % node.Location())  # pragma: no cover
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
+            panicWithCallStack("VHDL OCTET STRING (in %s) must have a fixed SIZE constraint !" % node.Location())  # pragma: no cover
+        maxlen = len(str(node._range[-1]))
+        lines = []  # type: List[str]
+        for i in range(node._range[-1]):
+            lines.append('' + dstVHDL + ('_elem_%0*d' % (maxlen, i)) + ' <= AXI_SLAVE_CTRL_r.' + dstVHDL + ('_elem_%0*d' % (maxlen, i)) + ';\n')
+        return lines
+
+    def MapEnumerated(self, _: str, dstVHDL: str, __: AsnEnumerated, ___: AST_Leaftypes, dummy: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+        return ['' + dstVHDL + ' <= AXI_SLAVE_CTRL_r.' + dstVHDL + ';\n']
+
+    def MapSequence(self, _: str, dstVHDL: str, node: Union[AsnSequenceOrSet, AsnChoice], leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+        lines = []  # type: List[str]
+        for x in node._members:
+            lines.extend(self.Map(_, dstVHDL + "_" + CleanName(x[0]), x[1], leafTypeDict, names))
+        return lines
+
+    def MapSet(self, _: str, dstVHDL: str, node: AsnSequenceOrSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+        return self.MapSequence(_, dstVHDL, node, leafTypeDict, name2s)  # pragma: nocover
+
+    def MapChoice(self, _: str, dstVHDL: str, node: AsnChoice, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+        lines = []  # type: List[str]
+        lines.append('' + dstVHDL + '_choiceIdx' + ' <= AXI_SLAVE_CTRL_r.' + dstVHDL + '_choiceIdx' + ';\n')
+        lines.extend(self.MapSequence(_, dstVHDL, node, leafTypeDict, names))
+        return lines
+
+    def MapSequenceOf(self, _: str, dstVHDL: str, node: AsnSequenceOrSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+        if not node._range:
+            panicWithCallStack("For VHDL, a SIZE constraint is mandatory (%s)!\n" % node.Location())  # pragma: no cover
+        if len(node._range) > 1 and node._range[0] != node._range[1]:
+            panicWithCallStack("Must have a fixed SIZE constraint (in %s) for VHDL code!" % node.Location())  # pragma: no cover
+        maxlen = len(str(node._range[-1]))
+        lines = []  # type: List[str]
+        for i in range(node._range[-1]):
+            lines.extend(self.Map(
+                _, dstVHDL + ('_elem_%0*d' % (maxlen, i)), node._containedType, leafTypeDict, names))
+        return lines
+
+    def MapSetOf(self, _: str, dstVHDL: str, node: AsnSequenceOrSetOf, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+        return self.MapSequenceOf(_, dstVHDL, node, leafTypeDict, names)  # pragma: nocover
+
+# pylint: disable=no-self-use
 class MapASN1ToVHDLreadinputdata(RecursiveMapperGeneric[List[int], str]):  # pylint: disable=invalid-sequence-index
     def MapInteger(self, reginfo: List[int], dstVHDL: str, node: AsnInt, _: AST_Leaftypes, __: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         if not node._range:
             panicWithCallStack("INTEGERs need explicit ranges when generating VHDL code... (%s)" % node.Location())  # pragma: no cover
         # bits = math.log(max(map(abs, node._range)+1),2)+(1 if node._range[0] < 0 else 0)
         lines = []  # type: List[str]
-        lines.append('when (%s) => %s(31 downto  0) <= S_AXI_WDATA;' % (reginfo[0], dstVHDL))
-        lines.append('when (%s) => %s(63 downto  32) <= S_AXI_WDATA;' % (reginfo[0] + 4, dstVHDL))
+        lines.append('when (%s) => v.%s(31 downto  0) := S_AXI_WDATA;' % (reginfo[0], dstVHDL))
+        lines.append('when (%s) => v.%s(63 downto  32) := S_AXI_WDATA;' % (reginfo[0] + 4, dstVHDL))
         reginfo[0] += 8
         return lines
 
@@ -989,7 +1169,13 @@ g_placeholders = {
     "connectionsToSystemC": '',
     "updateCalculationsCompleteReset": '',
     "updateCalculationsComplete": '',
-    "pi": ''
+    "pi": '',
+    "inputdeclaration": '',
+    "inputassign": '',
+    "done_start_assign": '',
+    "starstoppulses": '',
+    "internalsignals": '',
+    "memfilesrelocation": ''
 }
 
 
@@ -1056,6 +1242,9 @@ def AddToStr(s: str, d: str) -> None:
 def OnFinal() -> None:
     circuitMapper = MapASN1ToVHDLCircuit()
     ioRegisterMapper = MapASN1ToVHDLregisters()
+    inputDeclarationMapper = MapASN1ToVHDLinput()
+    inputAssignMapper = MapASN1ToVHDLinputassign()
+    internalSignalsMapper = MapASN1ToVHDLinternalsignals()
     readinputdataMapper = MapASN1ToVHDLreadinputdata()
     writeoutputdataMapper = MapASN1ToVHDLwriteoutputdata()
     connectionsToSystemCMapper = MapASN1ToSystemCconnections()
@@ -1064,6 +1253,7 @@ def OnFinal() -> None:
     outputs = []
     completions = []
     starts = []
+
 
     from . import vhdlTemplateZynQZC706
     ZynQZC706_tarball = os.getenv("ZYNQZC706")
@@ -1075,6 +1265,10 @@ def OnFinal() -> None:
         circuitLines = []
 
         ioregisterLines = []
+        
+        inputdeclarationLines = []
+        inputassignLines = []
+        internalsignalsLines = []
 
         readinputdataLines = []
 
@@ -1099,6 +1293,19 @@ def OnFinal() -> None:
                 readinputdataLines.extend(
                     readinputdataMapper.Map(
                         counter, c._spCleanName + '_' + p._id, node, VHDL_Circuit.leafTypeDict, VHDL_Circuit.names))
+                    
+                inputdeclarationLines.extend(
+                    inputDeclarationMapper.Map(
+                        direction, c._spCleanName + '_' + p._id, node, VHDL_Circuit.leafTypeDict, VHDL_Circuit.names))
+                    
+                inputassignLines.extend(
+                    inputAssignMapper.Map(
+                        direction, c._spCleanName + '_' + p._id, node, VHDL_Circuit.leafTypeDict, VHDL_Circuit.names))
+                    
+                internalsignalsLines.extend(
+                    internalSignalsMapper.Map(
+                        direction, c._spCleanName + '_' + p._id, node, VHDL_Circuit.leafTypeDict, VHDL_Circuit.names))
+
             else:
                 outputs.extend([c._spCleanName + '_' + x for x in outputsMapper.Map(p._id, 1, node, VHDL_Circuit.leafTypeDict, VHDL_Circuit.names)])
 
@@ -1111,12 +1318,14 @@ def OnFinal() -> None:
                     writeoutputdataMapper.Map(
                         counter, c._spCleanName + '_' + p._id, node, VHDL_Circuit.leafTypeDict, VHDL_Circuit.names))
 
-        completions.append(c._spCleanName + '_CalculationsComplete')
-        starts.append(c._spCleanName + '_StartCalculationsPulse')
+        completions.append(c._spCleanName + '_done')
+        starts.append(c._spCleanName + '_start')
 
         AddToStr('circuits', '    component bambu_%s is\n' % c._spCleanName)
         AddToStr('circuits', '    port (\n')
         AddToStr('circuits', '\n'.join(['        ' + x for x in circuitLines]) + '\n')
+        AddToStr('circuits', '        start_%s  : in  std_logic;\n' % c._spCleanName)
+        AddToStr('circuits', '        finish_%s : out std_logic;\n' % c._spCleanName)
         AddToStr('circuits', '        clock_%s : in std_logic;\n' % c._spCleanName)
         AddToStr('circuits', '        reset_%s  : in  std_logic\n' % c._spCleanName)
         AddToStr('circuits', '    );\n')
@@ -1141,7 +1350,20 @@ def OnFinal() -> None:
         vhdlSkeleton.close()
 
         AddToStr('ioregisters', '\n'.join(['    ' + x for x in ioregisterLines]) + '\n\n')
-
+        AddToStr('ioregisters', "           signal %(pi)s_start  : std_logic;\n" % {'pi': c._spCleanName})
+        AddToStr('ioregisters', "           signal %(pi)s_done   : std_logic;\n" % {'pi': c._spCleanName})
+        
+        AddToStr('inputdeclaration', '\n'.join(['    ' + x for x in inputdeclarationLines]) + '\n\n')
+        AddToStr('inputdeclaration', "%(pi)s_StartCalculationsInternal   : std_logic;\n" % {'pi': c._spCleanName})
+        AddToStr('inputdeclaration', "%(pi)s_StartCalculationsInternalOld   : std_logic;\n" % {'pi': c._spCleanName})
+        
+        AddToStr('inputassign', '\n'.join(['    ' + x for x in inputassignLines]) + '\n\n')
+        AddToStr('inputassign', "%(pi)s_StartCalculationsInternal   => '0',\n" % {'pi': c._spCleanName})
+        AddToStr('inputassign', "%(pi)s_StartCalculationsInternalOld   => '0',\n" % {'pi': c._spCleanName})
+        
+        AddToStr('internalsignals', '\n'.join(['    ' + x for x in internalsignalsLines]) + '\n\n')
+        AddToStr('internalsignals', "%(pi)s_start   <= AXI_SLAVE_CTRL_r.%(pi)s_StartCalculationsInternal xor AXI_SLAVE_CTRL_r.%(pi)s_StartCalculationsInternalOld;\n" % {'pi': c._spCleanName})
+        
         AddToStr('startStopSignals', '''\
     signal %(pi)s_StartCalculationsPulse : std_logic;
     signal %(pi)s_CalculationsComplete : std_logic;          -- the finish signal for %(pi)s
@@ -1165,6 +1387,8 @@ def OnFinal() -> None:
         AddToStr('updateStartStopPulses',
                  '            %(pi)s_StartCalculationsInternalOld <= %(pi)s_StartCalculationsInternal;\n' % {'pi': c._spCleanName})
 
+
+        AddToStr('readinputdata', 'when (%s) => v.%s_StartCalculationsInternal	:= AXI_SLAVE_CTRL_r.%s_StartCalculationsInternal xor \'1\';\n' % (0x0300 + c._offset, c._spCleanName, c._spCleanName))
         AddToStr('readinputdata', '\n'.join([' ' * 22 + x for x in readinputdataLines]) + '\n')
         
         AddToStr('setStartSignalsLow', ' ' * 12 + "if(%s_CalculationsCompletePulse = '1') then\n" % c._spCleanName)
@@ -1173,11 +1397,14 @@ def OnFinal() -> None:
         AddToStr('setStartSignalsLow', ' ' * 12 + "     %s_StartCalculationsInternalOld <= '0';\n" % c._spCleanName)
         AddToStr('setStartSignalsLow', ' ' * 12 + "end if;\n")
         
+        AddToStr('writeoutputdata', 'when (%s) => v_comb_out.rdata(31 downto 0)	:= X"000000" & "0000000" & AXI_SLAVE_CTRL_r.done;\n' % (0x0300 + c._offset))
         AddToStr('writeoutputdata', '\n'.join(['\t' * 5 + x for x in writeoutputdataLines]) + '\n')
 
         AddToStr('connectionsToSystemC', '\n    Interface_%s : bambu_%s\n' % (c._spCleanName, c._spCleanName))
         AddToStr('connectionsToSystemC', '        port map (\n')
         AddToStr('connectionsToSystemC', ',\n'.join(['            ' + x for x in connectionsToSystemCLines]) + ',\n')
+        AddToStr('connectionsToSystemC', '            start_%s => %s_start,\n' % (c._spCleanName, c._spCleanName))
+        AddToStr('connectionsToSystemC', '            finish_%s => %s_done,\n' % (c._spCleanName, c._spCleanName))
         AddToStr('connectionsToSystemC', '            clock_%s => S_AXI_ACLK,\n' % c._spCleanName)
         AddToStr('connectionsToSystemC', '            reset_%s => S_AXI_ARESETN\n' % c._spCleanName)
         AddToStr('connectionsToSystemC', '        );\n')
@@ -1188,22 +1415,30 @@ def OnFinal() -> None:
         AddToStr('updateCalculationsComplete', ' ' * 12 + "elsif (%s_StartCalculationsPulse='1') then\n" % c._spCleanName)
         AddToStr('updateCalculationsComplete', ' ' * 12 + "    %s_CalculationsComplete <= '0';\n" % c._spCleanName)
         AddToStr('updateCalculationsComplete', ' ' * 12 + "end if;\n")
+        
+        AddToStr('done_start_assign', 'if %s_start = \'1\' then\nv.done	:= \'0\';\nend if;\n' % c._spCleanName)
+        AddToStr('done_start_assign', 'if %s_done = \'1\' then\nv.done	:= \'1\';\nend if;\n' % c._spCleanName)
 
-    AddToStr('outputs', ', '.join(outputs) + (', ' if len(outputs) else ''))
+        AddToStr('starstoppulses', 'v.%s_StartCalculationsInternalOld 	:= AXI_SLAVE_CTRL_r.%s_StartCalculationsInternal;\n' % (c._spCleanName, c._spCleanName))
+
+    AddToStr('outputs', ', '.join(outputs))
     AddToStr('completions', ', '.join(completions))
     AddToStr('starts', ', '.join(starts))
 
     AddToStr('pi', "%s" % c._spCleanName)
-    vhdlFile = open(vhdlBackend.dir + '/TASTE-VHDL-DESIGN/ip/src/TASTE2.vhd', 'w')
+    vhdlFile = open(vhdlBackend.dir + '/TASTE-VHDL-DESIGN/ip/src/TASTE_AXI.vhd', 'w')
     vhdlFile.write(vhdlTemplateZynQZC706.vhd % g_placeholders)
     vhdlFile.close()
 
     msg = ""
     for c in VHDL_Circuit.allCircuits:
-        msg += ' ../ip/src/bambu_%s.vhd' % c._spCleanName
-    makefile = open(vhdlBackend.dir + '/TASTE-VHDL-DESIGN/design/Makefile', 'w')
+        msg += 'bambu_%s.vhd' % c._spCleanName
+    makefile = open(vhdlBackend.dir + '/TASTE-VHDL-DESIGN/project/Makefile', 'w')
     makefile.write(vhdlTemplateZynQZC706.makefile % {'pi': msg, 'tab': '\t'})
     makefile.close()
+    catalog = open(vhdlBackend.dir + '/TASTE-VHDL-DESIGN/ip/component.xml', 'w')
+    catalog.write(vhdlTemplateZynQZC706.component_xml % {'pi': msg} )
+    catalog.close()
 
 
 def getTypeAndVarsAsBambuWantsThem(param: Param, names: AST_Lookup, leafTypeDict: AST_Leaftypes):
