@@ -527,7 +527,7 @@ static inline void rtems_axi_write32(uintptr_t Addr, uint32_t Value)
 {
     volatile uint32_t *LocalAddr = (volatile uint32_t *)Addr;
     *LocalAddr = Value;
-    rtems_task_wake_after(1);
+    rtems_task_wake_after(10);
 }
 
 ''')
