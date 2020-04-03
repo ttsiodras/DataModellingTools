@@ -167,7 +167,7 @@ class FromVHDLToASN1SCC(RecursiveMapperGeneric[List[int], str]):  # pylint: disa
         lines.append("    asn1SccSint val = 0;\n")
         lines.append("    for(i=0; i<sizeof(asn1SccSint)/4; i++) {\n")
         lines.append("        //axi_read(R_AXI_BASEADR + %s + (i*4), &tmp, 4, R_AXI_DSTADR);\n" % hex(register))
-        lines.append("        tmp = rtems_axi_read32(R_AXI_BASEADR + %s + (i*4));\n" % hex(register))
+        lines.append("        tmp = rtems_axi_read32(AXI_BANK_IP + %s + (i*4));\n" % hex(register))
         lines.append("        tmp >>= 32; // ?\n")
         lines.append("        val |= (tmp << (32*i));\n")
         lines.append("    }\n")
@@ -186,7 +186,7 @@ class FromVHDLToASN1SCC(RecursiveMapperGeneric[List[int], str]):  # pylint: disa
         lines.append("{\n")
         lines.append("    unsigned int tmp = 0;\n")
         lines.append("    //axi_read(R_AXI_BASEADR + %s, &tmp, 4, R_AXI_DSTADR);\n" % hex(register))
-        lines.append("    tmp = rtems_axi_read32(R_AXI_BASEADR + %s + (i*4));\n" % hex(register))
+        lines.append("    tmp = rtems_axi_read32(AXI_BANK_IP + %s + (i*4));\n" % hex(register))
         lines.append("    %s = (asn1SccUint) tmp;\n" % destVar)
         lines.append("}\n")
         srcVHDL[0] += 4
@@ -210,7 +210,7 @@ class FromVHDLToASN1SCC(RecursiveMapperGeneric[List[int], str]):  # pylint: disa
         lines.append("    for(i=0; i<%d; i++) {\n" % int(node._range[-1] / 4))
         lines.append("        tmp = 0;\n")
         lines.append("        //axi_read(R_AXI_BASEADR + %s + (i*4), &tmp, 4, R_AXI_DSTADR);\n" % hex(register))
-        lines.append("        tmp = rtems_axi_read32(R_AXI_BASEADR + %s + (i*4));\n" % hex(register))
+        lines.append("        tmp = rtems_axi_read32(AXI_BANK_IP + %s + (i*4));\n" % hex(register))
         lines.append("        memcpy(%s.arr + (i*4), (unsigned char*)&tmp, sizeof(unsigned int));\n" % destVar)
         lines.append("    }\n")
         lines.append("}\n")
@@ -224,7 +224,7 @@ class FromVHDLToASN1SCC(RecursiveMapperGeneric[List[int], str]):  # pylint: disa
         lines.append("{\n")
         lines.append("    unsigned int tmp;\n")
         lines.append("    //axi_read(R_AXI_BASEADR + %s, &tmp, 4, R_AXI_DSTADR);\n" % hex(register))  
-        lines.append("    tmp = rtems_axi_read32(R_AXI_BASEADR + %s);\n" % hex(register))
+        lines.append("    tmp = rtems_axi_read32(AXI_BANK_IP + %s);\n" % hex(register))
         lines.append("    %s = tmp;\n" % destVar)
         lines.append("}\n")
         srcVHDL[0] += 4
@@ -512,16 +512,10 @@ unsigned int count;
 // #include "axi123.h"
 #include <rtems.h>
 
-#define R_AXI_DSTADR 0xfe
-#define R_AXI_BASEADR 0x80000300
-//unsigned int axi_base_address = R_AXI_BASEADR; /* Base address on Remote. This is the address to which the data is copied. */
-//unsigned int axi_dst_address = R_AXI_DSTADR; /* AXI Destination address. */
-
-/* NOTICE: the clock driver is explicitly disabled */
-#define XPAR_TASTE_0_BASEADDR 0x43C00000 //this is cheating, from Xilinx generated h file
+#define XPAR_TASTE_0_BASEADDR 0x40000000
 
 #define BUS_ALIGNEMENT                4
-#define AXI_BANK_IP                 XPAR_TASTE_0_BASEADDR
+#define AXI_BANK_IP                 XPAR_TASTE_0_BASEADDR + START_ADD
 #define START_ADD                    0x00000300
 
 static inline uint32_t rtems_axi_read32(uintptr_t Addr)
@@ -571,7 +565,7 @@ static inline void rtems_axi_write32(uintptr_t Addr, uint32_t Value)
         self.C_SourceFile.write("    // Now that the parameters are passed inside the FPGA, run the processing logic\n")
         
         self.C_SourceFile.write('    unsigned int okstart = 1;\n')
-        self.C_SourceFile.write('    rtems_axi_write32(R_AXI_BASEADR + %s, okstart);\n' %
+        self.C_SourceFile.write('    rtems_axi_write32(AXI_BANK_IP + %s, okstart);\n' %
                                 hex(int(VHDL_Circuit.lookupSP[sp._id]._offset)))
         self.C_SourceFile.write('    //if (rtems_axi_write32(R_AXI_BASEADR + %s, okstart)) {\n' %
                                 hex(int(VHDL_Circuit.lookupSP[sp._id]._offset)))
@@ -581,18 +575,20 @@ static inline void rtems_axi_write32(uintptr_t Addr, uint32_t Value)
         self.C_SourceFile.write('    LOGDEBUG(" - Write OK\\n");\n')
 
         self.C_SourceFile.write('    count = 0;\n')
-        self.C_SourceFile.write('    while (!flag && count < RETRIES){\n')
+        self.C_SourceFile.write('    while (flag==0 && count < RETRIES){\n')
         self.C_SourceFile.write("      // Wait for processing logic to complete\n")
         self.C_SourceFile.write('      count++;\n')
         self.C_SourceFile.write("      // axi_read32 returns successful??\n")
-        self.C_SourceFile.write('      if (rtems_axi_read32(R_AXI_BASEADR + %s)!=0) {\n' %
+        self.C_SourceFile.write('      flag = rtems_axi_read32(AXI_BANK_IP + %s);\n' %
                                 hex(int(VHDL_Circuit.lookupSP[sp._id]._offset)))
-        self.C_SourceFile.write('        LOGERROR("Failed reading Target\\n");\n')
-        self.C_SourceFile.write('        return -1;\n')
-        self.C_SourceFile.write('      }\n')
+        self.C_SourceFile.write('      // if (rtems_axi_read32(AXI_BANK_IP + %s)==0) {\n' %
+                                hex(int(VHDL_Circuit.lookupSP[sp._id]._offset)))
+        self.C_SourceFile.write('      //  LOGERROR("Failed reading Target\\n");\n')
+        self.C_SourceFile.write('      //  return -1;\n')
+        self.C_SourceFile.write('      //}\n')
         self.C_SourceFile.write('      LOGDEBUG(" - Read OK\\n");\n')
         self.C_SourceFile.write('    }\n')
-        self.C_SourceFile.write('    if(!flag && count == RETRIES){\n')
+        self.C_SourceFile.write('    if(flag==0 && count == RETRIES){\n')
         self.C_SourceFile.write('      LOGERROR("Max Target read attempts reached.\\n");\n')
         self.C_SourceFile.write('      return -1;\n')
         self.C_SourceFile.write('    }\n')
