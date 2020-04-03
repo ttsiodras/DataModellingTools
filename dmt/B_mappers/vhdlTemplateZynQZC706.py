@@ -321,6 +321,63 @@ clean:
 %(tab)srm -rf *.bit
 '''
 
+axi_support = r'''
+#define ARM_CP15_TEXT_SECTION BSP_START_TEXT_SECTION
+
+#include <bsp.h>
+#include <bsp/start.h>
+#include <bsp/arm-gic-irq.h>
+#include <bsp/arm-cp15-start.h>
+#include <bsp/arm-a9mpcore-start.h>
+
+
+#ifdef ARMV7_CP15_START_DEFAULT_SECTIONS
+
+BSP_START_DATA_SECTION static const arm_cp15_start_section_config zynq_mmu_config_table[] = {
+    ARMV7_CP15_START_DEFAULT_SECTIONS,
+    {
+    .begin = 0xe0000000U,
+    .end   = 0xe0200000U,
+    .flags = ARMV7_MMU_DEVICE
+    }, {
+    .begin = 0xf8000000U,
+    .end   = 0xf9000000U,
+    .flags = ARMV7_MMU_DEVICE
+    }, {
+    .begin = 0x40000000U,
+    .end   = 0xc0000000U,
+    .flags = ARMV7_MMU_DEVICE
+    }, {
+    .begin = 0x00100000U,
+    .end   = 0x00400000U,
+    .flags = ARMV7_MMU_DEVICE
+    }, {
+    .begin = 0xfffc0000u,
+    .end   = 0xffffffffu,
+    .flags = ARMV7_MMU_DEVICE
+    }
+};
+
+BSP_START_TEXT_SECTION void zynq_setup_mmu_and_cache(void) {
+    uint32_t ctrl = arm_cp15_start_setup_mmu_and_cache(
+    ARM_CP15_CTRL_A,
+    ARM_CP15_CTRL_AFE | ARM_CP15_CTRL_Z
+    );
+
+    arm_cp15_start_setup_translation_table_and_enable_mmu_and_cache(
+    ctrl,
+    (uint32_t *) bsp_translation_table_base,
+    ARM_MMU_DEFAULT_CLIENT_DOMAIN,
+    &zynq_mmu_config_table[0],
+    RTEMS_ARRAY_SIZE(zynq_mmu_config_table)
+    );
+}
+
+#pragma message ("Memory configurations updated for AXI interfaces")
+
+#endif
+'''
+
 per_circuit_vhd = """-- Company: GMV
 -- Copyright European Space Agency, 2019-2020
 

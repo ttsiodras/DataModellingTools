@@ -509,7 +509,7 @@ static long long bswap64(long long x)
 unsigned int count;
 
 // include any needed lib headers
-// #include "axi123.h"
+#include "axi_support.h"
 #include <rtems.h>
 
 #define XPAR_TASTE_0_BASEADDR 0x40000000
@@ -1432,6 +1432,11 @@ def OnFinal() -> None:
     makefile = open(vhdlBackend.dir + '/TASTE-VHDL-DESIGN/project/Makefile', 'w')
     makefile.write(vhdlTemplateZynQZC706.makefile % {'pi': msg, 'tab': '\t'})
     makefile.close()
+    
+    axi_support = open(vhdlBackend.dir + '/axi_support.h', 'w')
+    axi_support.write(vhdlTemplateZynQZC706.axi_support)
+    axi_support.close()
+    
     catalog = open(vhdlBackend.dir + '/TASTE-VHDL-DESIGN/ip/component.xml', 'w')
     catalog.write(vhdlTemplateZynQZC706.component_xml % {'pi': msg} )
     catalog.close()
