@@ -142,8 +142,14 @@ class VHDL_Circuit:
         VHDL_Circuit.currentOffset += 4  # reserve one register for "start" signal
         self._paramOffset = {}  # type: Dict[str, int]
         for p in sp._params:
-            self._paramOffset[p._id] = VHDL_Circuit.currentOffset
-            VHDL_Circuit.currentOffset += RegistersAllocated(p._signal._asnNodename)
+            if isinstance(p, InParam):
+                self._paramOffset[p._id] = VHDL_Circuit.currentOffset
+                VHDL_Circuit.currentOffset += RegistersAllocated(p._signal._asnNodename)
+        
+        for p in sp._params:
+            if not isinstance(p, InParam):
+                self._paramOffset[p._id] = VHDL_Circuit.currentOffset
+                VHDL_Circuit.currentOffset += RegistersAllocated(p._signal._asnNodename)
 
     def __str__(self) -> str:
         msg = "PI:%s\n" % self._sp._id  # pragma: no cover
@@ -168,7 +174,7 @@ class FromVHDLToASN1SCC(RecursiveMapperGeneric[List[int], str]):  # pylint: disa
         lines.append("    for(i=0; i<sizeof(asn1SccSint)/4; i++) {\n")
         lines.append("        //axi_read(R_AXI_BASEADR + %s + (i*4), &tmp, 4, R_AXI_DSTADR);\n" % hex(register))
         lines.append("        tmp = rtems_axi_read32(AXI_BANK_IP + %s + (i*4));\n" % hex(register))
-        lines.append("        tmp >>= 32; // ?\n")
+        lines.append("        //tmp >>= 32; // ?\n")
         lines.append("        val |= (tmp << (32*i));\n")
         lines.append("    }\n")
         lines.append("    %s = val;\n" % destVar)
