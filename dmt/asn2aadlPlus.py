@@ -427,9 +427,11 @@ end Stream_Element_Buffer;
         possibleACN = ASNtoACN(asnParser.g_names[asnTypename]._asnFilename)
         if bAADLv2 and os.path.exists(possibleACN):
             prefix2 = "TASTE::" if bAADLv2 else "assert_properties::"
-            base = os.path.splitext(os.path.basename(possibleACN))[0]
-            fname = base.replace("-", "_")
-            o.write('    %sEncodingDefinitionFile => classifier(DataView::ACN_%s);\n' % (prefix2, fname))
+            #base = os.path.splitext(os.path.basename(possibleACN))[0]
+            #fname = base.replace("-", "_")
+            #o.write('    %sEncodingDefinitionFile => classifier(DataView::ACN_%s);\n' % (prefix2, fname))
+            moduleName = g_AdaPackageNameOfType[asnTypename]
+            o.write('    %sEncodingDefinitionFile => classifier(DataView::ACN_%s);\n' % (prefix2, moduleName))
         o.write('    %sAda_Package_Name => "%s";\n' % (prefix, g_AdaPackageNameOfType[asnTypename]))
         if bAADLv2:
             o.write('    Deployment::ASN1_Module_Name => "%s";\n' % g_AdaPackageNameOfType[asnTypename].replace('_', '-'))
@@ -522,21 +524,47 @@ end Stream_Element_Buffer;
         o.write('   %s : DATA %s.impl;\n' % (cleanName, cleanName))
     o.write('END Taste_DataView.others;\n')
 
-    listOfAsn1Files = {}
-    for asnTypename in sorted(list(asnParser.g_names.keys())):
-        listOfAsn1Files[asnParser.g_names[asnTypename]._asnFilename] = 1
+#   listOfAsn1Files = {}
+#   for asnTypename in sorted(list(asnParser.g_names.keys())):
+#       listOfAsn1Files[asnParser.g_names[asnTypename]._asnFilename] = 1
 
-    if bAADLv2:
-        for asnFilename in sorted(list(listOfAsn1Files.keys())):
-            base = os.path.splitext(os.path.basename(asnFilename))[0]
-            possibleACN = ASNtoACN(asnFilename)
+    # Create a list of modules that are included in an ASN.1 file for which
+    # an ACN file exists as well, in order to declare a DATA part pointing
+    # to it (and referenced by the TASTE::EncodingDefinitionFile property)
+    listOfAsn1ModulesWithAcn = {}
+    for moduleName, asnTypes in asnParser.g_modules.items():
+        if asnTypes:   # ignore empty modules
+            # get the filename containing this module
+            asnFile = asnParser.g_names[asnTypes[0]]._asnFilename
+            possibleACN = ASNtoACN(asnFile)
             if os.path.exists(possibleACN):
-                fname = base.replace("-", "_")
-                o.write('DATA ACN_' + fname + '\n')
-                o.write('PROPERTIES\n')
-                o.write('    Source_Text => ("' + possibleACN + '");\n')
-                o.write('    Source_Language => (ACN);\n')
-                o.write('END ACN_' + fname + ';\n\n')
+                listOfAsn1ModulesWithAcn[moduleName.replace('-', '_')] = possibleACN
+                
+    if bAADLv2:
+        for moduleName, acnFile in listOfAsn1ModulesWithAcn.items():
+            o.write('DATA ACN_' + moduleName + '\n')
+            o.write('PROPERTIES\n')
+            o.write('    Source_Text => ("' + acnFile + '");\n')
+            o.write('    Source_Language => (ACN);\n')
+            o.write('END ACN_' + moduleName + ';\n\n')
+
+# MP (04/2020) The part below is removed because it names the identifier based
+# on the filename. However there could be several DataView.acn files (in different
+# folders). In that case the identifier would be defined more than once.
+#   if bAADLv2:
+#       for asnFilename in sorted(list(listOfAsn1Files.keys())):
+#           base = os.path.splitext(os.path.basename(asnFilename))[0]
+#           possibleACN = ASNtoACN(asnFilename)
+#           # This should be per module, not per file
+#           # we must have the list of modules per file and generate
+#           # a DATA ACN_Module name per module
+#           if os.path.exists(possibleACN):
+#               fname = base.replace("-", "_")
+#               o.write('DATA ACN_' + fname + '\n')
+#               o.write('PROPERTIES\n')
+#               o.write('    Source_Text => ("' + possibleACN + '");\n')
+#               o.write('    Source_Language => (ACN);\n')
+#               o.write('END ACN_' + fname + ';\n\n')
 
     o.write('end DataView;\n')
     o.close()
