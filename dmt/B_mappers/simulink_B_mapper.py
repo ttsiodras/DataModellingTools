@@ -161,9 +161,9 @@ class FromASN1SCCtoSimulink(RecursiveMapper):
 
         lines = []  # type: List[str]
         limit = sourceSequenceLimit(node, srcVar)
-        for i in range(0, node._range[-1]):
-            lines.append("if (%s>=%d) %s.element_data[%d] = %s.arr[%d]; else %s.element_data[%d] = 0;\n" %
-                         (limit, i + 1, dstSimulink, i, srcVar, i, dstSimulink, i))
+        lines.append("unsigned int i=0;\n");
+        lines.append("for(i=0; i<%s; i++)\n    %s.element_data[i] = %s.arr[i];\n" % (limit, dstSimulink, srcVar));
+
         if len(node._range) > 1 and node._range[0] != node._range[1]:
             lines.append("%s.length = %s;\n" % (dstSimulink, limit))
         return lines
