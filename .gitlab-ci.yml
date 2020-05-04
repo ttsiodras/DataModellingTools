@@ -1,6 +1,11 @@
 # image: $CI_REGISTRY_IMAGE/taste:latest
 image: dmt:latest
 
+workflow:
+  rules:
+    - if: $CI_MERGE_REQUEST_ID            # Execute jobs in merge request context
+    - if: $CI_COMMIT_BRANCH == 'CoRA-EBB' # Execute jobs when a new commit is pushed to any branch
+
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
 
