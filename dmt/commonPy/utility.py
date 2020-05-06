@@ -126,7 +126,7 @@ class Matcher:
         self._lastOne = 'Search'
         return self._search
 
-    def group(self, idx: int) -> str:
+    def group(self, idx: int) -> str:  # pylint: disable=inconsistent-return-statements
         if self._lastOne == 'Match':
             return self._match.group(idx)
         elif self._lastOne == 'Search':
@@ -136,7 +136,7 @@ class Matcher:
                 "Matcher group called with index "
                 "%d before match/search!\n" % idx)
 
-    def groups(self) -> Any:
+    def groups(self) -> Any:  # pylint: disable=inconsistent-return-statements
         if self._lastOne == 'Match':
             return self._match.groups()
         elif self._lastOne == 'Search':
