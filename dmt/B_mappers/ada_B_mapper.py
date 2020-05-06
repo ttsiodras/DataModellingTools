@@ -45,7 +45,7 @@ from ..commonPy.asnAST import AsnNode
 from ..commonPy.asnParser import AST_Lookup, AST_Leaftypes
 
 isAsynchronous = True
-cBackend = None
+cBackend: c_B_mapper.C_GlueGenerator
 
 
 def OnStartup(unused_modelingLanguage: str, asnFile: str, outputDir: str, maybeFVname: str, useOSS: bool) -> None:

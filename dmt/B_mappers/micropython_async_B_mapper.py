@@ -50,7 +50,7 @@ from .c_B_mapper import C_GlueGenerator
 
 backend_C = None
 backend_uPy = None
-backends = None
+backends = []  # type: List[ASynchronousToolGlueGenerator]
 
 # TODO replace most of the typedefs with an include of py/obj.h
 h_header_str = """

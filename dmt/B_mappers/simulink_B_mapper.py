@@ -48,7 +48,6 @@ from ..commonPy.recursiveMapper import RecursiveMapper
 from .synchronousTool import SynchronousToolGlueGenerator
 
 isAsynchronous = False
-simulinkBackend = None
 
 
 def IsElementMappedToPrimitive(node: AsnSequenceOrSetOf, names: AST_Lookup) -> bool:
@@ -463,6 +462,9 @@ class SimulinkGlueGenerator(SynchronousToolGlueGenerator):
                                 (self.g_FVname, self.g_FVname))
         self.C_SourceFile.write("    }\n")
         self.C_SourceFile.write("#endif\n")
+
+
+simulinkBackend: SimulinkGlueGenerator
 
 
 def OnStartup(modelingLanguage: str, asnFile: str, subProgram: ApLevelContainer, subProgramImplementation: str, outputDir: str, maybeFVname: str, useOSS: bool) -> None:

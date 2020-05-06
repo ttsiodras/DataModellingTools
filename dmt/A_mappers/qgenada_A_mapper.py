@@ -30,7 +30,7 @@ import sys
 import re
 
 from distutils import spawn
-from typing import List, Union, Set  # NOQA
+from typing import List, Union, Set, IO, Any  # NOQA
 
 from ..commonPy import asnParser
 from ..commonPy.utility import panic, inform
@@ -44,7 +44,7 @@ from ..commonPy.asnAST import AsnNode  # NOQA pylint: disable=unused-import
 from ..commonPy.asnParser import AST_Leaftypes, AST_Lookup
 
 # The file written to
-g_outputFile = None
+g_outputFile: IO[Any]
 
 # A map of the ASN.1 types defined so far
 g_definedTypes = set()  # type: Set[asnParser.Typename]

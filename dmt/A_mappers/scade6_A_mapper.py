@@ -28,7 +28,7 @@ import os
 import random
 
 from xml.dom.minidom import Document, Node  # type: ignore  # NOQA  pylint: disable=unused-import
-from typing import Union, Set, Dict  # NOQA pylint: disable=unused-import
+from typing import Optional, Union, Set, Dict, IO, Any  # NOQA pylint: disable=unused-import
 
 from ..commonPy.utility import inform, panic
 from ..commonPy.asnAST import (
@@ -47,7 +47,7 @@ g_lookup = {
 }
 
 # The file written to
-g_outputFile = None
+g_outputFile: IO[Any]
 
 # The assigned OIDs
 g_oid = {}  # type: Dict[str, str]
@@ -62,7 +62,7 @@ g_currOid = 0x1f00
 g_declaredTypes = set()  # type: Set[str]
 
 # The DOM elements
-g_doc = None
+g_doc: Document
 g_Declarations = None
 
 
@@ -142,7 +142,7 @@ def RenderElements(controlString: str) -> None:
     for elem in controlString.split(","):
         if '`' in elem:
             element = elem.split("`")[0]
-            under = elem.split("`")[1]
+            under = elem.split("`")[1]  # type: Optional[str]
         else:
             element = elem
             under = None

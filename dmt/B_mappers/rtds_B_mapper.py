@@ -42,8 +42,6 @@ from .asynchronousTool import ASynchronousToolGlueGenerator
 from . import c_B_mapper
 
 isAsynchronous = True
-rtdsBackend = None
-cBackend = None
 
 
 # noinspection PyListCreation
@@ -551,6 +549,10 @@ class RTDS_GlueGenerator(ASynchronousToolGlueGenerator):
         lines = ["    " + x.rstrip() for x in lines]
         fileOutSource.write("\n".join(lines))
         fileOutSource.write("\n}\n\n")
+
+
+rtdsBackend: RTDS_GlueGenerator
+cBackend: c_B_mapper.C_GlueGenerator
 
 
 def OnStartup(modelingLanguage: str, asnFile: str, outputDir: str, maybeFVname: str, useOSS: bool) -> None:

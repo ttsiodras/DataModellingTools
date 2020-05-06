@@ -34,11 +34,11 @@ from ..commonPy.asnParser import g_names, g_leafTypeDict, CleanNameForAST, AST_L
 from ..commonPy.utility import panic, warn
 from ..commonPy.cleanupNodes import SetOfBadTypenames
 
-g_sqlalchemyOutput = None  # type: IO[Any]
+g_sqlalchemyOutput: IO[Any]
 g_innerTypes = {}  # type: Dict[str, int]
 g_uniqueStringOfASN1files = ""
 g_outputDir = "."
-g_asnFiles = None  # type: Union[str, List[str]]
+g_asnFiles: Union[str, List[str]]
 
 
 # ====== Dummy stubs =====

@@ -23,7 +23,7 @@
 #
 import re
 
-from typing import Union, Set, List  # NOQA pylint: disable=unused-import
+from typing import Union, Set, List, IO, Any  # NOQA pylint: disable=unused-import
 
 from ..commonPy.utility import panic, inform
 from ..commonPy import asnParser
@@ -37,7 +37,7 @@ from ..commonPy.cleanupNodes import SetOfBadTypenames
 from ..commonPy.asnParser import AST_Leaftypes, AST_Lookup
 
 # The file written to
-g_outputFile = None
+g_outputFile: IO[Any]
 
 # A map of the ASN.1 types defined so far
 g_definedTypes = set()  # type: Set[asnParser.Typename]

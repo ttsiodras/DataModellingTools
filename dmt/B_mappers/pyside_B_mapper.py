@@ -3,7 +3,7 @@
 
 import re
 import os
-from typing import List
+from typing import List, IO, Any
 
 from ..commonPy.asnAST import (
     AsnInt, AsnBool, AsnReal, AsnEnumerated,
@@ -14,13 +14,13 @@ from ..commonPy.utility import panic
 from ..commonPy.asnParser import AST_Lookup, AST_Leaftypes
 from ..commonPy.aadlAST import ApLevelContainer, Param
 
-g_PyDataModel = None
+g_PyDataModel: IO[Any]
 g_iter = 1
 g_IFCount = 0
-g_BackendFile = None
+g_BackendFile: IO[Any]
 g_fromPysideToASN1 = []  # type: List[str]
 g_fromASN1ToPyside = []  # type: List[str]
-g_QUiFile = None
+g_QUiFile: IO[Any]
 g_bStarted = False       # type: bool
 g_firstElem = True       # type: bool
 g_asnId = ""             # type: str

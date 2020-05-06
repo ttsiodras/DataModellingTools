@@ -49,7 +49,6 @@ from ..commonPy.recursiveMapper import RecursiveMapper
 from .synchronousTool import SynchronousToolGlueGenerator
 
 isAsynchronous = False
-scadeBackend = None
 
 
 # noinspection PyListCreation
@@ -482,6 +481,9 @@ class ScadeGlueGenerator(SynchronousToolGlueGenerator):
 
     def ExecuteBlock(self, unused_modelingLanguage: str, unused_asnFile: str, sp: ApLevelContainer, unused_subProgramImplementation: str, unused_maybeFVname: str) -> None:
         self.C_SourceFile.write("    %s();\n" % (self.CleanNameAsToolWants(sp._id)))
+
+
+scadeBackend: ScadeGlueGenerator
 
 
 def OnStartup(modelingLanguage: str, asnFile: str, subProgram: ApLevelContainer, subProgramImplementation: str, outputDir: str, maybeFVname: str, useOSS: bool) -> None:

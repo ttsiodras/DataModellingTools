@@ -88,14 +88,14 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
 
     def __init__(self) -> None:
         # The files written to
-        self.C_HeaderFile = None  # type: IO[Any]
-        self.C_SourceFile = None  # type: IO[Any]
-        self.ADA_HeaderFile = None  # type: IO[Any]
-        self.ADA_SourceFile = None  # type: IO[Any]
+        self.C_HeaderFile: IO[Any]
+        self.C_SourceFile: IO[Any]
+        self.ADA_HeaderFile: IO[Any]
+        self.ADA_SourceFile: IO[Any]
         self.asn_name = ""
         self.supportedEncodings = ['native', 'uper', 'acn']
-        self.dir = None  # type: str
-        self.useOSS = None  # type: bool
+        self.dir: str
+        self.useOSS: bool
 
     def OnStartup(self,
                   modelingLanguage: str,

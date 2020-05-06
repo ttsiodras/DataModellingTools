@@ -279,6 +279,8 @@ def OnShutdown(unused_modelingLanguage: str, unused_asnFile: str, unused_sp: ApL
 
 
 def OnFinal() -> None:
+    assert g_HeaderFile is not None
+    assert g_PythonFile is not None
     g_HeaderFile.write("\n#endif\n")
     g_PythonFile.write('\n'.join(g_headerPython))
     g_PythonFile.write('\n\n')

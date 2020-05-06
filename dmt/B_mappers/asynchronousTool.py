@@ -73,11 +73,9 @@ class ASynchronousToolGlueGenerator:
 
     def __init__(self) -> None:
         # The files written to
-        self.C_HeaderFile = None  # type: IO[Any]
-        self.C_SourceFile = None  # type: IO[Any]
         self.asn_name = ""
         self.supportedEncodings = ['native', 'uper', 'acn']
-        self.useOSS = None  # type: bool
+        self.useOSS = False
         self.typesToWorkOn = {}  # type: Dict[str, Tuple[AsnNode, AST_Leaftypes, AST_Lookup]]
 
     def OnStartup(self, modelingLanguage: str, asnFile: str, outputDir: str, maybeFVname: str, useOSS: bool) -> None:
@@ -89,10 +87,10 @@ class ASynchronousToolGlueGenerator:
         outputCsourceFilename = self.CleanNameAsToolWants(prefix) + "_ASN1_Types.c"
 
         inform(str(self.__class__) + ": Creating file '%s'...", outputCheaderFilename)
-        self.C_HeaderFile = open(outputDir + outputCheaderFilename, 'w')
+        self.C_HeaderFile = open(outputDir + outputCheaderFilename, 'w')  # pylint: disable=attribute-defined-outside-init
 
         inform(str(self.__class__) + ": Creating file '%s'...", outputCsourceFilename)
-        self.C_SourceFile = open(outputDir + outputCsourceFilename, 'w')
+        self.C_SourceFile = open(outputDir + outputCsourceFilename, 'w')  # pylint: disable=attribute-defined-outside-init
 
         self.asn_name = os.path.basename(os.path.splitext(asnFile)[0])
 
@@ -117,8 +115,6 @@ class ASynchronousToolGlueGenerator:
         self.C_SourceFile.write("#include \"%s\"\n\n" % outputCheaderFilename)
 
         self.HeadersOnStartup(asnFile, outputDir, maybeFVname)
-
-        self.typesToWorkOn = {}  # type: Dict[str, Tuple[AsnNode, AST_Leaftypes, AST_Lookup]]
 
     def Common(self, nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
         # Async backends are different: they work on ASN.1 types, not SP params.
