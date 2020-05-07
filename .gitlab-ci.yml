@@ -11,7 +11,7 @@ stages:
 build:
   stage: build
   script:
-    - ./configure ; pip3 install --upgrade . ; LANG=C LC_ALL=C PATH=$PATH:/asn1scc make
+    - ./configure ; pip3 install --upgrade . ; pip3 uninstall --yes typing ; LANG=C LC_ALL=C PATH=$PATH:/asn1scc make
   # artifacts:
     # paths:
     #   - 'test/logs/*.err.txt'
