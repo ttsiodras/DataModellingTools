@@ -59,8 +59,8 @@ import hashlib
 import xml.sax  # type: ignore
 from typing import IO, TypeVar, Type, Optional, Callable, Union, List, Set, Dict, Tuple, Any  # NOQA pylint: disable=W0611
 
-import configMT
-import utility
+from . import configMT
+from . import utility
 
 from .asnAST import (
     AsnBasicNode, AsnEnumerated, AsnSequence, AsnChoice, AsnSequenceOf,
