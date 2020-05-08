@@ -663,17 +663,20 @@ def CreateNumericString(newModule: Module, lineNo: int, xmlNumericStringNode: El
     return CreateOctetString(newModule, lineNo, xmlNumericStringNode)  # pragma: no cover
 
 
-def getIntOrFloatOrNone(d: str) -> Union[int, float, None]:
+def getIntOrFloatOrNone(d: Optional[str]) -> Union[int, float, None]:
     i = f = None
     try:
-        i = int(d)
-        return i
+        if d is not None:
+            i = int(d)
+            return i
     except:
         try:
-            f = float(d)
-            return f
+            if d is not None:
+                f = float(d)
+                return f
         except:
             return None
+    return None
 
 
 def CreateReference(newModule: Module, lineNo: int, xmlReferenceNode: Element) -> AsnMetaType:
@@ -681,8 +684,8 @@ def CreateReference(newModule: Module, lineNo: int, xmlReferenceNode: Element) -
         asnFilename=newModule._asnFilename,
         lineno=lineNo,
         containedType=GetAttrCertainly(xmlReferenceNode, "ReferencedTypeName"),
-        Min=getIntOrFloatOrNone(GetAttrCertainly(xmlReferenceNode, "Min")),
-        Max=getIntOrFloatOrNone(GetAttrCertainly(xmlReferenceNode, "Max")))
+        Min=getIntOrFloatOrNone(GetAttr(xmlReferenceNode, "Min")),
+        Max=getIntOrFloatOrNone(GetAttr(xmlReferenceNode, "Max")))
 
 
 V = TypeVar('V', AsnSequenceOf, AsnSetOf)
