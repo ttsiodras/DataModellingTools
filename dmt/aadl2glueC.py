@@ -546,11 +546,11 @@ def main() -> None:
     asn1files = list(uniqueDataFiles.keys())
     if len(asn1files) == 1:
         asnFile = asn1files[0]
+        inform("Checking that all base nodes have mandatory ranges set in %s..." % asnFile)
         commonPy.asnParser.ParseAsnFileList(asn1files)
     elif asn1files:
         panic("There appear to be more than one ASN.1 files referenced (%s)..." % str(asn1files))
 
-    inform("Checking that all base nodes have mandatory ranges set in %s..." % asnFile)
     names = commonPy.asnParser.g_names
     for node in names.values():
         verify.VerifyRanges(node, names)
