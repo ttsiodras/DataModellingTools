@@ -213,7 +213,7 @@ class MapUPyObjData(RecursiveMapperGeneric[str, str]):
         for child in node._members:
             contained = self.Map(srcVar, destVar, child[1], leafTypeDict, names)
             if contained:
-                lines.extend('    ' + l for l in contained[:-1])
+                lines.extend('    ' + ll for ll in contained[:-1])
                 lines.append('    %s data_%s;' % (contained[-1], self.CleanName(child[0])))
         lines.append('}')
         return lines
@@ -231,7 +231,7 @@ class MapUPyObjData(RecursiveMapperGeneric[str, str]):
         for child in node._members:
             contained = self.Map(srcVar, destVar, child[1], leafTypeDict, names)
             if contained:
-                lines.extend('        ' + l for l in contained[:-1])
+                lines.extend('        ' + ll for ll in contained[:-1])
                 lines.append('        %s %s;' % (contained[-1], self.CleanName(child[0])))
         lines.append('    } data;')
         lines.append('}')
@@ -246,7 +246,7 @@ class MapUPyObjData(RecursiveMapperGeneric[str, str]):
         ]
         contained = self.Map(srcVar, destVar, node._containedType, leafTypeDict, names)
         if contained:
-            lines.extend('    ' + l for l in contained[:-1])
+            lines.extend('    ' + ll for ll in contained[:-1])
             lines.append('    %s data[%u];' % (contained[-1], num_items))
         lines.append('}')
         return lines
@@ -346,8 +346,8 @@ class MapUPyObjEncode(RecursiveMapperGeneric[str, Tuple[str, str]]):
         ])
         for it, child in enumerate(node._members):
             lines.append('%sif ((%s).kind == %s) {' % ('else ' if it else '', srcVar, self.CleanName(child[2])))
-            lines.extend('    ' + l
-                         for l in self.Map(
+            lines.extend('    ' + ll
+                         for ll in self.Map(
                              "(%s).u.%s" % (srcVar, self.CleanName(child[0])),
                              ('(%s)->items[0]' % data, '&(%s)->data.%s' % (data, self.CleanName(child[0]))),
                              child[1],
@@ -370,8 +370,8 @@ class MapUPyObjEncode(RecursiveMapperGeneric[str, Tuple[str, str]]):
             '(%s)->list.items = &(%s)->items[0];' % (data, data),
             'for (size_t %s = 0; %s < %s; ++%s) {' % (it, it, limit, it),
         ]
-        lines.extend('    ' + l
-                     for l in self.Map(
+        lines.extend('    ' + ll
+                     for ll in self.Map(
                          '(%s).arr[%s]' % (srcVar, it),
                          ('(%s)->items[%s]' % (data, it), '&(%s)->data[%s]' % (data, it)),
                          node._containedType, leafTypeDict, names))
@@ -446,8 +446,8 @@ class MapUPyObjDecode(RecursiveMapperGeneric[str, str]):
             lines.append('extern qstr %s[1];' % f)
         for it, child in enumerate(node._members):
             lines.append('%sif (MP_OBJ_TO_PTR(((mp_obj_tuple_t*)MP_OBJ_TO_PTR(%s))->items[1]) == %s) {' % ('else ' if it else '', srcVar, fields_names[it]))
-            lines.extend('    ' + l
-                         for l in self.Map(
+            lines.extend('    ' + ll
+                         for ll in self.Map(
                              '((mp_obj_tuple_t*)MP_OBJ_TO_PTR(%s))->items[0]' % srcVar,
                              '(%s).u.%s' % (destVar, self.CleanName(child[0])),
                              child[1],
@@ -467,8 +467,8 @@ class MapUPyObjDecode(RecursiveMapperGeneric[str, str]):
         lines = [
             'for (size_t %s = 0; %s < %s; ++%s) {' % (it, it, limit, it),
         ]
-        lines.extend('    ' + l
-                     for l in self.Map(
+        lines.extend('    ' + ll
+                     for ll in self.Map(
                          '((mp_obj_list_t*)MP_OBJ_TO_PTR(%s))->items[%s]' % (srcVar, it),
                          '%s.arr[%s]' % (destVar, it),
                          node._containedType, leafTypeDict, names))
@@ -548,7 +548,7 @@ class MicroPython_GlueGenerator(ASynchronousToolGlueGenerator):
             if dataType == 'void':
                 lines.append('    (void)pData;')  # suppress C compiler warning
             lines.append('    mp_obj_t o;')
-            lines.extend('    ' + l for l in self.MapUPyObjEncode.Map('*pVal', ('o', 'pData'), node, leafTypeDict, names))
+            lines.extend('    ' + ll for ll in self.MapUPyObjEncode.Map('*pVal', ('o', 'pData'), node, leafTypeDict, names))
             lines.append('    return o;')
             lines.append('}')
             self.C_SourceFile.write('\n'.join(lines) + '\n\n')
@@ -573,7 +573,7 @@ class MicroPython_GlueGenerator(ASynchronousToolGlueGenerator):
 
             lines = []
             lines.append('void mp_obj_decode_asn1Scc%s(mp_obj_t obj, asn1Scc%s *pVal) {' % (tname, tname))
-            lines.extend('    ' + l for l in self.MapUPyObjDecode.Map('obj', '(*pVal)', node, leafTypeDict, names))
+            lines.extend('    ' + ll for ll in self.MapUPyObjDecode.Map('obj', '(*pVal)', node, leafTypeDict, names))
             lines.append('}')
             self.C_SourceFile.write('\n'.join(lines) + '\n\n')
 
