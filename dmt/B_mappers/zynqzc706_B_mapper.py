@@ -1356,7 +1356,7 @@ def OnFinal() -> None:
         completions.append(c._spCleanName + '_done')
         starts.append(c._spCleanName + '_start')
 
-        AddToStr('circuits', '    component bambu_%s is\n' % c._spCleanName)
+        AddToStr('circuits', '    component %s_bambu is\n' % c._spCleanName)
         AddToStr('circuits', '    port (\n')
         AddToStr('circuits', '\n'.join(['        ' + x for x in circuitLines]) + '\n')
         AddToStr('circuits', '        start_%s  : in  std_logic;\n' % c._spCleanName)
@@ -1367,7 +1367,7 @@ def OnFinal() -> None:
         AddToStr('circuits', '    end component;\n\n')
         
         skeleton = []
-        skeleton.append('    entity bambu_%s is\n' % c._spCleanName)
+        skeleton.append('    entity %s_bambu is\n' % c._spCleanName)
         skeleton.append('    port (\n')
         skeleton.append('\n'.join(['        ' + x for x in circuitLines]) + '\n')
         skeleton.append('        start_%s  : in  std_logic;\n' % c._spCleanName)
@@ -1375,8 +1375,8 @@ def OnFinal() -> None:
         skeleton.append('        clock_%s : in std_logic;\n' % c._spCleanName)
         skeleton.append('        reset_%s  : in  std_logic\n' % c._spCleanName)
         skeleton.append('    );\n')
-        skeleton.append('    end bambu_%s;\n\n' % c._spCleanName)
-        vhdlSkeleton = open(vhdlBackend.dir + "/TASTE-VHDL-DESIGN/ip/src/bambu_" + c._spCleanName + '.vhd', 'w')
+        skeleton.append('    end %s_bambu;\n\n' % c._spCleanName)
+        vhdlSkeleton = open(vhdlBackend.dir + "/TASTE-VHDL-DESIGN/ip/src/" + c._spCleanName + '_bambu.vhd', 'w')
         vhdlSkeleton.write(
             vhdlTemplateZynQZC706.per_circuit_vhd % {
                 'pi': c._spCleanName,
@@ -1435,7 +1435,7 @@ def OnFinal() -> None:
         AddToStr('writeoutputdata', 'when (%s) => v_comb_out.rdata(31 downto 0)	:= X"000000" & "0000000" & AXI_SLAVE_CTRL_r.done;\n' % (0x0300 + c._offset))
         AddToStr('writeoutputdata', '\n'.join(['\t' * 5 + x for x in writeoutputdataLines]) + '\n')
 
-        AddToStr('connectionsToSystemC', '\n    Interface_%s : bambu_%s\n' % (c._spCleanName, c._spCleanName))
+        AddToStr('connectionsToSystemC', '\n    Interface_%s : %s_bambu\n' % (c._spCleanName, c._spCleanName))
         AddToStr('connectionsToSystemC', '        port map (\n')
         AddToStr('connectionsToSystemC', ',\n'.join(['            ' + x for x in connectionsToSystemCLines]) + ',\n')
         AddToStr('connectionsToSystemC', '            start_%s => %s_start,\n' % (c._spCleanName, c._spCleanName))
@@ -1467,7 +1467,7 @@ def OnFinal() -> None:
 
     msg = ""
     for c in VHDL_Circuit.allCircuits:
-        msg += 'bambu_%s.vhd' % c._spCleanName
+        msg += '%s_bambu.vhd' % c._spCleanName
     makefile = open(vhdlBackend.dir + '/TASTE-VHDL-DESIGN/project/Makefile', 'w')
     makefile.write(vhdlTemplateZynQZC706.makefile % {'pi': msg, 'tab': '\t'})
     makefile.close()
@@ -1791,11 +1791,12 @@ def EmitBambuSimulinkBridge(sp: ApLevelContainer, subProgramImplementation: str)
     bambuFile.write("#include \"%s.h\" // Space certified compiler generated\n" % vhdlBackend.asn_name)
     bambuFile.write("#include \"%s.h\"\n" % vhdlBackend.CleanNameAsToolWants(sp._id))
     bambuFile.write("#include \"%s_types.h\"\n\n" % vhdlBackend.CleanNameAsToolWants(sp._id))
+    bambuFile.write("#include \"%s.c\"\n" % vhdlBackend.CleanNameAsToolWants(sp._id))
     #TODO can be added later for optimization (and these 2 files can then be removed from Bambu call
     #bambuFile.write("#include \"%s.c\"\n\n" % vhdlBackend.CleanNameAsToolWants(sp._id))
     #bambuFile.write("#include \"%s_data.c\"\n\n" % vhdlBackend.CleanNameAsToolWants(sp._id))
 
-    bambuFile.write('void bambu_%s(\n    ' %  sp._id)
+    bambuFile.write('void %s_bambu(\n    ' %  sp._id)
     lines = []
     for param in sp._params:
         lines.extend(
@@ -1863,9 +1864,10 @@ def EmitBambuCBridge(sp: ApLevelContainer, subProgramImplementation: str):
 
     bambuFile.write("#include \"%s.h\" // Space certified compiler generated\n" % vhdlBackend.asn_name)
     bambuFile.write("#include \"%s.h\"\n" % functionBlocksName) 
+    bambuFile.write("#include \"%s.c\"\n" % functionBlocksName) 
 
 
-    bambuFile.write('\nvoid bambu_%s(\n    ' %  sp._id)
+    bambuFile.write('\nvoid %s_bambu(\n    ' %  sp._id)
     # List flattened PI parameters
     lines = []
     for param in sp._params:

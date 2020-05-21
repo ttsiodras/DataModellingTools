@@ -313,9 +313,12 @@ end rtl;'''
 
 makefile = r'''
 SRCS=../ip/src/TASTE_AXI.vhd ../ip/src/%(pi)s
+EXEC=./TASTE/TASTE.runs/impl_1/TASTE_wrapper.bit
 
-all:   ${SRCS}
-%(tab)svivado -mode batch -source TASTE_AXI.tcl
+all: ${EXEC}
+    
+${EXEC}: ${SRCS}
+	vivado -mode batch -source TASTE_AXI.tcl
 
 clean:
 %(tab)srm -rf *.bit
@@ -388,7 +391,7 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
 %(declaration)s
 
-architecture arch of bambu_%(pi)s is
+architecture arch of %(pi)s_bambu is
 
     -- Declare signals
     signal CLK : std_logic;
