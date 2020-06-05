@@ -12,7 +12,7 @@ vhd = '''-----------------------------------------------------------------------
 --   __/ |               
 --  |___/              
 -- 
--- Create Date: 18/09/2019
+-- Create Date: 01/04/2020
 -- Design Name: TASTE
 -- Module Name: TASTE
 -- Project Name: Cora-mbad-4zynq
@@ -35,33 +35,113 @@ use ieee.numeric_std.all;
 entity TASTE is
     port (
 		---------------------------------------------------
-		--			  AXI4 LITE CORE CONTROLLER 		 --
+		--			  	AXI4 LITE (REGISTERS)		 	 --
 		---------------------------------------------------
 		-- Clock and Reset
-		S_AXI_ACLK				: in  std_logic;
-		S_AXI_ARESETN			: in  std_logic;
+		S00_AXI_ACLK			: in  std_logic;
+		S00_AXI_ARESETN			: in  std_logic;
 		-- Write Address Channel
-		S_AXI_AWADDR			: in  std_logic_vector(31 downto 0);
-		S_AXI_AWVALID			: in  std_logic;
-		S_AXI_AWREADY			: out std_logic;
+		S00_AXI_AWADDR			: in  std_logic_vector(31 downto 0);
+		S00_AXI_AWVALID			: in  std_logic;
+		S00_AXI_AWREADY			: out std_logic;
 		-- Write Data Channel
-		S_AXI_WDATA				: in  std_logic_vector(31 downto 0);
-		S_AXI_WSTRB				: in  std_logic_vector(3 downto 0);
-		S_AXI_WVALID			: in  std_logic;
-		S_AXI_WREADY			: out std_logic;
+		S00_AXI_WDATA			: in  std_logic_vector(31 downto 0);
+		S00_AXI_WSTRB			: in  std_logic_vector(3 downto 0);
+		S00_AXI_WVALID			: in  std_logic;
+		S00_AXI_WREADY			: out std_logic;
 		-- Read Address Channel
-		S_AXI_ARADDR			: in  std_logic_vector(31 downto 0);
-		S_AXI_ARVALID			: in  std_logic;
-		S_AXI_ARREADY			: out std_logic;
+		S00_AXI_ARADDR			: in  std_logic_vector(31 downto 0);
+		S00_AXI_ARVALID			: in  std_logic;
+		S00_AXI_ARREADY			: out std_logic;
 		-- Read Data Channel
-		S_AXI_RDATA				: out std_logic_vector(31 downto 0);
-		S_AXI_RRESP				: out std_logic_vector(1 downto 0);
-		S_AXI_RVALID			: out std_logic;
-		S_AXI_RREADY			: in  std_logic;
+		S00_AXI_RDATA			: out std_logic_vector(31 downto 0);
+		S00_AXI_RRESP			: out std_logic_vector(1 downto 0);
+		S00_AXI_RVALID			: out std_logic;
+		S00_AXI_RREADY			: in  std_logic;
 		-- Write Response Channel
-		S_AXI_BRESP				: out std_logic_vector(1 downto 0);
-		S_AXI_BVALID			: out std_logic;
-		S_AXI_BREADY			: in  std_logic
+		S00_AXI_BRESP			: out std_logic_vector(1 downto 0);
+		S00_AXI_BVALID			: out std_logic;
+		S00_AXI_BREADY			: in  std_logic;
+		---------------------------------------------------
+		--			  AXI4 LITE (DDR CONTROLLER)		 --
+		---------------------------------------------------
+		-- Clock and Reset
+		M00_AXI_ACLK			: in  std_logic;
+		M00_AXI_ARESETN			: in  std_logic;
+		-- Write Address Channel
+		M00_AXI_AWADDR  		: out std_logic_vector(31 downto 0);
+		M00_AXI_AWVALID 		: out std_logic;
+		M00_AXI_AWREADY 		: in  std_logic;
+		-- Write Data Channel
+		M00_AXI_WDATA   		: out std_logic_vector(63 downto 0);
+		M00_AXI_WSTRB   		: out std_logic_vector(7 downto 0);
+		M00_AXI_WVALID  		: out std_logic;
+		M00_AXI_WREADY  		: in  std_logic;
+		-- Read Address Channel
+		M00_AXI_ARADDR  		: out std_logic_vector(31 downto 0);
+		M00_AXI_ARVALID 		: out std_logic;
+		M00_AXI_ARREADY 		: in  std_logic;
+		-- Read Data Channel
+		M00_AXI_RDATA   		: in  std_logic_vector(63 downto 0);
+		M00_AXI_RRESP   		: in  std_logic_vector(1 downto 0);
+		M00_AXI_RVALID  		: in  std_logic;
+		M00_AXI_RREADY  		: out std_logic;
+		-- Write Response Channel
+		M00_AXI_BRESP   		: in  std_logic_vector(1 downto 0);
+		M00_AXI_BVALID  		: in  std_logic;
+		M00_AXI_BREADY  		: out std_logic;
+		---------------------------------------------------
+		--			  	   AXI4 LITE (BRAMs)		 	 --
+		---------------------------------------------------
+		-- Clock and Reset
+		S01_AXI_ACLK			: in  std_logic;
+		S01_AXI_ARESETN			: in  std_logic;
+		-- Write Address Channel
+		S01_AXI_AWADDR			: in  std_logic_vector(31 downto 0);
+		S01_AXI_AWVALID			: in  std_logic;
+		S01_AXI_AWREADY			: out std_logic;
+		-- Write Data Channel
+		S01_AXI_WDATA			: in  std_logic_vector(31 downto 0);
+		S01_AXI_WSTRB			: in  std_logic_vector(3 downto 0);
+		S01_AXI_WVALID			: in  std_logic;
+		S01_AXI_WREADY			: out std_logic;
+		-- Read Address Channel
+		S01_AXI_ARADDR			: in  std_logic_vector(31 downto 0);
+		S01_AXI_ARVALID			: in  std_logic;
+		S01_AXI_ARREADY			: out std_logic;
+		-- Read Data Channel
+		S01_AXI_RDATA			: out std_logic_vector(31 downto 0);
+		S01_AXI_RRESP			: out std_logic_vector(1 downto 0);
+		S01_AXI_RVALID			: out std_logic;
+		S01_AXI_RREADY			: in  std_logic;
+		-- Write Response Channel
+		S01_AXI_BRESP			: out std_logic_vector(1 downto 0);
+		S01_AXI_BVALID			: out std_logic;
+		S01_AXI_BREADY			: in  std_logic;
+		---------------------------------------------------
+		--	   AXI4 STREAM SLAVE DATA SIGNALS (FIFOs) 	 --
+		---------------------------------------------------
+		-- Clock and Reset
+		S00_AXIS_ACLK    		: in  std_logic;
+		S00_AXIS_ARESETN 		: in  std_logic;
+		-- Data Channel		
+		S00_AXIS_TVALID 		: in  std_logic;
+		S00_AXIS_TREADY 		: out std_logic;
+		S00_AXIS_TDATA  		: in  std_logic_vector(31 downto 0);
+		S00_AXIS_TLAST 			: in  std_logic;
+		S00_AXIS_TDEST			: in  std_logic_vector(4 downto 0);
+		---------------------------------------------------
+		--	  AXI4 STREAM MASTER DATA SIGNALS (FIFOs) 	 --
+		---------------------------------------------------
+		-- Clock and Reset
+		M00_AXIS_ACLK    		: in  std_logic;
+		M00_AXIS_ARESETN 		: in  std_logic;
+		-- Data Channel		
+		M00_AXIS_TVALID 		: out std_logic;
+		M00_AXIS_TREADY 		: in  std_logic;
+		M00_AXIS_TDATA  		: out std_logic_vector(31 downto 0);
+		M00_AXIS_TLAST 			: out std_logic;
+		M00_AXIS_TID			: out std_logic_vector(4 downto 0)
     );
 end TASTE;
 
@@ -81,20 +161,19 @@ architecture rtl of TASTE is
 	constant EXOKAY						: std_logic_vector(1 downto 0) 		:= "01";
 	constant SLVERR						: std_logic_vector(1 downto 0) 		:= "10";
 	constant DECERR						: std_logic_vector(1 downto 0) 		:= "11";
-	
+	constant S2MM_PACKET_SIZE			: integer							:= 1024;
+
 
 	----------------------------------------------------
 	--			  	TYPE DEFINITION			 	 	  --
 	----------------------------------------------------
 
 	------------------------------
-	--	AXI LITE SLAVE CTRL		--
+	--	        S00 AXI	    	--
 	------------------------------
-	-- AXI4 LITE SLAVE CONTROLLER FSM --
-	type AXI_SLAVE_CTRL_states is(idle, reading, r_complete, writing, wait_resp);
+	type S00_AXI_states is(idle, reading, r_complete, writing, wait_resp);
 	
-	-- AXI4 combinational outputs record --
-	type AXI_SLAVE_CTRL_comb_out is record		
+	type S00_AXI_comb_out is record		
 
 		awready			: std_logic;
 		wready			: std_logic;
@@ -107,19 +186,21 @@ architecture rtl of TASTE is
 	end record;
 	
 	-- AXI4 internal signals record --
-	type AXI_SLAVE_CTRL_inter is record
+	type S00_AXI_inter is record
 	
-		current_state			: AXI_SLAVE_CTRL_states;
+		axi_state			: S00_AXI_states;
 		r_local_address			: integer;
 		bresp					: std_logic_vector(1 downto 0);
         --Registers for I/O
-        %(inputdeclaration)s
-        done					: std_logic;
-
+        %(s00_signals_declaration)s
+        ddr_ext_pointer_A				: std_logic_vector(31 downto 0);
+		startInternal					: std_logic;
+		startInternalOld				: std_logic;
+		doneInternal					: std_logic;
 	
 	end record;
 	
-	constant INIT_AXI_SLAVE_CTRL_comb_out	: AXI_SLAVE_CTRL_comb_out	:= (awready		=> '0',	
+	constant INIT_S00_AXI_COMB_OUT	                : S00_AXI_comb_out	:= (awready		=> '0',	
 																			wready		=> '0',
 																			arready		=> '0',
 																			rdata		=> (others => '0'),
@@ -128,27 +209,191 @@ architecture rtl of TASTE is
 																			bvalid		=> '0'
 																			);
 																						
-	constant INIT_AXI_SLAVE_CTRL_inter	: AXI_SLAVE_CTRL_inter 		:= (current_state		=> idle,
-										r_local_address		=> 0,
-										bresp				=> OKAY,
-										--Registers for I/O
-                                        %(inputassign)s
-                                        done                => '0'
-                                                                                );
+	constant INIT_S00_AXI_INTER	                   : S00_AXI_inter 		:= (axi_state		=> idle,
+                                                                            r_local_address		=> 0,
+                                                                            bresp				=> OKAY,
+                                                                            --Registers for I/O
+                                                                            %(s00_signals_assign)s
+                                                                            ddr_ext_pointer_A	=> (others => '0'),
+                                                                            startInternal		=> '0',		
+                                                                            startInternalOld	=> '0',
+                                                                            doneInternal		=> '0'
+                                                                            );
+	
+	------------------------------
+	--	        S01 AXI	    	--
+	------------------------------
+	type S01_AXI_states is(idle, reading, r_complete, writing, wait_resp);
+	
+	type S01_AXI_comb_out is record		
+
+		awready			: std_logic;
+		wready			: std_logic;
+		arready			: std_logic;
+		rdata			: std_logic_vector(31 downto 0);
+		rresp			: std_logic_vector(1 downto 0);
+		rvalid			: std_logic;
+		bvalid			: std_logic;
+        %(s01_signals_declaration)s
+        
+	end record;
+	
+	-- AXI4 internal signals record --
+	type S01_AXI_inter is record
+	
+		axi_state			: S01_AXI_states;
+		r_local_address			: integer;
+		bresp					: std_logic_vector(1 downto 0);
+	
+	end record;
+	
+	constant INIT_S01_AXI_COMB_OUT	                : S01_AXI_comb_out	:= (%(s01_signals_assign)s
+                                                                            awready		=> '0',	
+																			wready		=> '0',
+																			arready		=> '0',
+																			rdata		=> (others => '0'),
+																			rresp		=> OKAY,
+																			rvalid		=> '0',
+																			bvalid		=> '0'
+																			);
+																						
+	constant INIT_S01_AXI_INTER	                   : S01_AXI_inter 		:= (axi_state		=> idle,
+                                                                            r_local_address		=> 0,
+                                                                            bresp				=> OKAY
+                                                                            );
 	
 														
+	---------------------------------------------------
+	--			  		  M00 AXI		 	 		 --
+	---------------------------------------------------
+	type M00_AXI_states is(idle, writing, writing_finish, reading);
+	
+	type M00_AXI_comb_out is record		
+
+		awaddr  						: std_logic_vector(31 downto 0);
+		awvalid 						: std_logic;
+		wdata   						: std_logic_vector(63 downto 0);
+		wstrb   						: std_logic_vector(7 downto 0);
+		wvalid  						: std_logic;
+		araddr  						: std_logic_vector(31 downto 0);
+		arvalid 						: std_logic;
+		rready  						: std_logic;
+		bready  						: std_logic;
+		%(m00_signals_declaration)s
+	
+	end record;
+	
+	-- AXI4 internal signals record --
+	type M00_AXI_inter is record
+	
+		axi_state						: M00_AXI_states;
+		
+	end record;
+	
+	constant INIT_M00_AXI_COMB_OUT		: M00_AXI_comb_out		:= (%(m00_signals_assign)s
+                                                                    awaddr 				=> (others => '0'),
+																	awvalid				=> '0',
+																	wdata  				=> (others => '0'),
+																	wstrb  				=> (others => '0'),
+																	wvalid 				=> '0',
+																	araddr 				=> (others => '0'),
+																	arvalid				=> '0',
+																	rready 				=> '0',
+																	bready 				=> '0'
+																	);
+																						
+	constant INIT_M00_AXI_INTER			: M00_AXI_inter 		:= (axi_state			=> idle
+																	);
+																	
+	---------------------------------------------------
+	--			  		  S00 AXIS		 	 		 --
+	---------------------------------------------------
+	type S00_AXIS_states is(idle, runing);	
+	
+	type S00_AXIS_comb_out is record		
+
+		tready							: std_logic;
+		%(s00s_signals_declaration)s
+	
+	end record;
+	
+	type S00_AXIS_inter is record		
+
+		axis_state						: S00_AXIS_states;
+	
+	end record;
+	
+	constant INIT_S00_AXIS_COMB_OUT		: S00_AXIS_comb_out 	:= (%(s00s_signals_assign)s
+                                                                    tready				=> '0'
+                                                                    );		
+	
+	constant INIT_S00_AXIS_INTER		: S00_AXIS_inter 		:= (axis_state			=> idle);
+
+	---------------------------------------------------
+	--			  		  M00 AXIS		 	 		 --
+	---------------------------------------------------
+	type M00_AXIS_states is(idle, runing);
+
+	type M00_AXIS_comb_out is record		
+
+		tvalid							: std_logic;
+		tdata							: std_logic_vector(31 downto 0);
+		tlast							: std_logic;
+		%(m00s_signals_declaration)s
+	
+	end record;
+	
+	type M00_AXIS_inter is record		
+
+		axis_state						: M00_AXIS_states;
+		current_tid						: std_logic_vector(4 downto 0);
+		data_counter					: std_logic_vector(23 downto 0);
+		fifo_empty_vector				: std_logic_vector(31 downto 0);
+	
+	end record;
+
+	constant INIT_M00_AXIS_COMB_OUT		: M00_AXIS_comb_out 	:= (%(m00s_signals_assign)s
+                                                                    tvalid				=> '0',
+																	tdata				=> (others => '0'),
+																	tlast				=> '0'
+																	);	
+	
+	constant INIT_M00_AXIS_INTER		: M00_AXIS_inter 		:= (axis_state			=> idle,
+																	current_tid			=> (others => '0'),
+																	data_counter		=> (others => '0'),
+																	fifo_empty_vector	=> (others => '1')
+																	);
 	------------------------------
 	--	SIGNAL DECLARATION		--
 	------------------------------	
     -- Registers for I/O
-%(ioregisters)s
+    %(ioregisters)s
 
-	-- AXI LITE SLAVE CTRL Signals --	
-	signal AXI_SLAVE_CTRL_r					: AXI_SLAVE_CTRL_inter;
-	signal AXI_SLAVE_CTRL_rin				: AXI_SLAVE_CTRL_inter;
-	signal AXI_SLAVE_CTRL_r_comb_out		: AXI_SLAVE_CTRL_comb_out;
-	signal AXI_SLAVE_CTRL_rin_comb_out		: AXI_SLAVE_CTRL_comb_out;
-
+	-- AXI LITE SLAVE Registers Signals --	
+	signal S00_AXI_r					: S00_AXI_inter;
+	signal S00_AXI_rin					: S00_AXI_inter;
+	signal S00_AXI_r_comb_out			: S00_AXI_comb_out;
+	signal S00_AXI_rin_comb_out			: S00_AXI_comb_out;
+	-- AXI LITE MASTER AXI DDR3 Signals --	
+	signal M00_AXI_r					: M00_AXI_inter;
+	signal M00_AXI_rin					: M00_AXI_inter;
+	signal M00_AXI_r_comb_out			: M00_AXI_comb_out;
+	signal M00_AXI_rin_comb_out			: M00_AXI_comb_out;
+	-- AXI LITE SLAVE BRAM Signals --	
+	signal S01_AXI_r					: S01_AXI_inter;
+	signal S01_AXI_rin					: S01_AXI_inter;
+	signal S01_AXI_r_comb_out			: S01_AXI_comb_out;
+	signal S01_AXI_rin_comb_out			: S01_AXI_comb_out;	
+	-- AXI STREAM SLAVE FIFOs Signals --	
+	signal S00_AXIS_r					: S00_AXIS_inter;
+	signal S00_AXIS_rin					: S00_AXIS_inter;
+	signal S00_AXIS_r_comb_out			: S00_AXIS_comb_out;
+	signal S00_AXIS_rin_comb_out		: S00_AXIS_comb_out;
+	-- AXI STREAM MASTER FIFOs Signals --	
+	signal M00_AXIS_r					: M00_AXIS_inter;
+	signal M00_AXIS_rin					: M00_AXIS_inter;
+	signal M00_AXIS_r_comb_out			: M00_AXIS_comb_out;
+	signal M00_AXIS_rin_comb_out		: M00_AXIS_comb_out;
 begin
 
 	---------------------------------------------------
@@ -157,36 +402,472 @@ begin
     -- Connections to the VHDL circuits
 %(connectionsToSystemC)s
 
+%(connectionsToBRAMs)s
+
+%(connectionsToFIFOs)s
+
+
 	---------------------------------------------------
 	--				PROCESS INSTANTIATION		     --
 	---------------------------------------------------		
 	
-	---------------------------------------------------
-	--				AXI LITE SLAVE CTRL			 	 --
-	---------------------------------------------------	
+	------------------------------------------------------------------------------------------
+	--                                       S00 AXI                                        --
+	------------------------------------------------------------------------------------------
 	-- Sequential process --
-	seq_axi_slave:	process(S_AXI_ACLK)
+	seq_axi_slave:	process(S00_AXI_ACLK)
 	begin 		
-		if rising_edge(S_AXI_ACLK) then
-			AXI_SLAVE_CTRL_r				<= AXI_SLAVE_CTRL_rin;
-			AXI_SLAVE_CTRL_r_comb_out		<= AXI_SLAVE_CTRL_rin_comb_out;
+		if rising_edge(S00_AXI_ACLK) then
+			S00_AXI_r				<= S00_AXI_rin;
+			S00_AXI_r_comb_out		<= S00_AXI_rin_comb_out;
 		end if;
 	end process;
 
 	-- Combinational process --	
-	comb_axi_slave: process(	-- internal signals --
-							AXI_SLAVE_CTRL_r, AXI_SLAVE_CTRL_r_comb_out,
+	comb_axi_slave: process(-- Bambu signals --
+							%(s00_signals)s
+							-- internal signals --
+							S00_AXI_r, S00_AXI_r_comb_out,
 							-- AXI inptuts --
-							S_AXI_ARESETN, S_AXI_AWADDR, S_AXI_AWVALID, S_AXI_WDATA, S_AXI_WSTRB, S_AXI_WVALID, S_AXI_ARADDR, S_AXI_ARVALID, S_AXI_RREADY, S_AXI_BREADY,
-							-- Bambu signals --
-							%(outputs)s,
-							%(completions)s,
-							%(starts)s
+							S00_AXI_ARESETN, S00_AXI_AWADDR, S00_AXI_AWVALID, S00_AXI_WDATA, S00_AXI_WSTRB, S00_AXI_WVALID, S00_AXI_ARADDR, S00_AXI_ARVALID, S00_AXI_RREADY, S00_AXI_BREADY
 							)
 							
-		variable v									: AXI_SLAVE_CTRL_inter;
-		variable v_comb_out							: AXI_SLAVE_CTRL_comb_out;
-		variable comb_S_AXI_AWVALID_S_AXI_ARVALID	: std_logic_vector(1 downto 0);
+		variable v										: S00_AXI_inter;
+		variable v_comb_out								: S00_AXI_comb_out;
+		variable comb_S00_AXI_AWVALID_S00_AXI_ARVALID	: std_logic_vector(1 downto 0);
+		variable w_local_address						: integer;
+		
+	begin
+	
+		-----------------------------------------------------------------
+		--				   DEFAULT VARIABLES ASIGNATION		           --
+		-----------------------------------------------------------------
+		v 											:= S00_AXI_r;		
+		-----------------------------------------------------------------
+		--	 	DEFAULT COMBINATIONAL OUTPUT VARIABLES ASIGNATION      --
+		-----------------------------------------------------------------
+		v_comb_out									:= INIT_S00_AXI_COMB_OUT;
+		if %(starts)s = '1' then
+			v.doneInternal							:= '0';
+		end if;
+		if %(completions)s = '1' then
+			v.doneInternal							:= '1';
+		end if;
+		-----------------------------------------------------------------
+		--	 			DEFAULT INTERNAL VARIABLE ASIGNATION      	   --
+		-----------------------------------------------------------------		
+		w_local_address								:= to_integer(unsigned(S00_AXI_AWADDR(15 downto 0)));
+		comb_S00_AXI_AWVALID_S00_AXI_ARVALID		:= S00_AXI_AWVALID&S00_AXI_ARVALID;	
+		-- Update start-stop pulses
+		v.startInternalOld 							:= S00_AXI_r.startInternal;
+                -----------------------------------------------------------------
+		--	 					 AXI LITE CTRL FSM      	   		   --
+		-----------------------------------------------------------------		
+		case S00_AXI_r.axi_state is
+			when idle =>
+				v.bresp								:= OKAY;
+				case comb_S00_AXI_AWVALID_S00_AXI_ARVALID is
+					when "01" 	=> 
+						v.axi_state 				:= reading;
+					when "11" 	=> 
+						v.axi_state 				:= reading;
+					when "10" 	=> 
+						v.axi_state 				:= writing;
+					when others	=> 
+						v.axi_state 				:= idle;
+				end case;		
+			
+			when writing =>
+				v_comb_out.awready					:= S00_AXI_AWVALID;
+				v_comb_out.wready					:= S00_AXI_WVALID;
+				v.bresp								:= S00_AXI_r.bresp;				
+				if S00_AXI_WVALID = '1' then
+					v.axi_state	:= wait_resp;
+					case w_local_address is
+                        when (0) 					=> v.startInternal				:= S00_AXI_r.startInternal xor '1';
+                        %(s00_signals_writing)s
+						when others => null;
+					end case;
+				end if;
+				
+			when wait_resp =>
+				v_comb_out.awready					:= S00_AXI_AWVALID;
+				v_comb_out.wready					:= S00_AXI_WVALID;
+				v.bresp								:= S00_AXI_r.bresp;
+				v_comb_out.bvalid					:= S00_AXI_BREADY;
+				if S00_AXI_AWVALID = '0' then
+					v.axi_state 					:= idle;
+				else
+					if S00_AXI_WVALID = '1' then
+						case w_local_address is
+							when (0) 				=> v.startInternal				:= S00_AXI_r.startInternal xor '1';
+                        %(s00_signals_writing)s
+							when others => null;
+						end case;
+					else
+						v.axi_state := writing;
+					end if;
+				end if;
+			
+			when reading =>
+				v_comb_out.arready					:= S00_AXI_ARVALID;
+				v.bresp								:= OKAY;
+				v.r_local_address					:= to_integer(unsigned(S00_AXI_ARADDR(15 downto 0)));
+				v.axi_state 						:= r_complete;
+			when r_complete => 
+				v_comb_out.arready					:= S00_AXI_ARVALID;
+				v_comb_out.rvalid					:= '1';
+				v.bresp								:= OKAY;
+				if S00_AXI_RREADY = '1' then
+					if S00_AXI_ARVALID = '0' then
+						v.axi_state 				:= idle;
+					else
+						v.r_local_address			:= to_integer(unsigned(S00_AXI_ARADDR(15 downto 0)));
+					end if;
+				end if;
+				case S00_AXI_r.r_local_address is
+					-- result calculated flag 
+					when (0) 						=> v_comb_out.rdata(31 downto 0) := X"000000"&"0000000"&S00_AXI_r.doneInternal;
+                    %(s00_signals_rcomp)s
+					when others => v_comb_out.rdata(31 downto 0) 	:= (others => '0');								
+				end case;
+		end case;
+		---------------------------------------------------
+		--				  RESET ASIGNATION		 	     --
+		---------------------------------------------------		
+		if S00_AXI_ARESETN = '0' then
+			v		    		:= INIT_S00_AXI_INTER;
+			v_comb_out			:= INIT_S00_AXI_COMB_OUT;
+		end if;
+		---------------------------------------------------
+		--				SIGNAL ASIGNATION			     --
+		---------------------------------------------------
+		S00_AXI_rin 	       	<= v;
+		S00_AXI_rin_comb_out	<= v_comb_out;
+		
+	end process;
+
+
+	---------------------------------------------------
+	--		   INTERNAL ARCHITECTURE SIGNALS	 	 --
+	---------------------------------------------------
+        %(s00_signals_internal)s	
+
+	---------------------------------------------------
+	--					 OUTPUTS			 	     --
+	---------------------------------------------------		
+	S00_AXI_AWREADY				<= S00_AXI_rin_comb_out.awready;
+	S00_AXI_WREADY				<= S00_AXI_rin_comb_out.wready;
+	S00_AXI_ARREADY				<= S00_AXI_rin_comb_out.arready;
+	S00_AXI_RDATA				<= S00_AXI_rin_comb_out.rdata;
+	S00_AXI_RRESP				<= S00_AXI_rin_comb_out.rresp;
+	S00_AXI_RVALID				<= S00_AXI_rin_comb_out.rvalid;
+	S00_AXI_BRESP				<= S00_AXI_rin.bresp;
+	S00_AXI_BVALID				<= S00_AXI_rin_comb_out.bvalid;
+	
+		------------------------------------------------------------------------------------------
+	--                                       M00 AXI                                        --
+	------------------------------------------------------------------------------------------
+	-- Sequential process --
+	m00_axi_seq: process(M00_AXI_ACLK)
+	begin 		
+		if rising_edge(M00_AXI_ACLK) then
+			M00_AXI_r				<= M00_AXI_rin;
+			M00_AXI_r_comb_out		<= M00_AXI_rin_comb_out;
+		end if;
+	end process;
+
+	-- Combinational process --	
+	m00_axi_comb: process(	%(m00_signals)s
+                            -- internal signals --
+							M00_AXI_r, M00_AXI_r_comb_out,
+							-- AXI inptuts --
+							M00_AXI_AWREADY, M00_AXI_WREADY, M00_AXI_ARREADY, M00_AXI_RDATA, M00_AXI_RRESP, M00_AXI_RVALID, M00_AXI_BRESP, M00_AXI_BVALID
+							)
+							
+		variable v										: M00_AXI_inter;
+		variable v_comb_out								: M00_AXI_comb_out;
+		variable comb_Mout_we_ram_Mout_oe_ram			: std_logic_vector(1 downto 0);
+		variable comb_m_axi_awready_comb_m_axi_wready	: std_logic_vector(1 downto 0);
+		
+	begin
+	
+		-----------------------------------------------------------------
+		--				   DEFAULT VARIABLES ASIGNATION		           --
+		-----------------------------------------------------------------
+		v 											:= M00_AXI_r;		
+		-----------------------------------------------------------------
+		--	 	DEFAULT COMBINATIONAL OUTPUT VARIABLES ASIGNATION      --
+		-----------------------------------------------------------------
+		v_comb_out									:= INIT_M00_AXI_COMB_OUT;
+		-----------------------------------------------------------------
+		--	 			DEFAULT INTERNAL VARIABLE ASIGNATION      	   --
+		-----------------------------------------------------------------
+		%(m00_signals_internalassign)s
+		v_comb_out.M_Rdata_ram						:= M00_AXI_RDATA;
+		comb_m_axi_awready_comb_m_axi_wready		:= M00_AXI_AWREADY&M00_AXI_WREADY;
+		v_comb_out.wstrb							:= (others => '1');
+		-----------------------------------------------------------------
+		--	 					 AXI LITE CTRL FSM      	   		   --
+		-----------------------------------------------------------------		
+		case M00_AXI_r.axi_state is
+			when idle =>
+				case comb_Mout_we_ram_Mout_oe_ram is
+					when "01" 	=> 
+						v_comb_out.arvalid			:= '1';
+						v_comb_out.rready			:= '1';
+						if M00_AXI_ARREADY = '1' then
+							v.axi_state 			:= reading;
+						end if;
+					when "11" 	=> 
+						v_comb_out.arvalid			:= '1';
+						if M00_AXI_ARREADY = '1' then
+							v.axi_state 			:= reading;
+						end if;
+					when "10" 	=> 
+						v_comb_out.awvalid			:= '1';
+						v_comb_out.wvalid			:= '1';
+						case comb_m_axi_awready_comb_m_axi_wready is
+							when "11" =>
+								v.axi_state 		:= writing_finish;
+							when "10" =>
+								v.axi_state 		:= writing;
+							when others =>
+								v.axi_state 		:= idle;
+						end case; 
+					when others	=> 
+						v.axi_state 				:= idle;
+				end case;			
+			when writing =>
+				v_comb_out.awvalid					:= '1';
+				v_comb_out.wvalid					:= '1';
+				case comb_m_axi_awready_comb_m_axi_wready is
+					when "11" =>
+						v.axi_state 				:= writing_finish;
+					when "01" =>
+						v.axi_state 				:= writing_finish;
+					when others =>
+						v.axi_state 				:= writing;
+				end case; 	
+			when writing_finish =>
+				v_comb_out.bready					:= '1';
+				if M00_AXI_BVALID = '1' then
+					if M00_AXI_BRESP = OKAY then
+						v_comb_out.M_DataRdy		:= '1';
+					end if;
+					v.axi_state 					:= idle;
+				end if;		
+			when reading =>
+				v_comb_out.rready					:= '1';
+				if M00_AXI_RVALID = '1' then
+					if M00_AXI_RRESP = OKAY then
+						v_comb_out.M_DataRdy		:= '1';
+					end if;
+					v.axi_state 					:= idle;
+				end if;
+		end case;
+		---------------------------------------------------
+		--				  RESET ASIGNATION		 	     --
+		---------------------------------------------------		
+		if M00_AXI_ARESETN = '0' then
+			v		    		:= INIT_M00_AXI_INTER;
+			v_comb_out			:= INIT_M00_AXI_COMB_OUT;
+		end if;
+		---------------------------------------------------
+		--				SIGNAL ASIGNATION			     --
+		---------------------------------------------------
+		M00_AXI_rin 	       	<= v;
+		M00_AXI_rin_comb_out	<= v_comb_out;
+		
+	end process;	
+	
+	---------------------------------------------------
+	--		   INTERNAL ARCHITECTURE SIGNALS	 	 --
+	---------------------------------------------------
+	%(m00_signals_internal)s
+	
+	---------------------------------------------------
+	--					 OUTPUTS			 	     --
+	---------------------------------------------------		
+	M00_AXI_AWADDR				<= M00_AXI_rin_comb_out.awaddr;
+	M00_AXI_AWVALID				<= M00_AXI_rin_comb_out.awvalid;
+	M00_AXI_WDATA				<= M00_AXI_rin_comb_out.wdata;
+	M00_AXI_WSTRB				<= M00_AXI_rin_comb_out.wstrb;
+	M00_AXI_WVALID				<= M00_AXI_rin_comb_out.wvalid;
+	M00_AXI_ARADDR				<= M00_AXI_rin_comb_out.araddr;
+	M00_AXI_ARVALID				<= M00_AXI_rin_comb_out.arvalid;
+	M00_AXI_RREADY				<= M00_AXI_rin_comb_out.rready;
+	M00_AXI_BREADY				<= M00_AXI_rin_comb_out.bready;
+	
+	------------------------------------------------------------------------------------------
+	--                                       S01 AXI                                        --
+	------------------------------------------------------------------------------------------
+	-- Sequential process --
+	s01_axi_seq: process(S01_AXI_ACLK)
+	begin 		
+		if rising_edge(S01_AXI_ACLK) then
+			S01_AXI_r				<= S01_AXI_rin;
+			S01_AXI_r_comb_out		<= S01_AXI_rin_comb_out;
+		end if;
+	end process;
+
+	-- Combinational process --	
+	s01_axi_comb: process(	-- Bambu signals --
+                            %(s01_signals)s
+                            -- internal signals --
+							S01_AXI_r, S01_AXI_r_comb_out,
+							-- AXI inptuts --
+							S01_AXI_ARESETN, S01_AXI_AWADDR, S01_AXI_AWVALID, S01_AXI_WDATA, S01_AXI_WSTRB, S01_AXI_WVALID, S01_AXI_ARADDR, S01_AXI_ARVALID, S01_AXI_RREADY, S01_AXI_BREADY
+							)
+							
+		variable v										: S01_AXI_inter;
+		variable v_comb_out								: S01_AXI_comb_out;
+		variable comb_S01_AXI_AWVALID_S01_AXI_ARVALID	: std_logic_vector(1 downto 0);
+		variable w_local_address						: integer;
+
+	begin
+	
+		-----------------------------------------------------------------
+		--				   DEFAULT VARIABLES ASIGNATION		           --
+		-----------------------------------------------------------------
+		v 											:= S01_AXI_r;		
+		-----------------------------------------------------------------
+		--	 	DEFAULT COMBINATIONAL OUTPUT VARIABLES ASIGNATION      --
+		-----------------------------------------------------------------
+		v_comb_out									:= INIT_S01_AXI_COMB_OUT;
+		-----------------------------------------------------------------
+		--	 			DEFAULT INTERNAL VARIABLE ASIGNATION      	   --
+		-----------------------------------------------------------------		
+		w_local_address								:= to_integer(unsigned(S01_AXI_AWADDR(23 downto 22)));
+		comb_S01_AXI_AWVALID_S01_AXI_ARVALID		:= S01_AXI_AWVALID&S01_AXI_ARVALID;	
+		-----------------------------------------------------------------
+		--	 					 AXI LITE CTRL FSM      	   		   --
+		-----------------------------------------------------------------		
+		case S01_AXI_r.axi_state is
+			when idle =>
+				v.bresp								:= OKAY;
+				case comb_S01_AXI_AWVALID_S01_AXI_ARVALID is
+					when "01" 	=> 
+						v.axi_state 				:= reading;
+					when "11" 	=> 
+						v.axi_state 				:= reading;
+					when "10" 	=> 
+						v.axi_state 				:= writing;
+					when others	=> 
+						v.axi_state 				:= idle;
+				end case;			
+			when writing =>
+				v_comb_out.awready					:= S01_AXI_AWVALID;
+				v_comb_out.wready					:= S01_AXI_WVALID;
+				v.bresp								:= S01_AXI_r.bresp;				
+				if S01_AXI_WVALID = '1' then
+					v.axi_state	:= wait_resp;
+					case w_local_address is
+						%(s01_signals_write)s
+						when others => null;
+					end case;
+				end if;		
+			when wait_resp =>
+				v_comb_out.awready					:= S01_AXI_AWVALID;
+				v_comb_out.wready					:= S01_AXI_WVALID;
+				v.bresp								:= S01_AXI_r.bresp;
+				v_comb_out.bvalid					:= S01_AXI_BREADY;
+				if S01_AXI_AWVALID = '0' then
+					v.axi_state 					:= idle;
+				else
+					if S01_AXI_WVALID = '1' then
+						case w_local_address is
+						%(s01_signals_write)s
+						when others => null;
+						end case;
+					else
+						v.axi_state := writing;
+					end if;
+				end if;			
+			when reading =>
+				v_comb_out.arready					:= S01_AXI_ARVALID;
+				v.bresp								:= OKAY;
+				v.r_local_address					:= to_integer(unsigned(S01_AXI_ARADDR(23 downto 22)));
+				v.axi_state 						:= r_complete;
+				case v.r_local_address is
+					%(s01_signals_read)s
+					when others 					=> null;
+				end case;
+			when r_complete => 
+				v_comb_out.arready					:= S01_AXI_ARVALID;
+				v_comb_out.rvalid					:= '1';
+				v.bresp								:= OKAY;
+				if S01_AXI_RREADY = '1' then
+					if S01_AXI_ARVALID = '0' then
+						v.axi_state 				:= idle;
+					else
+						v.r_local_address			:= to_integer(unsigned(S01_AXI_ARADDR(23 downto 22)));
+						case v.r_local_address is
+							%(s01_signals_read)s
+							when others 			=> null;
+						end case;
+					end if;
+				end if;
+				case S01_AXI_r.r_local_address is
+					-- result calculated flag do_something2
+					%(s01_signals_rcomp_res)s
+					when others 					=> v_comb_out.rdata(31 downto 0) 	:= (others => '0');								
+				end case;
+		end case;
+		---------------------------------------------------
+		--				  RESET ASIGNATION		 	     --
+		---------------------------------------------------		
+		if S01_AXI_ARESETN = '0' then
+			v		    		:= INIT_S01_AXI_INTER;
+			v_comb_out			:= INIT_S01_AXI_COMB_OUT;
+		end if;
+		---------------------------------------------------
+		--				SIGNAL ASIGNATION			     --
+		---------------------------------------------------
+		S01_AXI_rin 	       	<= v;
+		S01_AXI_rin_comb_out	<= v_comb_out;
+		
+	end process;	
+	
+	---------------------------------------------------
+	--		   INTERNAL ARCHITECTURE SIGNALS	 	 --
+	---------------------------------------------------
+    %(s01_signals_internal)s
+	---------------------------------------------------
+	--					 OUTPUTS			 	     --
+	---------------------------------------------------		
+	S01_AXI_AWREADY				<= S01_AXI_rin_comb_out.awready;
+	S01_AXI_WREADY				<= S01_AXI_rin_comb_out.wready;
+	S01_AXI_ARREADY				<= S01_AXI_rin_comb_out.arready;
+	S01_AXI_RDATA				<= S01_AXI_rin_comb_out.rdata;
+	S01_AXI_RRESP				<= S01_AXI_rin_comb_out.rresp;
+	S01_AXI_RVALID				<= S01_AXI_rin_comb_out.rvalid;
+	S01_AXI_BRESP				<= S01_AXI_rin.bresp;
+	S01_AXI_BVALID				<= S01_AXI_rin_comb_out.bvalid;	
+	
+    ------------------------------------------------------------------------------------------
+	--                                       S00 AXIS                                       --
+	------------------------------------------------------------------------------------------
+	-- Sequential process --
+	s00_axis_seq: process(S00_AXIS_ACLK)
+	begin 		
+		if rising_edge(S00_AXIS_ACLK) then
+			S00_AXIS_r				<= S00_AXIS_rin;
+			S00_AXIS_r_comb_out		<= S00_AXIS_rin_comb_out;
+		end if;
+	end process;
+	
+	-- Combinational process --	
+	s00_axis_comb: process(	-- Bambu signals --
+							%(s00s_signals)s
+							-- internal signals --
+							S00_AXIS_r, S00_AXIS_r_comb_out,
+							-- AXI inptuts --
+							S00_AXIS_ARESETN, S00_AXIS_TVALID, S00_AXIS_TDATA, S00_AXIS_TLAST, S00_AXIS_TDEST							
+							)
+	
+		variable v									: S00_AXIS_inter;
+		variable v_comb_out							: S00_AXIS_comb_out;
 		variable w_local_address					: integer;
 		
 	begin
@@ -194,120 +875,151 @@ begin
 		-----------------------------------------------------------------
 		--				   DEFAULT VARIABLES ASIGNATION		           --
 		-----------------------------------------------------------------
-		v 											:= AXI_SLAVE_CTRL_r;		
+		v 											:= S00_AXIS_r;		
 		-----------------------------------------------------------------
 		--	 	DEFAULT COMBINATIONAL OUTPUT VARIABLES ASIGNATION      --
 		-----------------------------------------------------------------
-		v_comb_out									:= INIT_AXI_SLAVE_CTRL_comb_out;
-                %(done_start_assign)s
+		v_comb_out									:= INIT_S00_AXIS_COMB_OUT;
 		-----------------------------------------------------------------
 		--	 			DEFAULT INTERNAL VARIABLE ASIGNATION      	   --
 		-----------------------------------------------------------------		
-		w_local_address								:= to_integer(unsigned(S_AXI_AWADDR(15 downto 0)));
-		comb_S_AXI_AWVALID_S_AXI_ARVALID			:= S_AXI_AWVALID&S_AXI_ARVALID;	
-                -- Update start-stop pulses
-                %(starstoppulses)s
-                -----------------------------------------------------------------
-		--	 					 AXI LITE CTRL FSM      	   		   --
-		-----------------------------------------------------------------		
-		case AXI_SLAVE_CTRL_r.current_state is
+		w_local_address								:= to_integer(unsigned(S00_AXIS_TDEST));		
+		-----------------------------------------------------------------
+		--	 					 AXIS SLAVE CTRL FSM      	   		   --
+		-----------------------------------------------------------------
+		case S00_AXIS_r.axis_state is
 			when idle =>
-				v.bresp					:= OKAY;
-				case comb_S_AXI_AWVALID_S_AXI_ARVALID is
-					when "01" 	=> 
-						v.current_state 	:= reading;
-					when "11" 	=> 
-						v.current_state 	:= reading;
-					when "10" 	=> 
-						v.current_state 	:= writing;
-					when others	=> 
-						v.current_state 	:= idle;
-				end case;			
-			
-			when writing =>
-				v_comb_out.awready		:= S_AXI_AWVALID;
-				v_comb_out.wready		:= S_AXI_WVALID;
-				v.bresp					:= AXI_SLAVE_CTRL_r.bresp;				
-				if S_AXI_WVALID = '1' then
-					v.current_state	:= wait_resp;
-					case w_local_address is
-                        %(readinputdata)s
-						when others => null;
-					end case;
+				if S00_AXIS_TVALID = '1' then
+					v.axis_state					:= runing;
 				end if;
-				
-			when wait_resp =>
-				v_comb_out.awready		:= S_AXI_AWVALID;
-				v_comb_out.wready		:= S_AXI_WVALID;
-				v.bresp					:= AXI_SLAVE_CTRL_r.bresp;
-				v_comb_out.bvalid		:= S_AXI_BREADY;
-				if S_AXI_AWVALID = '0' then
-					v.current_state := idle;
-				else
-					if S_AXI_WVALID = '1' then
-						case w_local_address is
-                        %(readinputdata)s
-							when others => null;
-						end case;
-					else
-						v.current_state := writing;
-					end if;
-				end if;
-			
-			when reading =>
-				v_comb_out.arready		:= S_AXI_ARVALID;
-				v.bresp					:= OKAY;
-				v.r_local_address		:= to_integer(unsigned(S_AXI_ARADDR(15 downto 0)));
-				v.current_state 		:= r_complete;
-			when r_complete => 
-				v_comb_out.arready		:= S_AXI_ARVALID;
-				v_comb_out.rvalid		:= '1';
-				v.bresp					:= OKAY;
-				if S_AXI_RREADY = '1' then
-					if S_AXI_ARVALID = '0' then
-						v.current_state 	:= idle;
-					else
-						v.r_local_address	:= to_integer(unsigned(S_AXI_ARADDR(15 downto 0)));
-					end if;
-				end if;
-				case AXI_SLAVE_CTRL_r.r_local_address is
-					-- result calculated flag
-                    %(writeoutputdata)s
-					when others => v_comb_out.rdata(31 downto 0) 	:= (others => '0');								
+			when runing =>	
+				case w_local_address is
+					%(s00s_signals_running)s
+					when others => null;
 				end case;
-		end case;
+				if S00_AXIS_TLAST = '1' then
+					v.axis_state					:= idle;
+				end if;
+			when others => null;
+		end case;		
 		---------------------------------------------------
 		--				  RESET ASIGNATION		 	     --
-		---------------------------------------------------		
-		if S_AXI_ARESETN = '0' then
-			v		    			:= INIT_AXI_SLAVE_CTRL_inter;
-			v_comb_out				:= INIT_AXI_SLAVE_CTRL_comb_out;
+		---------------------------------------------------
+		if S00_AXIS_ARESETN = '0' then
+			v		    		:= INIT_S00_AXIS_INTER;
+			v_comb_out			:= INIT_S00_AXIS_COMB_OUT;
 		end if;
 		---------------------------------------------------
 		--				SIGNAL ASIGNATION			     --
 		---------------------------------------------------
-		AXI_SLAVE_CTRL_rin 	       	<= v;
-		AXI_SLAVE_CTRL_rin_comb_out	<= v_comb_out;
-		
-	end process;
-
-	----------------------------------------------------------
-	--			          OUTPUTS	 	 	    		 	--
-	----------------------------------------------------------
-        %(internalsignals)s	
-
-	---------------------------------------------------
-	--				AXI LITE SLAVE CTRL			 	 --
-	---------------------------------------------------		
-	S_AXI_AWREADY			<= AXI_SLAVE_CTRL_rin_comb_out.awready;
-	S_AXI_WREADY			<= AXI_SLAVE_CTRL_rin_comb_out.wready;
-	S_AXI_ARREADY			<= AXI_SLAVE_CTRL_rin_comb_out.arready;
-	S_AXI_RDATA				<= AXI_SLAVE_CTRL_rin_comb_out.rdata;
-	S_AXI_RRESP				<= AXI_SLAVE_CTRL_rin_comb_out.rresp;
-	S_AXI_RVALID			<= AXI_SLAVE_CTRL_rin_comb_out.rvalid;
-	S_AXI_BRESP				<= AXI_SLAVE_CTRL_rin.bresp;
-	S_AXI_BVALID			<= AXI_SLAVE_CTRL_rin_comb_out.bvalid;
+		S00_AXIS_rin 	       	<= v;
+		S00_AXIS_rin_comb_out	<= v_comb_out;	
 	
+	end process;	
+	
+	---------------------------------------------------
+	--		   INTERNAL ARCHITECTURE SIGNALS	 	 --
+	---------------------------------------------------
+    %(s00s_signals_internal)s
+    
+	---------------------------------------------------
+	--					 OUTPUTS			 	     --
+	---------------------------------------------------		
+	S00_AXIS_TREADY				<= S00_AXIS_rin_comb_out.tready;		
+	
+	------------------------------------------------------------------------------------------
+	--                                       M00 AXIS                                       --
+	------------------------------------------------------------------------------------------	
+	-- Sequential process --
+	m00_axis_seq: process(M00_AXIS_ACLK)
+	begin 		
+		if rising_edge(M00_AXIS_ACLK) then
+			M00_AXIS_r				<= M00_AXIS_rin;
+			M00_AXIS_r_comb_out		<= M00_AXIS_rin_comb_out;
+		end if;
+	end process;
+	
+	-- Combinational process --	
+	m00_axis_comb: process(	-- Bambu signals --
+							%(m00s_signals)s
+							-- internal signals --
+							M00_AXIS_r, M00_AXIS_r_comb_out,
+							-- AXI inptuts --
+							M00_AXIS_ARESETN, M00_AXIS_TREADY
+							)
+	
+		variable v									: M00_AXIS_inter;
+		variable v_comb_out							: M00_AXIS_comb_out;
+		variable r_local_address					: integer;
+		
+	begin
+	
+		-----------------------------------------------------------------
+		--				   DEFAULT VARIABLES ASIGNATION		           --
+		-----------------------------------------------------------------
+		v 											:= M00_AXIS_r;	
+		v.fifo_empty_vector							:= M00_AXIS_r.fifo_empty_vector;
+		%(m00s_signals_variables)s
+		-----------------------------------------------------------------
+		--	 	DEFAULT COMBINATIONAL OUTPUT VARIABLES ASIGNATION      --
+		-----------------------------------------------------------------
+		v_comb_out									:= INIT_M00_AXIS_COMB_OUT;
+		-----------------------------------------------------------------
+		--	 			DEFAULT INTERNAL VARIABLE ASIGNATION      	   --
+		-----------------------------------------------------------------
+		r_local_address								:= to_integer(unsigned(M00_AXIS_r.current_tid));
+		-----------------------------------------------------------------
+		--	 					 AXIS MASTER CTRL FSM      	   		   --
+		-----------------------------------------------------------------
+		case M00_AXIS_r.axis_state is
+			when idle =>
+				if M00_AXIS_TREADY = '1' then			
+					if v.fifo_empty_vector(to_integer(unsigned(M00_AXIS_r.current_tid))) = '1' then
+						v.current_tid				:= std_logic_vector(unsigned(M00_AXIS_r.current_tid) + 1);
+					else
+						v.axis_state				:= runing;
+					end if;
+				end if;					
+			when runing =>	
+				case r_local_address is
+                    %(m00s_signals_running)s
+					when others => null;
+				end case;
+				if to_integer(unsigned(M00_AXIS_r.data_counter)) = S2MM_PACKET_SIZE-1 then
+					v_comb_out.tlast				:= '1';
+					v.current_tid					:= std_logic_vector(unsigned(M00_AXIS_r.current_tid) + 1);
+					v.axis_state					:= idle;
+				end if;	
+			when others => null;
+		end case;		
+		---------------------------------------------------
+		--				  RESET ASIGNATION		 	     --
+		---------------------------------------------------		
+		if M00_AXIS_ARESETN = '0' then
+			v		    		:= INIT_M00_AXIS_INTER;
+			v_comb_out			:= INIT_M00_AXIS_COMB_OUT;
+		end if;
+	
+	---------------------------------------------------
+	--				SIGNAL ASIGNATION			     --
+	---------------------------------------------------
+	M00_AXIS_rin 	       		<= v;
+	M00_AXIS_rin_comb_out		<= v_comb_out;	
+	
+	end process;		
+	
+	---------------------------------------------------
+	--		   INTERNAL ARCHITECTURE SIGNALS	 	 --
+	---------------------------------------------------		
+    %(m00s_signals_internal)s
+    
+	---------------------------------------------------
+	--					 OUTPUTS			 	     --
+	---------------------------------------------------			
+	M00_AXIS_TVALID				<= M00_AXIS_rin_comb_out.tvalid;
+	M00_AXIS_TDATA				<= M00_AXIS_rin_comb_out.tdata;
+	M00_AXIS_TLAST				<= M00_AXIS_rin_comb_out.tlast;
+	M00_AXIS_TID				<= M00_AXIS_r.current_tid;
 	
 end rtl;'''
 
