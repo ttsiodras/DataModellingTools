@@ -475,9 +475,9 @@ class VHDLGlueGenerator(SynchronousToolGlueGeneratorGeneric[List[int], List[int]
 #endif
 
 #define LOGERRORS
-#define LOGWARNINGS
-#define LOGINFOS
-#define LOGDEBUGS
+//#define LOGWARNINGS
+//#define LOGINFOS
+//#define LOGDEBUGS
 
 #ifdef LOGERRORS
 #define LOGERROR(x...) printf(x)
