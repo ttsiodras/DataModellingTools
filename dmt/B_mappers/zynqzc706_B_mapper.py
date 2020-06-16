@@ -2065,7 +2065,15 @@ def OnFinal() -> None:
     makefile = open(vhdlBackend.dir + '/TASTE-VHDL-DESIGN/project/Makefile', 'w')
     makefile.write(vhdlTemplateZynQZC706.makefile % {'pi': msg, 'tab': '\t'})
     makefile.close()
-    
+
+    load_exec = open(vhdlBackend.dir + '/TASTE-VHDL-DESIGN/project/load_exec.sh', 'w')
+    load_exec.write(vhdlTemplateZynQZC706.load_exec)
+    load_exec.close()
+
+    programming_tcl = open(vhdlBackend.dir + '/TASTE-VHDL-DESIGN/project/programming.tcl', 'w')
+    programming_tcl.write(vhdlTemplateZynQZC706.programming_tcl)
+    programming_tcl.close()
+
     axi_support = open(vhdlBackend.dir + '/axi_support.h', 'w')
     axi_support.write(vhdlTemplateZynQZC706.axi_support)
     axi_support.close()
