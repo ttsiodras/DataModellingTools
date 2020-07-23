@@ -1,6 +1,6 @@
 .PHONY:	M2M M2C clean
 
-all:	M2M M2C SMP2
+all:	M2M M2C
 
 M2M:
 	$(MAKE) -f Makefile.M2M clean
