@@ -79,7 +79,7 @@ contact me at:
     System, Software and Technology Department
     European Space Agency
 
-    ESTEC
+    ESTEC / TEC-SWT
     Keplerlaan 1, PO Box 299
     NL-2200 AG Noordwijk, The Netherlands
     Athanasios.Tsiodras@esa.int | www.esa.int
