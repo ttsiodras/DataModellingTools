@@ -31,7 +31,7 @@ class CompleteTestingOfSQLMapperWithSQLite(AllTests, unittest.TestCase):
 class CompleteTestingOfSQLMapperWithPostgreSQL(AllTests, unittest.TestCase):
     #engine = create_engine('sqlite:///:memory:', echo=True)
     if os.getenv('CIRCLECI') is None:
-        dburi = 'postgresql+psycopg2://ubuntu:tastedb@localhost/circle_test'
+        dburi = 'postgresql+psycopg2://taste:tastedb@localhost/circle_test'
     else:
         dburi = 'postgresql+psycopg2://ubuntu:@localhost/circle_test'
     engine = create_engine(dburi, echo=False)

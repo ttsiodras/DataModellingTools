@@ -1,9 +1,12 @@
 coverage>=3.7.1
-flake8
-mypy
-pylint
+flake8==3.7.9
+mypy==0.530
+pyflakes>=1.2.3
+pylint>=1.7.0
 pytest>=2.6.3
 lxml>=3.6.0
-astroid
-pycodestyle
+astroid>=1.4.6
+pycodestyle>=2.0.0
+typing==3.5.2.2
+typing-extensions
 mypy-extensions>=0.3.0

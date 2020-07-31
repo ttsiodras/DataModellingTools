@@ -547,7 +547,7 @@ def DumpTypeDumper(
         lines.append(codeIndent + "state = self.GetState()")
         lines.append(codeIndent + "length = %s.GetLength()" % variableName)
         lines.append(codeIndent + "self.Reset(state)")
-        lines.append(codeIndent + "map(partial(emitElem, %s), range(length))" % variableName)
+        lines.append(codeIndent + "list(map(partial(emitElem, %s), range(length)))" % variableName)
         lines.append(codeIndent + 'self.Reset(state)')
         lines.append(codeIndent + 'lines.append("}")')
 
