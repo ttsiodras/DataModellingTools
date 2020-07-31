@@ -4,7 +4,7 @@ cleanDB:
 	# PostgreSQL
 	/etc/init.d/postgresql restart
 	# Since postgres takes a while to start, do this until it succeeds
-	bash -c "while true ; do echo 'drop database if exists circle_test; create database circle_test;' | psql -h 127.0.0.1 -U ubuntu postgres && break ; done"
+	bash -c "while true ; do echo 'drop database if exists circle_test; create database circle_test;' | psql -U ubuntu postgres && break ; done"
 	rm -f sql.log
 	#
 	# MySQL (is a toy - disabled related tests)
@@ -33,7 +33,7 @@ print:
 	    	echo "========" ; \
 		echo PostgreSQL Content of $$i ; \
 		echo "========" ; \
-		echo "select * from \"$$i\" " | psql -h 127.0.0.1 -U ubuntu circle_test ; \
+		echo "select * from \"$$i\" " | psql -U ubuntu circle_test ; \
 	done
 #	@for i in MyInt My2ndInt MySeq MyChoice TypeEnumerated MySuperSeq T_ARR T_ARR_indexes T_ARR_elm ; do \
 #	    	echo "========" ; \
