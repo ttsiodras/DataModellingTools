@@ -812,6 +812,8 @@ def VisitTypeAssignment(newModule: Module, xmlTypeAssignment: Element) -> Tuple[
     newNode._isArtificial = isArtificial == "True"
     name = GetAttr(xmlTypeAssignment, "Name")
     g_adaUses.setdefault(newModule._id, set()).add(name)
+    hasAcnEncDec = GetAttr(xmlType, "HasAcnEncDecFunction") or "False"
+    newNode.hasAcnEncDec = hasAcnEncDec != "False"
     return (name, newNode)
 
 
