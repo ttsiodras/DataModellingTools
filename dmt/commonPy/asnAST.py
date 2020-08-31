@@ -113,6 +113,7 @@ class AsnNode:
         self._asnFilename = asnFilename
         self._lineno = -1
         self._isArtificial = False
+        self.hasAcnEncDec = True
 
     def Location(self) -> str:
         return "file %s, line %d" % (self._asnFilename, int(self._lineno))  # pragma: no cover
