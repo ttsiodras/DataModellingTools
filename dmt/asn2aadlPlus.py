@@ -290,7 +290,12 @@ def main():
             panic("'%s' is not a file!\n" % x)
 
     aadlFile = args[-1]
-    inputFiles = [os.path.abspath(x) for x in args[:-1]]
+    inputFiles = [
+        os.path.relpath(x)
+        if 'tool-inst' not in x
+        else x
+        for x in args[:-1]
+    ]
 
     def md5(filename):
         hash_md5 = hashlib.md5()
