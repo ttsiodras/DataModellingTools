@@ -292,7 +292,7 @@ def main():
     aadlFile = args[-1]
     inputFiles = [
         os.path.relpath(x)
-        if 'tool-inst' not in x
+        if 'tool-inst' not in x and not x.startswith('/tmp')
         else x
         for x in args[:-1]
     ]
