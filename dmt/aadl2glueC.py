@@ -244,7 +244,7 @@ types). This used to cover Dumpable C/Ada Types and OG headers.'''
     if asnFile is not None:
         if not asn1SccPath:
             panic("ASN1SCC seems not installed on your system (asn1.exe not found in PATH).\n")  # pragma: no cover
-        os.system('mono "{}" -typePrefix asn1Scc {} -Ada -equal -o "{}" "{}"'
+        os.system('mono "{}" -typePrefix asn1Scc {} --target allboards -Ada -equal -o "{}" "{}"'
                   .format(asn1SccPath, extraFlags, outputDir, '" "'.join([asnFile])))
 
 
