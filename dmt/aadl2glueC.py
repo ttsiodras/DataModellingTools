@@ -244,7 +244,7 @@ types). This used to cover Dumpable C/Ada Types and OG headers.'''
     if asnFile is not None:
         if not asn1SccPath:
             panic("ASN1SCC seems not installed on your system (asn1.exe not found in PATH).\n")  # pragma: no cover
-        os.system('mono "{}" -typePrefix asn1Scc {} --target allboards -Ada -equal -o "{}" "{}"'
+        os.system('mono "{}" -typePrefix asn1Scc {} -Ada -equal -o "{}" "{}"'
                   .format(asn1SccPath, extraFlags, outputDir, '" "'.join([asnFile])))
 
 
@@ -500,6 +500,13 @@ def main() -> None:
         sys.argv.remove("-pdb")  # pragma: no cover
         import pdb  # pragma: no cover pylint: disable=wrong-import-position,wrong-import-order
         pdb.set_trace()  # pragma: no cover
+
+    use_ASN1SCC_allboards_support = "-allboards" in sys.argv
+    if use_ASN1SCC_allboards_support:
+        sys.argv.remove("-allboards")  # pragma: no cover
+        extraFlags = os.getenv("ASN1SCC_FLAGS") or ""
+        extraFlags += " --target allboards "
+        os.putenv("ASN1SCC_FLAGS", extraFlags)
 
     if "-profile" in sys.argv:
         sys.argv.remove("-profile")
