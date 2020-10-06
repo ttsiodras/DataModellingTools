@@ -89,9 +89,9 @@ def main() -> None:
     use_ASN1SCC_allboards_support = "-allboards" in sys.argv
     if use_ASN1SCC_allboards_support:
         sys.argv.remove("-allboards")  # pragma: no cover
-        extraFlags = os.getenv("ASN1SCC_FLAGS") or ""
-        extraFlags += " --target allboards "
-        os.putenv("ASN1SCC_FLAGS", extraFlags)
+        extraFlags = os.getenv("ASN1SCC_FLAGS") or ""  # pragma: no cover
+        extraFlags += " --target allboards "  # pragma: no cover
+        os.putenv("ASN1SCC_FLAGS", extraFlags)  # pragma: no cover
 
     if "-v" in sys.argv:
         import pkg_resources  # pragma: no cover
