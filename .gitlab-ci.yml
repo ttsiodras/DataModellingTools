@@ -1,5 +1,5 @@
 # image: $CI_REGISTRY_IMAGE/taste:latest
-image: dmt:latest
+image: taste-buster:latest
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
