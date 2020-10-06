@@ -93,7 +93,6 @@ def main() -> None:
         extraFlags += " --target allboards "
         os.putenv("ASN1SCC_FLAGS", extraFlags)
 
-
     if "-v" in sys.argv:
         import pkg_resources  # pragma: no cover
         version = pkg_resources.require("dmt")[0].version  # pragma: no cover
