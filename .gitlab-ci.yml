@@ -11,7 +11,7 @@ stages:
 build:
   stage: build
   script:
-    - ./configure ; pip3 install --upgrade . ; pip3 uninstall --yes typing ; LANG=C LC_ALL=C PATH=$PATH:/asn1scc make
+    - ./configure ; pip3 install --upgrade . ; pip3 uninstall --yes typing ; cd / ; wget -q -O - https://github.com/ttsiodras/asn1scc/releases/download/4.2.4.0f/asn1scc-bin-4.2.4.0f.tar.bz2 | tar jxpvf - ; cd - ; LANG=C LC_ALL=C PATH=$PATH:/asn1scc make
   # artifacts:
     # paths:
     #   - 'test/logs/*.err.txt'
