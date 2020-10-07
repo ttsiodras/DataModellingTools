@@ -506,7 +506,7 @@ def main() -> None:
         sys.argv.remove("-allboards")  # pragma: no cover
         extraFlags = os.getenv("ASN1SCC_FLAGS") or ""  # pragma: no cover
         extraFlags += " --target allboards "  # pragma: no cover
-        os.putenv("ASN1SCC_FLAGS", extraFlags)  # pragma: no cover
+        os.environ["ASN1SCC_FLAGS"] = extraFlags  # pragma: no cover
 
     if "-profile" in sys.argv:
         sys.argv.remove("-profile")
