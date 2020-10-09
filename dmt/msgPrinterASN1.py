@@ -67,7 +67,7 @@ class Printer(RecursiveMapper):
     def MapInteger(self, srcCVariable, unused, _, __, ___):
         lines = []
         lines.append('#if WORD_SIZE==8')
-        lines.append('printf("%%lld", %s);' % srcCVariable)
+        lines.append('printf("%%"PRId64, %s);' % srcCVariable)
         lines.append('#else')
         lines.append('printf("%%d", %s);' % srcCVariable)
         lines.append('#endif')
