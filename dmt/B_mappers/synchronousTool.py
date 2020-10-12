@@ -438,6 +438,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                 if encoding.lower() in ["uper", "acn"]:
                     self.C_SourceFile.write("    int errorCode;\n")
                     self.C_SourceFile.write("    STATIC BitStream strm;\n")
+                    self.C_SourceFile.write("    (void) iBufferSize;\n")
                     self.C_SourceFile.write("    BitStream_AttachBuffer(&strm, pBuffer, iBufferSize);\n\n")
                     self.C_SourceFile.write("    if (asn1Scc%s_%sDecode(&var_%s, &strm, &errorCode)) {\n" %
                                             (self.CleanNameAsToolWants(nodeTypename),
