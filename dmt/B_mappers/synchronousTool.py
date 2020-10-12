@@ -298,7 +298,10 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                     self.C_SourceFile.write("    int errorCode;\n")
                     self.C_SourceFile.write("    STATIC BitStream strm;\n\n")
                     # setup the asn1c encoder
+                    self.C_SourceFile.write("    (void)iMaxBufferSize;\n")
                     self.C_SourceFile.write("    BitStream_Init(&strm, pBuffer, iMaxBufferSize);\n")
+            else:
+                self.C_SourceFile.write("    (void)iMaxBufferSize;\n")
 
             # Write the mapping code for the message
             if self.useOSS and encoding.lower() == "uper":
@@ -446,6 +449,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                                              self.CleanNameAsToolWants(nodeTypename)))
                     self.C_SourceFile.write("        /* Decoding succeeded */\n")
                 elif encoding.lower() == "native":
+                    self.C_SourceFile.write("    (void) iBufferSize;\n")
                     self.C_SourceFile.write("    var_%s = *(asn1Scc%s *) pBuffer;\n    {\n" %
                                             (self.CleanNameAsToolWants(nodeTypename),
                                              self.CleanNameAsToolWants(nodeTypename)))
