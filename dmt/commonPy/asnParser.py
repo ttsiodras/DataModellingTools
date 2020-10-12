@@ -730,8 +730,6 @@ def CommonSeqSetChoice(
             opti = GetAttr(x, "Optional")
             bAlwaysPresent = GetAttr(x, "bAlwaysPresent")
             bAlwaysAbsent = GetAttr(x, "bAlwaysAbsent")
-            if opti and opti == "True":
-                utility.warn("OPTIONAL attribute ignored by A/B mappers (for field contained in %s,%s)" % (newModule._asnFilename, lineNo))
             enumID = GetAttr(x, "EnumID")
             myMembers.append([GetAttr(x, "VarName"), GenericFactory(newModule, GetChild(x, "Type"))])
             myMembers[-1].append(enumID)
