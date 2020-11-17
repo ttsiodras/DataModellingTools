@@ -840,7 +840,7 @@ class MapASN1ToVHDLinputassign(RecursiveMapperGeneric[str, str]):
         return lines
 
     def MapSet(self, _: str, dstVHDL: str, node: AsnSequenceOrSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
-        return self.MapSequence(_, dstVHDL, node, leafTypeDict, name2s)  # pragma: nocover
+        return self.MapSequence(_, dstVHDL, node, leafTypeDict, names)  # pragma: nocover
 
     def MapChoice(self, _: str, dstVHDL: str, node: AsnChoice, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         lines = []  # type: List[str]
@@ -899,7 +899,7 @@ class MapASN1ToVHDLinternalsignals(RecursiveMapperGeneric[str, str]):
         return lines
 
     def MapSet(self, _: str, dstVHDL: str, node: AsnSequenceOrSet, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
-        return self.MapSequence(_, dstVHDL, node, leafTypeDict, name2s)  # pragma: nocover
+        return self.MapSequence(_, dstVHDL, node, leafTypeDict, names)  # pragma: nocover
 
     def MapChoice(self, _: str, dstVHDL: str, node: AsnChoice, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         lines = []  # type: List[str]
