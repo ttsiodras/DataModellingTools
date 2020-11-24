@@ -7,11 +7,10 @@ jobs:
       - restore_cache:
           key: docker-{{ checksum "Dockerfile" }}
       - run:
-        # command: if [[ -e ~/docker/image.tar ]]; then docker load --input ~/docker/image.tar; else docker build -t dmt . && { mkdir -p ~/docker; docker save dmt > ~/docker/image.tar ; } ; fi
-          command: docker build -t dmt . && { mkdir -p ~/docker; docker save dmt > ~/docker/image.tar ; }
+          command: if [[ -e ~/docker/image.tar ]]; then docker load --input ~/docker/image.tar; else docker build -t dmt . && { mkdir -p ~/docker; docker save dmt > ~/docker/image.tar ; } ; fi
       - save_cache:
           key: docker-{{ checksum "Dockerfile" }}
           paths:
             - ~/docker
       - run:
-          command: docker run -it -v $(pwd):/root/tests dmt bash -c 'cd /root/tests ; ./configure ; pip3 uninstall dmt ; pip3 uninstall -y typing ; pip3 install --upgrade . ; LANG=C LC_ALL=C PATH=$PATH:/asn1scc make'
+          command: docker run -it -v $(pwd):/root/tests dmt bash -c 'cd /root/tests ; ./configure ; pip3 uninstall dmt ;  pip3 install --upgrade . ;pip3 uninstall -y typing ; LANG=C LC_ALL=C PATH=$PATH:/asn1scc make'
