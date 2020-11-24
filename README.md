@@ -21,6 +21,11 @@ Installation
 For using the tools, this should suffice:
 
     $ sudo apt-get install libxslt1-dev libxml2-dev zlib1g-dev python3-pip
+    $ ./configure
+    $ # Optionally, configure a Python virtual environment (via venv)
+    $ # to avoid "polluting" your system-level Python with dependencies
+    $ # you may not want.
+    # # But whether with an activated venv or not, you end with:
     $ pip3 install --user --upgrade .
 
 For developing the tools, the packaged Makefile allow for easy static-analysis
