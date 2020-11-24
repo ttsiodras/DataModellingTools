@@ -29,7 +29,7 @@ pylint:
 
 mypy:
 	@echo Performing type analysis via mypy...
-	@mypy --disallow-untyped-defs --check-untyped-defs --ignore-missing-imports ${PY_SRC} || exit 1
+	@mypy ${PY_SRC} || exit 1
 
 coverage:
 	@echo Performing coverage checks...

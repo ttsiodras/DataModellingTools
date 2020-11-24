@@ -3,7 +3,7 @@ import sys
 
 from typing import List, Union, Optional, Any, Tuple, Dict, NoReturn  # NOQA pylint: disable=unused-import
 
-from lxml import etree
+from lxml import etree  # type: ignore
 
 from .asnAST import (
     AsnBool, AsnInt, AsnReal, AsnEnumerated, AsnOctetString, AsnSequenceOf,
