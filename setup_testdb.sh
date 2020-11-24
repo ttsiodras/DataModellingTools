@@ -1,3 +1,4 @@
+sed -i 's,local.*all.*all.*,local all all trust,' /etc/postgresql/11/main/pg_hba.conf
 /etc/init.d/postgresql start
 su - postgres -c 'createuser ubuntu;'
 echo "ALTER USER ubuntu WITH PASSWORD 'tastedb';" | su - postgres -c 'psql -w'
