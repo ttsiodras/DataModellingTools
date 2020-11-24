@@ -1,0 +1,19 @@
+# image: $CI_REGISTRY_IMAGE/taste:latest
+image: dmt:latest
+
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+
+stages:
+  - build
+  - post_build
+
+build:
+  stage: build
+  script:
+    - ./configure ; pip3 install --upgrade . ; LANG=C LC_ALL=C PATH=$PATH:/asn1scc make
+  # artifacts:
+    # paths:
+    #   - 'test/logs/*.err.txt'
+    # when: on_failure
+    # expire_in: 2 weeks

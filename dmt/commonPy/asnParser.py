@@ -403,7 +403,8 @@ def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=inv
     if projectCache is not None:
         filehash = hashlib.md5()
         for each in sorted(listOfFilenames):
-            filehash.update(open(each).read().encode('utf-8'))
+            filehash.update(
+                open(each, "r", encoding="utf-8").read().encode('utf-8'))
             # also hash the file path: it is used in the AST in XML, so it is
             # not enough to hash the content of the ASN.1 files, as two sets
             # of files may have the same hash, that would lead to different XML
@@ -811,6 +812,8 @@ def VisitTypeAssignment(newModule: Module, xmlTypeAssignment: Element) -> Tuple[
     newNode._isArtificial = isArtificial == "True"
     name = GetAttr(xmlTypeAssignment, "Name")
     g_adaUses.setdefault(newModule._id, set()).add(name)
+    hasAcnEncDec = GetAttr(xmlType, "HasAcnEncDecFunction") or "False"
+    newNode.hasAcnEncDec = hasAcnEncDec != "False"
     return (name, newNode)
 
 

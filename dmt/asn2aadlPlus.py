@@ -121,7 +121,7 @@ def calculateForNativeAndASN1SCC(absASN1SCCpath, autosrc, names, inputFiles):
         cleaned = cleanNameAsAsn1cWants(asnTypename)
         msgEncoderFile.write('static asn1Scc%s sizeof_%s;\n' % (cleaned, cleaned))
         msgEncoderFile.write('char bytesEncoding_%s[asn1Scc%s_REQUIRED_BYTES_FOR_ENCODING];\n' % (cleaned, cleaned))
-        if acn != "":
+        if acn != "" and node.hasAcnEncDec:
             msgEncoderFile.write('char bytesAcnEncoding_%s[asn1Scc%s_REQUIRED_BYTES_FOR_ACN_ENCODING];\n' % (cleaned, cleaned))
     msgEncoderFile.close()
 
@@ -290,7 +290,12 @@ def main():
             panic("'%s' is not a file!\n" % x)
 
     aadlFile = args[-1]
-    inputFiles = [os.path.abspath(x) for x in args[:-1]]
+    inputFiles = [
+        os.path.relpath(x)
+        if 'tool-inst' not in x and not x.startswith('/tmp')
+        else x
+        for x in args[:-1]
+    ]
 
     def md5(filename):
         hash_md5 = hashlib.md5()
@@ -333,7 +338,7 @@ def main():
 
     # Parse the ASN.1 files (skip the ACN ones)
     asnFiles = [x for x in inputFiles if not x.lower().endswith('.acn')]
-    asnParser.ParseAsnFileList(asnFiles)
+    asnParser.ParseAsnFileList(inputFiles)
     autosrc = tempfile.mkdtemp(".asn1c")
     inform("Created temporary directory (%s) for auto-generated files...", autosrc)
     absPathOfAADLfile = os.path.abspath(aadlFile)
