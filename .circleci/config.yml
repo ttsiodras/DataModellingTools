@@ -13,4 +13,4 @@ jobs:
           paths:
             - ~/docker
       - run:
-          command: docker run -it -v $(pwd):/root/tests dmt bash -c 'cd /root/tests ; ./configure ; pip3 uninstall dmt ;  pip3 install --upgrade . ;pip3 uninstall -y typing ; LANG=C LC_ALL=C PATH=$PATH:/asn1scc make'
+          command: docker run -it -v $(pwd):/root/tests dmt bash -c 'cd /root/tests ; ./configure ; pip3 uninstall dmt ;  pip3 install --upgrade . ;pip3 uninstall -y typing ; LANG=C LC_ALL=C CIRCLECI=1 PATH=$PATH:/asn1scc make'
