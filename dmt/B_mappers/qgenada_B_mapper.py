@@ -48,7 +48,7 @@ from ..commonPy.asnAST import AsnBasicNode, AsnSequence, AsnSet, AsnEnumerated, 
 from ..commonPy.asnParser import AST_Lookup, AST_Leaftypes
 
 isAsynchronous = True
-cBackend = None
+cBackend: c_B_mapper.C_GlueGenerator
 
 
 # All the ada B mapper is now Obsolete, we are using ASN1SCC for Dumpables

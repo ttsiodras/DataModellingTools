@@ -59,7 +59,6 @@ from .synchronousTool import SynchronousToolGlueGeneratorGeneric
 
 
 isAsynchronous = False
-vhdlBackend = None
 
 
 def Version() -> None:
@@ -76,7 +75,6 @@ def RegistersAllocated(node_or_str: Union[str, AsnNode]) -> int:
         node = names[node_or_str]  # type: AsnNode
     else:
         node = node_or_str
-    retValue = None
     if isinstance(node, AsnBasicNode):
         retValue = 0
         realLeafType = asnParser.g_leafTypeDict[node._leafType]
@@ -976,6 +974,9 @@ def Common(nodeTypename: str, node: AsnNode, subProgram: ApLevelContainer, unuse
     VHDL_Circuit.currentCircuit.AddParam(nodeTypename, node, param, leafTypeDict, names)
 
 
+vhdlBackend: VHDLGlueGenerator
+
+
 def OnStartup(modelingLanguage: str, asnFile: str, subProgram: ApLevelContainer, subProgramImplementation: str, outputDir: str, maybeFVname: str, useOSS: bool) -> None:
     global vhdlBackend
     vhdlBackend = VHDLGlueGenerator()
@@ -1026,6 +1027,7 @@ def AddToStr(s: str, d: str) -> None:
 
 
 def OnFinal() -> None:
+    assert vhdlBackend.dir
     circuitMapper = MapASN1ToVHDLCircuit()
     ioRegisterMapper = MapASN1ToVHDLregisters()
     readinputdataMapper = MapASN1ToVHDLreadinputdata()

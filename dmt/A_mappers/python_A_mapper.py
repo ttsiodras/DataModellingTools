@@ -8,7 +8,7 @@
 import re
 import os
 
-from typing import Union, List  # NOQA pylint: disable=unused-import
+from typing import Union, List, IO, Any  # NOQA pylint: disable=unused-import
 
 from ..commonPy import asnParser
 from ..commonPy.utility import panic, inform
@@ -21,11 +21,11 @@ from ..commonPy.asnParser import AST_Lookup, AST_Leaftypes
 from ..commonPy.cleanupNodes import SetOfBadTypenames
 
 # The Python file written to
-g_outputFile = None
+g_outputFile: IO[Any]
 
 # The SETers and GETers files
-g_outputGetSetH = None
-g_outputGetSetC = None
+g_outputGetSetH: IO[Any]
+g_outputGetSetC: IO[Any]
 
 g_bHasStartupRunOnce = False
 
@@ -547,7 +547,7 @@ def DumpTypeDumper(
         lines.append(codeIndent + "state = self.GetState()")
         lines.append(codeIndent + "length = %s.GetLength()" % variableName)
         lines.append(codeIndent + "self.Reset(state)")
-        lines.append(codeIndent + "map(partial(emitElem, %s), range(length))" % variableName)
+        lines.append(codeIndent + "list(map(partial(emitElem, %s), range(length)))" % variableName)
         lines.append(codeIndent + 'self.Reset(state)')
         lines.append(codeIndent + 'lines.append("}")')
 

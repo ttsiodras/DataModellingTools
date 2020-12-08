@@ -99,14 +99,14 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
 
     def __init__(self) -> None:
         # The files written to
-        self.C_HeaderFile = None  # type: IO[Any]
-        self.C_SourceFile = None  # type: IO[Any]
-        self.ADA_HeaderFile = None  # type: IO[Any]
-        self.ADA_SourceFile = None  # type: IO[Any]
+        self.C_HeaderFile: IO[Any]
+        self.C_SourceFile: IO[Any]
+        self.ADA_HeaderFile: IO[Any]
+        self.ADA_SourceFile: IO[Any]
         self.asn_name = ""
         self.supportedEncodings = ['native', 'uper', 'acn']
-        self.dir = None  # type: str
-        self.useOSS = None  # type: bool
+        self.dir: str
+        self.useOSS: bool
 
     def OnStartup(self,
                   modelingLanguage: str,
@@ -199,9 +199,12 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
             self.C_SourceFile.write("#ifdef __unix__\n")
             self.C_SourceFile.write("#include <stdio.h>\n")
             self.C_SourceFile.write("#include <string.h>\n\n")
-            self.C_SourceFile.write("#include <assert.h>\n\n")
-            self.C_SourceFile.write("#endif\n")
+            self.C_SourceFile.write("#include <assert.h>\n")
+            self.C_SourceFile.write("#endif\n\n")
 
+            self.C_SourceFile.write("#ifndef STATIC\n")
+            self.C_SourceFile.write("#define STATIC\n")
+            self.C_SourceFile.write("#endif\n\n")
             self.C_SourceFile.write("#include \"%s\"\n" % outputCheaderFilename)
 
             self.HeadersOnStartup(modelingLanguage, asnFile, subProgram, subProgramImplementation, outputDir, maybeFVname)

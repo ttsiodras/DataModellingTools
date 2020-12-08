@@ -1,5 +1,5 @@
 PY_SRC:=$(wildcard dmt/asn2dataModel.py dmt/aadl2glueC.py dmt/smp2asn.py dmt/*mappers/[a-zA-Z]*py dmt/commonPy/[a-zA-Z]*py)
-PY_SRC:=$(filter-out dmt/B_mappers/antlr.main.py dmt/A_mappers/Stubs.py, ${PY_SRC})
+PY_SRC:=$(filter-out dmt/B_mappers/antlr.main.py dmt/A_mappers/Stubs.py dmt/B_mappers/micropython_async_B_mapper.py dmt/commonPy/commonSMP2.py, ${PY_SRC})
 
 # Python3.5 includes an older version of typing, which by default has priority over
 # the one installed in $HOME/.local via setup.py.
@@ -25,11 +25,11 @@ flake8:
 
 pylint:
 	@echo Performing static analysis via pylint...
-	@pylint --disable=I --rcfile=pylint.cfg ${PY_SRC}  | grep -v '^$$' | sed -n '/^Report/q;p'
+	@pylint --disable=I --rcfile=pylint.cfg ${PY_SRC}
 
 mypy:
 	@echo Performing type analysis via mypy...
-	@mypy --disallow-untyped-defs --check-untyped-defs --ignore-missing-imports ${PY_SRC} || exit 1
+	@mypy ${PY_SRC} || exit 1
 
 coverage:
 	@echo Performing coverage checks...

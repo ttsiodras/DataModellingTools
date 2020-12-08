@@ -403,7 +403,8 @@ def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=inv
     if projectCache is not None:
         filehash = hashlib.md5()
         for each in sorted(listOfFilenames):
-            filehash.update(open(each).read().encode('utf-8'))
+            filehash.update(
+                open(each, "r", encoding="utf-8").read().encode('utf-8'))
             # also hash the file path: it is used in the AST in XML, so it is
             # not enough to hash the content of the ASN.1 files, as two sets
             # of files may have the same hash, that would lead to different XML
@@ -543,11 +544,18 @@ def GetAttr(node: Element, attrName: str) -> Optional[Any]:
         return node._attrs[attrName]
 
 
-def GetChild(node: Element, childName: str) -> Optional[Element]:
+def GetAttrCertainly(node: Element, attrName: str) -> Any:
+    if attrName not in list(node._attrs.keys()):
+        assert False
+    return node._attrs[attrName]
+
+
+def GetChild(node: Element, childName: str) -> Element:
     for x in node._children:
         if x._name == childName:
             return x
-    return None  # pragma: no cover
+    utility.panic(
+        "GetChild: No child with name %s" % childName)  # pragma: no cover
 
 
 class Pretty:
@@ -585,12 +593,12 @@ U = TypeVar('U', int, float)
 
 def GetRange(newModule: Module, lineNo: int, nodeWithMinAndMax: Element, valueType: Type[U]) -> Tuple[U, U]:
     try:
-        mmin = GetAttr(nodeWithMinAndMax, "Min")
+        mmin = GetAttrCertainly(nodeWithMinAndMax, "Min")
         # rangel = ( mmin == "MIN" ) and -2147483648L or valueType(mmin)
         if mmin == "MIN":
             utility.panic("You missed a range specification, or used MIN/MAX (line %s)" % lineNo)  # pragma: no cover
         rangel = valueType(mmin)
-        mmax = GetAttr(nodeWithMinAndMax, "Max")
+        mmax = GetAttrCertainly(nodeWithMinAndMax, "Max")
         # rangeh = ( mmax == "MAX" ) and 2147483647L or valueType(mmax)
         if mmax == "MAX":
             utility.panic("You missed a range specification, or used MIN/MAX (line %s)" % lineNo)  # pragma: no cover
@@ -658,24 +666,27 @@ def CreateNumericString(newModule: Module, lineNo: int, xmlNumericStringNode: El
     return CreateOctetString(newModule, lineNo, xmlNumericStringNode)  # pragma: no cover
 
 
-def getIntOrFloatOrNone(d: str) -> Union[int, float, None]:
+def getIntOrFloatOrNone(d: Optional[str]) -> Union[int, float, None]:
     i = f = None
     try:
-        i = int(d)
-        return i
+        if d is not None:
+            i = int(d)
+            return i
     except:
         try:
-            f = float(d)
-            return f
+            if d is not None:
+                f = float(d)
+                return f
         except:
             return None
+    return None
 
 
 def CreateReference(newModule: Module, lineNo: int, xmlReferenceNode: Element) -> AsnMetaType:
     return AsnMetaType(
         asnFilename=newModule._asnFilename,
         lineno=lineNo,
-        containedType=GetAttr(xmlReferenceNode, "ReferencedTypeName"),
+        containedType=GetAttrCertainly(xmlReferenceNode, "ReferencedTypeName"),
         Min=getIntOrFloatOrNone(GetAttr(xmlReferenceNode, "Min")),
         Max=getIntOrFloatOrNone(GetAttr(xmlReferenceNode, "Max")))
 
@@ -786,7 +797,7 @@ def GenericFactory(newModule: Module, xmlType: Element) -> AsnNode:
         "SetType": CreateSet,
         "ChoiceType": CreateChoice
     }  # type: Dict[str, Callable[[Module, int, Element], AsnNode]]
-    lineNo = GetAttr(xmlType, "Line")
+    lineNo = GetAttrCertainly(xmlType, "Line")
     global g_lineno
     g_lineno = lineNo
     if len(xmlType._children) == 0:  # pylint: disable=len-as-condition
@@ -809,15 +820,17 @@ def VisitTypeAssignment(newModule: Module, xmlTypeAssignment: Element) -> Tuple[
     if isArtificial is None:
         utility.panic("You are using an older version of ASN1SCC - please upgrade.")
     newNode._isArtificial = isArtificial == "True"
-    name = GetAttr(xmlTypeAssignment, "Name")
+    name = GetAttrCertainly(xmlTypeAssignment, "Name")
     g_adaUses.setdefault(newModule._id, set()).add(name)
+    hasAcnEncDec = GetAttr(xmlType, "HasAcnEncDecFunction") or "False"
+    newNode.hasAcnEncDec = hasAcnEncDec != "False"
     return (name, newNode)
 
 
 def VisitAsn1Module(xmlAsn1File: Element, xmlModule: Element, modules: List[Module]) -> None:  # pylint: disable=invalid-sequence-index
     newModule = Module()
-    newModule._id = GetAttr(xmlModule, "ID")
-    newModule._asnFilename = GetAttr(xmlAsn1File, "FileName")
+    newModule._id = GetAttrCertainly(xmlModule, "ID")
+    newModule._asnFilename = GetAttrCertainly(xmlAsn1File, "FileName")
     newModule._exportedTypes = VisitAll(
         GetChild(xmlModule, "ExportedTypes"), "ExportedType",
         lambda x: GetAttr(x, "Name"))
@@ -902,8 +915,8 @@ def PrintType(f: IO[Any], xmlType: Element, indent: str, nameCleaner: Callable[[
         f.write('BOOLEAN')
     elif realType._name == "IntegerType":
         f.write('INTEGER')
-        mmin = GetAttr(realType, "Min")
-        mmax = GetAttr(realType, "Max")
+        mmin = GetAttrCertainly(realType, "Min")
+        mmax = GetAttrCertainly(realType, "Max")
         f.write(' (%s .. %s)' % (mmin, mmax))
     elif realType._name == "RealType":
         f.write('REAL')
@@ -914,11 +927,11 @@ def PrintType(f: IO[Any], xmlType: Element, indent: str, nameCleaner: Callable[[
         utility.panic("BIT STRINGs are not supported, use SEQUENCE OF BOOLEAN")  # pragma: no cover
     elif realType._name == "OctetStringType" or realType._name == "IA5StringType" or realType._name == "NumericStringType":
         f.write('OCTET STRING')
-        mmin = GetAttr(realType, "Min")
-        mmax = GetAttr(realType, "Max")
+        mmin = GetAttrCertainly(realType, "Min")
+        mmax = GetAttrCertainly(realType, "Max")
         f.write(' (SIZE (%s .. %s))' % (mmin, mmax))
     elif realType._name == "ReferenceType":
-        f.write(nameCleaner(GetAttr(realType, "ReferencedTypeName")))
+        f.write(nameCleaner(GetAttrCertainly(realType, "ReferencedTypeName")))
     elif realType._name == "EnumeratedType":
         f.write('ENUMERATED {\n')
         options = []
@@ -927,9 +940,9 @@ def PrintType(f: IO[Any], xmlType: Element, indent: str, nameCleaner: Callable[[
             options.append(x)
         VisitAll(realType, "EnumValue", addNewOption)
         if options:
-            f.write(indent + '    ' + nameCleaner(GetAttr(options[0], "StringValue")) + "(" + GetAttr(options[0], "IntValue") + ")")
+            f.write(indent + '    ' + nameCleaner(GetAttrCertainly(options[0], "StringValue")) + "(" + GetAttrCertainly(options[0], "IntValue") + ")")
             for otherOptions in options[1:]:
-                f.write(',\n' + indent + '    ' + nameCleaner(GetAttr(otherOptions, "StringValue")) + "(" + GetAttr(otherOptions, "IntValue") + ")")
+                f.write(',\n' + indent + '    ' + nameCleaner(GetAttrCertainly(otherOptions, "StringValue")) + "(" + GetAttrCertainly(otherOptions, "IntValue") + ")")
         f.write('\n' + indent + '}')
     elif realType._name == "SequenceType" or realType._name == "SetType":
         if realType._name == "SequenceType":
@@ -937,7 +950,7 @@ def PrintType(f: IO[Any], xmlType: Element, indent: str, nameCleaner: Callable[[
         else:
             f.write('SET {\n')
         if len(realType._children) > 0:  # pylint: disable=len-as-condition
-            f.write(indent + '    ' + nameCleaner(GetAttr(realType._children[0], "VarName")) + "\t")
+            f.write(indent + '    ' + nameCleaner(GetAttrCertainly(realType._children[0], "VarName")) + "\t")
             firstChildOptional = GetAttr(realType._children[0], "Optional") == "True"
             if len(realType._children[0]._children) == 0:  # pylint: disable=len-as-condition
                 utility.panic("AST inconsistency: len(realType._children[0]._children) = 0\nContact ESA")  # pragma: no cover
@@ -945,7 +958,7 @@ def PrintType(f: IO[Any], xmlType: Element, indent: str, nameCleaner: Callable[[
             if firstChildOptional:
                 f.write(' OPTIONAL')
             for sequenceOrSetChild in realType._children[1:]:
-                f.write(",\n" + indent + '    ' + nameCleaner(GetAttr(sequenceOrSetChild, "VarName")) + "\t")
+                f.write(",\n" + indent + '    ' + nameCleaner(GetAttrCertainly(sequenceOrSetChild, "VarName")) + "\t")
                 childOptional = GetAttr(sequenceOrSetChild, "Optional") == "True"
                 if len(sequenceOrSetChild._children) == 0:  # pylint: disable=len-as-condition
                     utility.panic("AST inconsistency: len(sequenceOrSetChild._children) = 0\nContact ESA")  # pragma: no cover
@@ -958,12 +971,12 @@ def PrintType(f: IO[Any], xmlType: Element, indent: str, nameCleaner: Callable[[
     elif realType._name == "ChoiceType":
         f.write('CHOICE {\n')
         if len(realType._children) > 0:  # pylint: disable=len-as-condition
-            f.write(indent + '    ' + nameCleaner(GetAttr(realType._children[0], "VarName")) + "\t")
+            f.write(indent + '    ' + nameCleaner(GetAttrCertainly(realType._children[0], "VarName")) + "\t")
             if len(realType._children[0]._children) == 0:  # pylint: disable=len-as-condition
                 utility.panic("AST inconsistency: len(realType._children[0]._children) = 0\nContact ESA")  # pragma: no cover
             PrintType(f, realType._children[0]._children[0], indent + "    ", nameCleaner)  # the contained type of the first child
             for choiceChild in realType._children[1:]:
-                f.write(",\n" + indent + '    ' + nameCleaner(GetAttr(choiceChild, "VarName")) + "\t")
+                f.write(",\n" + indent + '    ' + nameCleaner(GetAttrCertainly(choiceChild, "VarName")) + "\t")
                 if len(choiceChild._children) == 0:  # pylint: disable=len-as-condition
                     utility.panic("AST inconsistency: len(choiceChild._children) = 0\nContact ESA")  # pragma: no cover
                 PrintType(f, choiceChild._children[0], indent + "    ", nameCleaner)  # the contained type
@@ -993,6 +1006,8 @@ def PrintType(f: IO[Any], xmlType: Element, indent: str, nameCleaner: Callable[[
 
 
 def PrintGrammarFromAST(f: IO[Any], nameCleaner: Callable[[str], str] = SimpleCleaner) -> None:
+    if g_xmlASTrootNode is None:
+        return
     ourtypeAssignments = []
     VisitAll(
         g_xmlASTrootNode._children[0], "Asn1File",
@@ -1000,7 +1015,7 @@ def PrintGrammarFromAST(f: IO[Any], nameCleaner: Callable[[str], str] = SimpleCl
                            lambda y: ourtypeAssignments.append((x, y))))
 
     for a, t in ourtypeAssignments:
-        f.write("-- " + GetAttr(a, "FileName") + "\n%s ::= " % nameCleaner(GetAttr(t, "Name")))
+        f.write("-- " + GetAttrCertainly(a, "FileName") + "\n%s ::= " % nameCleaner(GetAttrCertainly(t, "Name")))
         typeChild = GetChild(t, "Type")
         if typeChild:
             PrintType(f, typeChild, '', nameCleaner)

@@ -35,11 +35,11 @@ from ..commonPy.utility import panic, warn
 from ..commonPy.cleanupNodes import SetOfBadTypenames
 from ..commonPy.asnParser import AST_Leaftypes
 
-g_sqlOutput = None  # type: IO[Any]
+g_sqlOutput: IO[Any]
 g_innerTypes = set()  # type: Set[str]
 g_uniqueStringOfASN1files = ""
 g_outputDir = "."
-g_asnFiles = None
+g_asnFiles: List[str]
 
 
 # ====== Dummy stubs =====

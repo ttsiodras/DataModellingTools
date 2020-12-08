@@ -101,7 +101,6 @@ from ..commonPy.recursiveMapper import RecursiveMapper
 from .asynchronousTool import ASynchronousToolGlueGenerator
 
 isAsynchronous = True
-ogBackend = None
 
 
 # noinspection PyListCreation
@@ -799,6 +798,9 @@ class OG_GlueGenerator(ASynchronousToolGlueGenerator):
         # fileOutHeader.write(
         #     "#define DECODE_%s(pBuffer, iBufferSize, pSdlVar) DECODE_UPER_%s(pBuffer, iBufferSize, pSdlVar)\n\n" %
         #     (self.CleanNameAsToolWants(nodeTypename), self.CleanNameAsToolWants(nodeTypename)))
+
+
+ogBackend: OG_GlueGenerator
 
 
 def OnStartup(modelingLanguage: str, asnFile: str, outputDir: str, maybeFVname: str, useOSS: bool) -> None:

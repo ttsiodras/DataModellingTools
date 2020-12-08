@@ -81,6 +81,8 @@ but with an extra call to OnFinal at the end.
 import os
 import sys
 import hashlib
+import pickle
+import tempfile
 from distutils import spawn
 
 from typing import cast, Optional, Dict, List, Tuple, Set, Any  # NOQA pylint: disable=unused-import
@@ -156,8 +158,8 @@ of each SUBPROGRAM param.'''
             except:
                 panic("The configured cache folder:\n\n\t" + projectCache +
                       "\n\n...is not there!\n")
-    cachedModelExists = False
     aadlASTcache = None
+    astInfo = None
     if projectCache is not None:
         filehash = hashlib.md5()
         for each in sorted(sys.argv[1:]):
@@ -169,15 +171,10 @@ of each SUBPROGRAM param.'''
             print("[DMT] No cached AADL model found for",
                   ",".join(sys.argv[1:]))
         else:
-            cachedModelExists = True
             print("[DMT] Reusing cached AADL model for",
                   ",".join(sys.argv[1:]))
-
-    import pickle
-    if cachedModelExists:
-        astInfo = pickle.load(open(aadlASTcache, 'rb'), fix_imports=False)
-    else:
-        import tempfile
+            astInfo = pickle.load(open(aadlASTcache, 'rb'), fix_imports=False)
+    if astInfo is None:
         f = tempfile.NamedTemporaryFile(delete=False)
         astFile = f.name
         f.close()
@@ -233,7 +230,7 @@ of each SUBPROGRAM param.'''
         panic(str(e))
 
 
-def SpecialCodes(asnFile: str) -> None:
+def SpecialCodes(asnFile: Optional[str]) -> None:
     '''This function handles the code generations needs that reside outside
 the scope of individual parameters (e.g. it needs access to all ASN.1
 types). This used to cover Dumpable C/Ada Types and OG headers.'''
@@ -403,7 +400,7 @@ def ProcessAsync(  # pylint: disable=dangerous-default-value
 
 def ProcessCustomBackends(
         # Taking list of tuples made of (spName, sp_impl, language, maybeFVname)
-        asnFile: str,
+        asnFile: Optional[str],
         useOSS: bool,
         SystemsAndImplementations: List[Tuple[str, str, str, str]]) -> None:
 
@@ -449,6 +446,10 @@ def ProcessCustomBackends(
         if lang.lower() == "vhdl":
             workedOnVHDL = True  # pragma: no cover
         inform("Creating %s for %s.%s", lang.upper(), sp._id, sp_impl)
+
+        # Necessary for mypy, but guaranteed by the check above for empty sp._params.
+        assert asnFile is not None
+
         for backend in getCustomBackends(lang):
             backend.OnStartup(lang, asnFile, sp, sp_impl, commonPy.configMT.outputDir, maybeFVname, useOSS)
         for param in sp._params:
@@ -580,16 +581,16 @@ def main() -> None:
             uniqueDataFiles[param._signal._asnFilename].setdefault(sp._language, [])
             uniqueDataFiles[param._signal._asnFilename][sp._language].append(sp)
 
-    asn1files = list(uniqueDataFiles.keys())
     asnFile = None  # type: Optional[str]
+    asn1files = list(uniqueDataFiles.keys())
     if len(asn1files) == 1:
         asnFile = asn1files[0]
+        inform("Checking that all base nodes have mandatory ranges set in %s..." % asnFile)
         commonPy.asnParser.ParseAsnFileList(asn1files)
     elif asn1files:
         panic("There appear to be more than one ASN.1 files referenced (%s)..." % str(asn1files))
 
     if asnFile is not None:
-        inform("Checking that all base nodes have mandatory ranges set in %s..." % asnFile)
         names = commonPy.asnParser.g_names
         for node in names.values():
             verify.VerifyRanges(node, names)
@@ -644,6 +645,9 @@ def main() -> None:
         if modelingLanguage.lower() in ["gui_ri", "gui_pi", "vhdl", "rhapsody"]:
             modelingLanguage = "C"
 
+        # Necessary for mypy, but guaranteed by the check above for empty sp._params.
+        assert asnFile is not None
+
         if modelingLanguage in async_languages:
             m = ProcessAsync(modelingLanguage, asnFile, sp, maybeFVname, useOSS, badTypes)
             asynchronousBackends.add(m)
@@ -652,7 +656,9 @@ def main() -> None:
 
     # SystemsAndImplementation loop completed - time to call OnShutdown ONCE for each async backend that we loaded
     for asyncBackend in asynchronousBackends:
-        asyncBackend.OnShutdown(modelingLanguage, asnFile, maybeFVname)
+        # Appeasing mypy: asnFile can be None here, so I checked all
+        # B mappers - no-one depends on a None value for the asnFile.
+        asyncBackend.OnShutdown(modelingLanguage, '' if not asnFile else asnFile, maybeFVname)
 
     ProcessCustomBackends(asnFile, useOSS, SystemsAndImplementations)
 

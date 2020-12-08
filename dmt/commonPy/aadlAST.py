@@ -198,7 +198,7 @@ class ApLevelContainer:
         self._id = iid
         self._params = []  # type: List[Param]
         self._connections = []  # type: List[Connection]
-        self._language = None  # type: str
+        self._language: str
 
     def AddConnection(self, srcUniquePortId: UniquePortIdentifier, destUniquePortId: UniquePortIdentifier) -> None:
         if srcUniquePortId._componentId is None:
