@@ -52,6 +52,7 @@ import os
 import sys
 import copy
 import tempfile
+import time
 import re
 from distutils import spawn
 import hashlib
