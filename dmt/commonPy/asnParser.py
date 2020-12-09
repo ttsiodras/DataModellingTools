@@ -398,61 +398,70 @@ def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=inv
         except:
             utility.panic(
                 "The configured cache folder:\n\n\t" + projectCache + "\n\n...is not there!\n")
-    xmlAST = None
-    someFilesHaveChanged = False
-    if projectCache is not None:
-        filehash = hashlib.md5()
-        for each in sorted(listOfFilenames):
-            filehash.update(
-                open(each, "r", encoding="utf-8").read().encode('utf-8'))
-            # also hash the file path: it is used in the AST in XML, so it is
-            # not enough to hash the content of the ASN.1 files, as two sets
-            # of files may have the same hash, that would lead to different XML
-            # content.
-            filehash.update(each.encode('utf-8'))
-        newHash = filehash.hexdigest()
-        # set the name of the XML files containing the dumped ASTs
-        xmlAST = projectCache + os.sep + newHash + "_ast_v4.xml"
-        xmlAST2 = projectCache + os.sep + newHash + "_ast_v1.xml"
-        if not os.path.exists(xmlAST) or not os.path.exists(xmlAST2):
 
+    # To avoid race conditions from multiple processes spawning ASN1SCC at the same time,
+    # enforce mutual exclusion via locking - using an atomic syscall:
+    while True:
+        try:
+            os.mkdir("/tmp/onlyOneAsn1Scc")
+        except:
+            time.sleep(1)
+
+    try:
+        xmlAST = None
+        someFilesHaveChanged = False
+        if projectCache is not None:
+            filehash = hashlib.md5()
+            for each in sorted(listOfFilenames):
+                filehash.update(
+                    open(each, "r", encoding="utf-8").read().encode('utf-8'))
+                # also hash the file path: it is used in the AST in XML, so it is
+                # not enough to hash the content of the ASN.1 files, as two sets
+                # of files may have the same hash, that would lead to different XML
+                # content.
+                filehash.update(each.encode('utf-8'))
+            newHash = filehash.hexdigest()
+            # set the name of the XML files containing the dumped ASTs
+            xmlAST = projectCache + os.sep + newHash + "_ast_v4.xml"
+            xmlAST2 = projectCache + os.sep + newHash + "_ast_v1.xml"
+            if not os.path.exists(xmlAST) or not os.path.exists(xmlAST2):
+
+                someFilesHaveChanged = True
+                print("[DMT] No cached model found for", ",".join(listOfFilenames))
+        else:
+            # no projectCache set, so xmlAST is set to None
             someFilesHaveChanged = True
-            print("[DMT] No cached model found for", ",".join(listOfFilenames))
-    else:
-        # no projectCache set, so xmlAST is set to None
-        someFilesHaveChanged = True
-    if not someFilesHaveChanged:
-        print("[DMT] Reusing cached ASN.1 AST for ", ",".join(listOfFilenames))
+        if not someFilesHaveChanged:
+            print("[DMT] Reusing cached ASN.1 AST for ", ",".join(listOfFilenames))
 
-    if not xmlAST:
-        (dummy, xmlAST) = tempfile.mkstemp()
-        os.fdopen(dummy).close()
+        if not xmlAST:
+            (dummy, xmlAST) = tempfile.mkstemp()
+            os.fdopen(dummy).close()
 
-    if someFilesHaveChanged:
-        asn1SccPath = spawn.find_executable('asn1.exe')
-        if asn1SccPath is None:
-            utility.panic("ASN1SCC seems not installed on your system (asn1.exe not found in PATH).\n")
-        asn1SccDir = os.path.dirname(os.path.abspath(asn1SccPath))
-        spawnResult = os.system("mono \"" + asn1SccPath + "\" -customStg \"" + asn1SccDir + "/xml.stg:" + xmlAST + "\" -typePrefix asn1Scc -fp AUTO -customStgAstVersion 4 \"" + "\" \"".join(listOfFilenames) + "\"")
-        if spawnResult != 0:
-            errCode = spawnResult / 256
-            if errCode == 1:
-                utility.panic("ASN1SCC reported syntax errors. Aborting...")
-            elif errCode == 2:
-                utility.panic("ASN1SCC reported semantic errors (or mono failed). Aborting...")
-            elif errCode == 3:
-                utility.panic("ASN1SCC reported internal error. Contact ESA with this input. Aborting...")
-            elif errCode == 4:
-                utility.panic("ASN1SCC reported usage error. Aborting...")
-            else:
-                utility.panic("ASN1SCC generic error. Contact ESA with this input. Aborting...")
-    ParseASN1SCC_AST(xmlAST)
-    if projectCache is None:
-        os.unlink(xmlAST)
-    g_names.update(g_names)
-    g_leafTypeDict.update(g_leafTypeDict)
-    g_checkedSoFarForKeywords.update(g_checkedSoFarForKeywords)
-    g_typesOfFile.update(g_typesOfFile)
+        if someFilesHaveChanged:
+            asn1SccPath = spawn.find_executable('asn1.exe')
+            if asn1SccPath is None:
+                utility.panic("ASN1SCC seems not installed on your system (asn1.exe not found in PATH).\n")
+            asn1SccDir = os.path.dirname(os.path.abspath(asn1SccPath))
+            spawnResult = os.system("mono \"" + asn1SccPath + "\" -customStg \"" + asn1SccDir + "/xml.stg:" + xmlAST + "\" -typePrefix asn1Scc -fp AUTO -customStgAstVersion 4 \"" + "\" \"".join(listOfFilenames) + "\"")
+            if spawnResult != 0:
+                errCode = spawnResult / 256
+                if errCode == 1:
+                    utility.panic("ASN1SCC reported syntax errors. Aborting...")
+                elif errCode == 2:
+                    utility.panic("ASN1SCC reported semantic errors (or mono failed). Aborting...")
+                elif errCode == 3:
+                    utility.panic("ASN1SCC reported internal error. Contact ESA with this input. Aborting...")
+                elif errCode == 4:
+                    utility.panic("ASN1SCC reported usage error. Aborting...")
+                else:
+                    utility.panic("ASN1SCC generic error. Contact ESA with this input. Aborting...")
+        ParseASN1SCC_AST(xmlAST)
+        if projectCache is None:
+            os.unlink(xmlAST)
+
+    finally:
+        os.rmdir("/tmp/onlyOneAsn1Scc")
 
 
 def Dump() -> None:
