@@ -405,6 +405,7 @@ def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=inv
     while True:
         try:
             os.mkdir("/tmp/onlyOneAsn1Scc")
+            break
         except:
             time.sleep(1)
 
