@@ -68,6 +68,8 @@ from .asnAST import (
     AsnSet, AsnSetOf, AsnMetaMember, AsnMetaType, AsnInt, AsnReal, AsnNode,
     AsnComplexNode, AsnBool, AsnOctetString, AsnAsciiString
 )
+from .lockResource import lock_filename
+
 
 g_asnFilename = ""
 
@@ -401,15 +403,9 @@ def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=inv
                 "The configured cache folder:\n\n\t" + projectCache + "\n\n...is not there!\n")
 
     # To avoid race conditions from multiple processes spawning ASN1SCC at the same time,
-    # enforce mutual exclusion via locking - using an atomic syscall:
-    while True:
-        try:
-            os.mkdir("/tmp/onlyOneAsn1Scc")
-            break
-        except:
-            time.sleep(1)
+    # enforce mutual exclusion via locking.
+    with lock_filename('/tmp/onlyOneASN1SCC'):
 
-    try:
         xmlAST = None
         someFilesHaveChanged = False
         if projectCache is not None:
@@ -461,9 +457,6 @@ def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=inv
         ParseASN1SCC_AST(xmlAST)
         if projectCache is None:
             os.unlink(xmlAST)
-
-    finally:
-        os.rmdir("/tmp/onlyOneAsn1Scc")
 
 
 def Dump() -> None:
