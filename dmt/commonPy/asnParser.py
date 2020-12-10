@@ -404,7 +404,7 @@ def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=inv
 
     # To avoid race conditions from multiple processes spawning ASN1SCC at the same time,
     # enforce mutual exclusion via locking.
-    with lock_filename('/tmp/onlyOneASN1SCC'):
+    with lock_filename('/tmp/onlyOneASN1SCC', verbose=False):
 
         xmlAST = None
         someFilesHaveChanged = False
