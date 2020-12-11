@@ -4,9 +4,10 @@ import fcntl
 
 from contextlib import contextmanager
 
+
 @contextmanager
 def lock_filename(filename: str, verbose: bool):
-    # If file is not there, make it, and close it. 
+    # If file is not there, make it, and close it.
     # This should only happen once in the universe - lockfiles are not supposed to be removed.
     # https://unix.stackexchange.com/questions/368159/why-flock-doesnt-clean-the-lock-file
     try:
