@@ -402,7 +402,7 @@ def ProcessCustomBackends(
         # Taking list of tuples made of (spName, sp_impl, language, maybeFVname)
         asnFile: Optional[str],
         useOSS: bool,
-        SystemsAndImplementations: List[Tuple[str, str, str, str]]) -> None:
+        SystemsAndImplementations: List[Tuple[str, str, str, str, str]]) -> None:
 
     # The code generators for GUIs, Python mappers and VHDL mappers are different: they need access to
     # both ASN.1 types and SP params.
@@ -559,7 +559,7 @@ def main() -> None:
             commonPy.configMT.fpga_mapper = os.path.normpath(sys.argv[idx + 1])
         except:  # pragma: no cover
             panic('Usage: %s [-v] [-verbose] [-useOSS] [-fpga <BRAVE|ZESTSC1|ZYNQZC706>] [-o dirname] input1.aadl [input2.aadl] ...\n' % sys.argv[0])  # pragma: no cover
-        if commonPy.configMT.fpga_mapper is None or commonPy.configMT.fpga_mapper not in ['BRAVE', 'ZESTSC1', 'ZYNQZC706']:
+        if commonPy.configMT.fpga_mapper == '' or commonPy.configMT.fpga_mapper not in ['BRAVE', 'ZESTSC1', 'ZYNQZC706']:
             panic('Usage: %s [-v] [-verbose] [-useOSS] [-fpga <BRAVE|ZESTSC1|ZYNQZC706>] [-o dirname] input1.aadl [input2.aadl] ...\n' % sys.argv[0])  # pragma: no cover
         del sys.argv[idx]
         del sys.argv[idx]

@@ -120,6 +120,7 @@ def RegistersAllocated(node_or_str: Union[str, AsnNode]) -> int:
         retValue = RegistersAllocated(names[node._containedType])
     else:  # pragma: no cover
         panicWithCallStack("unsupported %s (%s)" % (str(node.__class__), node.Location()))  # pragma: no cover
+    assert retValue is not None
     return retValue
 
 
@@ -1233,41 +1234,49 @@ def OnStartup(modelingLanguage: str, asnFile: str, subProgram: ApLevelContainer,
 
 def OnBasic(nodeTypename: str, node: AsnBasicNode, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
-    vhdlBackend.OnBasic(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
+    if vhdlBackend:
+        vhdlBackend.OnBasic(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
 def OnSequence(nodeTypename: str, node: AsnSequence, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
-    vhdlBackend.OnSequence(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
+    if vhdlBackend:
+        vhdlBackend.OnSequence(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
 def OnSet(nodeTypename: str, node: AsnSet, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)  # pragma: nocover
-    vhdlBackend.OnSet(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)  # pragma: nocover
+    if vhdlBackend:
+        vhdlBackend.OnSet(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)  # pragma: nocover
 
 
 def OnEnumerated(nodeTypename: str, node: AsnEnumerated, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
-    vhdlBackend.OnEnumerated(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
+    if vhdlBackend:
+        vhdlBackend.OnEnumerated(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
 def OnSequenceOf(nodeTypename: str, node: AsnSequenceOf, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
-    vhdlBackend.OnSequenceOf(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
+    if vhdlBackend:
+        vhdlBackend.OnSequenceOf(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
 def OnSetOf(nodeTypename: str, node: AsnSetOf, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)  # pragma: nocover
-    vhdlBackend.OnSetOf(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)  # pragma: nocover
+    if vhdlBackend:
+        vhdlBackend.OnSetOf(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)  # pragma: nocover
 
 
 def OnChoice(nodeTypename: str, node: AsnChoice, subProgram: ApLevelContainer, subProgramImplementation: str, param: Param, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> None:
     Common(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
-    vhdlBackend.OnChoice(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
+    if vhdlBackend:
+        vhdlBackend.OnChoice(nodeTypename, node, subProgram, subProgramImplementation, param, leafTypeDict, names)
 
 
 def OnShutdown(modelingLanguage: str, asnFile: str, sp: ApLevelContainer, subProgramImplementation: str, maybeFVname: str) -> None:
-    vhdlBackend.OnShutdown(modelingLanguage, asnFile, sp, subProgramImplementation, maybeFVname)
+    if vhdlBackend:
+        vhdlBackend.OnShutdown(modelingLanguage, asnFile, sp, subProgramImplementation, maybeFVname)
     if subProgramImplementation.lower() == "simulink":
         EmitBambuSimulinkBridge(sp, subProgramImplementation)
     elif subProgramImplementation.lower() == "c":
@@ -1279,6 +1288,8 @@ def AddToStr(s: str, d: str) -> None:
 
 
 def OnFinal() -> None:
+    assert vhdlBackend is not None
+
     circuitMapper = MapASN1ToVHDLCircuit()
     ioRegisterMapper = MapASN1ToVHDLregisters()
     inputDeclarationMapper = MapASN1ToVHDLinput()
@@ -1502,6 +1513,7 @@ def getTypeAndVarsAsBambuWantsThem(param: Param, names: AST_Lookup, leafTypeDict
 
 
 def computeBambuDeclarations(node: AsnNode, asnTypename: str, prefix: str, names: AST_Lookup, leafTypeDict: AST_Leaftypes) -> List[str]:
+    assert vhdlBackend is not None
     clean = vhdlBackend.CleanNameAsToolWants
     while isinstance(node, AsnMetaMember):
         node = names[node._containedType]
@@ -1524,7 +1536,7 @@ def computeBambuDeclarations(node: AsnNode, asnTypename: str, prefix: str, names
                     leafTypeDict))
         return lines
     elif isinstance(node, (AsnSequence, AsnSet)):
-        lines = []  # type: List[str]
+        lines = []
         for child in node._members:
             lines.extend(
                 computeBambuDeclarations(
@@ -1537,7 +1549,7 @@ def computeBambuDeclarations(node: AsnNode, asnTypename: str, prefix: str, names
     elif isinstance(node, AsnOctetString):
         if not node._range:
             panicWithCallStack("[computeBambuDeclarations] need a SIZE constraint or else we can't generate C code (%s)!\n" % node.Location())  # pragma: no cover
-        lines = []  # type: List[str]
+        lines = []
         maxlen = len(str(node._range[-1]))
         for i in range(0, node._range[-1]):
             lines.extend(["unsigned char" + " " + prefix + "_elem_%0*d" % (maxlen, i)])
@@ -1555,6 +1567,7 @@ def readInputsAsBambuWantsForSimulink(sp: ApLevelContainer, param: Param, names:
 
 
 def computeBambuInputAssignmentsForSimulink(sp: ApLevelContainer, node: AsnNode, unused_asnTypename: str, prefixSimulink: str, prefixVHDL: str, names: AST_Lookup, leafTypeDict: AST_Leaftypes) -> List[str]:
+    assert vhdlBackend is not None
     clean = vhdlBackend.CleanNameAsToolWants
     while isinstance(node, AsnMetaMember):
         node = names[node._containedType]
@@ -1583,7 +1596,7 @@ def computeBambuInputAssignmentsForSimulink(sp: ApLevelContainer, node: AsnNode,
                     leafTypeDict))
         return lines
     elif isinstance(node, (AsnSequence, AsnSet)):
-        lines = []  # type: List[str]
+        lines = []
         for child in node._members:
             lines.extend(
                 computeBambuInputAssignmentsForSimulink(
@@ -1598,7 +1611,7 @@ def computeBambuInputAssignmentsForSimulink(sp: ApLevelContainer, node: AsnNode,
     elif isinstance(node, AsnOctetString):
         if not node._range:
             panicWithCallStack("[computeBambuInputAssignmentsForSimulink] need a SIZE constraint or else we can't generate C code (%s)!\n" % node.Location())  # pragma: no cover
-        lines = []  # type: List[str]
+        lines = []
         maxlen = len(str(node._range[-1]))
         for i in range(0, node._range[-1]):
             lines.extend([clean(sp._id) + "_U." + prefixSimulink + ".element_data[%d] = " % i + prefixVHDL + "_elem_%0*d" % (maxlen, i)])
@@ -1616,6 +1629,7 @@ def readInputsAsBambuWantsForC(param: Param, names: AST_Lookup, leafTypeDict: AS
 
 
 def computeBambuInputAssignmentsForC(node: AsnNode, unused_asnTypename: str, prefixC: str, prefixVHDL: str, names: AST_Lookup, leafTypeDict: AST_Leaftypes) -> List[str]:
+    assert vhdlBackend is not None
     clean = vhdlBackend.CleanNameAsToolWants
     while isinstance(node, AsnMetaMember):
         node = names[node._containedType]
@@ -1638,7 +1652,7 @@ def computeBambuInputAssignmentsForC(node: AsnNode, unused_asnTypename: str, pre
     elif isinstance(node, (AsnSequenceOf, AsnSetOf)):
         if not node._range:
             panicWithCallStack("[computeBambuInputAssignmentsForC] need a SIZE constraint or else we can't generate C code (%s)!\n" % node.Location())  # pragma: no cover
-        lines = []  # type: List[str]
+        lines = []
         maxlen = len(str(node._range[-1]))
         for i in range(0, node._range[-1]):
             lines.extend(
@@ -1653,7 +1667,7 @@ def computeBambuInputAssignmentsForC(node: AsnNode, unused_asnTypename: str, pre
     elif isinstance(node, AsnOctetString):
         if not node._range:
             panicWithCallStack("[computeBambuInputAssignmentsForC] need a SIZE constraint or else we can't generate C code (%s)!\n" % node.Location())  # pragma: no cover
-        lines = []  # type: List[str]
+        lines = []
         maxlen = len(str(node._range[-1]))
         for i in range(0, node._range[-1]):
             lines.extend([prefixC + ".arr[%d] = " % i + prefixVHDL + "_elem_%0*d" % (maxlen, i)])
@@ -1671,6 +1685,7 @@ def writeOutputsAsBambuWantsForSimulink(sp: ApLevelContainer, param: Param, name
 
 
 def computeBambuOutputAssignmentsForSimulink(sp: ApLevelContainer, node: AsnNode, unused_asnTypename: str, prefixSimulink: str, prefixVHDL: str, names: AST_Lookup, leafTypeDict: AST_Leaftypes) -> List[str]:
+    assert vhdlBackend is not None
     clean = vhdlBackend.CleanNameAsToolWants
     while isinstance(node, AsnMetaMember):
         node = names[node._containedType]
@@ -1699,7 +1714,7 @@ def computeBambuOutputAssignmentsForSimulink(sp: ApLevelContainer, node: AsnNode
                     leafTypeDict))
         return lines
     elif isinstance(node, (AsnSequence, AsnSet)):
-        lines = []  # type: List[str]
+        lines = []
         for child in node._members:
             lines.extend(
                 computeBambuOutputAssignmentsForSimulink(
@@ -1714,7 +1729,7 @@ def computeBambuOutputAssignmentsForSimulink(sp: ApLevelContainer, node: AsnNode
     elif isinstance(node, AsnOctetString):
         if not node._range:
             panicWithCallStack("[computeBambuOutputAssignmentsForSimulink] need a SIZE constraint or else we can't generate C code (%s)!\n" % node.Location())  # pragma: no cover
-        lines = []  # type: List[str]
+        lines = []
         maxlen = len(str(node._range[-1]))
         for i in range(0, node._range[-1]):
             lines.extend([prefixVHDL + "_elem_%0*d = " % (maxlen, i) + clean(sp._id) + "_Y." + prefixSimulink + ".element_data[%d]" % i])
@@ -1732,6 +1747,7 @@ def writeOutputsAsBambuWantsForC(param: Param, names: AST_Lookup, leafTypeDict: 
 
 
 def computeBambuOutputAssignmentsForC(node: AsnNode, unused_asnTypename: str, prefixC: str, prefixVHDL: str, names: AST_Lookup, leafTypeDict: AST_Leaftypes) -> List[str]:
+    assert vhdlBackend is not None
     clean = vhdlBackend.CleanNameAsToolWants
     while isinstance(node, AsnMetaMember):
         node = names[node._containedType]
@@ -1758,7 +1774,7 @@ def computeBambuOutputAssignmentsForC(node: AsnNode, unused_asnTypename: str, pr
     elif isinstance(node, (AsnSequenceOf, AsnSetOf)):
         if not node._range:
             panicWithCallStack("[computeBambuOutputAssignmentsForC] need a SIZE constraint or else we can't generate C code (%s)!\n" % node.Location())  # pragma: no cover
-        lines = []  # type: List[str]
+        lines = []
         maxlen = len(str(node._range[-1]))
         for i in range(0, node._range[-1]):
             lines.extend(
@@ -1773,7 +1789,7 @@ def computeBambuOutputAssignmentsForC(node: AsnNode, unused_asnTypename: str, pr
     elif isinstance(node, AsnOctetString):
         if not node._range:
             panicWithCallStack("[computeBambuOutputAssignmentsForC] need a SIZE constraint or else we can't generate C code (%s)!\n" % node.Location())  # pragma: no cover
-        lines = []  # type: List[str]
+        lines = []
         maxlen = len(str(node._range[-1]))
         for i in range(0, node._range[-1]):
             lines.extend([prefixVHDL + "_elem_%0*d = " % (maxlen, i) + prefixC + ".arr[%d]" % i])
@@ -1783,6 +1799,8 @@ def computeBambuOutputAssignmentsForC(node: AsnNode, unused_asnTypename: str, pr
 
 
 def EmitBambuSimulinkBridge(sp: ApLevelContainer, unused_subProgramImplementation: str):
+    assert vhdlBackend is not None
+
     # Parameter access is much faster in Python - cache these two globals
     names = asnParser.g_names
     leafTypeDict = asnParser.g_leafTypeDict
@@ -1854,6 +1872,8 @@ def EmitBambuSimulinkBridge(sp: ApLevelContainer, unused_subProgramImplementatio
 
 
 def EmitBambuCBridge(sp: ApLevelContainer, unused_subProgramImplementation: str):
+    assert vhdlBackend is not None
+
     # Parameter access is much faster in Python - cache these two globals
     names = asnParser.g_names
     leafTypeDict = asnParser.g_leafTypeDict
