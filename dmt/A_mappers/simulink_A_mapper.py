@@ -131,13 +131,13 @@ def DeclareCollection(node: AsnSequenceOrSetOf, name: str, internal: str) -> Non
     for i in range(0, node._range[-1]):
         g_outputFile.write('%s_member_%02d=Simulink.BusElement;\n' % (name, i))
         # Andreas(ESA) wants them to be called 'element_%02d'
-        g_outputFile.write("%s_member_%02d.Name='element_%02d';\n" % (name, i, i))
+        g_outputFile.write("%s_member_%02d.name='element_%02d';\n" % (name, i, i))
         g_outputFile.write("%s_member_%02d.DataType='%s';\n" % (name, i, internal))
-        g_outputFile.write("%s_member_%02d.Dimensions=1;\n\n" % (name, i))
+        g_outputFile.write("%s_member_%02d.dimensions=1;\n\n" % (name, i))
     g_outputFile.write('%s_member_length=Simulink.BusElement;\n' % name)
-    g_outputFile.write("%s_member_length.Name='length';\n" % name)
+    g_outputFile.write("%s_member_length.name='length';\n" % name)
     g_outputFile.write("%s_member_length.DataType='int32';\n" % name)
-    g_outputFile.write("%s_member_length.Dimensions=1;\n\n" % name)
+    g_outputFile.write("%s_member_length.dimensions=1;\n\n" % name)
     g_outputFile.write('%s=Simulink.Bus;\n' % name)
     g_outputFile.write("%s.Elements = " % name)
     g_outputFile.write('[')
@@ -150,9 +150,9 @@ def DeclareCollection(node: AsnSequenceOrSetOf, name: str, internal: str) -> Non
 
 def DeclareSimpleCollection(node: Union[AsnString, AsnSequenceOf, AsnSetOf], name: str, internal: str) -> None:
     g_outputFile.write('%s_member_data=Simulink.BusElement;\n' % name)
-    g_outputFile.write("%s_member_data.Name='element_data';\n" % name)
+    g_outputFile.write("%s_member_data.name='element_data';\n" % name)
     g_outputFile.write("%s_member_data.DataType='%s';\n" % (name, internal))
-    g_outputFile.write("%s_member_data.Dimensions=%d;\n\n" % (name, node._range[-1]))
+    g_outputFile.write("%s_member_data.dimensions=%d;\n\n" % (name, node._range[-1]))
 
     bNeedLength = False
     if len(node._range) > 1 and node._range[0] != node._range[1]:
@@ -160,9 +160,9 @@ def DeclareSimpleCollection(node: Union[AsnString, AsnSequenceOf, AsnSetOf], nam
 
     if bNeedLength:
         g_outputFile.write('%s_member_length=Simulink.BusElement;\n' % name)
-        g_outputFile.write("%s_member_length.Name='length';\n" % name)
+        g_outputFile.write("%s_member_length.name='length';\n" % name)
         g_outputFile.write("%s_member_length.DataType='int32';\n" % name)
-        g_outputFile.write("%s_member_length.Dimensions=1;\n\n" % name)
+        g_outputFile.write("%s_member_length.dimensions=1;\n\n" % name)
 
     g_outputFile.write('%s=Simulink.Bus;\n' % name)
     g_outputFile.write("%s.Elements = " % name)
@@ -216,14 +216,14 @@ def CreateDeclarationForType(nodeTypename: str, names: AST_Lookup, leafTypeDict:
             elemNo += 1
             name = "%s_elem%02d" % (CleanNameAsSimulinkWants(nodeTypename), elemNo)
             g_outputFile.write(name + "=Simulink.BusElement;\n")
-            g_outputFile.write(name + ".Name='choiceIdx';\n")
+            g_outputFile.write(name + ".name='choiceIdx';\n")
             g_outputFile.write(name + ".DataType='uint8';\n")
-            g_outputFile.write(name + ".Dimensions=1;\n\n")
+            g_outputFile.write(name + ".dimensions=1;\n\n")
         for child in node._members:
             elemNo += 1
             name = "%s_elem%02d" % (CleanNameAsSimulinkWants(nodeTypename), elemNo)
             g_outputFile.write(name + "=Simulink.BusElement;\n")
-            g_outputFile.write(name + ".Name='%s';\n" % CleanNameAsSimulinkWants(child[0]))
+            g_outputFile.write(name + ".name='%s';\n" % CleanNameAsSimulinkWants(child[0]))
 
             # Since AliasType doesn't work well in the Matlab/Simulink typesystem,
             # we have to change the simple fields to their native types.
@@ -262,7 +262,7 @@ def CreateDeclarationForType(nodeTypename: str, names: AST_Lookup, leafTypeDict:
                 panic("Simulink_A_mapper: Unexpected category of child (%s)" % str(child[1]))  # pragma: no cover
             g_outputFile.write(name + ".DataType='%s';\n" % mappedType)
             # Used to be -1 for strings and metaMembers, but requirements have changed (again :-)
-            g_outputFile.write(name + ".Dimensions=1;\n\n")
+            g_outputFile.write(name + ".dimensions=1;\n\n")
 
         g_outputFile.write("%s = Simulink.Bus;\n" % CleanNameAsSimulinkWants(nodeTypename))
         g_outputFile.write("%s.Elements = " % CleanNameAsSimulinkWants(nodeTypename))

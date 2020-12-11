@@ -445,7 +445,7 @@ class SimulinkGlueGenerator(SynchronousToolGlueGenerator):
             panicWithCallStack("%s not supported (yet?)\n" % str(param._sourceElement))  # pragma: no cover
         return dstSimulink
 
-    def InitializeBlock(self, unused_modelingLanguage: str, unused_asnFile: str, sp: ApLevelContainer, unused_subProgramImplementation: str, maybeFVname: str) -> None:
+    def InitializeBlock(self, unused_modelingLanguage: str, unused_asnFile: str, unused_sp: ApLevelContainer, unused_subProgramImplementation: str, maybeFVname: str) -> None:
         self.C_SourceFile.write("    static int initialized = 0;\n")
         self.C_SourceFile.write("    if (!initialized) {\n")
         self.C_SourceFile.write("        initialized = 1;\n")

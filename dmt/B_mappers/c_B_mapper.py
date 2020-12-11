@@ -249,7 +249,7 @@ class C_GlueGenerator(ASynchronousToolGlueGenerator):
             self.C_SourceFile.write("\nextern OssGlobal *g_world;\n\n")
         self.C_HeaderFile.write("#include \"%s.h\" // Space certified compiler generated\n\n" %
                                 self.asn_name)
-        self.C_HeaderFile.write("#include \"../../build/system_config.h\" // Choose ASN.1 Types to use\n\n")
+        self.C_HeaderFile.write("#include \"../../system_config.h\" // Choose ASN.1 Types to use\n\n")
 
     def Encoder(self, nodeTypename: str, node: AsnNode, leafTypeDict: AST_Leaftypes, names: AST_Lookup, encoding: str) -> None:
         if encoding.lower() not in self.supportedEncodings:
