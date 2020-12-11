@@ -40,15 +40,12 @@ from typing import List
 from ..commonPy.utility import panicWithCallStack
 from ..commonPy.asnAST import (
     AsnInt, AsnReal, AsnBool, AsnEnumerated, isSequenceVariable, sourceSequenceLimit,
-    AsnOctetString, AsnSequenceOrSet, AsnSequenceOrSetOf, AsnChoice, AsnNode,
-    AsnSequenceOf, AsnSetOf, AsnSequence, AsnSet, AsnMetaMember)
+    AsnOctetString, AsnSequenceOrSet, AsnSequenceOrSetOf, AsnChoice, AsnNode)
 from ..commonPy.aadlAST import AadlPort, AadlParameter, ApLevelContainer, Param
 from ..commonPy.asnParser import AST_Lookup, AST_Leaftypes
 
 from ..commonPy.recursiveMapper import RecursiveMapper
 from .synchronousTool import SynchronousToolGlueGenerator
-
-import os
 
 isAsynchronous = False
 
@@ -454,7 +451,7 @@ class SimulinkGlueGenerator(SynchronousToolGlueGenerator):
         self.C_SourceFile.write("        initialized = 1;\n")
         self.C_SourceFile.write("        %s_initialize();\n" % self.g_FVname)
         # If there are HW(FPGA) configurations defined, initialize also the HW side (the device driver: <self.g_FVname>_Simulink.vhdl.c).
-        if sp._fpgaConfigurations is not '':
+        if sp._fpgaConfigurations != '':
             self.C_SourceFile.write("        init_%s_Fpga();\n" % maybeFVname)
         self.C_SourceFile.write("    }\n")
 
