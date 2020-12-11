@@ -334,7 +334,7 @@ project.addFiles('bravecomp', ['clkgen_bm.vhd'])
 project.addFiles('top_lib', ['rdhc_bb.vhd'])
 
 project.setOptions({'UseNxLibrary': 'Yes',
-		    'MergeRegisterToPad': 'Always',
+                    'MergeRegisterToPad': 'Always',
                     'ManageUnconnectedOutputs': 'Ground',
                     'ManageUnconnectedSignals': 'Ground',
                     'ManageAsynchronousReadPort': 'Yes',

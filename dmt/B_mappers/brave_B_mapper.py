@@ -1,4 +1,5 @@
 # (C) Semantix Information Technologies.
+# This file was created and is maintained by GMV (Tiago)
 #
 # Semantix Information Technologies is licensing the code of the
 # Data Modelling Tools (DMT) in the following dual-license mode:
@@ -43,7 +44,7 @@ from ..commonPy.utility import panic, panicWithCallStack
 from ..commonPy.asnAST import (
     AsnBasicNode, AsnInt, AsnSequence, AsnSet, AsnChoice, AsnSequenceOf,
     AsnSetOf, AsnEnumerated, AsnMetaMember, isSequenceVariable,
-    sourceSequenceLimit, AsnNode, AsnString, AsnReal, AsnOctetString,
+    AsnNode, AsnString, AsnReal, AsnOctetString,
     AsnSequenceOrSetOf, AsnSequenceOrSet, AsnBool)
 from ..commonPy.asnParser import AST_Lookup, AST_Leaftypes
 from ..commonPy.aadlAST import (
@@ -176,10 +177,10 @@ class FromVHDLToASN1SCC(RecursiveMapperGeneric[List[int], str]):  # pylint: disa
 
     def MapBoolean(self, srcVHDL: List[int], destVar: str, node: AsnBool, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         register = srcVHDL[0] + srcVHDL[1]
-        lines = []  # type: List[str]        
+        lines = []  # type: List[str]
         lines.append("{\n")
         lines.append("    unsigned int tmp = 0;\n")
-        lines.append("    rmap_tgt_read(R_RMAP_BASEADR + %s, &tmp, 4, R_RMAP_DSTADR);\n" % hex(register))      
+        lines.append("    rmap_tgt_read(R_RMAP_BASEADR + %s, &tmp, 4, R_RMAP_DSTADR);\n" % hex(register))
         lines.append("    %s = (asn1SccUint) tmp;\n" % destVar)
         lines.append("}\n")
         srcVHDL[0] += 4
@@ -192,30 +193,30 @@ class FromVHDLToASN1SCC(RecursiveMapperGeneric[List[int], str]):  # pylint: disa
             panicWithCallStack("OCTET STRING (in %s) must have a fixed SIZE constraint !" % node.Location())  # pragma: no cover
         if isSequenceVariable(node):
             panicWithCallStack("OCTET STRING (in %s) must have a fixed SIZE constraint !" % node.Location())  # pragma: no cover
-        if node._range[-1] % 4 != 0: # TODO
-            panicWithCallStack("OCTET STRING (in %s) is not a multiple of 4 bytes (this is not yet supported)." % node.Location())            
+        if node._range[-1] % 4 != 0:  # TODO
+            panicWithCallStack("OCTET STRING (in %s) is not a multiple of 4 bytes (this is not yet supported)." % node.Location())
 
         register = srcVHDL[0] + srcVHDL[1]
         lines = []  # type: List[str]
-        
+
         lines.append("{\n")
         lines.append("    unsigned int tmp, i;\n")
         lines.append("    for(i=0; i<%d; i++) {\n" % int(node._range[-1] / 4))
         lines.append("        tmp = 0;\n")
-        lines.append("        rmap_tgt_read(R_RMAP_BASEADR + %s + (i*4), &tmp, 4, R_RMAP_DSTADR);\n" % hex(register))      
+        lines.append("        rmap_tgt_read(R_RMAP_BASEADR + %s + (i*4), &tmp, 4, R_RMAP_DSTADR);\n" % hex(register))
         lines.append("        memcpy(%s.arr + (i*4), (unsigned char*)&tmp, sizeof(unsigned int));\n" % destVar)
         lines.append("    }\n")
         lines.append("}\n")
-        
+
         srcVHDL[0] += node._range[-1]
         return lines
 
     def MapEnumerated(self, srcVHDL: List[int], destVar: str, node: AsnEnumerated, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         register = srcVHDL[0] + srcVHDL[1]
-        lines = []  # type: List[str]        
+        lines = []  # type: List[str]
         lines.append("{\n")
         lines.append("    unsigned int tmp;\n")
-        lines.append("    rmap_tgt_read(R_RMAP_BASEADR + %s, &tmp, 4, R_RMAP_DSTADR);\n" % hex(register))      
+        lines.append("    rmap_tgt_read(R_RMAP_BASEADR + %s, &tmp, 4, R_RMAP_DSTADR);\n" % hex(register))
         lines.append("    %s = tmp;\n" % destVar)
         lines.append("}\n")
         srcVHDL[0] += 4
@@ -238,12 +239,12 @@ class FromVHDLToASN1SCC(RecursiveMapperGeneric[List[int], str]):  # pylint: disa
 
     def MapChoice(self, srcVHDL: List[int], destVar: str, node: AsnChoice, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         panicWithCallStack("CHOICEs (%s) not yet supported." % node.Location())  # pragma: no cover
-        register = srcVHDL[0] + srcVHDL[1]
+        # register = srcVHDL[0] + srcVHDL[1]
         lines = []  # type: List[str]
         childNo = 0
         lines.append("{\n")
         lines.append("    unsigned char choiceIdx = 0;\n")
-        #lines.append("    BraveReadRegister(g_Handle, BASE_ADDR + %s, &choiceIdx);\n" % hex(register))
+        # lines.append("    BraveReadRegister(g_Handle, BASE_ADDR + %s, &choiceIdx);\n" % hex(register))
         if len(node._members) > 255:
             panic("Up to 255 different CHOICEs can be supported (%s)" % node.Location())  # pragma: no cover
         for child in node._members:
@@ -331,7 +332,7 @@ class FromASN1SCCtoVHDL(RecursiveMapperGeneric[str, List[int]]):  # pylint: disa
         lines.append("    for(i=0; i<%d; i++) {\n" % int(node._range[-1] / 4))
         lines.append("        tmp = 0;\n")
         lines.append("        tmp = *(unsigned int*)(%s.arr + (i*4));\n" % srcVar)
-        lines.append("        rmap_tgt_write(R_RMAP_BASEADR + %s + (i*4), &tmp, 4, R_RMAP_DSTADR);\n" % hex(register))     
+        lines.append("        rmap_tgt_write(R_RMAP_BASEADR + %s + (i*4), &tmp, 4, R_RMAP_DSTADR);\n" % hex(register))
         lines.append("    }\n")
         lines.append("}\n")
 
@@ -366,7 +367,7 @@ class FromASN1SCCtoVHDL(RecursiveMapperGeneric[str, List[int]]):  # pylint: disa
         return self.MapSequence(srcVar, dstVHDL, node, leafTypeDict, names)  # pragma: nocover
 
     def MapChoice(self, srcVar: str, dstVHDL: List[int], node: AsnChoice, leafTypeDict: AST_Leaftypes, names: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
-        register = dstVHDL[0] + dstVHDL[1]
+        # register = dstVHDL[0] + dstVHDL[1]
         lines = []  # type: List[str]
         childNo = 0
         if len(node._members) > 255:
@@ -375,7 +376,7 @@ class FromASN1SCCtoVHDL(RecursiveMapperGeneric[str, List[int]]):  # pylint: disa
             childNo += 1
             lines.append("%sif (%s.kind == %s) {\n" % (self.maybeElse(childNo), srcVar, self.CleanName(child[2])))
             lines.append("    unsigned char tmp = %d;\n" % childNo)
-            #lines.append("    BraveWriteRegister(g_Handle, BASE_ADDR + %s, tmp);\n" % hex(register))
+            # lines.append("    BraveWriteRegister(g_Handle, BASE_ADDR + %s, tmp);\n" % hex(register))
             lines.extend(
                 ['    ' + x
                  for x in self.Map(
@@ -535,7 +536,7 @@ unsigned int count;
     def ExecuteBlock(self, unused_modelingLanguage: str, unused_asnFile: str, sp: ApLevelContainer, unused_subProgramImplementation: str, maybeFVname: str) -> None:
         self.C_SourceFile.write("    unsigned int flag = 0;\n\n")
         self.C_SourceFile.write("    // Now that the parameters are passed inside the FPGA, run the processing logic\n")
-        
+
         self.C_SourceFile.write('    unsigned int okstart = 1;\n')
         self.C_SourceFile.write('    if (rmap_tgt_write(R_RMAP_BASEADR + %s, &okstart, 4, R_RMAP_DSTADR)) {\n' %
                                 hex(int(VHDL_Circuit.lookupSP[sp._id]._offset)))
@@ -560,6 +561,7 @@ unsigned int count;
         self.C_SourceFile.write('      return -1;\n')
         self.C_SourceFile.write('    }\n')
         self.C_SourceFile.write('    return 0;\n')
+
 
 # pylint: disable=no-self-use
 class MapASN1ToVHDLCircuit(RecursiveMapperGeneric[str, str]):
@@ -707,15 +709,15 @@ class MapASN1ToVHDLreadinputdata(RecursiveMapperGeneric[List[int], str]):  # pyl
         if len(node._range) > 1 and node._range[0] != node._range[1]:
             panicWithCallStack("VHDL OCTET STRING (in %s) must have a fixed SIZE constraint !" % node.Location())  # pragma: no cover
         if node._range[-1] % 4 != 0:  # TODO
-            panicWithCallStack("OCTET STRING (in %s) is not a multiple of 4 bytes (this is not yet supported)." % node.Location())            
+            panicWithCallStack("OCTET STRING (in %s) is not a multiple of 4 bytes (this is not yet supported)." % node.Location())
         maxlen = len(str(node._range[-1]))
         lines = []  # type: List[str]
         for i in range(node._range[-1]):
             if (i) % 4 == 0:
-                lines.append('when X"%s" => %s_elem_%0*d(7 downto 0) <= apbi.pwdata(7 downto 0);' % (hex(reginfo[0])[2:] if len(hex(reginfo[0])[2:]) > 3 else ('0' + hex(reginfo[0])[2:]), dstVHDL, maxlen, i+0))
-                lines.append('                %s_elem_%0*d(7 downto 0) <= apbi.pwdata(15 downto 8);' % (dstVHDL, maxlen, i+1))
-                lines.append('                %s_elem_%0*d(7 downto 0) <= apbi.pwdata(23 downto 16);' % (dstVHDL, maxlen, i+2))
-                lines.append('                %s_elem_%0*d(7 downto 0) <= apbi.pwdata(31 downto 24);' % (dstVHDL, maxlen, i+3))
+                lines.append('when X"%s" => %s_elem_%0*d(7 downto 0) <= apbi.pwdata(7 downto 0);' % (hex(reginfo[0])[2:] if len(hex(reginfo[0])[2:]) > 3 else ('0' + hex(reginfo[0])[2:]), dstVHDL, maxlen, i + 0))
+                lines.append('                %s_elem_%0*d(7 downto 0) <= apbi.pwdata(15 downto 8);' % (dstVHDL, maxlen, i + 1))
+                lines.append('                %s_elem_%0*d(7 downto 0) <= apbi.pwdata(23 downto 16);' % (dstVHDL, maxlen, i + 2))
+                lines.append('                %s_elem_%0*d(7 downto 0) <= apbi.pwdata(31 downto 24);' % (dstVHDL, maxlen, i + 3))
             reginfo[0] += 1
         return lines
 
@@ -781,15 +783,15 @@ class MapASN1ToVHDLwriteoutputdata(RecursiveMapperGeneric[List[int], str]):  # p
         if len(node._range) > 1 and node._range[0] != node._range[1]:
             panicWithCallStack("VHDL OCTET STRING (in %s) must have a fixed SIZE constraint !" % node.Location())  # pragma: no cover
         if node._range[-1] % 4 != 0:  # TODO
-            panicWithCallStack("OCTET STRING (in %s) is not a multiple of 4 bytes (this is not yet supported)." % node.Location())            
+            panicWithCallStack("OCTET STRING (in %s) is not a multiple of 4 bytes (this is not yet supported)." % node.Location())
         maxlen = len(str(node._range[-1]))
         lines = []  # type: List[str]
         for i in range(node._range[-1]):
             if (i) % 4 == 0:
-                lines.append('when X"%s" => apbo.prdata(7 downto 0) <= %s_elem_%0*d(7 downto 0);' % (hex(reginfo[0])[2:] if len(hex(reginfo[0])[2:]) > 3 else ('0' + hex(reginfo[0])[2:]), dstVHDL, maxlen, i+0))
-                lines.append('                apbo.prdata(15 downto 8) <= %s_elem_%0*d(7 downto 0);' % (dstVHDL, maxlen, i+1))
-                lines.append('                apbo.prdata(23 downto 16) <= %s_elem_%0*d(7 downto 0);' % (dstVHDL, maxlen, i+2))
-                lines.append('                apbo.prdata(31 downto 24) <= %s_elem_%0*d(7 downto 0);' % (dstVHDL, maxlen, i+3))
+                lines.append('when X"%s" => apbo.prdata(7 downto 0) <= %s_elem_%0*d(7 downto 0);' % (hex(reginfo[0])[2:] if len(hex(reginfo[0])[2:]) > 3 else ('0' + hex(reginfo[0])[2:]), dstVHDL, maxlen, i + 0))
+                lines.append('                apbo.prdata(15 downto 8) <= %s_elem_%0*d(7 downto 0);' % (dstVHDL, maxlen, i + 1))
+                lines.append('                apbo.prdata(23 downto 16) <= %s_elem_%0*d(7 downto 0);' % (dstVHDL, maxlen, i + 2))
+                lines.append('                apbo.prdata(31 downto 24) <= %s_elem_%0*d(7 downto 0);' % (dstVHDL, maxlen, i + 3))
             reginfo[0] += 1
         return lines
 
@@ -1092,7 +1094,7 @@ def OnFinal() -> None:
         AddToStr('circuits', '        reset_%s  : in  std_logic\n' % c._spCleanName)
         AddToStr('circuits', '    );\n')
         AddToStr('circuits', '    end component;\n\n')
-        
+
         skeleton = []
         skeleton.append('    entity bambu_%s is\n' % c._spCleanName)
         skeleton.append('    port (\n')
@@ -1141,13 +1143,13 @@ def OnFinal() -> None:
                  '            %(pi)s_StartCalculationsInternalOld <= %(pi)s_StartCalculationsInternal;\n' % {'pi': c._spCleanName})
 
         AddToStr('readinputdata', '\n'.join([' ' * 22 + x for x in readinputdataLines]) + '\n')
-        
+
         AddToStr('setStartSignalsLow', ' ' * 12 + "if(%s_CalculationsCompletePulse = '1') then\n" % c._spCleanName)
         AddToStr('setStartSignalsLow', ' ' * 12 + "     %s_StartCalculationsInternal    <= '0';\n" % c._spCleanName)
         AddToStr('setStartSignalsLow', ' ' * 12 + "     %s_StartCalculationsPulse       <= '0';\n" % c._spCleanName)
         AddToStr('setStartSignalsLow', ' ' * 12 + "     %s_StartCalculationsInternalOld <= '0';\n" % c._spCleanName)
         AddToStr('setStartSignalsLow', ' ' * 12 + "end if;\n")
-        
+
         AddToStr('writeoutputdata', '\n'.join([' ' * 16 + x for x in writeoutputdataLines]) + '\n')
 
         AddToStr('connectionsToSystemC', '\n    Interface_%s : bambu_%s\n' % (c._spCleanName, c._spCleanName))
@@ -1200,6 +1202,7 @@ def getTypeAndVarsAsBambuWantsThem(param: Param, names: AST_Lookup, leafTypeDict
     node = names[asnTypename]
     return computeBambuDeclarations(node, asnTypename, prefix, names, leafTypeDict)
 
+
 def computeBambuDeclarations(node: AsnNode, asnTypename: str, prefix: str, names: AST_Lookup, leafTypeDict: AST_Leaftypes) -> List[str]:
     clean = vhdlBackend.CleanNameAsToolWants
     while isinstance(node, AsnMetaMember):
@@ -1239,14 +1242,15 @@ def computeBambuDeclarations(node: AsnNode, asnTypename: str, prefix: str, names
         return lines
     elif isinstance(node, AsnOctetString):
         if not node._range:
-            panicWithCallStack("[computeBambuDeclarations] need a SIZE constraint or else we can't generate C code (%s)!\n" % node.Location())  # pragma: no cover        
+            panicWithCallStack("[computeBambuDeclarations] need a SIZE constraint or else we can't generate C code (%s)!\n" % node.Location())  # pragma: no cover
         lines = []  # type: List[str]
         maxlen = len(str(node._range[-1]))
         for i in range(0, node._range[-1]):
-            lines.extend(["unsigned char" + " " + prefix + "_elem_%0*d" %  (maxlen, i)])
-        return lines    
+            lines.extend(["unsigned char" + " " + prefix + "_elem_%0*d" % (maxlen, i)])
+        return lines
     else:
         panicWithCallStack("[computeBambuDeclarations] Unsupported type: " + str(node.__class__))
+
 
 def readInputsAsBambuWantsForSimulink(sp: ApLevelContainer, param: Param, names: AST_Lookup, leafTypeDict: AST_Leaftypes):
     prefixVHDL = param._id
@@ -1254,6 +1258,7 @@ def readInputsAsBambuWantsForSimulink(sp: ApLevelContainer, param: Param, names:
     asnTypename = param._signal._asnNodename
     node = names[asnTypename]
     return computeBambuInputAssignmentsForSimulink(sp, node, asnTypename, prefixSimulink, prefixVHDL, names, leafTypeDict)
+
 
 def computeBambuInputAssignmentsForSimulink(sp: ApLevelContainer, node: AsnNode, asnTypename: str, prefixSimulink: str, prefixVHDL: str, names: AST_Lookup, leafTypeDict: AST_Leaftypes) -> List[str]:
     clean = vhdlBackend.CleanNameAsToolWants
@@ -1306,13 +1311,15 @@ def computeBambuInputAssignmentsForSimulink(sp: ApLevelContainer, node: AsnNode,
         return lines
     else:
         panicWithCallStack("[computeBambuInputAssignmentsForSimulink] Unsupported type: " + str(node.__class__))
-        
+
+
 def readInputsAsBambuWantsForC(param: Param, names: AST_Lookup, leafTypeDict: AST_Leaftypes):
     prefixVHDL = param._id
     prefixC = "IN_" + param._id
     asnTypename = param._signal._asnNodename
     node = names[asnTypename]
     return computeBambuInputAssignmentsForC(node, asnTypename, prefixC, prefixVHDL, names, leafTypeDict)
+
 
 def computeBambuInputAssignmentsForC(node: AsnNode, asnTypename: str, prefixC: str, prefixVHDL: str, names: AST_Lookup, leafTypeDict: AST_Leaftypes) -> List[str]:
     clean = vhdlBackend.CleanNameAsToolWants
@@ -1360,10 +1367,10 @@ def computeBambuInputAssignmentsForC(node: AsnNode, asnTypename: str, prefixC: s
         maxlen = len(str(node._range[-1]))
         for i in range(0, node._range[-1]):
             lines.extend([prefixC + ".arr[%d] = " % i + prefixVHDL + "_elem_%0*d" % (maxlen, i)])
-        return lines    
+        return lines
     else:
         panicWithCallStack("[computeBambuInputAssignmentsForC] Unsupported type: " + str(node.__class__))
-        
+
 
 def writeOutputsAsBambuWantsForSimulink(sp: ApLevelContainer, param: Param, names: AST_Lookup, leafTypeDict: AST_Leaftypes):
     prefixVHDL = "*" + param._id
@@ -1371,6 +1378,7 @@ def writeOutputsAsBambuWantsForSimulink(sp: ApLevelContainer, param: Param, name
     asnTypename = param._signal._asnNodename
     node = names[asnTypename]
     return computeBambuOutputAssignmentsForSimulink(sp, node, asnTypename, prefixSimulink, prefixVHDL, names, leafTypeDict)
+
 
 def computeBambuOutputAssignmentsForSimulink(sp: ApLevelContainer, node: AsnNode, asnTypename: str, prefixSimulink: str, prefixVHDL: str, names: AST_Lookup, leafTypeDict: AST_Leaftypes) -> List[str]:
     clean = vhdlBackend.CleanNameAsToolWants
@@ -1424,12 +1432,14 @@ def computeBambuOutputAssignmentsForSimulink(sp: ApLevelContainer, node: AsnNode
     else:
         panicWithCallStack("[computeBambuOutputAssignmentsForSimulink] Unsupported type: " + str(node.__class__))
 
+
 def writeOutputsAsBambuWantsForC(param: Param, names: AST_Lookup, leafTypeDict: AST_Leaftypes):
     prefixVHDL = "*" + param._id
     prefixC = "OUT_" + param._id
     asnTypename = param._signal._asnNodename
     node = names[asnTypename]
     return computeBambuOutputAssignmentsForC(node, asnTypename, prefixC, prefixVHDL, names, leafTypeDict)
+
 
 def computeBambuOutputAssignmentsForC(node: AsnNode, asnTypename: str, prefixC: str, prefixVHDL: str, names: AST_Lookup, leafTypeDict: AST_Leaftypes) -> List[str]:
     clean = vhdlBackend.CleanNameAsToolWants
@@ -1477,9 +1487,10 @@ def computeBambuOutputAssignmentsForC(node: AsnNode, asnTypename: str, prefixC: 
         maxlen = len(str(node._range[-1]))
         for i in range(0, node._range[-1]):
             lines.extend([prefixVHDL + "_elem_%0*d = " % (maxlen, i) + prefixC + ".arr[%d]" % i])
-        return lines    
+        return lines
     else:
         panicWithCallStack("[computeBambuOutputAssignmentsForC] Unsupported type: " + str(node.__class__))
+
 
 def EmitBambuSimulinkBridge(sp: ApLevelContainer, subProgramImplementation: str):
     # Parameter access is much faster in Python - cache these two globals
@@ -1487,17 +1498,17 @@ def EmitBambuSimulinkBridge(sp: ApLevelContainer, subProgramImplementation: str)
     leafTypeDict = asnParser.g_leafTypeDict
 
     outputCsourceFilename = vhdlBackend.CleanNameAsToolWants(sp._id) + "_bambu.c"
-    
-    bambuFile = open(os.path.dirname(vhdlBackend.C_SourceFile.name) + '/' +  outputCsourceFilename, 'w')
-    
+
+    bambuFile = open(os.path.dirname(vhdlBackend.C_SourceFile.name) + '/' + outputCsourceFilename, 'w')
+
     bambuFile.write("#include \"%s.h\" // Space certified compiler generated\n" % vhdlBackend.asn_name)
     bambuFile.write("#include \"%s.h\"\n" % vhdlBackend.CleanNameAsToolWants(sp._id))
     bambuFile.write("#include \"%s_types.h\"\n\n" % vhdlBackend.CleanNameAsToolWants(sp._id))
-    #TODO can be added later for optimization (and these 2 files can then be removed from Bambu call
-    #bambuFile.write("#include \"%s.c\"\n\n" % vhdlBackend.CleanNameAsToolWants(sp._id))
-    #bambuFile.write("#include \"%s_data.c\"\n\n" % vhdlBackend.CleanNameAsToolWants(sp._id))
+    # TODO can be added later for optimization (and these 2 files can then be removed from Bambu call
+    # bambuFile.write("#include \"%s.c\"\n\n" % vhdlBackend.CleanNameAsToolWants(sp._id))
+    # bambuFile.write("#include \"%s_data.c\"\n\n" % vhdlBackend.CleanNameAsToolWants(sp._id))
 
-    bambuFile.write('void bambu_%s(\n    ' %  sp._id)
+    bambuFile.write('void bambu_%s(\n    ' % sp._id)
     lines = []
     for param in sp._params:
         lines.extend(
@@ -1506,7 +1517,7 @@ def EmitBambuSimulinkBridge(sp: ApLevelContainer, subProgramImplementation: str)
         bambuFile.write(
             '%s%s' % (",\n    " if idx != 0 else "", line))
     bambuFile.write(') {\n')
-    
+
     initStr = """
 
     static int initialized = 0;
@@ -1525,7 +1536,7 @@ def EmitBambuSimulinkBridge(sp: ApLevelContainer, subProgramImplementation: str)
     for idx, line in enumerate(lines):
         bambuFile.write(
             '%s%s;' % ("\n    ", line))
-        
+
     stepStr = """
 
 #ifndef rtmGetStopRequested
@@ -1538,7 +1549,7 @@ def EmitBambuSimulinkBridge(sp: ApLevelContainer, subProgramImplementation: str)
 #endif
 """ % (sp._id, sp._id, sp._id, sp._id, sp._id)
     bambuFile.write(stepStr)
-    
+
     lines = []
     for param in sp._params:
         if isinstance(param, OutParam):
@@ -1546,8 +1557,8 @@ def EmitBambuSimulinkBridge(sp: ApLevelContainer, subProgramImplementation: str)
                 writeOutputsAsBambuWantsForSimulink(sp, param, names, leafTypeDict))
     for idx, line in enumerate(lines):
         bambuFile.write(
-            '%s%s;' % ("\n    ", line)) 
-    
+            '%s%s;' % ("\n    ", line))
+
     bambuFile.write('\n}\n\n')
 
 
@@ -1557,14 +1568,14 @@ def EmitBambuCBridge(sp: ApLevelContainer, subProgramImplementation: str):
     leafTypeDict = asnParser.g_leafTypeDict
 
     outputCsourceFilename = vhdlBackend.CleanNameAsToolWants(sp._id) + "_bambu.c"
-    
-    bambuFile = open(os.path.dirname(vhdlBackend.C_SourceFile.name) + '/' +  outputCsourceFilename, 'w')
-    
-    functionBlocksName = os.path.dirname(vhdlBackend.C_SourceFile.name)[4:] # not elegant but not sure how to get the Function Block's name from here
+
+    bambuFile = open(os.path.dirname(vhdlBackend.C_SourceFile.name) + '/' + outputCsourceFilename, 'w')
+
+    functionBlocksName = os.path.dirname(vhdlBackend.C_SourceFile.name)[4:]  # not elegant but not sure how to get the Function Block's name from here
     bambuFile.write("#include \"%s.h\" // Space certified compiler generated\n" % vhdlBackend.asn_name)
-    bambuFile.write("#include \"%s.h\"\n" % functionBlocksName) 
-    
-    bambuFile.write('\nvoid bambu_%s(\n    ' %  sp._id)
+    bambuFile.write("#include \"%s.h\"\n" % functionBlocksName)
+
+    bambuFile.write('\nvoid bambu_%s(\n    ' % sp._id)
     # List flattened PI parameters
     lines = []
     for param in sp._params:
@@ -1574,7 +1585,7 @@ def EmitBambuCBridge(sp: ApLevelContainer, subProgramImplementation: str):
         bambuFile.write(
             '%s%s' % (",\n    " if idx != 0 else "", line))
     bambuFile.write(') {\n')
-    
+
     # Declare PI params
     lines = []
     for param in sp._params:
@@ -1619,6 +1630,6 @@ def EmitBambuCBridge(sp: ApLevelContainer, subProgramImplementation: str):
                 writeOutputsAsBambuWantsForC(param, names, leafTypeDict))
     for idx, line in enumerate(lines):
         bambuFile.write(
-            '%s%s;' % ("\n    ", line)) 
-    
+            '%s%s;' % ("\n    ", line))
+
     bambuFile.write('\n}\n\n')
