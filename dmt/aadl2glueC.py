@@ -428,11 +428,11 @@ def ProcessCustomBackends(
             panic("Unexpected call of getCustomBackends...")  # pragma: no cover
 
     # Add call to the VHDL B-mapper also for C and Simulink functions (x[2]) with FPGA configuration(s) defined (x[4])
-    for si in [x for x in SystemsAndImplementations if x[2] is not None and (x[2].lower() in ["gui_ri", "gui_pi", "vhdl"] or ((x[2].lower() == "c" or x[2].lower() == "simulink") and len(x)>4 and x[4] is not ''))]:
+    for si in [x for x in SystemsAndImplementations if x[2] is not None and (x[2].lower() in ["gui_ri", "gui_pi", "vhdl"] or ((x[2].lower() == "c" or x[2].lower() == "simulink") and len(x)>4 and x[4] != ''))]:
         # We do, start the work
         spName, sp_impl, lang, maybeFVname = si[0], si[1], si[2], si[3]
         # Add call to the VHDL B-mapper also for C and Simulink functions (si[2]) with FPGA configuration(s) defined (si[4])
-        if (si[2].lower() == "c" or si[2].lower() == "simulink") and len(si)>4 and si[4] is not '':
+        if (si[2].lower() == "c" or si[2].lower() == "simulink") and len(si)>4 and si[4] != '':
             # pretend its VHDL
             lang = "vhdl"
         sp = commonPy.aadlAST.g_apLevelContainers[spName]
@@ -552,14 +552,14 @@ def main() -> None:
     useOSS = "-useOSS" in sys.argv
     if useOSS:
         sys.argv.remove("-useOSS")
-    
+
     if "-fpga" in sys.argv:  # pragma: no cover
         idx = sys.argv.index("-fpga")
         try:
             commonPy.configMT.fpga_mapper = os.path.normpath(sys.argv[idx + 1])
         except:  # pragma: no cover
-            panic('Usage: %s [-v] [-verbose] [-useOSS] [-fpga <BRAVE|ZESTSC1|ZYNQZC706>] [-o dirname] input1.aadl [input2.aadl] ...\n' % sys.argv[0])  # pragma: no cover 
-        if commonPy.configMT.fpga_mapper is None or commonPy.configMT.fpga_mapper not in ['BRAVE','ZESTSC1','ZYNQZC706']:
+            panic('Usage: %s [-v] [-verbose] [-useOSS] [-fpga <BRAVE|ZESTSC1|ZYNQZC706>] [-o dirname] input1.aadl [input2.aadl] ...\n' % sys.argv[0])  # pragma: no cover
+        if commonPy.configMT.fpga_mapper is None or commonPy.configMT.fpga_mapper not in ['BRAVE', 'ZESTSC1', 'ZYNQZC706']:
             panic('Usage: %s [-v] [-verbose] [-useOSS] [-fpga <BRAVE|ZESTSC1|ZYNQZC706>] [-o dirname] input1.aadl [input2.aadl] ...\n' % sys.argv[0])  # pragma: no cover
         del sys.argv[idx]
         del sys.argv[idx]
