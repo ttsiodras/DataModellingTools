@@ -34,6 +34,8 @@ parameters, which have C callable interfaces. The necessary
 stubs (to allow calling from the VM side) are also generated.
 '''
 
+# pylint: disable=too-many-lines
+
 import os
 import re
 import math
@@ -123,8 +125,8 @@ class VHDL_Circuit:
     allCircuits = []  # type: List[VHDL_Circuit]
     lookupSP = {}  # type: Dict[str, VHDL_Circuit]
     currentCircuit = None  # type: VHDL_Circuit
-    names = None  # type: asnParser.AST_Lookup
-    leafTypeDict = None  # type: asnParser.AST_Leaftypes
+    names = {}  # type: asnParser.AST_Lookup
+    leafTypeDict = {}  # type: asnParser.AST_Leaftypes
     currentOffset = 0x0  # type: int
 
     def __init__(self, sp: ApLevelContainer) -> None:
@@ -175,7 +177,7 @@ class FromVHDLToASN1SCC(RecursiveMapperGeneric[List[int], str]):  # pylint: disa
         panicWithCallStack("REALs (%s) cannot be used for synthesizeable VHDL" % node.Location())  # pragma: no cover
         # return ["%s = (double) %s;\n" % (destVar, srcVHDL)]
 
-    def MapBoolean(self, srcVHDL: List[int], destVar: str, node: AsnBool, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+    def MapBoolean(self, srcVHDL: List[int], destVar: str, unused_node: AsnBool, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         register = srcVHDL[0] + srcVHDL[1]
         lines = []  # type: List[str]
         lines.append("{\n")
@@ -211,7 +213,7 @@ class FromVHDLToASN1SCC(RecursiveMapperGeneric[List[int], str]):  # pylint: disa
         srcVHDL[0] += node._range[-1]
         return lines
 
-    def MapEnumerated(self, srcVHDL: List[int], destVar: str, node: AsnEnumerated, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+    def MapEnumerated(self, srcVHDL: List[int], destVar: str, unused_node: AsnEnumerated, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         register = srcVHDL[0] + srcVHDL[1]
         lines = []  # type: List[str]
         lines.append("{\n")
@@ -533,7 +535,7 @@ unsigned int count;
 ''' % (self.CleanNameAsADAWants(unused_maybeFVname)))
 
     # def ExecuteBlock(self, modelingLanguage, asnFile, sp, subProgramImplementation, maybeFVname):
-    def ExecuteBlock(self, unused_modelingLanguage: str, unused_asnFile: str, sp: ApLevelContainer, unused_subProgramImplementation: str, maybeFVname: str) -> None:
+    def ExecuteBlock(self, unused_modelingLanguage: str, unused_asnFile: str, sp: ApLevelContainer, unused_subProgramImplementation: str, unused_maybeFVname: str) -> None:
         self.C_SourceFile.write("    unsigned int flag = 0;\n\n")
         self.C_SourceFile.write("    // Now that the parameters are passed inside the FPGA, run the processing logic\n")
 
@@ -1168,7 +1170,7 @@ def OnFinal() -> None:
         AddToStr('updateCalculationsComplete', ' ' * 12 + "    %s_CalculationsComplete <= '0';\n" % c._spCleanName)
         AddToStr('updateCalculationsComplete', ' ' * 12 + "end if;\n")
 
-    AddToStr('outputs', ', '.join(outputs) + (', ' if len(outputs) else ''))
+    AddToStr('outputs', ', '.join(outputs) + (', ' if outputs else ''))
     AddToStr('completions', ', '.join(completions))
 
     # Handle invalid write accesses in the passinput space by kicking off the last circuit (i.e. an FDIR circuit)
@@ -1260,7 +1262,7 @@ def readInputsAsBambuWantsForSimulink(sp: ApLevelContainer, param: Param, names:
     return computeBambuInputAssignmentsForSimulink(sp, node, asnTypename, prefixSimulink, prefixVHDL, names, leafTypeDict)
 
 
-def computeBambuInputAssignmentsForSimulink(sp: ApLevelContainer, node: AsnNode, asnTypename: str, prefixSimulink: str, prefixVHDL: str, names: AST_Lookup, leafTypeDict: AST_Leaftypes) -> List[str]:
+def computeBambuInputAssignmentsForSimulink(sp: ApLevelContainer, node: AsnNode, unused_asnTypename: str, prefixSimulink: str, prefixVHDL: str, names: AST_Lookup, leafTypeDict: AST_Leaftypes) -> List[str]:
     clean = vhdlBackend.CleanNameAsToolWants
     while isinstance(node, AsnMetaMember):
         node = names[node._containedType]
@@ -1321,7 +1323,7 @@ def readInputsAsBambuWantsForC(param: Param, names: AST_Lookup, leafTypeDict: AS
     return computeBambuInputAssignmentsForC(node, asnTypename, prefixC, prefixVHDL, names, leafTypeDict)
 
 
-def computeBambuInputAssignmentsForC(node: AsnNode, asnTypename: str, prefixC: str, prefixVHDL: str, names: AST_Lookup, leafTypeDict: AST_Leaftypes) -> List[str]:
+def computeBambuInputAssignmentsForC(node: AsnNode, unused_asnTypename: str, prefixC: str, prefixVHDL: str, names: AST_Lookup, leafTypeDict: AST_Leaftypes) -> List[str]:
     clean = vhdlBackend.CleanNameAsToolWants
     while isinstance(node, AsnMetaMember):
         node = names[node._containedType]
@@ -1380,7 +1382,7 @@ def writeOutputsAsBambuWantsForSimulink(sp: ApLevelContainer, param: Param, name
     return computeBambuOutputAssignmentsForSimulink(sp, node, asnTypename, prefixSimulink, prefixVHDL, names, leafTypeDict)
 
 
-def computeBambuOutputAssignmentsForSimulink(sp: ApLevelContainer, node: AsnNode, asnTypename: str, prefixSimulink: str, prefixVHDL: str, names: AST_Lookup, leafTypeDict: AST_Leaftypes) -> List[str]:
+def computeBambuOutputAssignmentsForSimulink(sp: ApLevelContainer, node: AsnNode, unused_asnTypename: str, prefixSimulink: str, prefixVHDL: str, names: AST_Lookup, leafTypeDict: AST_Leaftypes) -> List[str]:
     clean = vhdlBackend.CleanNameAsToolWants
     while isinstance(node, AsnMetaMember):
         node = names[node._containedType]
@@ -1441,7 +1443,7 @@ def writeOutputsAsBambuWantsForC(param: Param, names: AST_Lookup, leafTypeDict: 
     return computeBambuOutputAssignmentsForC(node, asnTypename, prefixC, prefixVHDL, names, leafTypeDict)
 
 
-def computeBambuOutputAssignmentsForC(node: AsnNode, asnTypename: str, prefixC: str, prefixVHDL: str, names: AST_Lookup, leafTypeDict: AST_Leaftypes) -> List[str]:
+def computeBambuOutputAssignmentsForC(node: AsnNode, unused_asnTypename: str, prefixC: str, prefixVHDL: str, names: AST_Lookup, leafTypeDict: AST_Leaftypes) -> List[str]:
     clean = vhdlBackend.CleanNameAsToolWants
     while isinstance(node, AsnMetaMember):
         node = names[node._containedType]
@@ -1492,7 +1494,7 @@ def computeBambuOutputAssignmentsForC(node: AsnNode, asnTypename: str, prefixC: 
         panicWithCallStack("[computeBambuOutputAssignmentsForC] Unsupported type: " + str(node.__class__))
 
 
-def EmitBambuSimulinkBridge(sp: ApLevelContainer, subProgramImplementation: str):
+def EmitBambuSimulinkBridge(sp: ApLevelContainer, unused_subProgramImplementation: str):
     # Parameter access is much faster in Python - cache these two globals
     names = asnParser.g_names
     leafTypeDict = asnParser.g_leafTypeDict
@@ -1562,7 +1564,7 @@ def EmitBambuSimulinkBridge(sp: ApLevelContainer, subProgramImplementation: str)
     bambuFile.write('\n}\n\n')
 
 
-def EmitBambuCBridge(sp: ApLevelContainer, subProgramImplementation: str):
+def EmitBambuCBridge(sp: ApLevelContainer, unused_subProgramImplementation: str):
     # Parameter access is much faster in Python - cache these two globals
     names = asnParser.g_names
     leafTypeDict = asnParser.g_leafTypeDict

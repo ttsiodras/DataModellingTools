@@ -35,6 +35,9 @@ stubs (to allow calling from the VM side) are also generated.
 Status: Device driver side (PS, ARM) calls to AXI are still to be implemented. Hence such AXI writes/reads are temporarily commented out.
 TODO This and other possibly needed libraries will soon be linked and included with the exported device driver.
 '''
+
+# pylint: disable=too-many-lines
+
 import os
 import re
 import math
@@ -124,8 +127,8 @@ class VHDL_Circuit:
     allCircuits = []  # type: List[VHDL_Circuit]
     lookupSP = {}  # type: Dict[str, VHDL_Circuit]
     currentCircuit = None  # type: VHDL_Circuit
-    names = None  # type: asnParser.AST_Lookup
-    leafTypeDict = None  # type: asnParser.AST_Leaftypes
+    names = {}  # type: asnParser.AST_Lookup
+    leafTypeDict = {}  # type: asnParser.AST_Leaftypes
     currentOffset = 0x0  # type: int
 
     def __init__(self, sp: ApLevelContainer) -> None:
@@ -179,7 +182,7 @@ class FromVHDLToASN1SCC(RecursiveMapperGeneric[List[int], str]):  # pylint: disa
         srcVHDL[0] += 8
         return lines
 
-    def MapReal(self, srcVHDL: List[int], destVar: str, node: AsnReal, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+    def MapReal(self, srcVHDL: List[int], destVar: str, unused_node: AsnReal, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         register = srcVHDL[0] + srcVHDL[1]
         lines = []  # type: List[str]
         lines.append("{\n")
@@ -195,7 +198,7 @@ class FromVHDLToASN1SCC(RecursiveMapperGeneric[List[int], str]):  # pylint: disa
         srcVHDL[0] += 8
         return lines
 
-    def MapBoolean(self, srcVHDL: List[int], destVar: str, node: AsnBool, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+    def MapBoolean(self, srcVHDL: List[int], destVar: str, unused_node: AsnBool, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         register = srcVHDL[0] + srcVHDL[1]
         lines = []  # type: List[str]
         lines.append("{\n")
@@ -233,7 +236,7 @@ class FromVHDLToASN1SCC(RecursiveMapperGeneric[List[int], str]):  # pylint: disa
         srcVHDL[0] += node._range[-1]
         return lines
 
-    def MapEnumerated(self, srcVHDL: List[int], destVar: str, node: AsnEnumerated, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+    def MapEnumerated(self, srcVHDL: List[int], destVar: str, unused_node: AsnEnumerated, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         register = srcVHDL[0] + srcVHDL[1]
         lines = []  # type: List[str]
         lines.append("{\n")
@@ -327,7 +330,7 @@ class FromASN1SCCtoVHDL(RecursiveMapperGeneric[str, List[int]]):  # pylint: disa
         dstVHDL[0] += 8
         return lines
 
-    def MapReal(self, srcVar: str, dstVHDL: List[int], node: AsnReal, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+    def MapReal(self, srcVar: str, dstVHDL: List[int], unused_node: AsnReal, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         register = dstVHDL[0] + dstVHDL[1]
         lines = []  # type: List[str]
         lines.append("{\n")
@@ -588,7 +591,7 @@ static inline void rtems_axi_write32(uintptr_t Addr, uint32_t Value)
 ''' % (self.CleanNameAsADAWants(unused_maybeFVname)))
 
     # def ExecuteBlock(self, modelingLanguage, asnFile, sp, subProgramImplementation, maybeFVname):
-    def ExecuteBlock(self, unused_modelingLanguage: str, unused_asnFile: str, sp: ApLevelContainer, unused_subProgramImplementation: str, maybeFVname: str) -> None:
+    def ExecuteBlock(self, unused_modelingLanguage: str, unused_asnFile: str, sp: ApLevelContainer, unused_subProgramImplementation: str, unused_maybeFVname: str) -> None:
         self.C_SourceFile.write("    unsigned int flag = 0;\n\n")
         self.C_SourceFile.write("    // Now that the parameters are passed inside the FPGA, run the processing logic\n")
 
@@ -632,7 +635,7 @@ class MapASN1ToVHDLCircuit(RecursiveMapperGeneric[str, str]):
         bits += bits if node._range[0] < 0 else 0
         return [dstVHDL + ' : ' + direction + ('std_logic_vector(63 downto 0); -- ASSERT uses 64 bit INTEGERs (optimal would be %d bits)' % bits)]
 
-    def MapReal(self, direction: str, dstVHDL: str, node: AsnReal, ___: AST_Leaftypes, dummy: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+    def MapReal(self, direction: str, dstVHDL: str, unused_node: AsnReal, ___: AST_Leaftypes, dummy: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return [dstVHDL + ' : ' + direction + ('std_logic_vector(63 downto 0);')]
 
     def MapBoolean(self, direction: str, dstVHDL: str, _: AsnBool, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
@@ -692,7 +695,7 @@ class MapASN1ToVHDLregisters(RecursiveMapperGeneric[str, str]):
         bits += (bits if node._range[0] < 0 else 0)
         return ['signal ' + dstVHDL + ' : ' + ('std_logic_vector(63 downto 0); -- ASSERT uses 64 bit INTEGERs (optimal would be %d bits)' % bits)]
 
-    def MapReal(self, _: str, dstVHDL: str, node: AsnReal, ___: AST_Leaftypes, dummy: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+    def MapReal(self, _: str, dstVHDL: str, unused_node: AsnReal, ___: AST_Leaftypes, dummy: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return ['signal ' + dstVHDL + ' : ' + ('std_logic_vector(63 downto 0);')]
 
     def MapBoolean(self, _: str, dstVHDL: str, __: AsnBool, ___: AST_Leaftypes, dummy: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
@@ -752,7 +755,7 @@ class MapASN1ToVHDLinput(RecursiveMapperGeneric[str, str]):
         bits += (bits if node._range[0] < 0 else 0)
         return ['' + dstVHDL + ' : ' + ('std_logic_vector(63 downto 0); -- ASSERT uses 64 bit INTEGERs (optimal would be %d bits)' % bits)]
 
-    def MapReal(self, _: str, dstVHDL: str, node: AsnReal, ___: AST_Leaftypes, dummy: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+    def MapReal(self, _: str, dstVHDL: str, unused_node: AsnReal, ___: AST_Leaftypes, dummy: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return ['' + dstVHDL + ' : ' + ('std_logic_vector(63 downto 0);')]
 
     def MapBoolean(self, _: str, dstVHDL: str, __: AsnBool, ___: AST_Leaftypes, dummy: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
@@ -812,7 +815,7 @@ class MapASN1ToVHDLinputassign(RecursiveMapperGeneric[str, str]):
         bits += (bits if node._range[0] < 0 else 0)
         return ['' + dstVHDL + ' => (others => \'0\'),']
 
-    def MapReal(self, _: str, dstVHDL: str, node: AsnReal, ___: AST_Leaftypes, dummy: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+    def MapReal(self, _: str, dstVHDL: str, unused_node: AsnReal, ___: AST_Leaftypes, dummy: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return ['' + dstVHDL + ' => (others => \'0\'),']
 
     def MapBoolean(self, _: str, dstVHDL: str, __: AsnBool, ___: AST_Leaftypes, dummy: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
@@ -872,7 +875,7 @@ class MapASN1ToVHDLinternalsignals(RecursiveMapperGeneric[str, str]):
         bits += (bits if node._range[0] < 0 else 0)
         return ['' + dstVHDL + ' <= AXI_SLAVE_CTRL_r.' + dstVHDL + ';\n']
 
-    def MapReal(self, _: str, dstVHDL: str, node: AsnReal, ___: AST_Leaftypes, dummy: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+    def MapReal(self, _: str, dstVHDL: str, unused_node: AsnReal, ___: AST_Leaftypes, dummy: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return ['' + dstVHDL + ' <= AXI_SLAVE_CTRL_r.' + dstVHDL + ';\n']
 
     def MapBoolean(self, _: str, dstVHDL: str, __: AsnBool, ___: AST_Leaftypes, dummy: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
@@ -935,7 +938,7 @@ class MapASN1ToVHDLreadinputdata(RecursiveMapperGeneric[List[int], str]):  # pyl
         reginfo[0] += 8
         return lines
 
-    def MapReal(self, reginfo: List[int], dstVHDL: str, node: AsnReal, ___: AST_Leaftypes, dummy: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+    def MapReal(self, reginfo: List[int], dstVHDL: str, unused_node: AsnReal, ___: AST_Leaftypes, dummy: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         lines = []  # type: List[str]
         lines.append('when (%s) => v.%s(31 downto  0) := S_AXI_WDATA;' % (reginfo[0], dstVHDL))
         lines.append('when (%s) => v.%s(63 downto  32) := S_AXI_WDATA;' % (reginfo[0] + 4, dstVHDL))
@@ -1013,7 +1016,7 @@ class MapASN1ToVHDLwriteoutputdata(RecursiveMapperGeneric[List[int], str]):  # p
         reginfo[0] += 8
         return lines
 
-    def MapReal(self, reginfo: List[int], dstVHDL: str, node: AsnReal, ___: AST_Leaftypes, dummy: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+    def MapReal(self, reginfo: List[int], dstVHDL: str, unused_node: AsnReal, ___: AST_Leaftypes, dummy: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         lines = []  # type: List[str]
         lines.append('when (%s) => v_comb_out.rdata(31 downto 0) := %s(31 downto  0);' % (reginfo[0] + 0, dstVHDL))
         lines.append('when (%s) => v_comb_out.rdata(31 downto 0) := %s(63 downto  32);' % (reginfo[0] + 4, dstVHDL))
@@ -1084,7 +1087,7 @@ class MapASN1ToSystemCconnections(RecursiveMapperGeneric[str, str]):
     def MapInteger(self, srcRegister: str, dstCircuitPort: str, _: AsnInt, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return [dstCircuitPort + ' => ' + srcRegister]
 
-    def MapReal(self, srcRegister: str, dstCircuitPort: str, node: AsnReal, ___: AST_Leaftypes, dummy: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+    def MapReal(self, srcRegister: str, dstCircuitPort: str, unused_node: AsnReal, ___: AST_Leaftypes, dummy: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return [dstCircuitPort + ' => ' + srcRegister]
 
     def MapBoolean(self, srcRegister: str, dstCircuitPort: str, __: AsnBool, ___: AST_Leaftypes, dummy: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
@@ -1139,7 +1142,7 @@ class MapASN1ToOutputs(RecursiveMapperGeneric[str, int]):
     def MapInteger(self, paramName: str, _: int, dummy: AsnInt, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return [paramName]
 
-    def MapReal(self, paramName: str, __: int, node: AsnReal, ___: AST_Leaftypes, dummy: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
+    def MapReal(self, paramName: str, __: int, unused_node: AsnReal, ___: AST_Leaftypes, dummy: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
         return [paramName]
 
     def MapBoolean(self, paramName: str, _: int, dummy: AsnBool, __: AST_Leaftypes, ___: AST_Lookup) -> List[str]:  # pylint: disable=invalid-sequence-index
@@ -1459,7 +1462,9 @@ def OnFinal() -> None:
     AddToStr('completions', ', '.join(completions))
     AddToStr('starts', ', '.join(starts))
 
-    AddToStr('pi', "%s" % c._spCleanName)
+    assert len(VHDL_Circuit.allCircuits) > 0
+    AddToStr('pi', "%s" % VHDL_Circuit.allCircuits[0]._spCleanName)
+
     vhdlFile = open(vhdlBackend.dir + '/TASTE-VHDL-DESIGN/ip/src/TASTE_AXI.vhd', 'w')
     vhdlFile.write(vhdlTemplateZynQZC706.vhd % g_placeholders)
     vhdlFile.close()
@@ -1502,13 +1507,7 @@ def computeBambuDeclarations(node: AsnNode, asnTypename: str, prefix: str, names
         node = names[node._containedType]
     while isinstance(node, str):
         node = names[node]
-    if isinstance(node, AsnInt):
-        return ["asn1Scc" + clean(asnTypename) + " " + prefix]
-    if isinstance(node, AsnReal):
-        return ["asn1Scc" + clean(asnTypename) + " " + prefix]
-    if isinstance(node, AsnBool):
-        return ["asn1Scc" + clean(asnTypename) + " " + prefix]
-    if isinstance(node, AsnEnumerated):
+    if isinstance(node, (AsnInt, AsnReal, AsnBool, AsnEnumerated)):
         return ["asn1Scc" + clean(asnTypename) + " " + prefix]
     elif isinstance(node, (AsnSequenceOf, AsnSetOf)):
         if not node._range:
@@ -1555,15 +1554,13 @@ def readInputsAsBambuWantsForSimulink(sp: ApLevelContainer, param: Param, names:
     return computeBambuInputAssignmentsForSimulink(sp, node, asnTypename, prefixSimulink, prefixVHDL, names, leafTypeDict)
 
 
-def computeBambuInputAssignmentsForSimulink(sp: ApLevelContainer, node: AsnNode, asnTypename: str, prefixSimulink: str, prefixVHDL: str, names: AST_Lookup, leafTypeDict: AST_Leaftypes) -> List[str]:
+def computeBambuInputAssignmentsForSimulink(sp: ApLevelContainer, node: AsnNode, unused_asnTypename: str, prefixSimulink: str, prefixVHDL: str, names: AST_Lookup, leafTypeDict: AST_Leaftypes) -> List[str]:
     clean = vhdlBackend.CleanNameAsToolWants
     while isinstance(node, AsnMetaMember):
         node = names[node._containedType]
     while isinstance(node, str):
         node = names[node]
-    if isinstance(node, AsnInt):
-        return ["%s_U.%s = %s" % (clean(sp._id), prefixSimulink, prefixVHDL)]
-    if isinstance(node, AsnReal):
+    if isinstance(node, (AsnInt, AsnReal)):
         return ["%s_U.%s = %s" % (clean(sp._id), prefixSimulink, prefixVHDL)]
     if isinstance(node, AsnBool):
         return ["%s_U.%s = %s" % (clean(sp._id), prefixSimulink, prefixVHDL)]
@@ -1618,19 +1615,13 @@ def readInputsAsBambuWantsForC(param: Param, names: AST_Lookup, leafTypeDict: AS
     return computeBambuInputAssignmentsForC(node, asnTypename, prefixC, prefixVHDL, names, leafTypeDict)
 
 
-def computeBambuInputAssignmentsForC(node: AsnNode, asnTypename: str, prefixC: str, prefixVHDL: str, names: AST_Lookup, leafTypeDict: AST_Leaftypes) -> List[str]:
+def computeBambuInputAssignmentsForC(node: AsnNode, unused_asnTypename: str, prefixC: str, prefixVHDL: str, names: AST_Lookup, leafTypeDict: AST_Leaftypes) -> List[str]:
     clean = vhdlBackend.CleanNameAsToolWants
     while isinstance(node, AsnMetaMember):
         node = names[node._containedType]
     while isinstance(node, str):
         node = names[node]
-    if isinstance(node, AsnInt):
-        return ["%s = %s" % (prefixC, prefixVHDL)]
-    if isinstance(node, AsnReal):
-        return ["%s = %s" % (prefixC, prefixVHDL)]
-    if isinstance(node, AsnBool):
-        return ["%s = %s" % (prefixC, prefixVHDL)]
-    if isinstance(node, AsnEnumerated):
+    if isinstance(node, (AsnInt, AsnReal, AsnBool, AsnEnumerated)):
         return ["%s = %s" % (prefixC, prefixVHDL)]
     elif isinstance(node, (AsnSequence, AsnSet)):
         lines = []  # type: List[str]
@@ -1679,15 +1670,13 @@ def writeOutputsAsBambuWantsForSimulink(sp: ApLevelContainer, param: Param, name
     return computeBambuOutputAssignmentsForSimulink(sp, node, asnTypename, prefixSimulink, prefixVHDL, names, leafTypeDict)
 
 
-def computeBambuOutputAssignmentsForSimulink(sp: ApLevelContainer, node: AsnNode, asnTypename: str, prefixSimulink: str, prefixVHDL: str, names: AST_Lookup, leafTypeDict: AST_Leaftypes) -> List[str]:
+def computeBambuOutputAssignmentsForSimulink(sp: ApLevelContainer, node: AsnNode, unused_asnTypename: str, prefixSimulink: str, prefixVHDL: str, names: AST_Lookup, leafTypeDict: AST_Leaftypes) -> List[str]:
     clean = vhdlBackend.CleanNameAsToolWants
     while isinstance(node, AsnMetaMember):
         node = names[node._containedType]
     while isinstance(node, str):
         node = names[node]
-    if isinstance(node, AsnInt):
-        return ["%s = %s_Y.%s" % (prefixVHDL, clean(sp._id), prefixSimulink)]
-    if isinstance(node, AsnReal):
+    if isinstance(node, (AsnInt, AsnReal)):
         return ["%s = %s_Y.%s" % (prefixVHDL, clean(sp._id), prefixSimulink)]
     if isinstance(node, AsnBool):
         return ["%s = %s_Y.%s" % (prefixVHDL, clean(sp._id), prefixSimulink)]
@@ -1742,15 +1731,13 @@ def writeOutputsAsBambuWantsForC(param: Param, names: AST_Lookup, leafTypeDict: 
     return computeBambuOutputAssignmentsForC(node, asnTypename, prefixC, prefixVHDL, names, leafTypeDict)
 
 
-def computeBambuOutputAssignmentsForC(node: AsnNode, asnTypename: str, prefixC: str, prefixVHDL: str, names: AST_Lookup, leafTypeDict: AST_Leaftypes) -> List[str]:
+def computeBambuOutputAssignmentsForC(node: AsnNode, unused_asnTypename: str, prefixC: str, prefixVHDL: str, names: AST_Lookup, leafTypeDict: AST_Leaftypes) -> List[str]:
     clean = vhdlBackend.CleanNameAsToolWants
     while isinstance(node, AsnMetaMember):
         node = names[node._containedType]
     while isinstance(node, str):
         node = names[node]
-    if isinstance(node, AsnInt):
-        return ["%s = %s" % (prefixVHDL, prefixC)]
-    if isinstance(node, AsnReal):
+    if isinstance(node, (AsnInt, AsnReal)):
         return ["%s = %s" % (prefixVHDL, prefixC)]
     if isinstance(node, AsnBool):
         return ["%s = %s" % (prefixVHDL, prefixC)]
@@ -1795,7 +1782,7 @@ def computeBambuOutputAssignmentsForC(node: AsnNode, asnTypename: str, prefixC: 
         panicWithCallStack("[computeBambuOutputAssignmentsForC] Unsupported type: " + str(node.__class__))
 
 
-def EmitBambuSimulinkBridge(sp: ApLevelContainer, subProgramImplementation: str):
+def EmitBambuSimulinkBridge(sp: ApLevelContainer, unused_subProgramImplementation: str):
     # Parameter access is much faster in Python - cache these two globals
     names = asnParser.g_names
     leafTypeDict = asnParser.g_leafTypeDict
@@ -1866,7 +1853,7 @@ def EmitBambuSimulinkBridge(sp: ApLevelContainer, subProgramImplementation: str)
     bambuFile.write('\n}\n\n')
 
 
-def EmitBambuCBridge(sp: ApLevelContainer, subProgramImplementation: str):
+def EmitBambuCBridge(sp: ApLevelContainer, unused_subProgramImplementation: str):
     # Parameter access is much faster in Python - cache these two globals
     names = asnParser.g_names
     leafTypeDict = asnParser.g_leafTypeDict

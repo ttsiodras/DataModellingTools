@@ -769,7 +769,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                      self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation),
                      param._id,
                      fpgaSuffix)
-                if isinstance(param, InOutParam) or isinstance(param, OutParam):
+                if isinstance(param, (InOutParam, OutParam)):
                     self.C_SourceFile.write('    *pSize_%s = %s(p%s, %s);\n' %
                                             (self.CleanNameAsToolWants(param._id),
                                              tmpSpName,
