@@ -452,7 +452,7 @@ class SimulinkGlueGenerator(SynchronousToolGlueGenerator):
         self.C_SourceFile.write("        %s_initialize();\n" % self.g_FVname)
         # If there are HW(FPGA) configurations defined, initialize also the HW side (the device driver: <self.g_FVname>_Simulink.vhdl.c).
         if sp._fpgaConfigurations != '':
-            self.C_SourceFile.write("        init_%s_Fpga();\n" % maybeFVname)
+            self.C_SourceFile.write("        init_%s_Fpga();\n" % maybeFVname)  # pragma: no cover
         self.C_SourceFile.write("    }\n")
 
     def ExecuteBlock(self, unused_modelingLanguage: str, unused_asnFile: str, unused_sp: ApLevelContainer, unused_subProgramImplementation: str, unused_maybeFVname: str) -> None:
