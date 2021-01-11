@@ -210,7 +210,10 @@ def CreateDeclarationForType(nodeTypename: str, names: AST_Lookup, leafTypeDict:
         g_outputFile.write("\n")
     elif isinstance(node, (AsnSequence, AsnSet, AsnChoice)):
         if not node._members:
-            panic("Simulink_A_mapper: Simulink can't support empty Seq/Set/Choice! (%s)" % node.Location())  # pragma: no cover
+            return
+            # Ignore empty sequences in the A mapper, but do not raise an error, as empty sequences
+            # may be used in other parts of the system.
+            #panic("Simulink_A_mapper: Simulink can't support empty Seq/Set/Choice! (%s)" % node.Location())  # pragma: no cover
         elemNo = 0
         if isinstance(node, AsnChoice):
             elemNo += 1
