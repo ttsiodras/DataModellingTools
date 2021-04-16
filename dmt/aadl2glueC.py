@@ -141,7 +141,7 @@ g_sync_mappers = {
     'Simulink': simulink_B_mapper,
     'gui': gui_B_mapper,
     'python': python_B_mapper,
-    'QgenC': qgenc_B_mapper,
+    'QGenC': qgenc_B_mapper,
     'vhdl': vhdl_B_mapper,
 }
 
