@@ -674,7 +674,10 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
 
             if maybeFVname != "":
                 if not (genFpgaDevDrv and maybeFVname in fpga_seen and fpga_seen[maybeFVname] == 'with_init_already'):
-                    self.C_SourceFile.write("void init_%s%s(void)\n" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation)))
+                    if modelingLanguage == "QGenC":
+                        self.C_SourceFile.write("void init_%s%s(void)\n" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation)))
+                    else:
+                        self.C_SourceFile.write("void init_%s%s(void)\n" % (self.CleanNameAsADAWants(maybeFVname), fpgaSuffix))
             else:  # pragma: no cover
                 self.C_SourceFile.write("void %s_init(void)\n" % self.CleanNameAsADAWants(sp._id))  # pragma: no cover
             if not (genFpgaDevDrv and maybeFVname in fpga_seen and fpga_seen[maybeFVname] == 'with_init_already'):
