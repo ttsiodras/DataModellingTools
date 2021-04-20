@@ -621,7 +621,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
             if maybeFVname != "":
                 if not (genFpgaDevDrv and maybeFVname in fpga_seen and fpga_seen[maybeFVname] == 'with_init_already'):
                     if modelingLanguage == "QGenC":
-                        self.C_HeaderFile.write("void init_%s%s(void);\n" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation)))
+                        self.C_HeaderFile.write("void %s_PI_%s_startup(void);\n" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id)))
                     else:
                         self.C_HeaderFile.write("void init_%s%s(void);\n" % (self.CleanNameAsADAWants(maybeFVname), fpgaSuffix))
                 if genFpgaDevDrv:
@@ -629,7 +629,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                     self.C_HeaderFile.write("int %s_%s%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id), fpgaSuffix))
                 else:
                     if modelingLanguage == "QGenC":
-                        self.C_HeaderFile.write("void %s_%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation)))
+                        self.C_HeaderFile.write("void %s_PI_%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id)))
                     else:
                         self.C_HeaderFile.write("void %s_%s%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id), fpgaSuffix))
             else:  # pragma: no cover
@@ -675,7 +675,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
             if maybeFVname != "":
                 if not (genFpgaDevDrv and maybeFVname in fpga_seen and fpga_seen[maybeFVname] == 'with_init_already'):
                     if modelingLanguage == "QGenC":
-                        self.C_SourceFile.write("void init_%s%s(void)\n" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation)))
+                        self.C_SourceFile.write("void %s_PI_%s_startup(void)\n" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id)))
                     else:
                         self.C_SourceFile.write("void init_%s%s(void)\n" % (self.CleanNameAsADAWants(maybeFVname), fpgaSuffix))
             else:  # pragma: no cover
@@ -693,7 +693,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                     self.C_SourceFile.write("int %s_%s%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id), fpgaSuffix))
                 else:
                     if modelingLanguage == "QGenC":
-                        self.C_SourceFile.write("void %s_%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation)))
+                        self.C_SourceFile.write("void %s_PI_%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id)))
                     else:
                         self.C_SourceFile.write("void %s_%s%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id), fpgaSuffix))
             else:  # pragma: no cover
