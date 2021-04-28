@@ -282,8 +282,8 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
             self.C_SourceFile.write(
                 "int %s%s(void *pBuffer)\n{\n" % (tmpSpName, fpgaSuffix))
             self.C_SourceFile.write(
-                    "    STATIC asn1Scc%s var_%s;\n" %
-                    (self.CleanNameAsToolWants(nodeTypename), self.CleanNameAsToolWants(nodeTypename)))
+                "    STATIC asn1Scc%s var_%s;\n" %
+                (self.CleanNameAsToolWants(nodeTypename), self.CleanNameAsToolWants(nodeTypename)))
             toolToAsn1 = self.FromToolToASN1SCC()  # pylint: disable=assignment-from-no-return
             lines = toolToAsn1.Map(
                 srcVar,
@@ -455,10 +455,10 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
             self.C_SourceFile.write(
                 "int %s%s(void *pBuffer)\n{\n" % (tmpSpName, fpgaSuffix))
             self.C_SourceFile.write("    STATIC asn1Scc%s var_%s;\n" %
-                                                (self.CleanNameAsToolWants(nodeTypename), self.CleanNameAsToolWants(nodeTypename)))
+                                    (self.CleanNameAsToolWants(nodeTypename), self.CleanNameAsToolWants(nodeTypename)))
             self.C_SourceFile.write("    var_%s = *(asn1Scc%s *) pBuffer;\n    {\n" %
-                                                (self.CleanNameAsToolWants(nodeTypename),
-                                                 self.CleanNameAsToolWants(nodeTypename)))
+                                    (self.CleanNameAsToolWants(nodeTypename),
+                                     self.CleanNameAsToolWants(nodeTypename)))
             asn1ToTool = self.FromASN1SCCtoTool()  # pylint: disable=assignment-from-no-return
             lines = asn1ToTool.Map(
                 "var_" + self.CleanNameAsToolWants(nodeTypename),
@@ -831,12 +831,12 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                      self.CleanNameAsADAWants(nodeTypename),
                      self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation),
                      self.CleanNameAsADAWants(param._id),
-                     fpgaSuffix)                
+                     fpgaSuffix)
                 if isinstance(param, InParam):
                     if modelingLanguage == "QGenC":
                         self.C_SourceFile.write('    %s(p%s);\n' %
                                                 (tmpSpName,
-                                                self.CleanNameAsToolWants(param._id)))
+                                                 self.CleanNameAsToolWants(param._id)))
                     else:
                         self.C_SourceFile.write('    %s(p%s, size_%s);\n' %
                                                 (tmpSpName,
@@ -846,12 +846,12 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                     if modelingLanguage == "QGenC":
                         self.C_SourceFile.write('    %s(p%s);\n' %
                                                 (tmpSpName,
-                                                self.CleanNameAsToolWants(param._id)))
+                                                 self.CleanNameAsToolWants(param._id)))
                     else:
                         self.C_SourceFile.write('    %s(p%s, *pSize_%s);\n' %  # pragma: no cover
-                                            (tmpSpName,
-                                         self.CleanNameAsToolWants(param._id),
-                                         self.CleanNameAsToolWants(param._id)))  # pragma: no cover
+                                                (tmpSpName,
+                                                 self.CleanNameAsToolWants(param._id),
+                                                 self.CleanNameAsToolWants(param._id)))  # pragma: no cover
 
             # Do functional work
             if genFpgaDevDrv:
@@ -874,7 +874,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                     if modelingLanguage == "QGenC":
                         self.C_SourceFile.write('    %s(p%s);\n' %
                                                 (tmpSpName,
-                                                self.CleanNameAsToolWants(param._id)))
+                                                 self.CleanNameAsToolWants(param._id)))
                     else:
                         self.C_SourceFile.write('    *pSize_%s = %s(p%s, %s);\n' %
                                                 (self.CleanNameAsToolWants(param._id),
