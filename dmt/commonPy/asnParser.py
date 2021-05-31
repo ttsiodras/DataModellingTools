@@ -420,8 +420,7 @@ def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=inv
             newHash = filehash.hexdigest()
             # set the name of the XML files containing the dumped ASTs
             xmlAST = projectCache + os.sep + newHash + "_ast_v4.xml"
-            xmlAST2 = projectCache + os.sep + newHash + "_ast_v1.xml"
-            if not os.path.exists(xmlAST) or not os.path.exists(xmlAST2):
+            if not os.path.exists(xmlAST):
 
                 someFilesHaveChanged = True
                 print("[DMT] No cached model found for", ",".join(listOfFilenames))
