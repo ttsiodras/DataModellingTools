@@ -401,40 +401,41 @@ def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=inv
             utility.panic(
                 "The configured cache folder:\n\n\t" + projectCache + "\n\n...is not there!\n")
 
+    # Compute MD5 checksum of the contents of our input ASN.1 files
+    filehash = hashlib.md5()
+    for each in sorted(listOfFilenames):
+        filehash.update(
+            open(each, "r", encoding="utf-8").read().encode('utf-8'))
+        # also hash the file path: it is used in the AST in XML, so it is
+        # not enough to hash the content of the ASN.1 files, as two sets
+        # of files may have the same hash, that would lead to different XML
+        # content.
+        filehash.update(each.encode('utf-8'))
+    newHash = filehash.hexdigest()
+
+    xmlAST = None
+    someFilesHaveChanged = False
+    if projectCache is not None:
+        # set the name of the XML files containing the dumped ASTs
+        xmlAST = projectCache + os.sep + newHash + "_ast_v4.xml"
+        if not os.path.exists(xmlAST):
+
+            someFilesHaveChanged = True
+            print("[DMT] No cached model found for", ",".join(listOfFilenames))
+    else:
+        # no projectCache set, so xmlAST is set to None
+        someFilesHaveChanged = True
+    if not someFilesHaveChanged:
+        print("[DMT] Reusing cached ASN.1 AST for ", ",".join(listOfFilenames))
+
+    if not xmlAST:
+        (dummy, xmlAST) = tempfile.mkstemp()
+        os.fdopen(dummy).close()
+
     # To avoid race conditions from multiple processes spawning ASN1SCC at the same time,
     # enforce mutual exclusion via locking.
-    with lock_filename('/tmp/onlyOneASN1SCC', verbose=False):
-
-        xmlAST = None
-        someFilesHaveChanged = False
-        if projectCache is not None:
-            filehash = hashlib.md5()
-            for each in sorted(listOfFilenames):
-                filehash.update(
-                    open(each, "r", encoding="utf-8").read().encode('utf-8'))
-                # also hash the file path: it is used in the AST in XML, so it is
-                # not enough to hash the content of the ASN.1 files, as two sets
-                # of files may have the same hash, that would lead to different XML
-                # content.
-                filehash.update(each.encode('utf-8'))
-            newHash = filehash.hexdigest()
-            # set the name of the XML files containing the dumped ASTs
-            xmlAST = projectCache + os.sep + newHash + "_ast_v4.xml"
-            if not os.path.exists(xmlAST):
-
-                someFilesHaveChanged = True
-                print("[DMT] No cached model found for", ",".join(listOfFilenames))
-        else:
-            # no projectCache set, so xmlAST is set to None
-            someFilesHaveChanged = True
-        if not someFilesHaveChanged:
-            print("[DMT] Reusing cached ASN.1 AST for ", ",".join(listOfFilenames))
-
-        if not xmlAST:
-            (dummy, xmlAST) = tempfile.mkstemp()
-            os.fdopen(dummy).close()
-
-        if someFilesHaveChanged:
+    if someFilesHaveChanged:
+        with lock_filename('/tmp/onlyOneASN1SCC' + newHash, verbose=False):
             asn1SccPath = spawn.find_executable('asn1.exe')
             if asn1SccPath is None:
                 utility.panic("ASN1SCC seems not installed on your system (asn1.exe not found in PATH).\n")
