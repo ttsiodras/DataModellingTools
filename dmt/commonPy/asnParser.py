@@ -453,9 +453,9 @@ def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=inv
                     utility.panic("ASN1SCC reported usage error. Aborting...")
                 else:
                     utility.panic("ASN1SCC generic error. Contact ESA with this input. Aborting...")
-        ParseASN1SCC_AST(xmlAST)
-        if projectCache is None:
-            os.unlink(xmlAST)
+    ParseASN1SCC_AST(xmlAST)
+    if projectCache is None:
+        os.unlink(xmlAST)
 
 
 def Dump() -> None:
