@@ -149,15 +149,11 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
 
             self.ADA_HeaderFile.write('with taste_dataview;\n')
             self.ADA_HeaderFile.write('use taste_dataview;\n')
-            self.ADA_HeaderFile.write('with %s_types;\n' % self.CleanNameAsADAWants(subProgram._id))
-            self.ADA_HeaderFile.write('use %s_types;\n\n' % self.CleanNameAsADAWants(subProgram._id))
             self.ADA_HeaderFile.write(
                 'package %s is\n\n' %
                 self.CleanNameAsADAWants(subProgram._id + "_" + subProgramImplementation + "_wrapper"))
 
-            self.ADA_SourceFile.write('with %s;\n' % self.CleanNameAsADAWants(subProgram._id))
-            self.ADA_SourceFile.write('with %s_types;\n' % self.CleanNameAsADAWants(subProgram._id))
-            self.ADA_SourceFile.write('use %s_types;\n\n' % self.CleanNameAsADAWants(subProgram._id))
+            self.ADA_SourceFile.write('with qgen_entry_%s;\n' % self.CleanNameAsADAWants(subProgram._id))
             self.ADA_SourceFile.write(
                 'package body %s is\n\n' %
                 self.CleanNameAsADAWants(subProgram._id + "_" + subProgramImplementation + "_wrapper"))
@@ -267,6 +263,41 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
 
             self.ADA_SourceFile.write(
                 "    end Ada_%s;\n\n" % tmpSpName)
+        elif subProgramImplementation == "QGenC":
+            self.C_HeaderFile.write(
+                "int %s%s(void *pBuffer);\n" % (tmpSpName, fpgaSuffix))
+            self.ADA_HeaderFile.write(
+                "procedure Ada_%s(pBuffer : in Interfaces.C.char_array);\n" % tmpSpName)
+            self.ADA_SourceFile.write(
+                "procedure Ada_%s(pBuffer : in Interfaces.C.char_array) is\n" % tmpSpName)
+            self.ADA_SourceFile.write(
+                "    function C_%s(pBuffer : Interfaces.C.char_array) return Integer;\n" % tmpSpName)
+            self.ADA_SourceFile.write(
+                '    pragma Import(C, C_%s, "%s");\n' % (tmpSpName, tmpSpName))
+            self.ADA_SourceFile.write(
+                'begin\n'
+                '    C_%s(pBuffer);\n' % tmpSpName)
+            self.ADA_SourceFile.write(
+                "end Ada_%s;\n\n" % tmpSpName)
+            self.C_SourceFile.write(
+                "int %s%s(void *pBuffer)\n{\n" % (tmpSpName, fpgaSuffix))
+            self.C_SourceFile.write(
+                "    STATIC asn1Scc%s var_%s;\n" %
+                (self.CleanNameAsToolWants(nodeTypename), self.CleanNameAsToolWants(nodeTypename)))
+            toolToAsn1 = self.FromToolToASN1SCC()  # pylint: disable=assignment-from-no-return
+            lines = toolToAsn1.Map(
+                srcVar,
+                "var_" + self.CleanNameAsToolWants(nodeTypename),
+                node,
+                leafTypeDict,
+                names) if toolToAsn1 else []
+            lines = ["    " + x for x in lines]
+            self.C_SourceFile.write("".join(lines))
+            self.C_SourceFile.write(
+                "    memcpy(pBuffer, &var_%s, sizeof(asn1Scc%s) );\n" %
+                (self.CleanNameAsToolWants(nodeTypename), self.CleanNameAsToolWants(nodeTypename)))
+            self.C_SourceFile.write("    return sizeof(asn1Scc%s);\n" % self.CleanNameAsToolWants(nodeTypename))
+            self.C_SourceFile.write("}\n\n")
         else:
             self.C_HeaderFile.write(
                 "int %s%s(void *pBuffer, size_t iMaxBufferSize);\n" % (tmpSpName, fpgaSuffix))
@@ -404,6 +435,42 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
 
             self.ADA_SourceFile.write(
                 "    end Ada_%s;\n\n" % tmpSpName)
+        elif subProgramImplementation == "QGenC":
+            self.C_HeaderFile.write(
+                "int %s%s(void *pBuffer);\n" % (tmpSpName, fpgaSuffix))
+
+            self.ADA_HeaderFile.write(
+                "procedure Ada_%s(pBuffer : Interfaces.C.char_array);\n" % tmpSpName)
+            self.ADA_SourceFile.write(
+                "procedure Ada_%s(pBuffer : Interfaces.C.char_array) is\n" % tmpSpName)
+            self.ADA_SourceFile.write(
+                "    procedure C_%s(pBuffer : Interfaces.C.char_array);\n" % tmpSpName)
+            self.ADA_SourceFile.write(
+                '    pragma Import(C, C_%s, "%s");\n' % (tmpSpName, tmpSpName))
+            self.ADA_SourceFile.write(
+                'begin\n'
+                '    C_%s(pBuffer);\n' % tmpSpName)
+            self.ADA_SourceFile.write(
+                "end Ada_%s;\n\n" % tmpSpName)
+            self.C_SourceFile.write(
+                "int %s%s(void *pBuffer)\n{\n" % (tmpSpName, fpgaSuffix))
+            self.C_SourceFile.write("    STATIC asn1Scc%s var_%s;\n" %
+                                    (self.CleanNameAsToolWants(nodeTypename), self.CleanNameAsToolWants(nodeTypename)))
+            self.C_SourceFile.write("    var_%s = *(asn1Scc%s *) pBuffer;\n    {\n" %
+                                    (self.CleanNameAsToolWants(nodeTypename),
+                                     self.CleanNameAsToolWants(nodeTypename)))
+            asn1ToTool = self.FromASN1SCCtoTool()  # pylint: disable=assignment-from-no-return
+            lines = asn1ToTool.Map(
+                "var_" + self.CleanNameAsToolWants(nodeTypename),
+                targetVar,
+                node,
+                leafTypeDict,
+                names) if asn1ToTool else []
+            lines = ["        " + x for x in lines]
+            self.C_SourceFile.write("".join(lines))
+            self.C_SourceFile.write("        return 0;\n")
+            self.C_SourceFile.write("    }\n")
+            self.C_SourceFile.write("}\n\n")
         else:
             if encoding.lower() not in self.supportedEncodings:
                 panic(str(self.__class__) + ": in (%s), encoding can be one of %s (not '%s')" %  # pragma: no cover
@@ -580,7 +647,7 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                             self.CleanNameAsToolWants(param._id),
                             self.CleanNameAsToolWants(param._id)))
 
-            self.ADA_SourceFile.write("\n        %s.comp (" % self.CleanNameAsADAWants(sp._id))
+            self.ADA_SourceFile.write("\n        qgen_entry_%s.comp (" % self.CleanNameAsADAWants(sp._id))
             for param in sp._params:
                 if param._id != sp._params[0]._id:
                     self.ADA_SourceFile.write(', ')
@@ -624,22 +691,34 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                 self.C_HeaderFile.write("void Execute_%s(void);\n" % self.CleanNameAsADAWants(sp._id + "_" + subProgramImplementation))
             if maybeFVname != "":
                 if not (genFpgaDevDrv and maybeFVname in fpga_seen and fpga_seen[maybeFVname] == 'with_init_already'):
-                    self.C_HeaderFile.write("void init_%s%s(void);\n" % (self.CleanNameAsADAWants(maybeFVname), fpgaSuffix))
+                    if modelingLanguage == "QGenC":
+                        self.C_HeaderFile.write("void %s_PI_%s_startup(void);\n" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id)))
+                    else:
+                        self.C_HeaderFile.write("void init_%s%s(void);\n" % (self.CleanNameAsADAWants(maybeFVname), fpgaSuffix))
                 if genFpgaDevDrv:
                     # Return to dispatcher if HW delegation via Execute() is successful (0) or not (-1).
                     self.C_HeaderFile.write("int %s_%s%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id), fpgaSuffix))
                 else:
-                    self.C_HeaderFile.write("void %s_%s%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id), fpgaSuffix))
+                    if modelingLanguage == "QGenC":
+                        self.C_HeaderFile.write("void %s_PI_%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id)))
+                    else:
+                        self.C_HeaderFile.write("void %s_%s%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id), fpgaSuffix))
             else:  # pragma: no cover
                 self.C_HeaderFile.write("void %s_init%s(void);\n" % (self.CleanNameAsADAWants(sp._id), fpgaSuffix))  # pragma: no cover
                 self.C_HeaderFile.write("void %s%s(" % (self.CleanNameAsADAWants(sp._id), fpgaSuffix))  # pragma: no cover
             for param in sp._params:
                 if param._id != sp._params[0]._id:
                     self.C_HeaderFile.write(', ')
-                if isinstance(param, InParam):
-                    self.C_HeaderFile.write('void *p' + self.CleanNameAsToolWants(param._id) + ', size_t size_' + self.CleanNameAsToolWants(param._id))
+                if modelingLanguage == "QGenC":
+                    if isinstance(param, InParam):
+                        self.C_HeaderFile.write('void *p' + self.CleanNameAsToolWants(param._id))
+                    else:
+                        self.C_HeaderFile.write('void *p' + self.CleanNameAsToolWants(param._id))
                 else:
-                    self.C_HeaderFile.write('void *p' + self.CleanNameAsToolWants(param._id) + ', size_t *pSize_' + self.CleanNameAsToolWants(param._id))
+                    if isinstance(param, InParam):
+                        self.C_HeaderFile.write('void *p' + self.CleanNameAsToolWants(param._id) + ', size_t size_' + self.CleanNameAsToolWants(param._id))
+                    else:
+                        self.C_HeaderFile.write('void *p' + self.CleanNameAsToolWants(param._id) + ', size_t *pSize_' + self.CleanNameAsToolWants(param._id))
             self.C_HeaderFile.write(");\n")
 
             # Check if Function Block will exist both as SW and HW. If yes generate dispatcher function (to delegate to SW or HW).
@@ -672,7 +751,10 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
 
             if maybeFVname != "":
                 if not (genFpgaDevDrv and maybeFVname in fpga_seen and fpga_seen[maybeFVname] == 'with_init_already'):
-                    self.C_SourceFile.write("void init_%s%s(void)\n" % (self.CleanNameAsADAWants(maybeFVname), fpgaSuffix))
+                    if modelingLanguage == "QGenC":
+                        self.C_SourceFile.write("void %s_PI_%s_startup(void)\n" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id)))
+                    else:
+                        self.C_SourceFile.write("void init_%s%s(void)\n" % (self.CleanNameAsADAWants(maybeFVname), fpgaSuffix))
             else:  # pragma: no cover
                 self.C_SourceFile.write("void %s_init(void)\n" % self.CleanNameAsADAWants(sp._id))  # pragma: no cover
             if not (genFpgaDevDrv and maybeFVname in fpga_seen and fpga_seen[maybeFVname] == 'with_init_already'):
@@ -687,16 +769,25 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                     # Return to dispatcher if HW delegation via Execute() is successful (0) or not (-1).
                     self.C_SourceFile.write("int %s_%s%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id), fpgaSuffix))
                 else:
-                    self.C_SourceFile.write("void %s_%s%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id), fpgaSuffix))
+                    if modelingLanguage == "QGenC":
+                        self.C_SourceFile.write("void %s_PI_%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id)))
+                    else:
+                        self.C_SourceFile.write("void %s_%s%s(" % (self.CleanNameAsADAWants(maybeFVname), self.CleanNameAsADAWants(sp._id), fpgaSuffix))
             else:  # pragma: no cover
                 self.C_SourceFile.write("void %s(" % self.CleanNameAsADAWants(sp._id))  # pragma: no cover
             for param in sp._params:
                 if param._id != sp._params[0]._id:
                     self.C_SourceFile.write(', ')
-                if isinstance(param, InParam):
-                    self.C_SourceFile.write('void *p' + self.CleanNameAsToolWants(param._id) + ', size_t size_' + self.CleanNameAsToolWants(param._id))
+                if modelingLanguage == "QGenC":
+                    if isinstance(param, InParam):
+                        self.C_SourceFile.write('void *p' + self.CleanNameAsToolWants(param._id))
+                    else:
+                        self.C_SourceFile.write('void *p' + self.CleanNameAsToolWants(param._id))
                 else:
-                    self.C_SourceFile.write('void *p' + self.CleanNameAsToolWants(param._id) + ', size_t *pSize_' + self.CleanNameAsToolWants(param._id))
+                    if isinstance(param, InParam):
+                        self.C_SourceFile.write('void *p' + self.CleanNameAsToolWants(param._id) + ', size_t size_' + self.CleanNameAsToolWants(param._id))
+                    else:
+                        self.C_SourceFile.write('void *p' + self.CleanNameAsToolWants(param._id) + ', size_t *pSize_' + self.CleanNameAsToolWants(param._id))
             self.C_SourceFile.write(")\n{\n")
 
             # Call Dispatcher function
@@ -742,15 +833,25 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                      self.CleanNameAsADAWants(param._id),
                      fpgaSuffix)
                 if isinstance(param, InParam):
-                    self.C_SourceFile.write('    %s(p%s, size_%s);\n' %
-                                            (tmpSpName,
-                                             self.CleanNameAsToolWants(param._id),
-                                             self.CleanNameAsToolWants(param._id)))
+                    if modelingLanguage == "QGenC":
+                        self.C_SourceFile.write('    %s(p%s);\n' %
+                                                (tmpSpName,
+                                                 self.CleanNameAsToolWants(param._id)))
+                    else:
+                        self.C_SourceFile.write('    %s(p%s, size_%s);\n' %
+                                                (tmpSpName,
+                                                 self.CleanNameAsToolWants(param._id),
+                                                 self.CleanNameAsToolWants(param._id)))
                 elif isinstance(param, InOutParam):
-                    self.C_SourceFile.write('    %s(p%s, *pSize_%s);\n' %  # pragma: no cover
-                                            (tmpSpName,
-                                             self.CleanNameAsToolWants(param._id),
-                                             self.CleanNameAsToolWants(param._id)))  # pragma: no cover
+                    if modelingLanguage == "QGenC":
+                        self.C_SourceFile.write('    %s(p%s);\n' %
+                                                (tmpSpName,
+                                                 self.CleanNameAsToolWants(param._id)))
+                    else:
+                        self.C_SourceFile.write('    %s(p%s, *pSize_%s);\n' %  # pragma: no cover
+                                                (tmpSpName,
+                                                 self.CleanNameAsToolWants(param._id),
+                                                 self.CleanNameAsToolWants(param._id)))  # pragma: no cover
 
             # Do functional work
             if genFpgaDevDrv:
@@ -770,11 +871,16 @@ class SynchronousToolGlueGeneratorGeneric(Generic[TSource, TDestin]):
                      param._id,
                      fpgaSuffix)
                 if isinstance(param, (InOutParam, OutParam)):
-                    self.C_SourceFile.write('    *pSize_%s = %s(p%s, %s);\n' %
-                                            (self.CleanNameAsToolWants(param._id),
-                                             tmpSpName,
-                                             self.CleanNameAsToolWants(param._id),
-                                             param._signal._asnSize))
+                    if modelingLanguage == "QGenC":
+                        self.C_SourceFile.write('    %s(p%s);\n' %
+                                                (tmpSpName,
+                                                 self.CleanNameAsToolWants(param._id)))
+                    else:
+                        self.C_SourceFile.write('    *pSize_%s = %s(p%s, %s);\n' %
+                                                (self.CleanNameAsToolWants(param._id),
+                                                 tmpSpName,
+                                                 self.CleanNameAsToolWants(param._id),
+                                                 param._signal._asnSize))
             if genFpgaDevDrv:
                 # HW delegation via Execute() was successful, so return 0 to Dispatcher
                 self.C_SourceFile.write("    return 0;\n")

@@ -409,10 +409,9 @@ class QGenCGlueGenerator(SynchronousToolGlueGenerator):
                 "#include \"%s.oss.h\" // OSS generated\n" % self.asn_name)
             self.C_SourceFile.write("extern OssGlobal *g_world;\n\n")
         self.C_SourceFile.write("#include \"%s.h\" // Space certified compiler generated\n" % self.asn_name)
-        self.C_SourceFile.write("#include \"%s.h\"\n\n" % self.CleanNameAsToolWants(subProgram._id).lower())
-        self.C_SourceFile.write("#include \"%s_types.h\"\n\n" % self.CleanNameAsToolWants(subProgram._id).lower())
-        self.C_SourceFile.write("static comp_Input cInput;\n\n")
-        self.C_SourceFile.write("static comp_Output cOutput;\n\n")
+        self.C_SourceFile.write("#include \"qgen_entry_%s.h\"\n\n" % self.CleanNameAsToolWants(subProgram._id).lower())
+        self.C_SourceFile.write("static qgen_entry_%s_comp_Input cInput;\n\n" % self.CleanNameAsToolWants(subProgram._id))
+        self.C_SourceFile.write("static qgen_entry_%s_comp_Output cOutput;\n\n" % self.CleanNameAsToolWants(subProgram._id))
         self.g_FVname = subProgram._id
 
     def SourceVar(self,
@@ -453,19 +452,11 @@ class QGenCGlueGenerator(SynchronousToolGlueGenerator):
         self.C_SourceFile.write("    static int initialized = 0;\n")
         self.C_SourceFile.write("    if (!initialized) {\n")
         self.C_SourceFile.write("        initialized = 1;\n")
-        self.C_SourceFile.write("        %s_init();\n" % self.g_FVname)
+        self.C_SourceFile.write("         qgen_entry_%s_init();\n" % self.g_FVname)
         self.C_SourceFile.write("    }\n")
 
     def ExecuteBlock(self, unused_modelingLanguage: str, unused_asnFile: str, unused_sp: ApLevelContainer, unused_subProgramImplementation: str, unused_maybeFVname: str) -> None:
-        self.C_SourceFile.write("#ifndef rtmGetStopRequested\n")
-        self.C_SourceFile.write("    %s_comp(&cInput, &cOutput);\n" % self.g_FVname)
-        self.C_SourceFile.write("#else\n")
-        self.C_SourceFile.write("    if (!rtmGetStopRequested(%s_M)) {\n" % self.g_FVname)
-        self.C_SourceFile.write("        %s_step(&cInput, &cOutput);\n" % self.g_FVname)
-        self.C_SourceFile.write("        if (rtmGetStopRequested(%s_M)) { %s_terminate(); }\n" %
-                                (self.g_FVname, self.g_FVname))
-        self.C_SourceFile.write("    }\n")
-        self.C_SourceFile.write("#endif\n")
+        self.C_SourceFile.write("    qgen_entry_%s_comp(&cInput, &cOutput);\n" % self.g_FVname)
 
 
 qgencBackend: QGenCGlueGenerator
