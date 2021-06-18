@@ -8,7 +8,6 @@ file created by Maxime Perrotin.
 '''
 
 import os
-import sys
 from distutils import spawn
 
 from typing import List, Union
