@@ -42,11 +42,10 @@ def Version() -> None:
 
 def OnStartup(unused_modelingLanguage: str, asnFiles: List[str], outputDir: str, unused_badTypes: SetOfBadTypenames) -> None:  # pylint: disable=invalid-sequence-index
     # print "Use ASN1SCC to generate the structures for '%s'" % asnFile
-    asn1SccPath = spawn.find_executable('asn1.exe')
+    asn1SccPath = spawn.find_executable('asn1scc')
     if not asn1SccPath:
-        panic("ASN1SCC seems to be missing from your system (asn1.exe not found in PATH).\n")  # pragma: no cover
+        panic("ASN1SCC seems to be missing from your system (asn1scc not found in PATH).\n")  # pragma: no cover
     os.system(
-        ("mono " if sys.platform.startswith('linux') else "") +
         "\"{}\" -typePrefix asn1Scc -c -uPER -o \"".format(asn1SccPath) +
         outputDir + "\" \"" + "\" \"".join(asnFiles) + "\"")
 #   cmd = 'rm -f '

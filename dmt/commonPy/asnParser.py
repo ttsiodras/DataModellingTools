@@ -436,17 +436,17 @@ def ParseAsnFileList(listOfFilenames: List[str]) -> None:  # pylint: disable=inv
     # enforce mutual exclusion via locking.
     if someFilesHaveChanged:
         with lock_filename('/tmp/onlyOneASN1SCC' + newHash, verbose=False):
-            asn1SccPath = spawn.find_executable('asn1.exe')
+            asn1SccPath = spawn.find_executable('asn1scc')
             if asn1SccPath is None:
-                utility.panic("ASN1SCC seems not installed on your system (asn1.exe not found in PATH).\n")
+                utility.panic("ASN1SCC seems not installed on your system (asn1scc not found in PATH).\n")
             asn1SccDir = os.path.dirname(os.path.abspath(asn1SccPath))
-            spawnResult = os.system("mono \"" + asn1SccPath + "\" -customStg \"" + asn1SccDir + "/xml.stg:" + xmlAST + "\" -typePrefix asn1Scc -fp AUTO -customStgAstVersion 4 \"" + "\" \"".join(listOfFilenames) + "\"")
+            spawnResult = os.system("\"" + asn1SccPath + "\" -customStg \"" + asn1SccDir + "/xml.stg:" + xmlAST + "\" -typePrefix asn1Scc -fp AUTO -customStgAstVersion 4 \"" + "\" \"".join(listOfFilenames) + "\"")
             if spawnResult != 0:
                 errCode = spawnResult / 256
                 if errCode == 1:
                     utility.panic("ASN1SCC reported syntax errors. Aborting...")
                 elif errCode == 2:
-                    utility.panic("ASN1SCC reported semantic errors (or mono failed). Aborting...")
+                    utility.panic("ASN1SCC reported semantic errors (or .NET Core failed). Aborting...")
                 elif errCode == 3:
                     utility.panic("ASN1SCC reported internal error. Contact ESA with this input. Aborting...")
                 elif errCode == 4:

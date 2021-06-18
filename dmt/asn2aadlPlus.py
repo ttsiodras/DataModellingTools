@@ -88,7 +88,7 @@ def calculateForNativeAndASN1SCC(absASN1SCCpath, autosrc, names, inputFiles):
     if platform.system() == "Windows" or platform.system() == "Darwin":
         mysystem("%s -c -uPER -o \"%s\" %s %s" % (absASN1SCCpath, autosrc, acn, '"' + '" "'.join(inputFiles) + '"'))
     else:
-        cmd = "mono %s -c -uPER -fp AUTO -typePrefix asn1Scc -o \"%s\" %s %s" % (absASN1SCCpath, autosrc, acn, '"' + '" "'.join(inputFiles) + '"')
+        cmd = "%s -c -uPER -fp AUTO -typePrefix asn1Scc -o \"%s\" %s %s" % (absASN1SCCpath, autosrc, acn, '"' + '" "'.join(inputFiles) + '"')
         res = mysystem(cmd)
         if res != 0:
             panic("This command failed: %s\n" % cmd)
@@ -342,9 +342,9 @@ def main():
     autosrc = tempfile.mkdtemp(".asn1c")
     inform("Created temporary directory (%s) for auto-generated files...", autosrc)
     absPathOfAADLfile = os.path.abspath(aadlFile)
-    asn1SccPath = spawn.find_executable('asn1.exe')
+    asn1SccPath = spawn.find_executable('asn1scc')
     if asn1SccPath is None:
-        panic("ASN1SCC seems not installed on your system (asn1.exe not found in PATH).\n")
+        panic("ASN1SCC seems not installed on your system (asn1scc not found in PATH).\n")
     absASN1SCCpath = os.path.abspath(asn1SccPath)
 
     # Update the AdaUses dictionary - can now be safely done in all cases,

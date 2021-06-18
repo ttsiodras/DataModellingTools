@@ -127,12 +127,10 @@ def OnStartup(unused_modelingLanguage: str, asnFile: str, outputDir: str, badTyp
     # where "-equal" is passed - the _Equal functions will be generated
     # and used during comparisons of incoming TMs (For MSCs)
 
-    # mono_exe = "mono " if sys.platform.startswith('linux') else ""
-    mono_exe = "mono"
     makefile_text = '''\
 export MAKEFLAGS="-j $(grep -c ^processor /proc/cpuinfo)"
 
-ASN1SCC:=$(shell which asn1.exe)
+ASN1SCC:=$(shell which asn1scc)
 ASN2DATAMODEL:=asn2dataModel
 GRAMMAR := %(origGrammarBase)s
 BASEGRAMMAR := %(base)s
@@ -147,11 +145,11 @@ $(BDIR)/$(GRAMMAR)_getset.c:       $(GRAMMAR).asn
 
 # Create the ACN file if it is missing
 $(BDIR)/$(GRAMMAR).acn:
-%(tab)smono $(ASN1SCC) -ACND -o $(BDIR) $(GRAMMAR).asn
+%(tab)s$(ASN1SCC) -ACND -o $(BDIR) $(GRAMMAR).asn
 
 # The hell of multiple outputs (see https://www.gnu.org/software/automake/manual/html_node/Multiple-Outputs.html )
 $(BDIR)/asn1crt.c:	$(GRAMMAR).asn  $(GRAMMAR).acn
-%(tab)s%(mono)s $(ASN1SCC) -ACN -c -uPER -equal -o $(BDIR) $< $(GRAMMAR).acn
+%(tab)s$(ASN1SCC) -ACN -c -uPER -equal -o $(BDIR) $< $(GRAMMAR).acn
 
 # The hell of multiple outputs (see https://www.gnu.org/software/automake/manual/html_node/Multiple-Outputs.html )
 $(BDIR)/$(GRAMMAR).c $(BDIR)/asn1crt_encoding.c $(BDIR)/asn1crt_encoding_uper.c $(BDIR)/asn1crt_encoding_acn.c $(BDIR)/$(GRAMMAR).h $(BDIR)/asn1crt.h:	$(BDIR)/asn1crt.c
@@ -181,7 +179,7 @@ clean:
 %(tab)srm -f $(BDIR)/DV.py $(BDIR)/*.pyc $(BDIR)/$(BASEGRAMMAR)_getset.? $(BDIR)/$(BASEGRAMMAR)_getset.so
 %(tab)srm -f $(BDIR)/$(GRAMMAR)_asn.py
 '''
-    makefile.write(makefile_text % {'tab': '\t', 'base': base, 'origGrammarBase': origGrammarBase, 'mono': mono_exe})
+    makefile.write(makefile_text % {'tab': '\t', 'base': base, 'origGrammarBase': origGrammarBase})
     makefile.close()
     CreateDeclarationsForAllTypes(asnParser.g_names, asnParser.g_leafTypeDict, badTypes)
     g_outputGetSetH.write('\n/* Helper functions for NATIVE encodings */\n\n')
