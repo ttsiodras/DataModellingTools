@@ -26,7 +26,6 @@ of ASN.1 constructs to C. It is used as a backend of Semantix's
 code generator A.'''
 
 import os
-import sys
 import re
 
 from distutils import spawn
