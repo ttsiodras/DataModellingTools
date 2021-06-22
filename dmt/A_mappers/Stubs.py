@@ -398,7 +398,7 @@ grep for the errorcode value inside ASN1SCC generated headers."""
                 retval += bytes([self.Get(reset=False)])
                 self._params.pop()
             self.Reset()
-            return retval.decode("utf-8")
+            return retval
         else:
             retval = ""
             strLength = self.GetLength(False)
