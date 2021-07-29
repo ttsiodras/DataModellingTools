@@ -10,7 +10,7 @@ export PYTHONPATH=${TYPING_FOLDER}
 
 all:	tests
 
-tests:	flake8 pylint coverage # testDB
+tests:	flake8 pylint coverage testDB
 
 configure:
 	./configure
