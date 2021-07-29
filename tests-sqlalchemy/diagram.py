@@ -1,11 +1,21 @@
+#!/usr/bin/env python3
+
+import sys
+
 from sqlalchemy import MetaData
 from sqlalchemy_schemadisplay import create_schema_graph
 
+if len(sys.argv) < 2:
+    print("Usage: " + sys.argv[0] + ' <database_name>')
+    sys.exit(1)
+
 # create the pydot graph object by autoloading all tables via a bound metadata object
-graph = create_schema_graph(metadata=MetaData('postgresql+psycopg2://taste:tastedb@localhost/circle_test'),
-   show_datatypes=False, # The image would get nasty big if we'd show the datatypes
-   show_indexes=False, # ditto for indexes
-   rankdir='LR', # From left to right (instead of top to bottom)
-   concentrate=False # Don't try to join the relation lines together
+graph = create_schema_graph(
+    metadata=MetaData(
+        'postgresql+psycopg2://taste:tastedb@localhost/' + sys.argv[1]),
+    show_datatypes=False,  # The image would get too big if we'd show the datatypes
+    show_indexes=False,    # ditto for indexes
+    rankdir='LR',          # From left to right (instead of top to bottom)
+    concentrate=True       # Don't try to join the relation lines together
 )
-graph.write_png('dbschema.png') # write out the file
+graph.write_png(sys.argv[1] + '.png')  # write out the file
