@@ -1,6 +1,6 @@
 FROM debian:stretch
 
-RUN bash -c echo -e 'Acquire::http::Pipeline-Depth 0;\nAcquire::http::No-Cache true;\nAcquire::BrokenProxy true;\n' > /etc/apt/apt.conf.d/99badproxies
+RUN bash -c "echo -e 'Acquire::http::Pipeline-Depth 0;\nAcquire::http::No-Cache true;\nAcquire::BrokenProxy true;\n' > /etc/apt/apt.conf.d/99badproxies"
 RUN cat  /etc/apt/apt.conf.d/99badproxies
 RUN apt-get update
 RUN apt-get install -y libxslt-dev libxml2-dev python-psycopg2 mono-runtime libmono-system-data4.0-cil libmono-system-web4.0-cil libfsharp-core4.3-cil libpq-dev
