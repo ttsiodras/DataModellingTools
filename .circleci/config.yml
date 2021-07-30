@@ -13,4 +13,4 @@ jobs:
           paths:
             - ~/docker
       - run:
-          command: docker run -it -v $(pwd):/root/tests dmt bash -c 'cd /root/tests ; pip3 uninstall dmt ; ./configure ; pip3 install --upgrade . ; export CIRCLECI=1  ; LANG=C LC_ALL=C PATH=$PATH:/asn1scc make'
+          command: docker run -it -v $(pwd):/root/tests dmt bash -c 'cd /root/tests ; ./configure ; pip3 install --upgrade . ; pip3 uninstall --yes typing ; cd / ; wget -q -O - https://github.com/ttsiodras/asn1scc/releases/download/4.2.4.7f/asn1scc-bin-4.2.4.7f.tar.bz2 | tar jxpvf - ; cd - ; LANG=C LC_ALL=C PATH=$PATH:/asn1scc:/root/.local/bin/ make'
