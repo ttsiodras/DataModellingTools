@@ -48,7 +48,6 @@ from ..commonPy.recursiveMapper import RecursiveMapper
 from .synchronousTool import SynchronousToolGlueGenerator
 
 isAsynchronous = False
-simulinkBackend = None
 
 
 def IsElementMappedToPrimitive(node: AsnSequenceOrSetOf, names: AST_Lookup) -> bool:
@@ -446,11 +445,14 @@ class SimulinkGlueGenerator(SynchronousToolGlueGenerator):
             panicWithCallStack("%s not supported (yet?)\n" % str(param._sourceElement))  # pragma: no cover
         return dstSimulink
 
-    def InitializeBlock(self, unused_modelingLanguage: str, unused_asnFile: str, unused_sp: ApLevelContainer, unused_subProgramImplementation: str, unused_maybeFVname: str) -> None:
+    def InitializeBlock(self, unused_modelingLanguage: str, unused_asnFile: str, sp: ApLevelContainer, unused_subProgramImplementation: str, maybeFVname: str) -> None:
         self.C_SourceFile.write("    static int initialized = 0;\n")
         self.C_SourceFile.write("    if (!initialized) {\n")
         self.C_SourceFile.write("        initialized = 1;\n")
         self.C_SourceFile.write("        %s_initialize();\n" % self.g_FVname)
+        # If there are HW(FPGA) configurations defined, initialize also the HW side (the device driver: <self.g_FVname>_Simulink.vhdl.c).
+        if sp._fpgaConfigurations != '':
+            self.C_SourceFile.write("        init_%s_Fpga();\n" % maybeFVname)  # pragma: no cover
         self.C_SourceFile.write("    }\n")
 
     def ExecuteBlock(self, unused_modelingLanguage: str, unused_asnFile: str, unused_sp: ApLevelContainer, unused_subProgramImplementation: str, unused_maybeFVname: str) -> None:
@@ -463,6 +465,9 @@ class SimulinkGlueGenerator(SynchronousToolGlueGenerator):
                                 (self.g_FVname, self.g_FVname))
         self.C_SourceFile.write("    }\n")
         self.C_SourceFile.write("#endif\n")
+
+
+simulinkBackend: SimulinkGlueGenerator
 
 
 def OnStartup(modelingLanguage: str, asnFile: str, subProgram: ApLevelContainer, subProgramImplementation: str, outputDir: str, maybeFVname: str, useOSS: bool) -> None:

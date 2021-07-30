@@ -48,7 +48,6 @@ from ..commonPy.recursiveMapper import RecursiveMapper
 from .asynchronousTool import ASynchronousToolGlueGenerator
 
 isAsynchronous = True
-cBackend = None
 
 
 # noinspection PyListCreation
@@ -427,6 +426,9 @@ class C_GlueGenerator(ASynchronousToolGlueGenerator):
             self.C_SourceFile.write("    }\n")
             self.C_SourceFile.write("}\n")
             self.C_SourceFile.write("#endif\n\n")
+
+
+cBackend: C_GlueGenerator
 
 
 def OnStartup(modelingLanguage: str, asnFile: str, outputDir: str, maybeFVname: str, useOSS: bool) -> None:

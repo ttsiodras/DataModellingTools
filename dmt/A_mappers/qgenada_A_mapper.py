@@ -26,11 +26,10 @@ of ASN.1 constructs to C. It is used as a backend of Semantix's
 code generator A.'''
 
 import os
-import sys
 import re
 
 from distutils import spawn
-from typing import List, Union, Set  # NOQA
+from typing import List, Union, Set, IO, Any  # NOQA
 
 from ..commonPy import asnParser
 from ..commonPy.utility import panic, inform
@@ -44,7 +43,7 @@ from ..commonPy.asnAST import AsnNode  # NOQA pylint: disable=unused-import
 from ..commonPy.asnParser import AST_Leaftypes, AST_Lookup
 
 # The file written to
-g_outputFile = None
+g_outputFile: IO[Any]
 
 # A map of the ASN.1 types defined so far
 g_definedTypes = set()  # type: Set[asnParser.Typename]
@@ -67,11 +66,10 @@ def CleanNameAsSimulinkWants(name: str) -> str:
 
 def OnStartup(unused_modelingLanguage: str, asnFiles: List[str], outputDir: str, unused_badTypes: SetOfBadTypenames) -> None:  # pylint: disable=invalid-sequence-index
     # print "Use ASN1SCC to generate the structures for '%s'" % asnFile
-    asn1SccPath = spawn.find_executable('asn1.exe')
+    asn1SccPath = spawn.find_executable('asn1scc')
     if not asn1SccPath:
-        panic("ASN1SCC seems to be missing from your system (asn1.exe not found in PATH).\n")  # pragma: no cover
+        panic("ASN1SCC seems to be missing from your system (asn1scc not found in PATH).\n")  # pragma: no cover
     os.system(
-        ("mono " if sys.platform.startswith('linux') else "") +
         "\"{}\"  -typePrefix asn1Scc -c -uPER -o \"".format(asn1SccPath) +
         outputDir + "\" \"" + "\" \"".join(asnFiles) + "\"")
     os.system("rm -f \"" + outputDir + "\"/*.adb")
@@ -232,6 +230,11 @@ def CreateDeclarationForType(nodeTypename: str, names: AST_Lookup, leafTypeDict:
         CreateAlias(nodeTypename, "int32", "values of ENUMERATED %s" % nodeTypename)
         g_outputFile.write("\n")
     elif isinstance(node, (AsnSequence, AsnSet, AsnChoice)):
+        if not node._members:
+            return
+            # Ignore empty sequences in the A mapper, but do not raise an error, as empty sequences
+            # may be used in other parts of the system.
+            # panic("Simulink_A_mapper: Simulink can't support empty Seq/Set/Choice! (%s)" % node.Location())  # pragma: no cover
         elemNo = 0
         if isinstance(node, AsnChoice):
             elemNo += 1

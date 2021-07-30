@@ -8,7 +8,7 @@
 import re
 import os
 
-from typing import Union, List  # NOQA pylint: disable=unused-import
+from typing import Union, List, IO, Any  # NOQA pylint: disable=unused-import
 
 from ..commonPy import asnParser
 from ..commonPy.utility import panic, inform
@@ -21,11 +21,11 @@ from ..commonPy.asnParser import AST_Lookup, AST_Leaftypes
 from ..commonPy.cleanupNodes import SetOfBadTypenames
 
 # The Python file written to
-g_outputFile = None
+g_outputFile: IO[Any]
 
 # The SETers and GETers files
-g_outputGetSetH = None
-g_outputGetSetC = None
+g_outputGetSetH: IO[Any]
+g_outputGetSetC: IO[Any]
 
 g_bHasStartupRunOnce = False
 
@@ -109,11 +109,10 @@ def OnStartup(unused_modelingLanguage: str, asnFile: str, outputDir: str, badTyp
     g_outputGetSetC.write('BitStream *CreateStream(size_t bufferSize) {\n')
     g_outputGetSetC.write('    BitStream *pBitStrm = malloc(sizeof(BitStream));\n')
     g_outputGetSetC.write('    assert(pBitStrm);\n')
-    g_outputGetSetC.write('    pBitStrm->buf = malloc(bufferSize);\n')
-    g_outputGetSetC.write('    assert(pBitStrm->buf);\n')
-    g_outputGetSetC.write('    pBitStrm->count = bufferSize;\n')
-    g_outputGetSetC.write('    memset(pBitStrm->buf, 0x0, bufferSize);\n')
-    g_outputGetSetC.write('    ResetStream(pBitStrm);\n')
+    g_outputGetSetC.write('    unsigned char* buf = malloc(bufferSize);\n')
+    g_outputGetSetC.write('    assert(buf);\n')
+    g_outputGetSetC.write('    memset(buf, 0x0, bufferSize);\n')
+    g_outputGetSetC.write('    BitStream_Init(pBitStrm, buf, bufferSize);\n')
     g_outputGetSetC.write('    return pBitStrm;\n')
     g_outputGetSetC.write('}\n\n')
     g_outputGetSetC.write('void DestroyStream(BitStream *pBitStrm) {\n')
@@ -128,12 +127,10 @@ def OnStartup(unused_modelingLanguage: str, asnFile: str, outputDir: str, badTyp
     # where "-equal" is passed - the _Equal functions will be generated
     # and used during comparisons of incoming TMs (For MSCs)
 
-    # mono_exe = "mono " if sys.platform.startswith('linux') else ""
-    mono_exe = "mono"
     makefile_text = '''\
 export MAKEFLAGS="-j $(grep -c ^processor /proc/cpuinfo)"
 
-ASN1SCC:=$(shell which asn1.exe)
+ASN1SCC:=$(shell which asn1scc)
 ASN2DATAMODEL:=asn2dataModel
 GRAMMAR := %(origGrammarBase)s
 BASEGRAMMAR := %(base)s
@@ -148,11 +145,11 @@ $(BDIR)/$(GRAMMAR)_getset.c:       $(GRAMMAR).asn
 
 # Create the ACN file if it is missing
 $(BDIR)/$(GRAMMAR).acn:
-%(tab)smono $(ASN1SCC) -ACND -o $(BDIR) $(GRAMMAR).asn
+%(tab)s$(ASN1SCC) -ACND -o $(BDIR) $(GRAMMAR).asn
 
 # The hell of multiple outputs (see https://www.gnu.org/software/automake/manual/html_node/Multiple-Outputs.html )
 $(BDIR)/asn1crt.c:	$(GRAMMAR).asn  $(GRAMMAR).acn
-%(tab)s%(mono)s $(ASN1SCC) -ACN -c -uPER -equal -o $(BDIR) $< $(GRAMMAR).acn
+%(tab)s$(ASN1SCC) -ACN -c -uPER -equal -o $(BDIR) $< $(GRAMMAR).acn
 
 # The hell of multiple outputs (see https://www.gnu.org/software/automake/manual/html_node/Multiple-Outputs.html )
 $(BDIR)/$(GRAMMAR).c $(BDIR)/asn1crt_encoding.c $(BDIR)/asn1crt_encoding_uper.c $(BDIR)/asn1crt_encoding_acn.c $(BDIR)/$(GRAMMAR).h $(BDIR)/asn1crt.h:	$(BDIR)/asn1crt.c
@@ -182,7 +179,7 @@ clean:
 %(tab)srm -f $(BDIR)/DV.py $(BDIR)/*.pyc $(BDIR)/$(BASEGRAMMAR)_getset.? $(BDIR)/$(BASEGRAMMAR)_getset.so
 %(tab)srm -f $(BDIR)/$(GRAMMAR)_asn.py
 '''
-    makefile.write(makefile_text % {'tab': '\t', 'base': base, 'origGrammarBase': origGrammarBase, 'mono': mono_exe})
+    makefile.write(makefile_text % {'tab': '\t', 'base': base, 'origGrammarBase': origGrammarBase})
     makefile.close()
     CreateDeclarationsForAllTypes(asnParser.g_names, asnParser.g_leafTypeDict, badTypes)
     g_outputGetSetH.write('\n/* Helper functions for NATIVE encodings */\n\n')

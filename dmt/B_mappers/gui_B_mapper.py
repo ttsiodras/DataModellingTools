@@ -35,20 +35,20 @@ from ..commonPy import asnParser
 from ..commonPy.asnParser import AST_Lookup, AST_Leaftypes
 from ..commonPy.aadlAST import ApLevelContainer, Param
 
-g_HeaderFile = None  # type: IO[Any]
-g_SourceFile = None  # type: IO[Any]
-g_GnuplotFile = None  # type: IO[Any]
+g_HeaderFile: IO[Any]
+g_SourceFile: IO[Any]
+g_GnuplotFile: IO[Any]
 
-g_MyEvents = None
-g_MyCreation = None
-g_MyClickPrototypes = None
-g_MyAction = None
-g_MyControls = None
-g_MyLoad = None
-g_MySave = None
-g_MyThreadsInc = None
-g_MyThreadsH = None
-g_MyTelemetryActions = None
+g_MyEvents: IO[Any]
+g_MyCreation: IO[Any]
+g_MyClickPrototypes: IO[Any]
+g_MyAction: IO[Any]
+g_MyControls: IO[Any]
+g_MyLoad: IO[Any]
+g_MySave: IO[Any]
+g_MyThreadsInc: IO[Any]
+g_MyThreadsH: IO[Any]
+g_MyTelemetryActions: IO[Any]
 
 g_bStarted = False
 g_IDs = 20000

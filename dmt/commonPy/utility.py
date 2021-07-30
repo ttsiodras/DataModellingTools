@@ -109,42 +109,6 @@ def readContexts(tapNumbers: str) -> Dict[str, str]:
     return data
 
 
-class Matcher:
-    def __init__(self, pattern: str, flags: Any = 0) -> None:
-        self._pattern = re.compile(pattern, flags)
-        self._lastOne = None  # type: Union[str, None]
-        self._match = None  # type: Union[Match, None]
-        self._search = None  # type: Union[Match, None]
-
-    def match(self, line: str) -> Match:
-        self._match = re.match(self._pattern, line)
-        self._lastOne = 'Match'
-        return self._match
-
-    def search(self, line: str) -> Match:
-        self._search = re.search(self._pattern, line)
-        self._lastOne = 'Search'
-        return self._search
-
-    def group(self, idx: int) -> str:  # pylint: disable=inconsistent-return-statements
-        if self._lastOne == 'Match':
-            return self._match.group(idx)
-        elif self._lastOne == 'Search':
-            return self._search.group(idx)
-        else:
-            panic(
-                "Matcher group called with index "
-                "%d before match/search!\n" % idx)
-
-    def groups(self) -> Any:  # pylint: disable=inconsistent-return-statements
-        if self._lastOne == 'Match':
-            return self._match.groups()
-        elif self._lastOne == 'Search':
-            return self._search.groups()
-        else:
-            panic("Matcher groups called with match/search!\n")
-
-
 def mysystem(cmd: str) -> int:
     p = platform.system()
     if p == "Windows" or p.startswith("CYGWIN"):

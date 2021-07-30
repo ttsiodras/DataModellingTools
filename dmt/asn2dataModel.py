@@ -86,6 +86,13 @@ def main() -> None:
         import pdb  # pragma: no cover pylint: disable=wrong-import-position,wrong-import-order
         pdb.set_trace()  # pragma: no cover
 
+    use_ASN1SCC_allboards_support = "-allboards" in sys.argv
+    if use_ASN1SCC_allboards_support:
+        sys.argv.remove("-allboards")  # pragma: no cover
+        extraFlags = os.getenv("ASN1SCC_FLAGS") or ""  # pragma: no cover
+        extraFlags += " --target allboards "  # pragma: no cover
+        os.environ["ASN1SCC_FLAGS"] = extraFlags  # pragma: no cover
+
     if "-v" in sys.argv:
         import pkg_resources  # pragma: no cover
         version = pkg_resources.require("dmt")[0].version  # pragma: no cover

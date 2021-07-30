@@ -34,11 +34,11 @@ from ..commonPy.cleanupNodes import SetOfBadTypenames
 from ..commonPy.asnAST import AsnBasicNode, AsnSequenceOrSet, AsnSequenceOrSetOf, AsnEnumerated
 from ..commonPy.asnParser import AST_Leaftypes
 
-g_catalogueXML = None  # type: IO[Any]
+g_catalogueXML: IO[Any]
 g_innerTypes = set()  # type: Set[str]
 g_uniqueStringOfASN1files = ""
 g_outputDir = "."
-g_asnFiles = None
+g_asnFiles: List[str]
 
 
 def Version() -> None:

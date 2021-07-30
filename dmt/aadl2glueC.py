@@ -81,6 +81,8 @@ but with an extra call to OnFinal at the end.
 import os
 import sys
 import hashlib
+import pickle
+import tempfile
 from distutils import spawn
 
 from typing import cast, Optional, Dict, List, Tuple, Set, Any  # NOQA pylint: disable=unused-import
@@ -101,6 +103,8 @@ from .B_mappers import simulink_B_mapper
 from .B_mappers import micropython_async_B_mapper
 from .B_mappers import vhdl_B_mapper
 from .B_mappers import zestSC1_B_mapper
+from .B_mappers import brave_B_mapper           # Specific CoRA B-mapper for BRAVE
+from .B_mappers import zynqzc706_B_mapper       # Specific CoRA-ZynQ B-mapper for the ZynQ ZC706
 
 from .B_mappers.module_protos import Sync_B_Mapper, Async_B_Mapper
 
@@ -137,7 +141,7 @@ g_sync_mappers = {
     'Simulink': simulink_B_mapper,
     'gui': gui_B_mapper,
     'python': python_B_mapper,
-    'QgenC': qgenc_B_mapper,
+    'QGenC': qgenc_B_mapper,
     'vhdl': vhdl_B_mapper,
 }
 
@@ -154,8 +158,8 @@ of each SUBPROGRAM param.'''
             except:
                 panic("The configured cache folder:\n\n\t" + projectCache +
                       "\n\n...is not there!\n")
-    cachedModelExists = False
     aadlASTcache = None
+    astInfo = None
     if projectCache is not None:
         filehash = hashlib.md5()
         for each in sorted(sys.argv[1:]):
@@ -167,15 +171,10 @@ of each SUBPROGRAM param.'''
             print("[DMT] No cached AADL model found for",
                   ",".join(sys.argv[1:]))
         else:
-            cachedModelExists = True
             print("[DMT] Reusing cached AADL model for",
                   ",".join(sys.argv[1:]))
-
-    import pickle
-    if cachedModelExists:
-        astInfo = pickle.load(open(aadlASTcache, 'rb'), fix_imports=False)
-    else:
-        import tempfile
+            astInfo = pickle.load(open(aadlASTcache, 'rb'), fix_imports=False)
+    if astInfo is None:
         f = tempfile.NamedTemporaryFile(delete=False)
         astFile = f.name
         f.close()
@@ -231,26 +230,31 @@ of each SUBPROGRAM param.'''
         panic(str(e))
 
 
-def SpecialCodes(asnFile: str) -> None:
+def SpecialCodes(asnFile: Optional[str]) -> None:
     '''This function handles the code generations needs that reside outside
 the scope of individual parameters (e.g. it needs access to all ASN.1
 types). This used to cover Dumpable C/Ada Types and OG headers.'''
     outputDir = commonPy.configMT.outputDir
-    asn1SccPath = spawn.find_executable('asn1.exe')
+    asn1SccPath = spawn.find_executable('asn1scc')
     # allow externally-defined flags when calling the asn1 compiler (e.g. to set word size based on target)
     extraFlags = os.getenv("ASN1SCC_FLAGS") or ""
     if asnFile is not None:
         if not asn1SccPath:
-            panic("ASN1SCC seems not installed on your system (asn1.exe not found in PATH).\n")  # pragma: no cover
-        os.system('mono "{}" -typePrefix asn1Scc {} -Ada -equal -o "{}" "{}"'
+            panic("ASN1SCC seems not installed on your system (asn1scc not found in PATH).\n")  # pragma: no cover
+        os.system('"{}" -typePrefix asn1Scc {} -Ada -equal -o "{}" "{}"'
                   .format(asn1SccPath, extraFlags, outputDir, '" "'.join([asnFile])))
 
 
 def getSyncBackend(modelingLanguage: str) -> Sync_B_Mapper:
     if modelingLanguage not in g_sync_mappers:
         panic("Synchronous modeling language '%s' not supported" % modelingLanguage)
-    if os.getenv("ZESTSC1") is not None and modelingLanguage == 'vhdl':
-        return cast(Sync_B_Mapper, zestSC1_B_mapper)
+    if modelingLanguage == 'vhdl':
+        if commonPy.configMT.fpga_mapper == "BRAVE":
+            return cast(Sync_B_Mapper, brave_B_mapper)  # pragma: no cover
+        elif commonPy.configMT.fpga_mapper == "ZESTSC1":
+            return cast(Sync_B_Mapper, zestSC1_B_mapper)  # pragma: no cover
+        elif commonPy.configMT.fpga_mapper == "ZYNQZC706":
+            return cast(Sync_B_Mapper, zynqzc706_B_mapper)  # pragma: no cover
     return cast(Sync_B_Mapper, g_sync_mappers[modelingLanguage])
 
 
@@ -396,9 +400,9 @@ def ProcessAsync(  # pylint: disable=dangerous-default-value
 
 def ProcessCustomBackends(
         # Taking list of tuples made of (spName, sp_impl, language, maybeFVname)
-        asnFile: str,
+        asnFile: Optional[str],
         useOSS: bool,
-        SystemsAndImplementations: List[Tuple[str, str, str, str]]) -> None:
+        SystemsAndImplementations: List[Tuple[str, str, str, str, str]]) -> None:
 
     # The code generators for GUIs, Python mappers and VHDL mappers are different: they need access to
     # both ASN.1 types and SP params.
@@ -412,16 +416,25 @@ def ProcessCustomBackends(
         if lang.lower() in ["gui_pi", "gui_ri"]:
             return [cast(Sync_B_Mapper, x) for x in [python_B_mapper, pyside_B_mapper]]  # pragma: no cover
         elif lang.lower() == "vhdl":  # pragma: no cover
-            if os.getenv("ZESTSC1") is not None:
+            if commonPy.configMT.fpga_mapper == "BRAVE":
+                return [cast(Sync_B_Mapper, brave_B_mapper)]  # pragma: no cover
+            elif commonPy.configMT.fpga_mapper == "ZESTSC1":
                 return [cast(Sync_B_Mapper, zestSC1_B_mapper)]  # pragma: no cover
+            elif commonPy.configMT.fpga_mapper == "ZYNQZC706":
+                return [cast(Sync_B_Mapper, zynqzc706_B_mapper)]  # pragma: no cover
             else:
                 return [cast(Sync_B_Mapper, vhdl_B_mapper)]  # pragma: no cover
         else:
             panic("Unexpected call of getCustomBackends...")  # pragma: no cover
 
-    for si in [x for x in SystemsAndImplementations if x[2] is not None and x[2].lower() in ["gui_ri", "gui_pi", "vhdl"]]:
+    # Add call to the VHDL B-mapper also for C and Simulink functions (x[2]) with FPGA configuration(s) defined (x[4])
+    for si in [x for x in SystemsAndImplementations if x[2] is not None and (x[2].lower() in ["gui_ri", "gui_pi", "vhdl"] or ((x[2].lower() == "c" or x[2].lower() == "simulink") and len(x)>4 and x[4] != ''))]:
         # We do, start the work
         spName, sp_impl, lang, maybeFVname = si[0], si[1], si[2], si[3]
+        # Add call to the VHDL B-mapper also for C and Simulink functions (si[2]) with FPGA configuration(s) defined (si[4])
+        if (si[2].lower() == "c" or si[2].lower() == "simulink") and len(si)>4 and si[4] != '':
+            # pretend its VHDL
+            lang = "vhdl"
         sp = commonPy.aadlAST.g_apLevelContainers[spName]
         if not sp._params:
             if lang.lower() == "gui_ri":  # pragma: no cover
@@ -433,6 +446,10 @@ def ProcessCustomBackends(
         if lang.lower() == "vhdl":
             workedOnVHDL = True  # pragma: no cover
         inform("Creating %s for %s.%s", lang.upper(), sp._id, sp_impl)
+
+        # Necessary for mypy, but guaranteed by the check above for empty sp._params.
+        assert asnFile is not None
+
         for backend in getCustomBackends(lang):
             backend.OnStartup(lang, asnFile, sp, sp_impl, commonPy.configMT.outputDir, maybeFVname, useOSS)
         for param in sp._params:
@@ -485,6 +502,13 @@ def main() -> None:
         import pdb  # pragma: no cover pylint: disable=wrong-import-position,wrong-import-order
         pdb.set_trace()  # pragma: no cover
 
+    use_ASN1SCC_allboards_support = "-allboards" in sys.argv
+    if use_ASN1SCC_allboards_support:
+        sys.argv.remove("-allboards")  # pragma: no cover
+        extraFlags = os.getenv("ASN1SCC_FLAGS") or ""  # pragma: no cover
+        extraFlags += " --target allboards "  # pragma: no cover
+        os.environ["ASN1SCC_FLAGS"] = extraFlags  # pragma: no cover
+
     if "-profile" in sys.argv:
         sys.argv.remove("-profile")
         import cProfile
@@ -514,7 +538,7 @@ def main() -> None:
         try:
             commonPy.configMT.outputDir = os.path.normpath(sys.argv[idx + 1]) + os.sep
         except:  # pragma: no cover
-            panic('Usage: %s [-v] [-verbose] [-useOSS] [-o dirname] input1.aadl [input2.aadl] ...\n' % sys.argv[0])  # pragma: no cover
+            panic('Usage: %s [-v] [-verbose] [-useOSS] [-fpga <BRAVE|ZESTSC1|ZYNQZC706>] [-o dirname] input1.aadl [input2.aadl] ...\n' % sys.argv[0])  # pragma: no cover
         del sys.argv[idx]
         del sys.argv[idx]
         if not os.path.isdir(commonPy.configMT.outputDir):
@@ -529,9 +553,20 @@ def main() -> None:
     if useOSS:
         sys.argv.remove("-useOSS")
 
+    if "-fpga" in sys.argv:  # pragma: no cover
+        idx = sys.argv.index("-fpga")
+        try:
+            commonPy.configMT.fpga_mapper = os.path.normpath(sys.argv[idx + 1])
+        except:  # pragma: no cover
+            panic('Usage: %s [-v] [-verbose] [-useOSS] [-fpga <BRAVE|ZESTSC1|ZYNQZC706>] [-o dirname] input1.aadl [input2.aadl] ...\n' % sys.argv[0])  # pragma: no cover
+        if commonPy.configMT.fpga_mapper == '' or commonPy.configMT.fpga_mapper not in ['BRAVE', 'ZESTSC1', 'ZYNQZC706']:
+            panic('Usage: %s [-v] [-verbose] [-useOSS] [-fpga <BRAVE|ZESTSC1|ZYNQZC706>] [-o dirname] input1.aadl [input2.aadl] ...\n' % sys.argv[0])  # pragma: no cover
+        del sys.argv[idx]
+        del sys.argv[idx]
+
     # No other options must remain in the cmd line...
     if len(sys.argv) < 2:
-        panic('Usage: %s [-v] [-verbose] [-useOSS] [-o dirname] input1.aadl [input2.aadl] ...\n' % sys.argv[0])  # pragma: no cover
+        panic('Usage: %s [-v] [-verbose] [-useOSS] [-fpga <BRAVE|ZESTSC1|ZYNQZC706>] [-o dirname] input1.aadl [input2.aadl] ...\n' % sys.argv[0])  # pragma: no cover
     commonPy.configMT.showCode = True
     for f in sys.argv[1:]:
         if not os.path.isfile(f):
@@ -546,16 +581,16 @@ def main() -> None:
             uniqueDataFiles[param._signal._asnFilename].setdefault(sp._language, [])
             uniqueDataFiles[param._signal._asnFilename][sp._language].append(sp)
 
-    asn1files = list(uniqueDataFiles.keys())
     asnFile = None  # type: Optional[str]
+    asn1files = list(uniqueDataFiles.keys())
     if len(asn1files) == 1:
         asnFile = asn1files[0]
+        inform("Checking that all base nodes have mandatory ranges set in %s..." % asnFile)
         commonPy.asnParser.ParseAsnFileList(asn1files)
     elif asn1files:
         panic("There appear to be more than one ASN.1 files referenced (%s)..." % str(asn1files))
 
     if asnFile is not None:
-        inform("Checking that all base nodes have mandatory ranges set in %s..." % asnFile)
         names = commonPy.asnParser.g_names
         for node in names.values():
             verify.VerifyRanges(node, names)
@@ -610,6 +645,9 @@ def main() -> None:
         if modelingLanguage.lower() in ["gui_ri", "gui_pi", "vhdl", "rhapsody"]:
             modelingLanguage = "C"
 
+        # Necessary for mypy, but guaranteed by the check above for empty sp._params.
+        assert asnFile is not None
+
         if modelingLanguage in async_languages:
             m = ProcessAsync(modelingLanguage, asnFile, sp, maybeFVname, useOSS, badTypes)
             asynchronousBackends.add(m)
@@ -618,7 +656,9 @@ def main() -> None:
 
     # SystemsAndImplementation loop completed - time to call OnShutdown ONCE for each async backend that we loaded
     for asyncBackend in asynchronousBackends:
-        asyncBackend.OnShutdown(modelingLanguage, asnFile, maybeFVname)
+        # Appeasing mypy: asnFile can be None here, so I checked all
+        # B mappers - no-one depends on a None value for the asnFile.
+        asyncBackend.OnShutdown(modelingLanguage, '' if not asnFile else asnFile, maybeFVname)
 
     ProcessCustomBackends(asnFile, useOSS, SystemsAndImplementations)
 

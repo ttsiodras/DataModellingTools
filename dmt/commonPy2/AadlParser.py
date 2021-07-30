@@ -1214,9 +1214,6 @@ class Parser(antlr.LLkParser):
                       if property._name[-15:].lower() == "source_language":
                           stripQuotes = property._propertyExpressionOrList.replace("\"", "")
                           sp.SetLanguage(stripQuotes)
-                      elif property._name[-10:].lower() == "fpga_modes":
-                          stripQuotes = property._propertyExpressionOrList.replace("\"", "")
-                          sp.SetFPGAModes(stripQuotes)
         elif la1 and la1 in [END,ANNEX]:
             pass
         else:
@@ -1256,7 +1253,8 @@ class Parser(antlr.LLkParser):
             if not g_apLevelContainers.has_key(typeid.getText()):
                panic("Line %d: Subprogram (%s) must first be declared before it is implemented" % (typeid.getLine(), typeid.getText()))
             sp = g_apLevelContainers[typeid.getText()]
-            g_subProgramImplementations.append([typeid.getText(), defid.getText(), sp._language, "" ])
+            # Add field for FPGA configurations
+            g_subProgramImplementations.append([typeid.getText(), defid.getText(), sp._language, "", sp._fpgaConfigurations])
         la1 = self.LA(1)
         if False:
             pass
@@ -1335,6 +1333,11 @@ class Parser(antlr.LLkParser):
                        stripQuotes = assoc._value.replace("\"", "")
                        #sp.SetLanguage(stripQuotes) 
                        g_subProgramImplementations[-1][3] = stripQuotes
+                   # Assign defined FPGA configurations
+                   if assoc._name[-19:].lower() == "fpga_configurations":
+                       stripQuotes = assoc._value.replace("\"", "")
+                       g_subProgramImplementations[-1][4] = stripQuotes
+                       sp.SetFPGAConfigurations(stripQuotes)      
         self.match(END)
         id = self.LT(1)
         self.match(IDENT)

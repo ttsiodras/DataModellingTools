@@ -136,5 +136,7 @@ SuperChoice ::= CHOICE {
 -- Choice items can be removed in subtypes
 SuperRestrictedChoice ::= SuperChoice (WITH COMPONENTS {second-choice ABSENT})
 
+MaximeNeedsEmptySequences ::= SEQUENCE {
+}
 
 END

@@ -67,7 +67,13 @@ class Printer(RecursiveMapper):
         return self.uniqueID
 
     def MapInteger(self, srcCVariable, prefix, _, __, ___):
-        return ['printf("%%s%s %%" ASN1SCC_PRId "\\n", paramName, %s);' % (prefix, srcCVariable)]
+        lines = []
+        lines.append('#if WORD_SIZE==8')
+        lines.append('printf("%%s%s %%"PRId64"\\n", paramName, %s);' % (prefix, srcCVariable))
+        lines.append('#else')
+        lines.append('printf("%%s%s %%d\\n", paramName, %s);' % (prefix, srcCVariable))
+        lines.append('#endif')
+        return lines
 
     def MapReal(self, srcCVariable, prefix, _, __, ___):
         return ['printf("%%s%s %%f\\n", paramName, %s);' % (prefix, srcCVariable)]

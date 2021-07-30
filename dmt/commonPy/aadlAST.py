@@ -41,9 +41,9 @@ from typing import Tuple, Union, Dict, Any, List  # NOQA pylint: disable=unused-
 
 g_apLevelContainers = {}  # type: Dict[str, ApLevelContainer]
 
-g_subProgramImplementations = []  # type: List[Tuple[str,str,str,str]]
-g_processImplementations = []  # type: List[Tuple[str,str,str,str]]
-g_threadImplementations = []  # type: List[Tuple[str,str,str,str]]
+g_subProgramImplementations = []  # type: List[Tuple[str,str,str,str,str]]
+g_processImplementations = []  # type: List[Tuple[str,str,str,str,str]]
+g_threadImplementations = []  # type: List[Tuple[str,str,str,str,str]]
 
 # AST classes
 
@@ -198,7 +198,8 @@ class ApLevelContainer:
         self._id = iid
         self._params = []  # type: List[Param]
         self._connections = []  # type: List[Connection]
-        self._language = None  # type: str
+        self._language: str
+        self._fpgaConfigurations: str
 
     def AddConnection(self, srcUniquePortId: UniquePortIdentifier, destUniquePortId: UniquePortIdentifier) -> None:
         if srcUniquePortId._componentId is None:

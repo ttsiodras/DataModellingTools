@@ -23,7 +23,6 @@ of ASN.1 constructs to C. It is used as a backend of Semantix's
 code generator A.'''
 
 import os
-import sys
 from distutils import spawn
 
 from typing import List
@@ -43,13 +42,12 @@ def Version() -> None:
 
 def OnStartup(unused_modelingLanguage: str, asnFiles: List[str], outputDir: str, unused_badTypes: SetOfBadTypenames) -> None:  # pylint: disable=invalid-sequence-index
     # print "Use ASN1SCC to generate the structures for '%s'" % asnFile
-    asn1SccPath = spawn.find_executable('asn1.exe')
+    asn1SccPath = spawn.find_executable('asn1scc')
     if not asn1SccPath:
-        panic("ASN1SCC seems to be missing from your system (asn1.exe not found in PATH).\n")  # pragma: no cover
+        panic("ASN1SCC seems to be missing from your system (asn1scc not found in PATH).\n")  # pragma: no cover
     # allow externally-defined flags when calling the asn1 compiler (e.g. to set word size based on target)
     extraFlags = os.getenv("ASN1SCC_FLAGS") or ""
     os.system(
-        ("mono " if sys.platform.startswith('linux') else "") +
         "\"{}\" -typePrefix asn1Scc -equal -Ada {} -o \"".format(asn1SccPath, extraFlags) +
         outputDir + "\" \"" + "\" \"".join(asnFiles) + "\"")
     # os.system("rm -f \"" + outputDir + "\"/*.adb")

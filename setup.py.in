@@ -31,6 +31,7 @@ setup(
         'pycodestyle>=2.0.0',
         'typing==3.5.2.2',
         'mypy-extensions>=0.3.0',
+        'sqlalchemy_schemadisplay>=1.3'
     ],
     entry_points={
         'console_scripts': [
@@ -41,7 +42,8 @@ setup(
             'msgPrinter = dmt.msgPrinter:main',
             'msgPrinterASN1 = dmt.msgPrinterASN1:main',
             'smp2asn = dmt.smp2asn:main',
-            'dmt = dmt.commonPy:print_version'
+            'dmt = dmt.commonPy:print_version',
+            'taste-db-diagram = dmt.diagram:main'
         ]
     }
 )
