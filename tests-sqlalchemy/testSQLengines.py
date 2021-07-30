@@ -33,7 +33,7 @@ class CompleteTestingOfSQLMapperWithPostgreSQL(AllTests, unittest.TestCase):
     if os.getenv('CIRCLECI') is None:
         dburi = 'postgresql+psycopg2://taste:tastedb@localhost/circle_test'
     else:
-        dburi = 'postgresql+psycopg2://ubuntu@localhost/circle_test'
+        dburi = 'postgresql+psycopg2://ubuntu:tastedb@localhost/circle_test'
     engine = create_engine(dburi, echo=False)
     Base.metadata.create_all(engine)
     from sqlalchemy.orm import sessionmaker
